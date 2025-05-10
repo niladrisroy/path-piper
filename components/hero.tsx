@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 import Image from "next/image"
 import { BookOpen, Users, Award, Lightbulb } from "lucide-react"
+import Link from "next/link"
 
 export default function Hero() {
   // Feature list data
@@ -97,9 +98,11 @@ export default function Hero() {
               to enable career discovery, skill-building, and structured mentorship.
             </p>
             <div className="flex flex-col sm:flex-row md:justify-start justify-center gap-4 mb-10">
-              <Button className="bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full px-8 py-6 text-lg">
-                Join the Community
-              </Button>
+              <Link href="/signup">
+                <Button className="bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full px-8 py-6 text-lg">
+                  Join the Community
+                </Button>
+              </Link>
               <Button
                 variant="outline"
                 className="rounded-full px-8 py-6 text-lg border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-teal-600"

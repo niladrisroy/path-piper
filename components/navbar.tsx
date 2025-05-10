@@ -67,9 +67,11 @@ export default function Navbar() {
                 {link.name}
               </Link>
             ))}
-            <Button className="bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full px-6">
-              Join Now
-            </Button>
+            <Link href="/signup">
+              <Button className="bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full px-6">
+                Join Now
+              </Button>
+            </Link>
           </nav>
 
           {/* Mobile Navigation Toggle */}
@@ -98,12 +100,14 @@ export default function Navbar() {
                     {link.name}
                   </Link>
                 ))}
-                <Button
-                  className="bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full w-full"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Join Now
-                </Button>
+                <Link href="/signup">
+                  <Button
+                    className="bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full w-full"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Join Now
+                  </Button>
+                </Link>
               </div>
             </motion.div>
           )}

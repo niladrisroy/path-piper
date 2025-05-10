@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 export default function CTA() {
   return (
@@ -29,9 +30,11 @@ export default function CTA() {
                 designed just for students.
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <Button className="bg-white text-teal-600 hover:bg-yellow-100 hover:text-orange-600 rounded-full px-8 py-6 text-lg transition-colors duration-300">
-                  Join Now
-                </Button>
+                <Link href="/signup">
+                  <Button className="bg-white text-teal-600 hover:bg-yellow-100 hover:text-orange-600 rounded-full px-8 py-6 text-lg transition-colors duration-300">
+                    Join Now
+                  </Button>
+                </Link>
                 <Button
                   variant="outline"
                   className="text-amber-700 border-white hover:bg-white/10 hover:text-white rounded-full px-8 py-6 text-lg transition-colors duration-300"
