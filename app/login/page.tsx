@@ -5,6 +5,7 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,10 +13,12 @@ import { EyeIcon, EyeOffIcon } from "lucide-react"
 import { motion } from "framer-motion"
 
 export default function Login() {
+  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [isLoading, setIsLoading] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
   // Track mouse position for interactive elements
@@ -47,6 +50,37 @@ export default function Login() {
     e.preventDefault()
     // Handle login logic here
     console.log({ email, password })
+
+    // Show loading state
+    setIsLoading(true)
+
+    // Simulate API call delay
+    setTimeout(() => {
+      // Determine user role based on email (for demo purposes)
+      let userType = "student" // default
+
+      if (email.includes("mentor") || email.includes("teacher")) {
+        userType = "mentor"
+      } else if (
+        email.includes("school") ||
+        email.includes("institution") ||
+        email.includes("college") ||
+        email.includes("university")
+      ) {
+        userType = "institution"
+      }
+
+      // Navigate to the appropriate onboarding page
+      if (userType === "mentor") {
+        router.push("/mentor-onboarding")
+      } else if (userType === "institution") {
+        router.push("/institution-onboarding")
+      } else {
+        router.push("/onboarding")
+      }
+
+      setIsLoading(false)
+    }, 1500)
   }
 
   const handleSocialLogin = (provider: string) => {
@@ -67,8 +101,7 @@ export default function Login() {
             className="h-full w-auto"
           />
         </Link>
-        <div className="flex items-center gap-2">
-          <span className="text-slate-600">Don't have an account?</span>
+        <div>
           <Link href="/signup">
             <Button variant="ghost" className="text-teal-500 hover:text-teal-600 hover:bg-teal-50">
               Sign Up
@@ -101,8 +134,8 @@ export default function Login() {
             {/* Hero text from home page - positioned at top left */}
             <div className="z-10 mb-auto">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
-                Welcome back! Ready to explore with
-                <span className="block bg-gradient-to-r from-orange-500 via-purple-500 to-teal-500 bg-clip-text text-transparent">
+                Welcome back! Ready to explore with{" "}
+                <span className="bg-gradient-to-r from-orange-500 via-purple-500 to-teal-500 bg-clip-text text-transparent">
                   PathPiper
                 </span>
               </h1>
@@ -190,17 +223,6 @@ export default function Login() {
         {/* Right side - Login form */}
         <div className="w-full md:flex-1 flex items-center justify-center p-8 bg-white">
           <div className="w-full max-w-md mx-auto">
-            {/* Mobile logo - only visible on mobile */}
-            <div className="md:hidden flex justify-center mb-8">
-              <Image
-                src="/images/pathpiper-logo.png"
-                width={60}
-                height={60}
-                alt="PathPiper Logo"
-                className="h-12 w-auto"
-              />
-            </div>
-
             <h1 className="text-4xl font-bold text-gray-900 mb-8">Login</h1>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -248,8 +270,19 @@ export default function Login() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
-                Log In
+              <Button
+                type="submit"
+                className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Logging in...
+                  </div>
+                ) : (
+                  "Log In"
+                )}
               </Button>
             </form>
 

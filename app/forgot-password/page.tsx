@@ -67,15 +67,14 @@ export default function ForgotPassword() {
             className="h-full w-auto"
           />
         </Link>
-        <div className="flex items-center gap-2">
-          <span className="text-slate-600">Remember your password?</span>
+        <div>
           <Link href="/login">
             <Button
               variant="ghost"
               className="text-teal-500 hover:text-teal-600 hover:bg-teal-50 flex items-center gap-1"
             >
               <ArrowLeft size={16} />
-              Back to Login
+              <span className="whitespace-nowrap">Back to Login</span>
             </Button>
           </Link>
         </div>
@@ -105,8 +104,8 @@ export default function ForgotPassword() {
             {/* Hero text from home page - positioned at top left */}
             <div className="z-10 mb-auto">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
-                Don't worry! I'll help you get back into
-                <span className="block bg-gradient-to-r from-orange-500 via-purple-500 to-teal-500 bg-clip-text text-transparent">
+                Don't worry! I'll help you get back into{" "}
+                <span className="bg-gradient-to-r from-orange-500 via-purple-500 to-teal-500 bg-clip-text text-transparent">
                   PathPiper
                 </span>
               </h1>
@@ -195,15 +194,6 @@ export default function ForgotPassword() {
         <div className="w-full md:flex-1 flex items-center justify-center p-8 bg-white">
           <div className="w-full max-w-md mx-auto">
             {/* Mobile logo - only visible on mobile */}
-            <div className="md:hidden flex justify-center mb-8">
-              <Image
-                src="/images/pathpiper-logo.png"
-                width={60}
-                height={60}
-                alt="PathPiper Logo"
-                className="h-12 w-auto"
-              />
-            </div>
 
             <h1 className="text-4xl font-bold text-gray-900 mb-8">Reset Password</h1>
 
@@ -241,6 +231,13 @@ export default function ForgotPassword() {
                     "Send Reset Instructions"
                   )}
                 </Button>
+
+                <p className="mt-8 text-center text-gray-500 text-sm">
+                  Remember your password?{" "}
+                  <Link href="/login" className="text-teal-600 hover:text-teal-700 font-medium">
+                    Back to login
+                  </Link>
+                </p>
               </form>
             ) : (
               <motion.div

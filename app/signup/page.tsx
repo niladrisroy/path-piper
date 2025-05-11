@@ -77,8 +77,7 @@ export default function Signup() {
             className="h-full w-auto"
           />
         </Link>
-        <div className="flex items-center gap-2">
-          <span className="text-slate-600">Already have an account?</span>
+        <div>
           <Link href="/login">
             <Button variant="ghost" className="text-teal-500 hover:text-teal-600 hover:bg-teal-50">
               Log In
@@ -111,8 +110,8 @@ export default function Signup() {
             {/* Hero text from home page - positioned at top left */}
             <div className="z-10 mb-auto">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
-                Start your journey with
-                <span className="block bg-gradient-to-r from-orange-500 via-purple-500 to-teal-500 bg-clip-text text-transparent">
+                Start your journey with{" "}
+                <span className="bg-gradient-to-r from-orange-500 via-purple-500 to-teal-500 bg-clip-text text-transparent">
                   PathPiper
                 </span>
               </h1>
@@ -200,17 +199,6 @@ export default function Signup() {
         {/* Right side - Registration form */}
         <div className="w-full md:flex-1 flex items-center justify-center p-8 bg-white">
           <div className="w-full max-w-md mx-auto">
-            {/* Mobile logo - only visible on mobile */}
-            <div className="md:hidden flex justify-center mb-8">
-              <Image
-                src="/images/pathpiper-logo.png"
-                width={60}
-                height={60}
-                alt="PathPiper Logo"
-                className="h-12 w-auto"
-              />
-            </div>
-
             <div className="w-full">
               {/* Progress Bar */}
               <div className="w-full h-2 bg-slate-100 mb-8 rounded-full overflow-hidden">
@@ -228,7 +216,7 @@ export default function Signup() {
                 {step > 1 && (
                   <button
                     onClick={goBack}
-                    className="absolute top-0 left-0 p-2 text-slate-500 hover:text-teal-500 flex items-center gap-1 z-10"
+                    className="absolute -top-6 left-0 p-2 text-slate-500 hover:text-teal-500 flex items-center gap-1 z-10"
                   >
                     <ArrowLeft size={16} />
                     <span>Back</span>
@@ -245,6 +233,12 @@ export default function Signup() {
                       transition={{ duration: 0.3 }}
                     >
                       <RoleSelection onSelectRole={handleRoleSelect} />
+                      <p className="mt-8 text-center text-gray-500 text-sm">
+                        Already have an account?{" "}
+                        <Link href="/login" className="text-teal-600 hover:text-teal-700 font-medium">
+                          Log in
+                        </Link>
+                      </p>
                     </motion.div>
                   )}
 
@@ -257,6 +251,12 @@ export default function Signup() {
                       transition={{ duration: 0.3 }}
                     >
                       <StudentRegistration onComplete={handleStudentComplete} />
+                      <p className="mt-8 text-center text-gray-500 text-sm">
+                        Already have an account?{" "}
+                        <Link href="/login" className="text-teal-600 hover:text-teal-700 font-medium">
+                          Log in
+                        </Link>
+                      </p>
                     </motion.div>
                   )}
 
@@ -269,6 +269,12 @@ export default function Signup() {
                       transition={{ duration: 0.3 }}
                     >
                       <MentorRegistration onComplete={() => setStep(3)} />
+                      <p className="mt-8 text-center text-gray-500 text-sm">
+                        Already have an account?{" "}
+                        <Link href="/login" className="text-teal-600 hover:text-teal-700 font-medium">
+                          Log in
+                        </Link>
+                      </p>
                     </motion.div>
                   )}
 
@@ -281,6 +287,12 @@ export default function Signup() {
                       transition={{ duration: 0.3 }}
                     >
                       <InstitutionRegistration onComplete={() => setStep(3)} />
+                      <p className="mt-8 text-center text-gray-500 text-sm">
+                        Already have an account?{" "}
+                        <Link href="/login" className="text-teal-600 hover:text-teal-700 font-medium">
+                          Log in
+                        </Link>
+                      </p>
                     </motion.div>
                   )}
 
