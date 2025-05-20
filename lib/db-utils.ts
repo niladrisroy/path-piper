@@ -3,35 +3,27 @@ import { prisma, testPrismaConnection } from './prisma'
 import { supabase, testSupabaseConnection } from './supabase'
 
 export async function testDatabaseConnections() {
-  const results = {
-    prisma: await testPrismaConnection(),
-    supabase: await testSupabaseConnection()
-  }
-  
-  console.log('Database connection test results:', results)
-  return results
-}
-
-export async function getUser(userId: string) {
   try {
-    const { data: supabaseUser, error: supabaseError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
+    const prismaResult = await testPrismaConnection()
+    const supabaseResult = await testSupabaseConnection()
     
-    if (supabaseError) throw supabaseError
-
-    const prismaUser = await prisma.profile.findUnique({
-      where: { id: userId }
+    console.log('Database Connection Results:', {
+      prisma: prismaResult,
+      supabase: supabaseResult
     })
-
+    
     return {
-      supabase: supabaseUser,
-      prisma: prismaUser
+      prisma: prismaResult,
+      supabase: supabaseResult,
+      success: prismaResult && supabaseResult
     }
   } catch (error) {
-    console.error('Error fetching user:', error)
-    return null
+    console.error('Database connection test failed:', error)
+    return {
+      prisma: false,
+      supabase: false,
+      success: false,
+      error: error.message
+    }
   }
 }
