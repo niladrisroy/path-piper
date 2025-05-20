@@ -9,12 +9,12 @@ import Safety from "@/components/safety"
 import CTA from "@/components/cta"
 import Footer from "@/components/footer"
 
-import { testConnection } from '@/lib/db-utils'
+import { testDatabaseConnections } from '@/lib/db-utils'
 
 export default function Home() {
   // Test the connection when the component mounts
-  testConnection().then(isConnected => {
-    console.log('Database connection test result:', isConnected)
+  testDatabaseConnections().then(results => {
+    console.log('Database connection test results:', results)
   })
   return (
     <div className="min-h-screen bg-white overflow-hidden">
