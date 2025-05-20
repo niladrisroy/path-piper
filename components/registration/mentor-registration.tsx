@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
 import { Eye, EyeOff, Plus, X } from "lucide-react"
-import { getSupabase } from "@/lib/supabase/client"
 
 interface MentorRegistrationProps {
   onComplete: () => void
@@ -23,7 +22,6 @@ export default function MentorRegistration({ onComplete }: MentorRegistrationPro
   const [isLoading, setIsLoading] = useState(false)
   const [newSkill, setNewSkill] = useState("")
   const [skills, setSkills] = useState<string[]>([])
-  const [error, setError] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -56,57 +54,21 @@ export default function MentorRegistration({ onComplete }: MentorRegistrationPro
     setSkills(skills.filter((skill) => skill !== skillToRemove))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    setError(null)
 
-    try {
-      const supabase = getSupabase()
-
-      if (!supabase) {
-        // If Supabase client isn't available, use demo mode
-        console.log("Using demo mode for mentor registration")
-        // Simulate a delay
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-        onComplete()
-        return
-      }
-
-      // In a real implementation, we would use Supabase auth here
-      const { error: signUpError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            profession: formData.profession,
-            organization: formData.organization,
-            bio: formData.bio,
-            skills: skills,
-            role: "mentor",
-          },
-        },
-      })
-
-      if (signUpError) throw signUpError
-
-      onComplete()
-    } catch (err: any) {
-      console.error("Registration error:", err)
-      setError(err.message || "An unexpected error occurred during registration")
-    } finally {
+    // Simulate API call
+    setTimeout(() => {
       setIsLoading(false)
-    }
+      onComplete()
+    }, 1500)
   }
 
   return (
     <div>
       <h2 className="text-2xl font-bold mb-2 text-center">Become a Mentor</h2>
       <p className="text-slate-600 mb-6 text-center">Share your knowledge and inspire the next generation</p>
-
-      {error && <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md mb-4">{error}</div>}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -337,7 +299,7 @@ export default function MentorRegistration({ onComplete }: MentorRegistrationPro
 
         <Button
           type="submit"
-          disabled={isLoading || !formData.agreeTerms || !formData.agreeGuidelines || skills.length === 0}
+          disabled={isLoading || !formData.agreeTerms || !formData.agreeGuidelines}
           className="w-full bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white rounded-full py-6"
         >
           {isLoading ? (

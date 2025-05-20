@@ -10,7 +10,6 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Eye, EyeOff, Upload } from "lucide-react"
-import { getSupabase } from "@/lib/supabase/client"
 
 interface InstitutionRegistrationProps {
   onComplete: () => void
@@ -22,7 +21,6 @@ const RequiredIndicator = () => <span className="text-red-500 ml-1">*</span>
 export default function InstitutionRegistration({ onComplete }: InstitutionRegistrationProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
     institutionName: "",
@@ -53,59 +51,21 @@ export default function InstitutionRegistration({ onComplete }: InstitutionRegis
     })
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    setError(null)
 
-    try {
-      const supabase = getSupabase()
-
-      if (!supabase) {
-        // If Supabase client isn't available, use demo mode
-        console.log("Using demo mode for institution registration")
-        // Simulate a delay
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-        onComplete()
-        return
-      }
-
-      // In a real implementation, we would use Supabase auth here
-      const { error: signUpError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            institution_name: formData.institutionName,
-            institution_type: formData.institutionType,
-            contact_first_name: formData.contactFirstName,
-            contact_last_name: formData.contactLastName,
-            contact_title: formData.contactTitle,
-            phone: formData.phone,
-            description: formData.description,
-            website: formData.website,
-            role: "institution",
-          },
-        },
-      })
-
-      if (signUpError) throw signUpError
-
-      onComplete()
-    } catch (err: any) {
-      console.error("Registration error:", err)
-      setError(err.message || "An unexpected error occurred during registration")
-    } finally {
+    // Simulate API call
+    setTimeout(() => {
       setIsLoading(false)
-    }
+      onComplete()
+    }, 1500)
   }
 
   return (
     <div>
       <h2 className="text-2xl font-bold mb-2 text-center">Register Your Institution</h2>
       <p className="text-slate-600 mb-6 text-center">Connect your organization with students and mentors</p>
-
-      {error && <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md mb-4">{error}</div>}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">

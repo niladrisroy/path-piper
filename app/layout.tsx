@@ -1,9 +1,7 @@
 import type React from "react"
-import "./globals.css"
 import type { Metadata } from "next"
 import { Nunito } from "next/font/google"
-import { ThemeProvider } from "@/components/theme-provider"
-import { AuthProvider } from "@/contexts/auth-context"
+import "./globals.css"
 
 const nunito = Nunito({
   subsets: ["latin"],
@@ -25,11 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={`${nunito.className} font-normal overflow-fix`}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <AuthProvider>{children}</AuthProvider>
-        </ThemeProvider>
-      </body>
+      <body className={`${nunito.className} font-normal overflow-fix`}>{children}</body>
     </html>
   )
 }

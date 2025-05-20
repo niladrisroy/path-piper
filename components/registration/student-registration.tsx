@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,8 +9,6 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Eye, EyeOff, Info, AlertCircle } from "lucide-react"
-import { getSupabase } from "@/lib/supabase/client"
-import { createUserProfiles, sendParentApprovalEmail } from "@/app/actions/auth-actions"
 
 interface StudentRegistrationProps {
   onComplete: (isUnder16: boolean) => void
@@ -23,11 +22,6 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
   const [isLoading, setIsLoading] = useState(false)
   const [isUnder16, setIsUnder16] = useState(true)
   const [ageDisplay, setAgeDisplay] = useState<{ years: number; months: number; totalMonths: number } | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [statusMessage, setStatusMessage] = useState<string | null>(null)
-  const [isCheckingEmail, setIsCheckingEmail] = useState(false)
-  const [emailExists, setEmailExists] = useState(false)
-
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -41,13 +35,6 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target
-
-    // Reset email exists error when email is changed
-    if (name === "email" && emailExists) {
-      setEmailExists(false)
-      setError(null)
-    }
-
     setFormData({
       ...formData,
       [name]: type === "checkbox" ? checked : value,
@@ -59,34 +46,6 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
       ...formData,
       [name]: value,
     })
-  }
-
-  // Check if email exists when email field loses focus
-  const checkEmailExists = async () => {
-    if (!formData.email || !formData.email.includes("@")) return
-
-    setIsCheckingEmail(true)
-    try {
-      const supabase = getSupabase()
-      if (!supabase) return
-
-      const { data, error } = await supabase.auth.signInWithOtp({
-        email: formData.email,
-        options: {
-          shouldCreateUser: false,
-        },
-      })
-
-      // If no error, the email exists
-      if (!error) {
-        setEmailExists(true)
-        setError("This email is already registered. Please use a different email or sign in.")
-      }
-    } catch (err) {
-      // Ignore errors here - we're just checking if the email exists
-    } finally {
-      setIsCheckingEmail(false)
-    }
   }
 
   // Calculate age in years and months whenever birth month or year changes
@@ -122,136 +81,15 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
     }
   }, [formData.birthMonth, formData.birthYear])
 
-  // Helper function to determine age group based on years
-  const getAgeGroup = (years: number) => {
-    if (years < 8) return "early-childhood"
-    if (years < 11) return "elementary"
-    if (years < 14) return "middle-school"
-    if (years < 18) return "high-school"
-    return "young-adult"
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-
-    // Don't proceed if email already exists
-    if (emailExists) {
-      setError("This email is already registered. Please use a different email or sign in.")
-      return
-    }
-
     setIsLoading(true)
-    setError(null)
-    setStatusMessage(null)
 
-    try {
-      const supabase = getSupabase()
-
-      if (!supabase) {
-        // If Supabase client isn't available, use demo mode
-        console.log("Using demo mode for registration")
-        setStatusMessage("Demo mode: Simulating registration process...")
-        // Simulate a delay
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-        onComplete(isUnder16)
-        return
-      }
-
-      // Step 1: Check if email exists
-      setStatusMessage("Checking email availability...")
-      const { error: emailCheckError } = await supabase.auth.signInWithOtp({
-        email: formData.email,
-        options: {
-          shouldCreateUser: false,
-        },
-      })
-
-      // If no error, the email exists
-      if (!emailCheckError) {
-        setEmailExists(true)
-        setError("This email is already registered. Please use a different email or sign in.")
-        setIsLoading(false)
-        return
-      }
-
-      // Step 2: Create the user with Supabase Auth
-      setStatusMessage("Creating your account...")
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            role: "student",
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-          },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      })
-
-      if (signUpError) {
-        if (signUpError.message.includes("already registered")) {
-          setEmailExists(true)
-          throw new Error("This email is already registered. Please use a different email or sign in.")
-        }
-        throw new Error(`Authentication error: ${signUpError.message}`)
-      }
-
-      if (!authData.user) {
-        throw new Error("User creation failed: No user returned from auth")
-      }
-
-      console.log("Auth signup successful, user ID:", authData.user.id)
-
-      // Step 3: Create the profile records using the server action
-      setStatusMessage("Setting up your profile...")
-      const ageGroup = ageDisplay ? getAgeGroup(ageDisplay.years) : "young-adult"
-      const parentEmail = isUnder16 ? formData.parentEmail : null
-
-      const result = await createUserProfiles(
-        authData.user.id,
-        formData.firstName,
-        formData.lastName,
-        ageGroup,
-        parentEmail,
-      )
-
-      if (!result.success) {
-        throw new Error(`Profile creation failed: ${result.error}`)
-      }
-
-      // Step 4: If under 16, send parent approval email
-      if (isUnder16 && parentEmail) {
-        setStatusMessage("Sending parent approval request...")
-        const approvalResult = await sendParentApprovalEmail(
-          authData.user.id,
-          formData.firstName,
-          formData.lastName,
-          parentEmail,
-        )
-
-        if (!approvalResult.success) {
-          console.warn("Parent approval email could not be sent:", approvalResult.error)
-          // Continue anyway, we'll handle this later
-        }
-      }
-
-      setStatusMessage(
-        isUnder16
-          ? "Account created successfully! A confirmation email has been sent to your email address, and an approval request has been sent to your parent/guardian."
-          : "Account created successfully! A confirmation email has been sent to your email address.",
-      )
-
-      // Call onComplete with the isUnder16 value
-      setTimeout(() => {
-        onComplete(isUnder16)
-      }, 2000) // Give user time to read the success message
-    } catch (err: any) {
-      console.error("Registration error:", err)
-      setError(err.message || "An unexpected error occurred during registration")
-    } finally {
+    // Simulate API call
+    setTimeout(() => {
       setIsLoading(false)
-    }
+      onComplete(isUnder16)
+    }, 1500)
   }
 
   // Generate birth year options (3+ years old)
@@ -281,20 +119,6 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
     <div>
       <h2 className="text-2xl font-bold mb-2 text-center">Create Student Account</h2>
       <p className="text-slate-600 mb-6 text-center">Let's get you started on your journey</p>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md mb-4">
-          <p className="font-medium">Registration Error</p>
-          <p>{error}</p>
-        </div>
-      )}
-
-      {statusMessage && (
-        <div className="bg-blue-50 border border-blue-200 text-blue-700 p-3 rounded-md mb-4">
-          <p className="font-medium">Status</p>
-          <p>{statusMessage}</p>
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -343,12 +167,9 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
             placeholder="Enter your email"
             value={formData.email}
             onChange={handleChange}
-            onBlur={checkEmailExists}
             required
-            className={`rounded-lg ${emailExists ? "border-red-300 focus:border-red-500 focus:ring-red-500" : "border-slate-300"}`}
+            className="rounded-lg border-slate-300"
           />
-          {isCheckingEmail && <p className="text-xs text-slate-500 mt-1">Checking email...</p>}
-          {emailExists && <p className="text-xs text-red-500 mt-1">This email is already registered</p>}
         </div>
 
         <div className="space-y-2">
@@ -365,7 +186,6 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
               value={formData.password}
               onChange={handleChange}
               required
-              minLength={8}
               className="rounded-lg border-slate-300 pr-10"
             />
             <button
@@ -517,7 +337,7 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
 
         <Button
           type="submit"
-          disabled={isLoading || !formData.agreeTerms || emailExists}
+          disabled={isLoading || !formData.agreeTerms}
           className="w-full bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full py-6"
         >
           {isLoading ? (

@@ -9,10 +9,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, X, Calendar, Target } from "lucide-react"
-import { createGoal } from "@/lib/supabase/goals"
-import { useToast } from "@/hooks/use-toast"
 
-interface GoalData {
+interface Goal {
   id: string
   title: string
   description: string
@@ -21,11 +19,10 @@ interface GoalData {
 }
 
 interface GoalsStepProps {
-  initialData: GoalData[]
-  onComplete: (data: GoalData[]) => void
+  initialData: Goal[]
+  onComplete: (data: Goal[]) => void
   onNext: () => void
   onSkip: () => void
-  userId: string
 }
 
 // Sample goal categories
@@ -34,9 +31,9 @@ const GOAL_CATEGORIES = ["Academic", "Career", "Skill Development", "Personal Gr
 // Sample timeframes
 const TIMEFRAMES = ["1 month", "3 months", "6 months", "1 year", "2+ years", "Ongoing"]
 
-export default function GoalsStep({ initialData, onComplete, onNext, onSkip, userId }: GoalsStepProps) {
-  const [goals, setGoals] = useState<GoalData[]>(initialData)
-  const [newGoal, setNewGoal] = useState<GoalData>({
+export default function GoalsStep({ initialData, onComplete, onNext, onSkip }: GoalsStepProps) {
+  const [goals, setGoals] = useState<Goal[]>(initialData)
+  const [newGoal, setNewGoal] = useState<Goal>({
     id: "",
     title: "",
     description: "",
@@ -44,8 +41,6 @@ export default function GoalsStep({ initialData, onComplete, onNext, onSkip, use
     timeframe: "",
   })
   const [isAddingGoal, setIsAddingGoal] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const { toast } = useToast()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -62,61 +57,27 @@ export default function GoalsStep({ initialData, onComplete, onNext, onSkip, use
     }))
   }
 
-  const handleAddGoal = async () => {
+  const handleAddGoal = () => {
     if (newGoal.title.trim() === "") return
 
-    setIsLoading(true)
-
-    try {
-      // Save goal to database
-      const { data, error } = await createGoal({
-        user_id: userId,
-        title: newGoal.title,
-        description: newGoal.description || null,
-        category: newGoal.category || null,
-        timeframe: newGoal.timeframe || null,
-        completed: false,
-      })
-
-      if (error) {
-        throw new Error(error.message)
-      }
-
-      if (data) {
-        const goalToAdd = {
-          id: data.id,
-          title: data.title,
-          description: data.description || "",
-          category: data.category || "",
-          timeframe: data.timeframe || "",
-        }
-
-        setGoals((prev) => [...prev, goalToAdd])
-        setNewGoal({
-          id: "",
-          title: "",
-          description: "",
-          category: "",
-          timeframe: "",
-        })
-        setIsAddingGoal(false)
-      }
-    } catch (err) {
-      console.error("Error adding goal:", err)
-      toast({
-        title: "Error adding goal",
-        description: err instanceof Error ? err.message : "An error occurred while adding your goal",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
+    const goalToAdd = {
+      ...newGoal,
+      id: Date.now().toString(),
     }
+
+    setGoals((prev) => [...prev, goalToAdd])
+    setNewGoal({
+      id: "",
+      title: "",
+      description: "",
+      category: "",
+      timeframe: "",
+    })
+    setIsAddingGoal(false)
   }
 
-  const handleRemoveGoal = async (id: string) => {
+  const handleRemoveGoal = (id: string) => {
     setGoals((prev) => prev.filter((goal) => goal.id !== id))
-    // Note: We're not deleting from the database here, just removing from the UI
-    // In a real app, you might want to add a deleteGoal function
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -218,7 +179,6 @@ export default function GoalsStep({ initialData, onComplete, onNext, onSkip, use
                     placeholder="e.g., Learn Python Programming"
                     className="mt-1 rounded-lg"
                     required
-                    disabled={isLoading}
                   />
                 </div>
 
@@ -233,7 +193,6 @@ export default function GoalsStep({ initialData, onComplete, onNext, onSkip, use
                     onChange={handleInputChange}
                     placeholder="Describe your goal in more detail"
                     className="mt-1 rounded-lg"
-                    disabled={isLoading}
                   />
                 </div>
 
@@ -242,11 +201,7 @@ export default function GoalsStep({ initialData, onComplete, onNext, onSkip, use
                     <Label htmlFor="category" className="text-slate-700">
                       Category
                     </Label>
-                    <Select
-                      value={newGoal.category}
-                      onValueChange={(value) => handleSelectChange("category", value)}
-                      disabled={isLoading}
-                    >
+                    <Select value={newGoal.category} onValueChange={(value) => handleSelectChange("category", value)}>
                       <SelectTrigger className="mt-1 rounded-lg">
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
@@ -264,11 +219,7 @@ export default function GoalsStep({ initialData, onComplete, onNext, onSkip, use
                     <Label htmlFor="timeframe" className="text-slate-700">
                       Timeframe
                     </Label>
-                    <Select
-                      value={newGoal.timeframe}
-                      onValueChange={(value) => handleSelectChange("timeframe", value)}
-                      disabled={isLoading}
-                    >
+                    <Select value={newGoal.timeframe} onValueChange={(value) => handleSelectChange("timeframe", value)}>
                       <SelectTrigger className="mt-1 rounded-lg">
                         <SelectValue placeholder="Select a timeframe" />
                       </SelectTrigger>
@@ -289,17 +240,16 @@ export default function GoalsStep({ initialData, onComplete, onNext, onSkip, use
                     variant="outline"
                     onClick={() => setIsAddingGoal(false)}
                     className="border-slate-200"
-                    disabled={isLoading}
                   >
                     Cancel
                   </Button>
                   <Button
                     type="button"
                     onClick={handleAddGoal}
-                    disabled={!newGoal.title.trim() || isLoading}
+                    disabled={!newGoal.title.trim()}
                     className="bg-teal-500 hover:bg-teal-600 text-white"
                   >
-                    {isLoading ? "Adding..." : "Add Goal"}
+                    Add Goal
                   </Button>
                 </div>
               </div>

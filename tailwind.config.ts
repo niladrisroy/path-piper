@@ -91,9 +91,6 @@ const config = {
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
       },
-      fontFamily: {
-        sans: ["var(--font-nunito)"],
-      },
     },
   },
   plugins: [require("tailwindcss-animate")],
