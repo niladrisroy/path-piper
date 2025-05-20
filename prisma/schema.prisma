@@ -9,48 +9,164 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL") // Used for migrations
+  directUrl = env("DIRECT_URL")
 }
 
-// User model
-model User {
-  id              String    @id @default(cuid())
-  email           String    @unique
-  password        String
-  name            String?
-  role            String    @default("student") // "student", "mentor", "institution"
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  studentProfile  Student?
-  mentorProfile   Mentor?
-  institutionProfile Institution?
+model Profile {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  role      String   @default("student")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  feedPosts          FeedPost[]
+  goals             Goal[]
+  studentProfile    StudentProfile?
+  mentorProfile     MentorProfile?
+  institutionProfile InstitutionProfile?
+
+  @@map("profiles")
 }
 
-model Student {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id])
+model FeedPost {
+  id            String   @id @default(uuid())
+  userId        String?  @map("user_id")
+  content       String
+  imageUrl      String?  @map("image_url")
+  likesCount    Int?     @default(0) @map("likes_count")
+  commentsCount Int?     @default(0) @map("comments_count")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  profile       Profile? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("feed_posts")
+}
+
+model Goal {
+  id          String   @id @default(uuid())
+  userId      String?  @map("user_id")
+  title       String
+  description String?
+  category    String?
+  timeframe   String?
+  completed   Boolean? @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  profile     Profile? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("goals")
+}
+
+model InstitutionProfile {
+  id                  String   @id
+  institutionName     String   @map("institution_name")
+  institutionType     String   @map("institution_type")
+  category           String
+  website            String?
+  logoUrl            String?  @map("logo_url")
+  coverImageUrl      String?  @map("cover_image_url")
+  verified           Boolean? @default(false)
+  onboardingCompleted Boolean? @default(false) @map("onboarding_completed")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+  profile            Profile  @relation(fields: [id], references: [id], onDelete: Cascade)
+  events             InstitutionEvent[]
+  gallery            InstitutionGallery[]
+  programs           InstitutionProgram[]
+
+  @@map("institution_profiles")
+}
+
+model InstitutionEvent {
+  id              String    @id @default(uuid())
+  institutionId   String?   @map("institution_id")
+  title           String
+  description     String
+  eventType       String    @map("event_type")
+  startDate       DateTime  @map("start_date")
+  endDate         DateTime? @map("end_date")
+  location        String?
+  imageUrl        String?   @map("image_url")
+  registrationUrl String?   @map("registration_url")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  institution     InstitutionProfile? @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  @@map("institution_events")
+}
+
+model InstitutionGallery {
+  id            String   @id @default(uuid())
+  institutionId String?  @map("institution_id")
+  imageUrl      String   @map("image_url")
+  caption       String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  institution   InstitutionProfile? @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  @@map("institution_gallery")
+}
+
+model InstitutionProgram {
+  id             String   @id @default(uuid())
+  institutionId  String?  @map("institution_id")
+  name           String
+  type           String
+  level          String
+  duration       String
+  durationType   String   @map("duration_type")
+  description    String
+  eligibility    String?
+  outcomes       String?
+  assessment     String?
+  certification  String?
+  schedule       String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  institution    InstitutionProfile? @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  @@map("institution_programs")
+}
+
+model Interest {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  category  String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("interests")
+}
+
+model MentorProfile {
+  id           String   @id
+  expertise    String[]
+  experience   String?
+  bio          String?
+  profile      Profile  @relation(fields: [id], references: [id], onDelete: Cascade)
+  availability MentorAvailability[]
+
+  @@map("mentor_profiles")
+}
+
+model MentorAvailability {
+  id        String   @id @default(uuid())
+  mentorId  String?  @map("mentor_id")
+  timeSlot  String   @map("time_slot")
+  createdAt DateTime @default(now()) @map("created_at")
+  mentor    MentorProfile? @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+
+  @@unique([mentorId, timeSlot])
+  @@map("mentor_availability")
+}
+
+model StudentProfile {
+  id        String   @id
   bio       String?
   interests String[]
   skills    String[]
   goals     String[]
-}
+  profile   Profile  @relation(fields: [id], references: [id], onDelete: Cascade)
 
-model Mentor {
-  id         String   @id @default(cuid())
-  userId     String   @unique
-  user       User     @relation(fields: [userId], references: [id])
-  expertise  String[]
-  experience String?
-  bio        String?
-}
-
-model Institution {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id])
-  type        String
-  description String?
-  location    String?
-  programs    String[]
+  @@map("student_profiles")
 }
