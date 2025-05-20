@@ -103,12 +103,14 @@ export default function Hero() {
                   Join the Community
                 </Button>
               </Link>
-              <Button
-                variant="outline"
-                className="rounded-full px-8 py-6 text-lg border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-teal-600"
-              >
-                Learn More
-              </Button>
+              <Link href="/student/profile">
+                <Button
+                  variant="outline"
+                  className="rounded-full px-8 py-6 text-lg border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-teal-600"
+                >
+                  Learn More
+                </Button>
+              </Link>
             </div>
             <div className="flex md:justify-start justify-center items-center">
               <div className="flex -space-x-2">

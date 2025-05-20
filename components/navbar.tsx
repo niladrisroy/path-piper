@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Menu, X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
-export default function Navbar() {
+export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
@@ -67,6 +67,11 @@ export default function Navbar() {
                 {link.name}
               </Link>
             ))}
+            <Link href="/login">
+              <Button className="bg-gradient-to-r from-purple-400 to-pink-500 hover:from-purple-500 hover:to-pink-600 text-white rounded-full px-6 mr-2">
+                Login
+              </Button>
+            </Link>
             <Link href="/signup">
               <Button className="bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full px-6">
                 Join Now
@@ -100,6 +105,14 @@ export default function Navbar() {
                     {link.name}
                   </Link>
                 ))}
+                <Link href="/login">
+                  <Button
+                    className="bg-gradient-to-r from-purple-400 to-pink-500 hover:from-purple-500 hover:to-pink-600 text-white rounded-full w-full mb-2"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Login
+                  </Button>
+                </Link>
                 <Link href="/signup">
                   <Button
                     className="bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full w-full"
@@ -116,3 +129,5 @@ export default function Navbar() {
     </header>
   )
 }
+
+export default Navbar

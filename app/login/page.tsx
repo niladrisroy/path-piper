@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { EyeIcon, EyeOffIcon } from "lucide-react"
 import { motion } from "framer-motion"
+import { useAuth } from "@/contexts/auth-context"
 
 export default function Login() {
   const router = useRouter()
@@ -19,7 +20,9 @@ export default function Login() {
   const [password, setPassword] = useState("")
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const { signIn, isInitialized } = useAuth()
 
   // Track mouse position for interactive elements
   useEffect(() => {
@@ -46,16 +49,26 @@ export default function Login() {
     }
   }, [])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle login logic here
-    console.log({ email, password })
-
-    // Show loading state
     setIsLoading(true)
+    setError(null)
 
-    // Simulate API call delay
-    setTimeout(() => {
+    if (!isInitialized) {
+      setError("Authentication system is not available. Please try again later.")
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      const { error } = await signIn(email, password)
+
+      if (error) {
+        setError(error.message)
+        setIsLoading(false)
+        return
+      }
+
       // Determine user role based on email (for demo purposes)
       let userType = "student" // default
 
@@ -78,14 +91,22 @@ export default function Login() {
       } else {
         router.push("/onboarding")
       }
-
+    } catch (err) {
+      console.error("Login error:", err)
+      setError("An unexpected error occurred. Please try again.")
+    } finally {
       setIsLoading(false)
-    }, 1500)
+    }
   }
 
-  const handleSocialLogin = (provider: string) => {
-    // Handle social login logic here
-    console.log(`Login with ${provider}`)
+  const handleSocialLogin = async (provider: string) => {
+    try {
+      // Handle social login logic here
+      console.log(`Login with ${provider}`)
+    } catch (err) {
+      console.error(`${provider} login error:`, err)
+      setError(`Failed to login with ${provider}. Please try again.`)
+    }
   }
 
   return (
@@ -225,6 +246,14 @@ export default function Login() {
           <div className="w-full max-w-md mx-auto">
             <h1 className="text-4xl font-bold text-gray-900 mb-8">Login</h1>
 
+            {!isInitialized && (
+              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-md">
+                Authentication system is initializing. Please try again in a moment.
+              </div>
+            )}
+
+            {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">{error}</div>}
+
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-gray-700">
@@ -273,7 +302,7 @@ export default function Login() {
               <Button
                 type="submit"
                 className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
-                disabled={isLoading}
+                disabled={isLoading || !isInitialized}
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
@@ -301,6 +330,7 @@ export default function Login() {
               <button
                 onClick={() => handleSocialLogin("Google")}
                 className="flex items-center justify-center h-12 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                disabled={!isInitialized}
               >
                 <span className="text-gray-700">Login with Google</span>
               </button>
@@ -308,6 +338,7 @@ export default function Login() {
               <button
                 onClick={() => handleSocialLogin("LinkedIn")}
                 className="flex items-center justify-center h-12 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                disabled={!isInitialized}
               >
                 <span className="text-gray-700">Login with LinkedIn</span>
               </button>
