@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ReloadIcon } from '@radix-ui/react-icons'
+import { ReloadIcon, CheckCircledIcon, CrossCircledIcon } from '@radix-ui/react-icons'
 
 export default function StatusPage() {
   const [status, setStatus] = useState<any>(null)
