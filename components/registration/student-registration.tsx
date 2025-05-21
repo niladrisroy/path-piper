@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Eye, EyeOff, Info, AlertCircle } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 interface StudentRegistrationProps {
   onComplete: (isUnder16: boolean) => void
