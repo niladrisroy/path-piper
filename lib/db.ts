@@ -14,8 +14,9 @@ const connectionString = process.env.POSTGRES_URL + '?sslmode=require'
 const client = postgres(connectionString, {
   max: 1,
   prepare: false,
-  ssl: {
-    rejectUnauthorized: false
+  ssl: 'require',
+  connection: {
+    options: '-c statement_timeout=60000'
   }
 })
 
