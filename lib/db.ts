@@ -7,17 +7,10 @@ if (!process.env.POSTGRES_URL) {
   throw new Error('POSTGRES_URL is required')
 }
 
-// Parse connection string components for Supabase direct connection
-const url = new URL(process.env.POSTGRES_URL!)
-const connectionString = `postgres://${url.username}:${url.password}@${url.hostname}:${url.port}${url.pathname}`
-
-// Configure postgres client with Supabase settings
-const client = postgres(connectionString, {
-  max: 1,
-  ssl: {
-    rejectUnauthorized: false,
-    mode: 'require'
-  }
+// Configure postgres client for Supabase connection
+const client = postgres(process.env.POSTGRES_URL, {
+  ssl: 'require',
+  max: 1
 })
 
 export const db = drizzle(client, { schema })
