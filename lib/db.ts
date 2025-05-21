@@ -7,14 +7,15 @@ if (!process.env.POSTGRES_URL) {
   throw new Error('POSTGRES_URL is required')
 }
 
-// Configure postgres client for Supabase connection
-const connectionString = 'postgresql://postgres:pathpiper287@db.owikmmifkriuzjkvmsei.supabase.co:5432/postgres?sslmode=require'
+// Configure postgres client for Supabase connection with pooling
+const connectionString = 'postgresql://postgres:pathpiper287@db.owikmmifkriuzjkvmsei.supabase.co:5432/postgres'
+const poolingUrl = connectionString.replace('db.', 'db-pooler.')
 
-const client = postgres(connectionString, {
+const client = postgres(poolingUrl, {
   max: 1,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  idle_timeout: 20,
+  connect_timeout: 10,
+  ssl: 'require'
 })
 
 export const db = drizzle(client, { schema })
