@@ -8,8 +8,8 @@ if (!process.env.POSTGRES_URL) {
 }
 
 // Configure postgres client for Supabase connection
-const client = postgres(process.env.POSTGRES_URL, {
-  ssl: 'require',
+const client = postgres('postgres://postgres:pathpiper287@db.owikmmifkriuzjkvmsei.supabase.co:5432/postgres', {
+  ssl: true,
   max: 1
 })
 
