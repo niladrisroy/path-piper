@@ -27,10 +27,25 @@ export async function checkEmailExists(email: string) {
   return !!data
 }
 
-export async function sendParentApprovalEmail(studentEmail: string, parentEmail: string) {
-  // TODO: Implement email sending logic via your email service
-  // For now, we'll simulate success
-  return { success: true }
+import { sendEmail } from '../email';
+
+export async function sendParentApprovalEmail(studentName: string, studentEmail: string, parentEmail: string) {
+  const approvalToken = Buffer.from(`${studentEmail}:${Date.now()}`).toString('base64');
+  const approvalLink = `${process.env.NEXT_PUBLIC_APP_URL}/approve-student?token=${approvalToken}`;
+  
+  return sendEmail('parent-approval', parentEmail, {
+    studentName,
+    approvalLink
+  });
+}
+
+export async function sendVerificationEmail(userName: string, email: string, token: string) {
+  const verificationLink = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${token}`;
+  
+  return sendEmail('verification', email, {
+    userName,
+    verificationLink
+  });
 }
 
 export async function registerUser(data: UserRegistrationData) {
