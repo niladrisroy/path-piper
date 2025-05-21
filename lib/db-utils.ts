@@ -3,8 +3,14 @@ import { supabase } from './supabase'
 
 export async function testConnection() {
   try {
-    const { data, error } = await supabase.from('users').select('*').limit(1)
-    if (error) throw error
+    // Test raw connection first
+    const { data, error: pingError } = await supabase.rpc('ping')
+    if (pingError) throw pingError
+    
+    // Then test users table access
+    const { data: userData, error: userError } = await supabase.from('users').select('count').single()
+    if (userError && userError.code !== 'PGRST116') throw userError
+    
     console.log('Database connection successful')
     return true
   } catch (error) {
