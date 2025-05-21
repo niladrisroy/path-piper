@@ -7,16 +7,16 @@ if (!process.env.POSTGRES_URL) {
   throw new Error('POSTGRES_URL is required')
 }
 
-// Create connection string with proper parameters
-const connectionString = process.env.POSTGRES_URL + '?sslmode=require'
+// Parse connection string components for Supabase direct connection
+const url = new URL(process.env.POSTGRES_URL!)
+const connectionString = `postgres://${url.username}:${url.password}@${url.hostname}:${url.port}${url.pathname}`
 
-// Configure postgres client with pooling
+// Configure postgres client with Supabase settings
 const client = postgres(connectionString, {
   max: 1,
-  prepare: false,
-  ssl: 'require',
-  connection: {
-    options: '-c statement_timeout=60000'
+  ssl: {
+    rejectUnauthorized: false,
+    mode: 'require'
   }
 })
 
