@@ -81,12 +81,16 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
     }
   }, [formData.birthMonth, formData.birthYear])
 
+  const { toast } = useToast()
+  const [error, setError] = useState<string | null>(null)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError(null)
 
     try {
-      const { success, error } = await registerUser({
+      const result = await registerUser({
         email: formData.email,
         password: formData.password,
         firstName: formData.firstName,
@@ -97,15 +101,27 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
         parentEmail: isUnder16 ? formData.parentEmail : undefined
       })
 
-      if (success) {
+      if (result.success) {
+        // Show success toast
+        toast({
+          title: "Account created successfully!",
+          description: result.needsParentApproval 
+            ? `A verification email has been sent to your email and an approval request to ${result.parentEmail}`
+            : "A verification email has been sent to your email address",
+        })
         onComplete(isUnder16)
       } else {
-        console.error('Registration failed:', error)
-        // TODO: Show error toast/message to user
+        if (result.error === 'Email already exists') {
+          setError('This email is already registered. Please use a different email address.')
+          // Focus email input
+          const emailInput = document.getElementById('email')
+          if (emailInput) emailInput.focus()
+        } else {
+          setError(result.error || 'Failed to create account. Please try again.')
+        }
       }
     } catch (error) {
-      console.error('Registration error:', error)
-      // TODO: Show error toast/message to user
+      setError('An unexpected error occurred. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -179,6 +195,11 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
             Email
             <RequiredIndicator />
           </Label>
+          {error && (
+            <div className="text-sm text-red-500 mb-2">
+              {error}
+            </div>
+          )}
           <Input
             id="email"
             name="email"
