@@ -8,13 +8,19 @@ if (!process.env.POSTGRES_URL) {
 }
 
 // Configure postgres client for Supabase connection with pooling
-const connectionString = 'postgresql://postgres.owikmmifkriuzjkvmsei:pathpiper287@aws-0-us-east-1.pooler.supabase.com:6543/postgres'
-
-const client = postgres(connectionString, {
+const client = postgres(process.env.POSTGRES_URL!, {
   max: 1,
   idle_timeout: 20,
   connect_timeout: 10,
-  ssl: 'require'
+  ssl: {
+    rejectUnauthorized: false
+  },
+  connection: {
+    parsers: {
+      date: (val) => val,
+      timestamp: (val) => val
+    }
+  }
 })
 
 export const db = drizzle(client, { schema })
