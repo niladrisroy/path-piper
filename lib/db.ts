@@ -11,8 +11,9 @@ export const db = drizzle(sql, { schema })
 
 export async function testDrizzleConnection() {
   try {
-    await db.select().from(schema.profiles).limit(1)
-    console.log('Drizzle connection successful')
+    // Test the connection by querying the profiles table
+    const result = await db.select().from(schema.profiles).limit(1)
+    console.log('Drizzle connection successful:', result)
     return true
   } catch (error) {
     console.error('Drizzle connection failed:', error)
