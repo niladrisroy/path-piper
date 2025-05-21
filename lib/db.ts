@@ -1,13 +1,17 @@
 
-import { drizzle } from 'drizzle-orm/vercel-postgres'
-import { sql } from '@vercel/postgres'
+import { drizzle } from 'drizzle-orm/postgres-js'
+import postgres from 'postgres'
 import * as schema from './db/schema'
 
 if (!process.env.POSTGRES_URL) {
   throw new Error('POSTGRES_URL is required')
 }
 
-export const db = drizzle(sql, { schema })
+// Convert the URL to use connection pooling
+const connectionString = process.env.POSTGRES_URL.replace('postgres://', 'postgres://pooler-')
+
+const client = postgres(connectionString, { max: 1 })
+export const db = drizzle(client, { schema })
 
 export async function testDrizzleConnection() {
   try {
