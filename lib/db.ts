@@ -7,15 +7,22 @@ if (!process.env.POSTGRES_URL) {
   throw new Error('POSTGRES_URL is required')
 }
 
-// Convert the URL to use connection pooling
-const connectionString = process.env.POSTGRES_URL.replace('postgres://', 'postgres://pooler-')
+// Create connection string with proper parameters
+const connectionString = process.env.POSTGRES_URL + '?sslmode=require'
 
-const client = postgres(connectionString, { max: 1 })
+// Configure postgres client with pooling
+const client = postgres(connectionString, {
+  max: 1,
+  prepare: false,
+  ssl: {
+    rejectUnauthorized: false
+  }
+})
+
 export const db = drizzle(client, { schema })
 
 export async function testDrizzleConnection() {
   try {
-    // Test the connection by querying the profiles table
     const result = await db.select().from(schema.profiles).limit(1)
     console.log('Drizzle connection successful:', result)
     return true
