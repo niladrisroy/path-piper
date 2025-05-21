@@ -1,58 +1,40 @@
-
 import { supabase } from '../lib/supabase'
 
 async function fetchSchema() {
   try {
-    // Fetch tables
+    // Get all tables
     const { data: tables, error: tablesError } = await supabase
-      .from('pg_tables')
-      .select('*')
-      .eq('schemaname', 'public')
-    
+      .rpc('get_schema')
+      .select()
+
     if (tablesError) throw tablesError
 
-    // Fetch columns for each table
-    const schemaData = await Promise.all(
-      tables.map(async (table) => {
-        const { data: columns, error: columnsError } = await supabase
-          .from('information_schema.columns')
-          .select('*')
-          .eq('table_schema', 'public')
-          .eq('table_name', table.tablename)
-        
-        if (columnsError) throw columnsError
-        
-        return {
-          table: table.tablename,
-          columns
-        }
-      })
-    )
-
     // Generate markdown documentation
-    const markdown = generateMarkdown(schemaData)
+    const markdown = generateMarkdown(tables || [])
     console.log(markdown)
+    return markdown
   } catch (error) {
     console.error('Error fetching schema:', error)
   }
 }
 
-function generateMarkdown(schema) {
+function generateMarkdown(tables: any[]) {
   let md = '# PathPiper Database Schema\n\n'
-  
-  schema.forEach(({ table, columns }) => {
-    md += `## ${table}\n\n`
-    md += '| Column | Type | Nullable | Default |\n'
-    md += '|--------|------|----------|----------|\n'
-    
-    columns.forEach((col) => {
-      md += `| ${col.column_name} | ${col.data_type} | ${col.is_nullable} | ${col.column_default || '-'} |\n`
+
+  tables.forEach((table) => {
+    md += `## ${table.table_name}\n\n`
+    md += '| Column | Type | Nullable | Default | Description |\n'
+    md += '|--------|------|----------|----------|-------------|\n'
+
+    table.columns?.forEach((col: any) => {
+      md += `| ${col.column_name} | ${col.data_type} | ${col.is_nullable} | ${col.column_default || '-'} | ${col.description || '-'} |\n`
     })
-    
+
     md += '\n'
   })
-  
+
   return md
 }
 
+// Execute the function
 fetchSchema()
