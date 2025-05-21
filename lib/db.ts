@@ -8,9 +8,13 @@ if (!process.env.POSTGRES_URL) {
 }
 
 // Configure postgres client for Supabase connection
-const client = postgres('postgres://postgres:pathpiper287@db.owikmmifkriuzjkvmsei.supabase.co:5432/postgres', {
-  ssl: true,
-  max: 1
+const connectionString = 'postgresql://postgres:pathpiper287@db.owikmmifkriuzjkvmsei.supabase.co:5432/postgres?sslmode=require'
+
+const client = postgres(connectionString, {
+  max: 1,
+  ssl: {
+    rejectUnauthorized: false
+  }
 })
 
 export const db = drizzle(client, { schema })
