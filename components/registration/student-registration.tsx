@@ -103,7 +103,6 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
       })
 
       if (result.success) {
-        // Show success toast
         toast({
           title: "Account created successfully!",
           description: result.needsParentApproval 
@@ -114,15 +113,18 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
       } else {
         if (result.error === 'Email already exists') {
           setError('This email is already registered. Please use a different email address.')
-          // Focus email input
           const emailInput = document.getElementById('email')
           if (emailInput) emailInput.focus()
+        } else if (result.error?.includes('RESEND_API_KEY')) {
+          setError('Email service configuration error. Please try again later.')
         } else {
+          console.error('Registration error:', result.error)
           setError(result.error || 'Failed to create account. Please try again.')
         }
       }
-    } catch (error) {
-      setError('An unexpected error occurred. Please try again.')
+    } catch (error: any) {
+      console.error('Registration error:', error)
+      setError(error?.message || 'An unexpected error occurred. Please try again.')
     } finally {
       setIsLoading(false)
     }
