@@ -8,10 +8,9 @@ if (!process.env.POSTGRES_URL) {
 }
 
 // Configure postgres client for Supabase connection with pooling
-const connectionString = 'postgresql://postgres:pathpiper287@db.owikmmifkriuzjkvmsei.supabase.co:5432/postgres'
-const poolingUrl = connectionString.replace('db.', 'db-pooler.')
+const connectionString = 'postgresql://postgres.owikmmifkriuzjkvmsei:pathpiper287@aws-0-us-east-1.pooler.supabase.com:6543/postgres'
 
-const client = postgres(poolingUrl, {
+const client = postgres(connectionString, {
   max: 1,
   idle_timeout: 20,
   connect_timeout: 10,
