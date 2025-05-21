@@ -81,15 +81,34 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
     }
   }, [formData.birthMonth, formData.birthYear])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const { success, error } = await registerUser({
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        role: 'student',
+        birthMonth: formData.birthMonth,
+        birthYear: formData.birthYear,
+        parentEmail: isUnder16 ? formData.parentEmail : undefined
+      })
+
+      if (success) {
+        onComplete(isUnder16)
+      } else {
+        console.error('Registration failed:', error)
+        // TODO: Show error toast/message to user
+      }
+    } catch (error) {
+      console.error('Registration error:', error)
+      // TODO: Show error toast/message to user
+    } finally {
       setIsLoading(false)
-      onComplete(isUnder16)
-    }, 1500)
+    }
   }
 
   // Generate birth year options (3+ years old)
