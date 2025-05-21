@@ -1,29 +1,23 @@
 
-import { testSupabaseConnection } from './supabase'
-import { testDrizzleConnection } from './db'
+import { supabase } from './supabase'
 
 export async function testDatabaseConnections() {
   try {
-    const [supabaseResult, drizzleResult] = await Promise.all([
-      testSupabaseConnection(),
-      testDrizzleConnection()
-    ])
+    const { data, error } = await supabase.from('profiles').select('count')
+    if (error) throw error
     
-    console.log('Database Connection Results:', {
-      supabase: supabaseResult,
-      drizzle: drizzleResult
+    console.log('Database Connection Result:', {
+      supabase: true
     })
     
     return {
-      supabase: supabaseResult,
-      drizzle: drizzleResult,
-      success: supabaseResult && drizzleResult
+      supabase: true,
+      success: true
     }
   } catch (error) {
     console.error('Database connection test failed:', error)
     return {
       supabase: false,
-      drizzle: false,
       success: false,
       error: error.message
     }
