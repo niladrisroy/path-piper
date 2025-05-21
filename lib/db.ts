@@ -8,10 +8,12 @@ if (!process.env.POSTGRES_URL) {
 }
 
 // Configure postgres client for Supabase connection with pooling
-const client = postgres(process.env.POSTGRES_URL!, {
+const connectionString = process.env.POSTGRES_URL!;
+const client = postgres(connectionString, {
   max: 1,
   idle_timeout: 20,
   connect_timeout: 30,
+  ssl: true,
   connection: {
     options: {
       ssl: 'require'
