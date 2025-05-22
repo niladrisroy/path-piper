@@ -111,7 +111,7 @@ export async function registerUser(data: UserRegistrationData) {
       const { error: studentError } = await supabase
         .from('student_profiles')
         .insert([{
-            user_id: authData.user.id,
+            id: authData.user.id,
             birth_month: parseInt(data.birthMonth),
             birth_year: parseInt(data.birthYear),
             onboarding_completed: false
