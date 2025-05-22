@@ -1,4 +1,3 @@
-
 import { supabase } from '../supabase'
 import { calculateAge } from '../utils'
 import { sendEmail } from '../email'
@@ -43,7 +42,7 @@ async function sendParentApprovalEmail(studentEmail: string, parentEmail: string
 export async function registerUser(data: UserRegistrationData) {
   try {
     console.log('Starting user registration process for:', data.email)
-    
+
     // Check if email exists
     const emailExists = await checkEmailExists(data.email)
     if (emailExists) {
@@ -112,22 +111,32 @@ export async function registerUser(data: UserRegistrationData) {
       const { error: studentError } = await supabase
         .from('student_profiles')
         .insert([{
-          user_id: authData.user.id,
-          birth_month: parseInt(data.birthMonth),
-          birth_year: parseInt(data.birthYear),
-          parent_email: needsParentApproval ? data.parentEmail : null,
-          parent_approval_status: needsParentApproval ? 'pending' : 'not_required',
-          onboarding_completed: false
-        }])
+            user_id: authData.user.id,
+            birth_month: parseInt(data.birthMonth),
+            birth_year: parseInt(data.birthYear),
+            onboarding_completed: false
+          }]);
 
-      if (studentError) {
-        console.error('Registration failed: Student profile creation error:', studentError)
-        throw studentError
-      }
+        if (studentError) {
+          console.error('Student profile insert error:', studentError);
+          throw studentError;
+        }
 
-      console.log('Student profile created successfully')
+        // Create parent relation if needed
+        if (needsParentApproval && data.parentEmail) {
+          const { error: parentRelationError } = await supabase
+            .from('parent_child_relations')
+            .insert([{
+              student_id: authData.user.id,
+              parent_email: data.parentEmail,
+              approval_status: 'pending'
+            }]);
 
-      if (needsParentApproval && data.parentEmail) {
+          if (parentRelationError) {
+            console.error('Parent relation insert error:', parentRelationError);
+            throw parentRelationError;
+          }
+
         try {
           await sendParentApprovalEmail(data.email, data.parentEmail)
           console.log('Parent approval email sent successfully')
