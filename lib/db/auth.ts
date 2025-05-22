@@ -1,4 +1,3 @@
-
 import { supabase } from '../supabase'
 import { calculateAge } from '../utils'
 
@@ -11,6 +10,8 @@ export type UserRegistrationData = {
   birthMonth?: string
   birthYear?: string
   parentEmail?: string
+  profession?: string
+  organization?: string
 }
 
 export async function checkEmailExists(email: string) {
@@ -32,7 +33,7 @@ import { sendEmail } from '../email';
 export async function sendParentApprovalEmail(studentName: string, studentEmail: string, parentEmail: string) {
   const approvalToken = Buffer.from(`${studentEmail}:${Date.now()}`).toString('base64');
   const approvalLink = `${process.env.NEXT_PUBLIC_APP_URL}/approve-student?token=${approvalToken}`;
-  
+
   return sendEmail('parent-approval', parentEmail, {
     studentName,
     approvalLink
@@ -41,7 +42,7 @@ export async function sendParentApprovalEmail(studentName: string, studentEmail:
 
 export async function sendVerificationEmail(userName: string, email: string, token: string) {
   const verificationLink = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${token}`;
-  
+
   return sendEmail('verification', email, {
     userName,
     verificationLink
@@ -120,7 +121,26 @@ export async function registerUser(data: UserRegistrationData) {
         }
       }
 
-      return { success: true, user: authData.user }
+      // If mentor, store additional info
+      if (data.role === 'mentor') {
+        const { error: mentorError } = await supabase
+          .from('mentor_profiles')
+          .insert([{
+            id: authData.user.id,
+            profession: data.profession,
+            organization: data.organization || null,
+            onboarding_completed: false
+          }])
+
+        if (mentorError) throw mentorError
+
+        return { success: true, user: authData.user }
+      }
+
+      // If institution, store additional info
+      if (data.role === 'institution') {
+        // Similar logic for institution if needed
+      }
     }
 
     throw new Error('Failed to create user')
