@@ -1,10 +1,13 @@
 
 import { Resend } from 'resend';
 
-if (!process.env.RESEND_API_KEY) {
-  console.error('Missing RESEND_API_KEY environment variable');
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+
+if (!RESEND_API_KEY) {
+  throw new Error('Missing RESEND_API_KEY environment variable. Please check your Secrets configuration.');
 }
-const resend = new Resend(process.env.RESEND_API_KEY);
+
+const resend = new Resend(RESEND_API_KEY);
 
 export type EmailTemplate = 'verification' | 'parent-approval';
 
