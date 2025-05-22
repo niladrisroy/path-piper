@@ -4,10 +4,16 @@ import { Resend } from 'resend';
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
 if (!RESEND_API_KEY) {
-  console.error('Missing RESEND_API_KEY environment variable. Please check your Secrets configuration.');
+  console.warn('Missing RESEND_API_KEY environment variable. Email functionality will be limited.');
 }
 
-const resend = new Resend(RESEND_API_KEY || 'dummy_key');
+const resend = new Resend(RESEND_API_KEY);
+
+// Mock email sending for development if API key is missing
+async function mockSendEmail() {
+  console.log('Email sending mocked due to missing API key');
+  return { success: true, data: { id: 'mocked_id' } };
+}
 
 export type EmailTemplate = 'verification' | 'parent-approval';
 
