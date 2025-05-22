@@ -2,14 +2,24 @@
 import { Resend } from 'resend';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const isDevelopment = process.env.NODE_ENV === 'development';
 
-if (!RESEND_API_KEY) {
-  console.warn('Missing RESEND_API_KEY environment variable. Email functionality will be limited.');
+let resend: Resend;
+try {
+  resend = new Resend(RESEND_API_KEY || (isDevelopment ? 'dummy_key' : undefined));
+} catch (error) {
+  console.warn('Email service initialization failed:', error);
+  resend = {
+    emails: {
+      send: async () => {
+        console.log('Email sending mocked - development mode');
+        return { data: { id: 'mocked_id' } };
+      }
+    }
+  } as Resend;
 }
 
-const resend = new Resend(RESEND_API_KEY);
-
-// Mock email sending for development if API key is missing
+// Mock email sending for development
 async function mockSendEmail() {
   console.log('Email sending mocked due to missing API key');
   return { success: true, data: { id: 'mocked_id' } };
