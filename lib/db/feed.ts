@@ -1,4 +1,6 @@
 
+'use server'
+
 import { prisma } from '../prisma'
 
 export async function getFeedPosts() {

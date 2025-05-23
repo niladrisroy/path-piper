@@ -1,51 +1,61 @@
 
+'use server'
+
 import { prisma } from '../prisma'
 
-export async function getInstitutionProfile(id: string) {
+export async function getInstitutions(limit = 10) {
   try {
-    const profile = await prisma.institutionProfile.findUnique({
-      where: {
-        id: id
+    const institutions = await prisma.institutionProfile.findMany({
+      take: limit,
+      include: {
+        profile: true
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
     })
 
-    if (!profile) return null
+    return institutions.map(institution => ({
+      id: institution.id,
+      name: institution.institutionName,
+      type: institution.institutionType,
+      location: institution.profile.location || 'Unknown location',
+      logo: institution.profile.profileImageUrl || '/placeholder-logo.png',
+      verified: institution.verified
+    }))
+  } catch (error) {
+    console.error('Error fetching institutions:', error)
+    return []
+  }
+}
 
-    // This is a placeholder for fetching related data
-    // You would need to create models for events, gallery, and programs in your Prisma schema
-    // For now, we'll just return counts and empty arrays
-    
-    // Assuming you have these models defined in your Prisma schema
-    const [eventsCount, programsCount, galleryCount] = await Promise.all([
-      prisma.$queryRaw`SELECT COUNT(*) FROM institution_events WHERE institution_id = ${id}`,
-      prisma.$queryRaw`SELECT COUNT(*) FROM institution_programs WHERE institution_id = ${id}`,
-      prisma.$queryRaw`SELECT COUNT(*) FROM institution_gallery WHERE institution_id = ${id}`
-    ])
+export async function getInstitutionById(id: string) {
+  try {
+    const institution = await prisma.institutionProfile.findUnique({
+      where: { id },
+      include: {
+        profile: true
+      }
+    })
 
-    // You would need to implement these fetches based on your actual Prisma schema
-    // const events = await prisma.institutionEvent.findMany({ where: { institutionId: id } })
-    // const gallery = await prisma.institutionGallery.findMany({ where: { institutionId: id } })
-    // const programs = await prisma.institutionProgram.findMany({ where: { institutionId: id } })
+    if (!institution) {
+      return null
+    }
 
     return {
-      institution: {
-        name: profile.institutionName,
-        type: profile.institutionType,
-        stats: {
-          events: Number(eventsCount[0]?.count || 0),
-          programs: Number(programsCount[0]?.count || 0),
-          gallery: Number(galleryCount[0]?.count || 0)
-        },
-        contact: {
-          website: profile.website
-        }
-      },
-      events: [],  // Replace with actual events when implemented
-      gallery: [], // Replace with actual gallery when implemented
-      programs: [] // Replace with actual programs when implemented
+      id: institution.id,
+      name: institution.institutionName,
+      type: institution.institutionType,
+      category: institution.category,
+      location: institution.profile.location || 'Unknown location',
+      bio: institution.profile.bio || '',
+      logo: institution.profile.profileImageUrl || '/placeholder-logo.png',
+      coverImage: institution.coverImageUrl || '/university-classroom.png',
+      website: institution.website || '',
+      verified: institution.verified
     }
   } catch (error) {
-    console.error('Error fetching institution profile:', error)
+    console.error(`Error fetching institution ${id}:`, error)
     return null
   }
 }

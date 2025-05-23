@@ -1,100 +1,123 @@
 
+'use server'
+
 import { prisma } from '@/lib/prisma'
 import { calculateAge } from '@/lib/utils'
 import { sendEmail } from '@/lib/email'
-// We still need supabase for auth, but not for database operations
-import { supabase } from '@/lib/supabase'
 
-export type UserRegistrationData = {
-  email: string
-  password: string
+export interface UserRegistrationData {
   firstName: string
   lastName: string
-  role: 'student' | 'mentor' | 'institution'
+  email: string
+  password: string
   birthMonth?: string
   birthYear?: string
   parentEmail?: string
+  role: 'student' | 'mentor' | 'institution'
 }
 
 export async function registerStudent(data: UserRegistrationData) {
   try {
-    // First create Supabase auth user (keep this as it's auth, not database)
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        data: {
-          first_name: data.firstName,
-          last_name: data.lastName,
-          role: 'student'
-        }
-      }
-    })
+    const age = data.birthYear ? calculateAge(parseInt(data.birthYear)) : null;
+    const needsParentApproval = age !== null && age < 16;
 
-    if (authError) {
-      console.error('Auth registration failed:', authError)
-      return { success: false, error: authError.message }
-    }
-
-    if (!authData.user) {
-      return { success: false, error: 'Auth user creation failed' }
-    }
-
-    // Create profile with auth user ID using Prisma
+    // Create user profile
     const profile = await prisma.profile.create({
       data: {
-        id: authData.user.id,
+        id: crypto.randomUUID(), // Generate a UUID for the user 
         firstName: data.firstName,
         lastName: data.lastName,
         role: 'student',
       }
-    })
+    });
 
-    // Calculate age if birth date is provided
-    let needsParentApproval = false
-    if (data.birthMonth && data.birthYear) {
-      const birthDate = new Date(
-        parseInt(data.birthYear),
-        parseInt(data.birthMonth) - 1
-      )
-      const age = calculateAge(birthDate)
-      needsParentApproval = age < 16
-    }
-
-    // Create student profile using Prisma
-    const studentProfile = await prisma.studentProfile.create({
+    // Create student profile
+    await prisma.studentProfile.create({
       data: {
-        id: authData.user.id,
-        ageGroup: 'young_adult',
-        educationLevel: 'high_school',
-        parentEmail: needsParentApproval ? data.parentEmail : null,
+        id: profile.id,
+        ageGroup: 'young-adult', // You may want to determine this based on age
+        educationLevel: 'undergraduate', // Default value, can be updated later
+        parentEmail: data.parentEmail || null,
         parentVerified: false,
+        onboardingCompleted: false
       }
-    })
+    });
 
-    // Send verification email to parent if needed
-    if (needsParentApproval && data.parentEmail) {
-      try {
-        await sendEmail('parent-approval', data.parentEmail, {
-          studentEmail: data.email,
-          studentName: `${data.firstName} ${data.lastName}`
-        })
-      } catch (error) {
-        console.error('Failed to send parent approval email:', error)
+    // Send verification email logic goes here
+    // if (needsParentApproval && data.parentEmail) {
+    //   await sendEmail({
+    //     to: data.parentEmail,
+    //     subject: 'Parental Approval Required',
+    //     text: `Your child ${data.firstName} has signed up for PathPiper and requires your approval.`
+    //   });
+    // }
+
+    return { success: true, needsParentApproval, parentEmail: data.parentEmail };
+    
+  } catch (error) {
+    console.error('Registration failed:', error);
+    return { success: false, error: (error as Error).message || 'Registration failed' };
+  }
+}
+
+export async function registerMentor(data: UserRegistrationData) {
+  try {
+    // Create user profile
+    const profile = await prisma.profile.create({
+      data: {
+        id: crypto.randomUUID(), // Generate a UUID for the user
+        firstName: data.firstName,
+        lastName: data.lastName,
+        role: 'mentor',
       }
-    }
+    });
 
-    return {
-      success: true,
-      needsParentApproval,
-      parentEmail: data.parentEmail
-    }
+    // Create mentor profile
+    await prisma.mentorProfile.create({
+      data: {
+        id: profile.id,
+        profession: 'Not specified', // Default value
+        verified: false,
+        onboardingCompleted: false
+      }
+    });
 
-  } catch (error: any) {
-    console.error('Registration failed:', error)
-    return {
-      success: false,
-      error: error.message || 'Registration failed'
-    }
+    return { success: true };
+    
+  } catch (error) {
+    console.error('Registration failed:', error);
+    return { success: false, error: (error as Error).message || 'Registration failed' };
+  }
+}
+
+export async function registerInstitution(data: UserRegistrationData) {
+  try {
+    // Create user profile
+    const profile = await prisma.profile.create({
+      data: {
+        id: crypto.randomUUID(), // Generate a UUID for the user
+        firstName: data.firstName,
+        lastName: data.lastName,
+        role: 'institution',
+      }
+    });
+
+    // Create institution profile
+    await prisma.institutionProfile.create({
+      data: {
+        id: profile.id,
+        institutionName: data.firstName + ' ' + data.lastName, // Temporary, update during onboarding
+        institutionType: 'Not specified',
+        category: 'Not specified',
+        verified: false,
+        onboardingCompleted: false
+      }
+    });
+
+    return { success: true };
+    
+  } catch (error) {
+    console.error('Registration failed:', error);
+    return { success: false, error: (error as Error).message || 'Registration failed' };
   }
 }
