@@ -4,6 +4,12 @@
 import { prisma } from '@/lib/prisma'
 import { calculateAge } from '@/lib/utils'
 import { sendEmail } from '@/lib/email'
+import { createClient } from '@supabase/supabase-js'
+
+// Initialize Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export interface UserRegistrationData {
   firstName: string
@@ -21,10 +27,26 @@ export async function registerStudent(data: UserRegistrationData) {
     const age = data.birthYear ? calculateAge(parseInt(data.birthYear)) : null;
     const needsParentApproval = age !== null && age < 16;
 
-    // Create user profile
+    // First create the user in Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: data.email,
+      password: data.password,
+      email_confirm: true,
+      user_metadata: {
+        first_name: data.firstName,
+        last_name: data.lastName,
+        role: 'student'
+      }
+    });
+
+    if (authError || !authData.user) {
+      throw new Error(authError?.message || 'Failed to create user account');
+    }
+
+    // Create user profile with the Supabase user ID
     const profile = await prisma.profile.create({
       data: {
-        id: crypto.randomUUID(), // Generate a UUID for the user 
+        id: authData.user.id,
         firstName: data.firstName,
         lastName: data.lastName,
         role: 'student',
@@ -35,7 +57,7 @@ export async function registerStudent(data: UserRegistrationData) {
     await prisma.studentProfile.create({
       data: {
         id: profile.id,
-        ageGroup: 'young-adult', // You may want to determine this based on age
+        ageGroup: 'young_adult', // You may want to determine this based on age
         educationLevel: 'undergraduate', // Default value, can be updated later
         parentEmail: data.parentEmail || null,
         parentVerified: false,
@@ -52,7 +74,7 @@ export async function registerStudent(data: UserRegistrationData) {
     //   });
     // }
 
-    return { success: true, needsParentApproval, parentEmail: data.parentEmail };
+    return { success: true, needsParentApproval, parentEmail: data.parentEmail, userId: authData.user.id };
     
   } catch (error) {
     console.error('Registration failed:', error);
@@ -62,10 +84,26 @@ export async function registerStudent(data: UserRegistrationData) {
 
 export async function registerMentor(data: UserRegistrationData) {
   try {
-    // Create user profile
+    // First create the user in Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: data.email,
+      password: data.password,
+      email_confirm: true,
+      user_metadata: {
+        first_name: data.firstName,
+        last_name: data.lastName,
+        role: 'mentor'
+      }
+    });
+
+    if (authError || !authData.user) {
+      throw new Error(authError?.message || 'Failed to create user account');
+    }
+
+    // Create user profile with the Supabase user ID
     const profile = await prisma.profile.create({
       data: {
-        id: crypto.randomUUID(), // Generate a UUID for the user
+        id: authData.user.id,
         firstName: data.firstName,
         lastName: data.lastName,
         role: 'mentor',
@@ -82,7 +120,7 @@ export async function registerMentor(data: UserRegistrationData) {
       }
     });
 
-    return { success: true };
+    return { success: true, userId: authData.user.id };
     
   } catch (error) {
     console.error('Registration failed:', error);
@@ -92,10 +130,26 @@ export async function registerMentor(data: UserRegistrationData) {
 
 export async function registerInstitution(data: UserRegistrationData) {
   try {
-    // Create user profile
+    // First create the user in Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: data.email,
+      password: data.password,
+      email_confirm: true,
+      user_metadata: {
+        first_name: data.firstName,
+        last_name: data.lastName,
+        role: 'institution'
+      }
+    });
+
+    if (authError || !authData.user) {
+      throw new Error(authError?.message || 'Failed to create user account');
+    }
+
+    // Create user profile with the Supabase user ID
     const profile = await prisma.profile.create({
       data: {
-        id: crypto.randomUUID(), // Generate a UUID for the user
+        id: authData.user.id,
         firstName: data.firstName,
         lastName: data.lastName,
         role: 'institution',
@@ -114,7 +168,7 @@ export async function registerInstitution(data: UserRegistrationData) {
       }
     });
 
-    return { success: true };
+    return { success: true, userId: authData.user.id };
     
   } catch (error) {
     console.error('Registration failed:', error);
