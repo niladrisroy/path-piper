@@ -1,13 +1,10 @@
 
-import { supabase } from './supabase'
+import { prisma } from './prisma'
 
 export async function testConnection() {
   try {
-    // Test raw connection first
     // Test connection by querying the profiles table
-    const { data, error } = await supabase.from('profiles').select('count')
-    if (error) throw error
-    
+    const count = await prisma.profile.count()
     console.log('Database connection successful')
     return true
   } catch (error) {
@@ -18,14 +15,13 @@ export async function testConnection() {
 
 export async function getUser(userId: string) {
   try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single()
+    const user = await prisma.profile.findUnique({
+      where: {
+        id: userId
+      }
+    })
     
-    if (error) throw error
-    return data
+    return user
   } catch (error) {
     console.error('Error fetching user:', error)
     return null
@@ -34,14 +30,29 @@ export async function getUser(userId: string) {
 
 export async function getUserProfile(userId: string, type: 'student' | 'mentor' | 'institution') {
   try {
-    const { data, error } = await supabase
-      .from(`${type}_profiles`)
-      .select('*')
-      .eq('user_id', userId)
-      .single()
+    let profile = null
     
-    if (error) throw error
-    return data
+    if (type === 'student') {
+      profile = await prisma.studentProfile.findUnique({
+        where: {
+          id: userId
+        }
+      })
+    } else if (type === 'mentor') {
+      profile = await prisma.mentorProfile.findUnique({
+        where: {
+          id: userId
+        }
+      })
+    } else if (type === 'institution') {
+      profile = await prisma.institutionProfile.findUnique({
+        where: {
+          id: userId
+        }
+      })
+    }
+    
+    return profile
   } catch (error) {
     console.error(`Error fetching ${type} profile:`, error)
     return null

@@ -2,6 +2,7 @@
 import { prisma } from '@/lib/prisma'
 import { calculateAge } from '@/lib/utils'
 import { sendEmail } from '@/lib/email'
+// We still need supabase for auth, but not for database operations
 import { supabase } from '@/lib/supabase'
 
 export type UserRegistrationData = {
@@ -17,7 +18,7 @@ export type UserRegistrationData = {
 
 export async function registerStudent(data: UserRegistrationData) {
   try {
-    // First create Supabase auth user
+    // First create Supabase auth user (keep this as it's auth, not database)
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
@@ -39,7 +40,7 @@ export async function registerStudent(data: UserRegistrationData) {
       return { success: false, error: 'Auth user creation failed' }
     }
 
-    // Create profile with auth user ID
+    // Create profile with auth user ID using Prisma
     const profile = await prisma.profile.create({
       data: {
         id: authData.user.id,
@@ -60,7 +61,7 @@ export async function registerStudent(data: UserRegistrationData) {
       needsParentApproval = age < 16
     }
 
-    // Create student profile
+    // Create student profile using Prisma
     const studentProfile = await prisma.studentProfile.create({
       data: {
         id: authData.user.id,

@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 
 export default function StatusPage() {
   const [prismaStatus, setPrismaStatus] = useState<boolean | null>(null)
-  const [supabaseStatus, setSupabaseStatus] = useState<boolean | null>(null)
   const [loading, setLoading] = useState(false)
 
   const checkConnections = async () => {
@@ -16,11 +15,9 @@ export default function StatusPage() {
       const response = await fetch('/api/status')
       const data = await response.json()
       setPrismaStatus(data.prismaConnected)
-      setSupabaseStatus(data.supabaseConnected)
     } catch (error) {
       console.error('Error checking connections:', error)
       setPrismaStatus(false)
-      setSupabaseStatus(false)
     }
     setLoading(false)
   }
@@ -42,18 +39,6 @@ export default function StatusPage() {
             }`} />
             <span>{prismaStatus === null ? 'Checking...' : 
                    prismaStatus ? 'Connected' : 'Disconnected'}</span>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-2">Supabase Status</h2>
-          <div className="flex items-center gap-2">
-            <div className={`w-3 h-3 rounded-full ${
-              supabaseStatus === null ? 'bg-gray-400' :
-              supabaseStatus ? 'bg-green-500' : 'bg-red-500'
-            }`} />
-            <span>{supabaseStatus === null ? 'Checking...' : 
-                   supabaseStatus ? 'Connected' : 'Disconnected'}</span>
           </div>
         </Card>
 
