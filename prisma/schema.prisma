@@ -13,24 +13,37 @@ enum UserRole {
   student
   mentor
   institution
+
+  @@map("user_role")
+}
+
+/// This model maps to the enum in the database
+model UserRoleEnum {
+  name String @id @map("name")
+  
+  @@map("user_role")
 }
 
 enum AgeGroup {
-  early_childhood
+  early_childhood @map("early-childhood")
   elementary
-  middle_school
-  high_school
-  young_adult
+  middle_school @map("middle-school")
+  high_school @map("high-school")
+  young_adult @map("young-adult")
+
+  @@map("age_group")
 }
 
 enum EducationLevel {
-  pre_school
+  pre_school @map("pre_school")
   school
-  high_school
+  high_school @map("high_school")
   undergraduate
   graduate
-  post_graduate
+  post_graduate @map("post_graduate")
   phd
+
+  @@map("education_level")
 }
 
 model Profile {
