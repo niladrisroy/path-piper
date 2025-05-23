@@ -91,7 +91,10 @@ export default function Login() {
       
       // Navigation based on user role and onboarding status
       setTimeout(() => {
-        if (!result.onboardingCompleted) {
+        if (result.onboardingCompleted) {
+          // If onboarding is completed, go to feed
+          router.push('/feed');
+        } else {
           // If onboarding not completed, direct to appropriate onboarding page
           if (result.role === 'mentor') {
             router.push('/mentor-onboarding');
@@ -101,9 +104,6 @@ export default function Login() {
             // Default to student onboarding
             router.push('/onboarding');
           }
-        } else {
-          // If onboarding completed, go to feed
-          router.push('/feed');
         }
       }, 800); // Small delay to allow the toast to be visible
     } catch (error) {
