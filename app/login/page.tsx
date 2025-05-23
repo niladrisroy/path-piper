@@ -46,6 +46,9 @@ export default function Login() {
     }
   }, [])
 
+  // Import toast
+  import { toast } from "sonner"
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -65,30 +68,49 @@ export default function Login() {
       const result = await response.json();
       
       if (!result.success) {
-        // Show error message
-        alert(result.error || 'Login failed. Please check your credentials.');
+        // Show error toast instead of alert
+        toast.error(result.error || 'Login failed. Please check your credentials.');
         setIsLoading(false);
         return;
       }
       
-      // Navigation based on user role and onboarding status
-      if (!result.onboardingCompleted) {
-        // If onboarding not completed, direct to appropriate onboarding page
-        if (result.role === 'mentor') {
-          router.push('/mentor-onboarding');
-        } else if (result.role === 'institution') {
-          router.push('/institution-onboarding');
-        } else {
-          // Default to student onboarding
-          router.push('/onboarding');
-        }
-      } else {
-        // If onboarding completed, go to feed
-        router.push('/feed');
+      // Show success toast
+      toast.success(`Welcome back${result.name ? ', ' + result.name : ''}!`);
+      
+      // Save user data to localStorage or sessionStorage if needed
+      // This can be useful to maintain user state across the app
+      try {
+        sessionStorage.setItem('user', JSON.stringify({
+          userId: result.userId,
+          email: result.email,
+          role: result.role,
+          name: result.name,
+          onboardingCompleted: result.onboardingCompleted
+        }));
+      } catch (err) {
+        console.warn("Could not save user data to session storage:", err);
       }
+      
+      // Navigation based on user role and onboarding status
+      setTimeout(() => {
+        if (!result.onboardingCompleted) {
+          // If onboarding not completed, direct to appropriate onboarding page
+          if (result.role === 'mentor') {
+            router.push('/mentor-onboarding');
+          } else if (result.role === 'institution') {
+            router.push('/institution-onboarding');
+          } else {
+            // Default to student onboarding
+            router.push('/onboarding');
+          }
+        } else {
+          // If onboarding completed, go to feed
+          router.push('/feed');
+        }
+      }, 800); // Small delay to allow the toast to be visible
     } catch (error) {
       console.error('Login error:', error);
-      alert('An error occurred during login. Please try again.');
+      toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }

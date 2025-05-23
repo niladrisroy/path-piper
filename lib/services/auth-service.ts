@@ -200,9 +200,15 @@ export async function loginUser(data: LoginData) {
       throw new Error('No user returned from login');
     }
 
-    // Get user's profile to determine their role
+    // Get user's profile with a single optimized query
+    // Include the specific profile type based on role to get onboarding status in one query
     const profile = await prisma.profile.findUnique({
       where: { id: authData.user.id },
+      include: {
+        studentProfile: true,
+        mentorProfile: true,
+        institutionProfile: true,
+      },
     });
 
     if (!profile) {
@@ -215,23 +221,14 @@ export async function loginUser(data: LoginData) {
       };
     }
 
-    // Check if onboarding is completed based on role
+    // Get onboarding status from the included profile data
     let onboardingCompleted = false;
-    if (profile.role === 'student') {
-      const studentProfile = await prisma.studentProfile.findUnique({
-        where: { id: profile.id },
-      });
-      onboardingCompleted = studentProfile?.onboardingCompleted || false;
-    } else if (profile.role === 'mentor') {
-      const mentorProfile = await prisma.mentorProfile.findUnique({
-        where: { id: profile.id },
-      });
-      onboardingCompleted = mentorProfile?.onboardingCompleted || false;
-    } else if (profile.role === 'institution') {
-      const institutionProfile = await prisma.institutionProfile.findUnique({
-        where: { id: profile.id },
-      });
-      onboardingCompleted = institutionProfile?.onboardingCompleted || false;
+    if (profile.role === 'student' && profile.studentProfile) {
+      onboardingCompleted = profile.studentProfile.onboardingCompleted || false;
+    } else if (profile.role === 'mentor' && profile.mentorProfile) {
+      onboardingCompleted = profile.mentorProfile.onboardingCompleted || false;
+    } else if (profile.role === 'institution' && profile.institutionProfile) {
+      onboardingCompleted = profile.institutionProfile.onboardingCompleted || false;
     }
 
     return { 

@@ -24,7 +24,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         role: result.role,
-        onboardingCompleted: result.onboardingCompleted
+        onboardingCompleted: result.onboardingCompleted,
+        userId: result.user.id,
+        email: result.user.email,
+        name: `${result.user.user_metadata?.first_name || ''} ${result.user.user_metadata?.last_name || ''}`.trim()
       });
     }
 
