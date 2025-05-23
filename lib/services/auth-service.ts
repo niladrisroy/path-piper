@@ -6,7 +6,7 @@ import { calculateAge } from '@/lib/utils'
 import { sendEmail } from '@/lib/email'
 import { createClient } from '@supabase/supabase-js'
 
-// Initialize Supabase client
+// Initialize Supabase client - ONLY for auth operations
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
@@ -27,7 +27,7 @@ export async function registerStudent(data: UserRegistrationData) {
     const age = data.birthYear ? calculateAge(parseInt(data.birthYear)) : null;
     const needsParentApproval = age !== null && age < 16;
 
-    // First create the user in Supabase Auth
+    // Step 1: Use Supabase for auth only - create user in Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: data.email,
       password: data.password,
@@ -43,6 +43,7 @@ export async function registerStudent(data: UserRegistrationData) {
       throw new Error(authError?.message || 'Failed to create user account');
     }
 
+    // Step 2: Use Prisma for all database operations
     // Create user profile with the Supabase user ID
     const profile = await prisma.profile.create({
       data: {
@@ -84,7 +85,7 @@ export async function registerStudent(data: UserRegistrationData) {
 
 export async function registerMentor(data: UserRegistrationData) {
   try {
-    // First create the user in Supabase Auth
+    // Step 1: Use Supabase for auth only - create user in Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: data.email,
       password: data.password,
@@ -100,6 +101,7 @@ export async function registerMentor(data: UserRegistrationData) {
       throw new Error(authError?.message || 'Failed to create user account');
     }
 
+    // Step 2: Use Prisma for all database operations
     // Create user profile with the Supabase user ID
     const profile = await prisma.profile.create({
       data: {
@@ -130,7 +132,7 @@ export async function registerMentor(data: UserRegistrationData) {
 
 export async function registerInstitution(data: UserRegistrationData) {
   try {
-    // First create the user in Supabase Auth
+    // Step 1: Use Supabase for auth only - create user in Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: data.email,
       password: data.password,
@@ -146,6 +148,7 @@ export async function registerInstitution(data: UserRegistrationData) {
       throw new Error(authError?.message || 'Failed to create user account');
     }
 
+    // Step 2: Use Prisma for all database operations
     // Create user profile with the Supabase user ID
     const profile = await prisma.profile.create({
       data: {
