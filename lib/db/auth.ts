@@ -76,11 +76,17 @@ export async function registerUser(data: UserRegistrationData) {
 
     console.log('Auth user created successfully:', authData.user.id)
 
+    // Set auth context for subsequent operations
+    supabase.auth.setSession({
+      access_token: authData.session?.access_token || '',
+      refresh_token: authData.session?.refresh_token || ''
+    });
+
     // Create profile with auth user ID
     const { error: profileError } = await supabase
       .from('profiles')
       .insert({
-        id: authData.user.id, // Use auth user ID directly
+        id: authData.user.id,
         first_name: data.firstName,
         last_name: data.lastName,
         email: data.email,
