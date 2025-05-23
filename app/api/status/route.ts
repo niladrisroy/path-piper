@@ -10,7 +10,7 @@ export async function GET() {
   // Check Prisma connection
   try {
     // Test query to check connection
-    await prisma.$queryRaw`SELECT 1 as result`
+    await prisma.profile.count()
     prismaConnected = true
   } catch (error) {
     console.error('Prisma connection failed:', error)
