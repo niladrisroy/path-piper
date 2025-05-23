@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Eye, EyeOff, Info, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { registerUser } from "@/lib/db/auth"
+import { registerStudent } from "@/lib/services/auth-service"
 
 interface StudentRegistrationProps {
   onComplete: (isUnder16: boolean) => void
@@ -92,7 +92,7 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
     setError(null)
 
     try {
-      const result = await registerUser({
+      const result = await registerStudent({
         email: formData.email,
         password: formData.password,
         firstName: formData.firstName,
