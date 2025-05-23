@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { EyeIcon, EyeOffIcon } from "lucide-react"
 import { motion } from "framer-motion"
+import { toast } from "sonner"
 
 export default function Login() {
   const router = useRouter()
@@ -45,9 +46,6 @@ export default function Login() {
       }
     }
   }, [])
-
-  // Import toast
-  import { toast } from "sonner"
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
