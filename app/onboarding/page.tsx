@@ -150,19 +150,19 @@ export default function OnboardingPage() {
         const completed: Record<string, boolean> = {}
         
         if (profile.first_name && profile.last_name) {
-          completed.personalInfo = true
+          completed["personalInfo"] = true
         }
         
         if (interests.length > 0) {
-          completed.interests = true
+          completed["interests"] = true
         }
         
         if (goals.length > 0) {
-          completed.goals = true
+          completed["goals"] = true
         }
         
         if (skills.length > 0) {
-          completed.skills = true
+          completed["skills"] = true
         }
         
         setCompletedSteps(completed)
