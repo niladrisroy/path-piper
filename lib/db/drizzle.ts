@@ -1,20 +1,14 @@
 
 import { drizzle } from 'drizzle-orm/node-postgres';
-import postgres from 'pg';
+import { Pool } from '@neondatabase/serverless';
 import * as schema from './schema-drizzle';
-
-const { Pool } = postgres;
 
 const connectionString = process.env.DATABASE_URL;
 
-const pool = new Pool({
-  connectionString,
-  connectionTimeoutMillis: 5000,
-  ssl: process.env.NODE_ENV === 'production' 
-    ? { rejectUnauthorized: false } 
-    : false,
-  keepAlive: true,
-  max: 20
-});
+if (!connectionString) {
+  throw new Error('DATABASE_URL environment variable is not set');
+}
+
+const pool = new Pool({ connectionString });
 
 export const db = drizzle(pool, { schema });
