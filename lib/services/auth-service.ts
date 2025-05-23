@@ -205,9 +205,9 @@ export async function loginUser(data: LoginData) {
     const profile = await prisma.profile.findUnique({
       where: { id: authData.user.id },
       include: {
-        studentProfile: true,
-        mentorProfile: true,
-        institutionProfile: true,
+        student: true,
+        mentor: true,
+        institution: true,
       },
     });
 
@@ -223,12 +223,12 @@ export async function loginUser(data: LoginData) {
 
     // Get onboarding status from the included profile data
     let onboardingCompleted = false;
-    if (profile.role === 'student' && profile.studentProfile) {
-      onboardingCompleted = profile.studentProfile.onboardingCompleted || false;
-    } else if (profile.role === 'mentor' && profile.mentorProfile) {
-      onboardingCompleted = profile.mentorProfile.onboardingCompleted || false;
-    } else if (profile.role === 'institution' && profile.institutionProfile) {
-      onboardingCompleted = profile.institutionProfile.onboardingCompleted || false;
+    if (profile.role === 'student' && profile.student) {
+      onboardingCompleted = profile.student.onboardingCompleted || false;
+    } else if (profile.role === 'mentor' && profile.mentor) {
+      onboardingCompleted = profile.mentor.onboardingCompleted || false;
+    } else if (profile.role === 'institution' && profile.institution) {
+      onboardingCompleted = profile.institution.onboardingCompleted || false;
     }
 
     return { 
