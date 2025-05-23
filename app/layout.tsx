@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={`font-sans ${nunito.variable}`}>
+      <body className={`font-sans ${nunito.variable} notebook-bg`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

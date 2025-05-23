@@ -103,6 +103,47 @@ html {
 
 /* Teal to blue gradient for buttons and accents */
 .gradient-teal-blue {
+
+/* Notebook-style checkered pattern background */
+.notebook-bg {
+  position: relative;
+}
+
+.notebook-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(to right, rgba(59, 130, 246, 0.2) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(59, 130, 246, 0.2) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: center center;
+  opacity: 0.25;
+  z-index: 0;
+}
+
+.notebook-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(to right, rgba(59, 130, 246, 0.3) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(59, 130, 246, 0.3) 1px, transparent 1px);
+  background-size: 100px 100px;
+  background-position: center center;
+  opacity: 0.3;
+  z-index: 0;
+}
+
+.notebook-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
   @apply bg-gradient-to-b from-pathpiper-teal to-pathpiper-blue;
 }
 
