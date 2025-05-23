@@ -1,0 +1,113 @@
+
+// This is your Prisma schema file
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  student
+  mentor
+  institution
+}
+
+enum AgeGroup {
+  early_childhood
+  elementary
+  middle_school
+  high_school
+  young_adult
+}
+
+enum EducationLevel {
+  pre_school
+  school
+  high_school
+  undergraduate
+  graduate
+  post_graduate
+  phd
+}
+
+model Profile {
+  id              String    @id @db.Uuid
+  role            UserRole
+  firstName       String    @map("first_name")
+  lastName        String    @map("last_name")
+  bio             String?
+  location        String?
+  profileImageUrl String?   @map("profile_image_url")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  student         StudentProfile?
+  mentor          MentorProfile?
+  institution     InstitutionProfile?
+  posts           FeedPost[]
+
+  @@map("profiles")
+}
+
+model StudentProfile {
+  id                  String         @id @db.Uuid
+  profile             Profile        @relation(fields: [id], references: [id])
+  ageGroup            AgeGroup       @map("age_group")
+  educationLevel      EducationLevel @map("education_level")
+  parentEmail         String?        @map("parent_email")
+  parentVerified      Boolean        @default(false) @map("parent_verified")
+  onboardingCompleted Boolean        @default(false) @map("onboarding_completed")
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
+
+  @@map("student_profiles")
+}
+
+model MentorProfile {
+  id                  String    @id @db.Uuid
+  profile             Profile   @relation(fields: [id], references: [id])
+  profession          String
+  organization        String?
+  yearsExperience     Int?      @map("years_experience")
+  verified            Boolean   @default(false)
+  onboardingCompleted Boolean   @default(false) @map("onboarding_completed")
+  hoursPerWeek        Int       @default(5) @map("hours_per_week")
+  maxMentees          Int       @default(1) @map("max_mentees")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  @@map("mentor_profiles")
+}
+
+model InstitutionProfile {
+  id                  String    @id @db.Uuid
+  profile             Profile   @relation(fields: [id], references: [id])
+  institutionName     String    @map("institution_name")
+  institutionType     String    @map("institution_type")
+  category           String
+  website            String?
+  logoUrl            String?   @map("logo_url")
+  coverImageUrl      String?   @map("cover_image_url")
+  verified           Boolean   @default(false)
+  onboardingCompleted Boolean  @default(false) @map("onboarding_completed")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  @@map("institution_profiles")
+}
+
+model FeedPost {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  content       String
+  imageUrl      String?  @map("image_url")
+  likesCount    Int      @default(0) @map("likes_count")
+  commentsCount Int      @default(0) @map("comments_count")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  author        Profile  @relation(fields: [userId], references: [id])
+
+  @@map("feed_posts")
+}
