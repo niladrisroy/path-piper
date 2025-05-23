@@ -11,5 +11,5 @@ export default function InstitutionOnboardingLayout({
 }: {
   children: React.ReactNode
 }) {
-  return children
+  return <div className="notebook-bg">{children}</div>
 }

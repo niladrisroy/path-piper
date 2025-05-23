@@ -11,5 +11,5 @@ export default function OnboardingLayout({
 }: {
   children: React.ReactNode
 }) {
-  return children
+  return <div className="notebook-bg">{children}</div>
 }
