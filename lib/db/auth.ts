@@ -108,10 +108,22 @@ export async function registerUser(data: UserRegistrationData) {
       const totalMonths = calculateAge(parseInt(data.birthMonth), parseInt(data.birthYear))
       const needsParentApproval = totalMonths < 192 // 16 years
 
+      // Get user profile to ensure we have the correct ID
+      const { data: profileData, error: profileFetchError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', authData.user.id)
+        .single();
+
+      if (profileFetchError) {
+        console.error('Failed to fetch profile:', profileFetchError);
+        throw profileFetchError;
+      }
+
       const { error: studentError } = await supabase
         .from('student_profiles')
         .insert([{
-            id: authData.user.id,
+            id: profileData.id, // Use the confirmed profile ID
             birth_month: parseInt(data.birthMonth),
             birth_year: parseInt(data.birthYear),
             onboarding_completed: false
