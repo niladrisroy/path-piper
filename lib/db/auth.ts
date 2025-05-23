@@ -1,8 +1,6 @@
 import { supabase } from '../supabase'
 import { calculateAge } from '../utils'
 import { sendEmail } from '../email'
-import { db } from './drizzle'
-import { profiles, studentProfiles } from './schema-drizzle'
 
 export type UserRegistrationData = {
   email: string
@@ -84,20 +82,24 @@ export async function registerUser(data: UserRegistrationData) {
       refresh_token: authData.session?.refresh_token || ''
     });
 
-    // Create profile with auth user ID using Drizzle
-    try {
-      await db.insert(profiles).values({
+    // Create profile with auth user ID
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert({
         id: authData.user.id,
-        firstName: data.firstName,
-        lastName: data.lastName,
+        first_name: data.firstName,
+        last_name: data.lastName,
         email: data.email,
         role: data.role,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      });
-    } catch (error) {
-      console.error('Registration failed: Profile creation error:', error);
-      throw error;
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single()
+
+    if (profileError) {
+      console.error('Registration failed: Profile creation error:', profileError)
+      throw profileError
     }
 
     console.log('User profile created successfully')
@@ -124,12 +126,14 @@ export async function registerUser(data: UserRegistrationData) {
         throw profileFetchError;
       }
 
-      await db.insert(studentProfiles).values({
-        id: authData.user.id,
-        birthMonth: data.birthMonth,
-        birthYear: data.birthYear,
-        onboardingCompleted: false
-      });
+      const { error: studentError } = await supabase
+        .from('student_profiles')
+        .insert([{
+            id: profileData.id, // Use the confirmed profile ID
+            birth_month: parseInt(data.birthMonth),
+            birth_year: parseInt(data.birthYear),
+            onboarding_completed: false
+          }]);
 
         if (studentError) {
           console.error('Student profile insert error:', studentError);
