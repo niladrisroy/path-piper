@@ -9,7 +9,6 @@ export const prisma = globalForPrisma.prisma || new PrismaClient({
       url: process.env.DATABASE_URL
         ?.replace('postgres://', 'postgresql://')
         .replace('#', '%23')
-        .concat('&connection_limit=1')
     },
   },
 })
