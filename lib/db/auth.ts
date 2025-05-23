@@ -1,6 +1,8 @@
 import { supabase } from '../supabase'
 import { calculateAge } from '../utils'
 import { sendEmail } from '../email'
+import { db } from './drizzle'
+import { profiles, studentProfiles } from './schema-drizzle'
 
 export type UserRegistrationData = {
   email: string
