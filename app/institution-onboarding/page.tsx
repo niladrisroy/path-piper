@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ArrowLeft, ArrowRight, CheckCircle, Building, BookOpen, Calendar, ImageIcon } from "lucide-react"
 import OnboardingHeader from "@/components/onboarding/onboarding-header"
 import InstitutionInfoStep from "@/components/onboarding/institution/institution-info-step"
@@ -8,6 +8,7 @@ import ProgramsStep from "@/components/onboarding/institution/programs-step"
 import EventsStep from "@/components/onboarding/institution/events-step"
 import GalleryStep from "@/components/onboarding/institution/gallery-step"
 import InstitutionCompletionStep from "@/components/onboarding/institution/completion-step"
+import { supabase } from "@/lib/supabase"
 
 // Define the steps for the institution onboarding process
 const STEPS = [
@@ -17,6 +18,157 @@ const STEPS = [
   { id: "gallery", title: "Gallery", icon: <ImageIcon className="h-5 w-5" /> },
   { id: "completion", title: "Complete", icon: <CheckCircle className="h-5 w-5" /> },
 ]
+
+// Define the steps for the institution onboarding process
+const STEPS = [
+  { id: "institution-info", title: "Institution Info", icon: <Building className="h-5 w-5" /> },
+  { id: "programs", title: "Programs", icon: <BookOpen className="h-5 w-5" /> },
+  { id: "events", title: "Events", icon: <Calendar className="h-5 w-5" /> },
+  { id: "gallery", title: "Gallery", icon: <ImageIcon className="h-5 w-5" /> },
+  { id: "completion", title: "Complete", icon: <CheckCircle className="h-5 w-5" /> },
+]
+
+export default function InstitutionOnboardingPage() {
+  const [currentStep, setCurrentStep] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
+  const [profileData, setProfileData] = useState({
+    institutionInfo: {
+      name: "",
+      type: "",
+      category: "",
+      bio: "",
+      location: "",
+      website: "",
+      logo: null,
+      coverImage: null,
+    },
+    programs: [],
+    events: [],
+    gallery: [],
+  })
+  const [completedSteps, setCompletedSteps] = useState<Record<string, boolean>>({})
+  
+  // Fetch institution data on component mount
+  useEffect(() => {
+    async function fetchInstitutionData() {
+      try {
+        setIsLoading(true)
+        
+        // Get current user session
+        const { data: sessionData } = await supabase.auth.getSession()
+        
+        if (!sessionData.session) {
+          console.error("No active session found")
+          setIsLoading(false)
+          return
+        }
+        
+        // Fetch profile data
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', sessionData.session.user.id)
+          .single()
+          
+        if (profileError) {
+          console.error("Error fetching profile:", profileError)
+          setIsLoading(false)
+          return
+        }
+        
+        // Fetch institution profile data
+        const { data: institutionProfile, error: institutionError } = await supabase
+          .from('institution_profiles')
+          .select('*')
+          .eq('id', sessionData.session.user.id)
+          .single()
+          
+        if (institutionError && institutionError.code !== 'PGRST116') { // PGRST116 means no rows found
+          console.error("Error fetching institution profile:", institutionError)
+        }
+        
+        // Fetch institution programs
+        const { data: institutionPrograms, error: programsError } = await supabase
+          .from('institution_programs')
+          .select('*')
+          .eq('institution_id', sessionData.session.user.id)
+          
+        if (programsError) {
+          console.error("Error fetching programs:", programsError)
+        }
+        
+        // Fetch institution events
+        const { data: institutionEvents, error: eventsError } = await supabase
+          .from('institution_events')
+          .select('*')
+          .eq('institution_id', sessionData.session.user.id)
+          
+        if (eventsError) {
+          console.error("Error fetching events:", eventsError)
+        }
+        
+        // Fetch institution gallery
+        const { data: institutionGallery, error: galleryError } = await supabase
+          .from('institution_gallery')
+          .select('*')
+          .eq('institution_id', sessionData.session.user.id)
+          
+        if (galleryError) {
+          console.error("Error fetching gallery:", galleryError)
+        }
+        
+        // Update state with fetched data
+        setProfileData({
+          institutionInfo: {
+            name: institutionProfile?.institution_name || "",
+            type: institutionProfile?.institution_type || "",
+            category: institutionProfile?.category || "",
+            bio: profile?.bio || "",
+            location: profile?.location || "",
+            website: institutionProfile?.website || "",
+            logo: institutionProfile?.logo_url || null,
+            coverImage: institutionProfile?.cover_image_url || null,
+          },
+          programs: institutionPrograms || [],
+          events: institutionEvents || [],
+          gallery: institutionGallery?.map(item => ({
+            id: item.id,
+            imageUrl: item.image_url,
+            caption: item.caption
+          })) || [],
+        })
+        
+        // Set completed steps based on data availability
+        const completed: Record<string, boolean> = {}
+        
+        if (institutionProfile?.institution_name) {
+          completed["institution-info"] = true
+        }
+        
+        if (institutionPrograms && institutionPrograms.length > 0) {
+          completed.programs = true
+        }
+        
+        if (institutionEvents && institutionEvents.length > 0) {
+          completed.events = true
+        }
+        
+        if (institutionGallery && institutionGallery.length > 0) {
+          completed.gallery = true
+        }
+        
+        setCompletedSteps(completed)
+        
+      } catch (error) {
+        console.error("Error loading institution data:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    fetchInstitutionData()
+  }, [])
+
 
 export default function InstitutionOnboardingPage() {
   const [currentStep, setCurrentStep] = useState(0)
@@ -77,6 +229,14 @@ export default function InstitutionOnboardingPage() {
       <OnboardingHeader completionPercentage={completionPercentage} />
 
       <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
+        {isLoading ? (
+          <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg p-8 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-12 w-12 rounded-full border-4 border-teal-400 border-t-transparent animate-spin"></div>
+              <p className="text-slate-600">Loading your institution profile data...</p>
+            </div>
+          </div>
+        ) : (
         <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg overflow-hidden">
           {/* Step navigation */}
           <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
@@ -191,6 +351,8 @@ export default function InstitutionOnboardingPage() {
             )}
           </div>
         </div>
+      </div>
+        )}
       </div>
 
       {/* Footer */}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ArrowLeft, ArrowRight, CheckCircle, User, BookOpen, Award, MessageSquare } from "lucide-react"
 import OnboardingHeader from "@/components/onboarding/onboarding-header"
 import MentorPersonalInfoStep from "@/components/onboarding/mentor/personal-info-step"
@@ -8,6 +8,7 @@ import MentorExpertiseStep from "@/components/onboarding/mentor/expertise-step"
 import MentorExperienceStep from "@/components/onboarding/mentor/experience-step"
 import MentorAvailabilityStep from "@/components/onboarding/mentor/availability-step"
 import MentorCompletionStep from "@/components/onboarding/mentor/completion-step"
+import { supabase } from "@/lib/supabase"
 
 // Define the steps for the mentor onboarding process
 const STEPS = [
@@ -20,6 +21,7 @@ const STEPS = [
 
 export default function MentorOnboardingPage() {
   const [currentStep, setCurrentStep] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
   const [profileData, setProfileData] = useState({
     personalInfo: {
       firstName: "",
@@ -39,6 +41,147 @@ export default function MentorOnboardingPage() {
     },
   })
   const [completedSteps, setCompletedSteps] = useState<Record<string, boolean>>({})
+  
+  // Fetch user data on component mount
+  useEffect(() => {
+    async function fetchMentorData() {
+      try {
+        setIsLoading(true)
+        
+        // Get current user session
+        const { data: sessionData } = await supabase.auth.getSession()
+        
+        if (!sessionData.session) {
+          console.error("No active session found")
+          setIsLoading(false)
+          return
+        }
+        
+        // Fetch mentor profile data
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', sessionData.session.user.id)
+          .single()
+          
+        if (profileError) {
+          console.error("Error fetching profile:", profileError)
+          setIsLoading(false)
+          return
+        }
+        
+        // Fetch mentor specific profile data
+        const { data: mentorProfile, error: mentorError } = await supabase
+          .from('mentor_profiles')
+          .select('*')
+          .eq('id', sessionData.session.user.id)
+          .single()
+          
+        if (mentorError && mentorError.code !== 'PGRST116') { // PGRST116 means no rows found
+          console.error("Error fetching mentor profile:", mentorError)
+        }
+        
+        // Fetch mentor expertise
+        const { data: mentorExpertise, error: expertiseError } = await supabase
+          .from('mentor_expertise')
+          .select('*')
+          .eq('mentor_id', sessionData.session.user.id)
+          
+        if (expertiseError) {
+          console.error("Error fetching expertise:", expertiseError)
+        }
+        
+        // Fetch mentor experience
+        const { data: mentorExperience, error: experienceError } = await supabase
+          .from('mentor_experience')
+          .select('*')
+          .eq('mentor_id', sessionData.session.user.id)
+          
+        if (experienceError) {
+          console.error("Error fetching experience:", experienceError)
+        }
+        
+        // Fetch mentor availability
+        const { data: mentorAvailability, error: availabilityError } = await supabase
+          .from('mentor_availability')
+          .select('*')
+          .eq('mentor_id', sessionData.session.user.id)
+          
+        if (availabilityError) {
+          console.error("Error fetching availability:", availabilityError)
+        }
+        
+        // Format expertise, experience and availability data
+        const expertise = mentorExpertise?.map(item => ({
+          id: item.id,
+          subject: item.subject,
+          description: item.description,
+          yearsExperience: item.years_experience
+        })) || []
+        
+        const experience = mentorExperience?.map(item => ({
+          id: item.id,
+          title: item.title,
+          organization: item.organization,
+          startDate: item.start_date,
+          endDate: item.end_date,
+          current: item.current,
+          description: item.description,
+          type: item.type,
+          credentialId: item.credential_id,
+          credentialUrl: item.credential_url
+        })) || []
+        
+        // Update state with fetched data
+        setProfileData({
+          personalInfo: {
+            firstName: profile.first_name || "",
+            lastName: profile.last_name || "",
+            bio: profile.bio || "",
+            location: profile.location || "",
+            profession: mentorProfile?.profession || "",
+            organization: mentorProfile?.organization || "",
+            profileImage: profile.profile_image_url || null,
+          },
+          expertise,
+          experience,
+          availability: {
+            hoursPerWeek: mentorProfile?.hours_per_week || 0,
+            preferredTimes: mentorAvailability?.map(item => item.time_slot) || [],
+            menteeCount: mentorProfile?.max_mentees || 0,
+          },
+        })
+        
+        // Set completed steps based on data availability
+        const completed: Record<string, boolean> = {}
+        
+        if (profile.first_name && profile.last_name) {
+          completed.personalInfo = true
+        }
+        
+        if (expertise.length > 0) {
+          completed.expertise = true
+        }
+        
+        if (experience.length > 0) {
+          completed.experience = true
+        }
+        
+        if (mentorProfile?.hours_per_week && mentorProfile.max_mentees) {
+          completed.availability = true
+        }
+        
+        setCompletedSteps(completed)
+        
+      } catch (error) {
+        console.error("Error loading mentor data:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    fetchMentorData()
+  }, [])
 
   // Calculate completion percentage
   const completionPercentage = Math.round(
@@ -81,6 +224,14 @@ export default function MentorOnboardingPage() {
       <OnboardingHeader completionPercentage={completionPercentage} />
 
       <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
+        {isLoading ? (
+          <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg p-8 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-12 w-12 rounded-full border-4 border-teal-400 border-t-transparent animate-spin"></div>
+              <p className="text-slate-600">Loading your mentor profile data...</p>
+            </div>
+          </div>
+        ) : (
         <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg overflow-hidden">
           {/* Step navigation */}
           <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
@@ -195,6 +346,8 @@ export default function MentorOnboardingPage() {
             )}
           </div>
         </div>
+      </div>
+        )}
       </div>
 
       {/* Footer */}
