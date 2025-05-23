@@ -76,20 +76,20 @@ export async function registerUser(data: UserRegistrationData) {
 
     console.log('Auth user created successfully:', authData.user.id)
 
-    // Create profile
-    const profileData = {
-      id: authData.user.id,
-      first_name: data.firstName,
-      last_name: data.lastName,
-      email: data.email,
-      role: data.role,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
-
+    // Create profile with auth user ID
     const { error: profileError } = await supabase
       .from('profiles')
-      .insert([profileData])
+      .insert({
+        id: authData.user.id, // Use auth user ID directly
+        first_name: data.firstName,
+        last_name: data.lastName,
+        email: data.email,
+        role: data.role,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single()
 
     if (profileError) {
       console.error('Registration failed: Profile creation error:', profileError)
