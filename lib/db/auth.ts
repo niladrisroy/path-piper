@@ -82,24 +82,20 @@ export async function registerUser(data: UserRegistrationData) {
       refresh_token: authData.session?.refresh_token || ''
     });
 
-    // Create profile with auth user ID
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert({
+    // Create profile with auth user ID using Drizzle
+    try {
+      await db.insert(profiles).values({
         id: authData.user.id,
-        first_name: data.firstName,
-        last_name: data.lastName,
+        firstName: data.firstName,
+        lastName: data.lastName,
         email: data.email,
         role: data.role,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select()
-      .single()
-
-    if (profileError) {
-      console.error('Registration failed: Profile creation error:', profileError)
-      throw profileError
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+    } catch (error) {
+      console.error('Registration failed: Profile creation error:', error);
+      throw error;
     }
 
     console.log('User profile created successfully')
@@ -126,14 +122,12 @@ export async function registerUser(data: UserRegistrationData) {
         throw profileFetchError;
       }
 
-      const { error: studentError } = await supabase
-        .from('student_profiles')
-        .insert([{
-            id: profileData.id, // Use the confirmed profile ID
-            birth_month: parseInt(data.birthMonth),
-            birth_year: parseInt(data.birthYear),
-            onboarding_completed: false
-          }]);
+      await db.insert(studentProfiles).values({
+        id: authData.user.id,
+        birthMonth: data.birthMonth,
+        birthYear: data.birthYear,
+        onboardingCompleted: false
+      });
 
         if (studentError) {
           console.error('Student profile insert error:', studentError);
