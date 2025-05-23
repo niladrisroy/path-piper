@@ -2,6 +2,7 @@
 import { prisma } from '@/lib/prisma'
 import { calculateAge } from '@/lib/utils'
 import { sendEmail } from '@/lib/email'
+import { supabase } from '@/lib/supabase'
 
 export type UserRegistrationData = {
   email: string
@@ -16,19 +17,32 @@ export type UserRegistrationData = {
 
 export async function registerStudent(data: UserRegistrationData) {
   try {
-    // Check if user exists
-    const existingProfile = await prisma.profile.findFirst({
-      where: { id: data.email }
+    // First create Supabase auth user
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        data: {
+          first_name: data.firstName,
+          last_name: data.lastName,
+          role: 'student'
+        }
+      }
     })
 
-    if (existingProfile) {
-      return { success: false, error: 'Email already exists' }
+    if (authError) {
+      console.error('Auth registration failed:', authError)
+      return { success: false, error: authError.message }
     }
 
-    // Create profile
+    if (!authData.user) {
+      return { success: false, error: 'Auth user creation failed' }
+    }
+
+    // Create profile with auth user ID
     const profile = await prisma.profile.create({
       data: {
-        id: data.email,
+        id: authData.user.id,
         firstName: data.firstName,
         lastName: data.lastName,
         role: 'student',
@@ -49,9 +63,9 @@ export async function registerStudent(data: UserRegistrationData) {
     // Create student profile
     const studentProfile = await prisma.studentProfile.create({
       data: {
-        id: data.email,
-        ageGroup: 'young_adult', // You may want to calculate this based on age
-        educationLevel: 'high_school', // This should come from form data
+        id: authData.user.id,
+        ageGroup: 'young_adult',
+        educationLevel: 'high_school',
         parentEmail: needsParentApproval ? data.parentEmail : null,
         parentVerified: false,
       }
