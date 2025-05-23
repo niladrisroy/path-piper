@@ -46,46 +46,80 @@ export default function Login() {
     }
   }, [])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle login logic here
-    console.log({ email, password })
-
+    
     // Show loading state
     setIsLoading(true)
-
-    // Simulate API call delay
-    setTimeout(() => {
-      // Determine user role based on email (for demo purposes)
-      let userType = "student" // default
-
-      if (email.includes("mentor") || email.includes("teacher")) {
-        userType = "mentor"
-      } else if (
-        email.includes("school") ||
-        email.includes("institution") ||
-        email.includes("college") ||
-        email.includes("university")
-      ) {
-        userType = "institution"
+    
+    try {
+      // Call login API
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      
+      const result = await response.json();
+      
+      if (!result.success) {
+        // Show error message
+        alert(result.error || 'Login failed. Please check your credentials.');
+        setIsLoading(false);
+        return;
       }
-
-      // Navigate to the appropriate onboarding page
-      if (userType === "mentor") {
-        router.push("/mentor-onboarding")
-      } else if (userType === "institution") {
-        router.push("/institution-onboarding")
+      
+      // Navigation based on user role and onboarding status
+      if (!result.onboardingCompleted) {
+        // If onboarding not completed, direct to appropriate onboarding page
+        if (result.role === 'mentor') {
+          router.push('/mentor-onboarding');
+        } else if (result.role === 'institution') {
+          router.push('/institution-onboarding');
+        } else {
+          // Default to student onboarding
+          router.push('/onboarding');
+        }
       } else {
-        router.push("/onboarding")
+        // If onboarding completed, go to feed
+        router.push('/feed');
       }
-
-      setIsLoading(false)
-    }, 1500)
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('An error occurred during login. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   }
 
-  const handleSocialLogin = (provider: string) => {
-    // Handle social login logic here
-    console.log(`Login with ${provider}`)
+  const handleSocialLogin = async (provider: string) => {
+    try {
+      setIsLoading(true);
+      
+      const response = await fetch('/api/auth/social', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ provider }),
+      });
+      
+      const result = await response.json();
+      
+      if (result.success && result.url) {
+        // Redirect to the OAuth provider URL
+        window.location.href = result.url;
+      } else {
+        alert(result.error || `Login with ${provider} failed`);
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error(`${provider} login error:`, error);
+      alert(`An error occurred during ${provider} login`);
+      setIsLoading(false);
+    }
   }
 
   return (

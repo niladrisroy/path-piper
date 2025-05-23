@@ -178,3 +178,71 @@ export async function registerInstitution(data: UserRegistrationData) {
     return { success: false, error: (error as Error).message || 'Registration failed' };
   }
 }
+
+export interface LoginData {
+  email: string;
+  password: string;
+}
+
+export async function loginUser(data: LoginData) {
+  try {
+    // Use Supabase Auth for login
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    });
+
+    if (authError) {
+      throw new Error(authError.message || 'Login failed');
+    }
+
+    if (!authData.user) {
+      throw new Error('No user returned from login');
+    }
+
+    // Get user's profile to determine their role
+    const profile = await prisma.profile.findUnique({
+      where: { id: authData.user.id },
+    });
+
+    if (!profile) {
+      console.warn(`User ${authData.user.id} doesn't have a profile in the database`);
+      return { 
+        success: true, 
+        user: authData.user,
+        role: authData.user.user_metadata?.role || 'student',
+        onboardingCompleted: false
+      };
+    }
+
+    // Check if onboarding is completed based on role
+    let onboardingCompleted = false;
+    if (profile.role === 'student') {
+      const studentProfile = await prisma.studentProfile.findUnique({
+        where: { id: profile.id },
+      });
+      onboardingCompleted = studentProfile?.onboardingCompleted || false;
+    } else if (profile.role === 'mentor') {
+      const mentorProfile = await prisma.mentorProfile.findUnique({
+        where: { id: profile.id },
+      });
+      onboardingCompleted = mentorProfile?.onboardingCompleted || false;
+    } else if (profile.role === 'institution') {
+      const institutionProfile = await prisma.institutionProfile.findUnique({
+        where: { id: profile.id },
+      });
+      onboardingCompleted = institutionProfile?.onboardingCompleted || false;
+    }
+
+    return { 
+      success: true, 
+      user: authData.user,
+      role: profile.role,
+      onboardingCompleted
+    };
+
+  } catch (error) {
+    console.error('Login failed:', error);
+    return { success: false, error: (error as Error).message || 'Login failed' };
+  }
+}
