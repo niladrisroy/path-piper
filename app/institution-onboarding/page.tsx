@@ -54,7 +54,52 @@ export default function InstitutionOnboardingPage() {
       try {
         setIsLoading(true)
         
-        // Get current user session
+        // First try to get data from the API (will work with both auth methods)
+        try {
+          const response = await fetch("/api/auth/user")
+          if (response.ok) {
+            const apiData = await response.json()
+            
+            if (apiData.user) {
+              // Use API data if available
+              const profile = {
+                id: apiData.user.id,
+                name: apiData.user.institution?.name || apiData.user.profile?.firstName || "",
+                type: apiData.user.institution?.type || "",
+                category: apiData.user.institution?.category || "",
+                bio: apiData.user.profile?.bio || "",
+                location: apiData.user.profile?.location || "",
+                website: apiData.user.institution?.website || "",
+                email: apiData.user.email || "",
+                logo_url: apiData.user.profile?.profileImageUrl || ""
+              }
+              
+              // Update profileData with the fetched data
+              setProfileData(prevData => ({
+                ...prevData,
+                institutionInfo: {
+                  ...prevData.institutionInfo,
+                  name: profile.name,
+                  type: profile.type,
+                  category: profile.category,
+                  bio: profile.bio,
+                  location: profile.location,
+                  website: profile.website,
+                  logo: profile.logo_url || null,
+                },
+                programs: apiData.user.institution?.programs || [],
+                events: apiData.user.institution?.events || [],
+                gallery: apiData.user.institution?.gallery || [],
+              }))
+              await populateInstitutionData(profile)
+              return
+            }
+          }
+        } catch (apiError) {
+          console.log("Falling back to direct Supabase auth:", apiError)
+        }
+        
+        // Fallback to Supabase auth
         const { data: sessionData } = await supabase.auth.getSession()
         
         if (!sessionData.session) {
@@ -75,6 +120,17 @@ export default function InstitutionOnboardingPage() {
           setIsLoading(false)
           return
         }
+        
+        // Populate institution data using the profile
+        await populateInstitutionData(profile)
+      } catch (error) {
+        console.error("Error loading institution data:", error)
+        setIsLoading(false)
+      }
+    }
+    
+    // Helper function to populate institution data from profile
+    async function populateInstitutionData(profile) {
         
         // Fetch institution profile data
         const { data: institutionProfile, error: institutionError } = await supabase
@@ -168,6 +224,102 @@ export default function InstitutionOnboardingPage() {
     
     fetchInstitutionData()
   }, [])
+  
+  // This is the refactored function to populate institution data from a profile
+  async function populateInstitutionData(profile) {
+    try {
+      // Get session for user ID
+      const { data: sessionData } = await supabase.auth.getSession()
+      const userId = sessionData.session?.user.id || profile.id
+      
+      // Fetch institution profile data
+      const { data: institutionProfile, error: institutionError } = await supabase
+        .from('institution_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+        
+      if (institutionError && institutionError.code !== 'PGRST116') { // PGRST116 means no rows found
+        console.error("Error fetching institution profile:", institutionError)
+      }
+      
+      // Fetch institution programs
+      const { data: institutionPrograms, error: programsError } = await supabase
+        .from('institution_programs')
+        .select('*')
+        .eq('institution_id', userId)
+        
+      if (programsError) {
+        console.error("Error fetching programs:", programsError)
+      }
+      
+      // Fetch institution events
+      const { data: institutionEvents, error: eventsError } = await supabase
+        .from('institution_events')
+        .select('*')
+        .eq('institution_id', userId)
+        
+      if (eventsError) {
+        console.error("Error fetching events:", eventsError)
+      }
+      
+      // Fetch institution gallery
+      const { data: institutionGallery, error: galleryError } = await supabase
+        .from('institution_gallery')
+        .select('*')
+        .eq('institution_id', userId)
+        
+      if (galleryError) {
+        console.error("Error fetching gallery:", galleryError)
+      }
+      
+      // Update state with fetched data
+      setProfileData({
+        institutionInfo: {
+          name: institutionProfile?.institution_name || profile.first_name + " " + profile.last_name || "",
+          type: institutionProfile?.institution_type || "",
+          category: institutionProfile?.category || "",
+          bio: profile?.bio || "",
+          location: profile?.location || "",
+          website: institutionProfile?.website || "",
+          logo: institutionProfile?.logo_url || null,
+          coverImage: institutionProfile?.cover_image_url || null,
+        },
+        programs: institutionPrograms || [],
+        events: institutionEvents || [],
+        gallery: institutionGallery?.map(item => ({
+          id: item.id,
+          imageUrl: item.image_url,
+          caption: item.caption
+        })) || [],
+      })
+      
+      // Set completed steps based on data availability
+      const completed: Record<string, boolean> = {}
+      
+      if (institutionProfile?.institution_name) {
+        completed["institution-info"] = true
+      }
+      
+      if (institutionPrograms && institutionPrograms.length > 0) {
+        completed.programs = true
+      }
+      
+      if (institutionEvents && institutionEvents.length > 0) {
+        completed.events = true
+      }
+      
+      if (institutionGallery && institutionGallery.length > 0) {
+        completed.gallery = true
+      }
+      
+      setCompletedSteps(completed)
+    } catch (error) {
+      console.error("Error populating institution data:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
 
 export default function InstitutionOnboardingPage() {

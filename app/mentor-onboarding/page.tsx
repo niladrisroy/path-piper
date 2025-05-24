@@ -48,7 +48,57 @@ export default function MentorOnboardingPage() {
       try {
         setIsLoading(true)
         
-        // Get current user session
+        // First try to get data from the API (will work with both auth methods)
+        try {
+          const response = await fetch("/api/auth/user")
+          if (response.ok) {
+            const apiData = await response.json()
+            
+            if (apiData.user) {
+              // Use API data if available
+              const profile = {
+                id: apiData.user.id,
+                first_name: apiData.user.profile?.firstName || apiData.user.firstName || "",
+                last_name: apiData.user.profile?.lastName || apiData.user.lastName || "",
+                bio: apiData.user.profile?.bio || "",
+                location: apiData.user.profile?.location || "",
+                email: apiData.user.email || "",
+                profile_image_url: apiData.user.profile?.profileImageUrl || "",
+                profession: apiData.user.mentor?.profession || apiData.user.profile?.profession || "",
+                organization: apiData.user.mentor?.organization || apiData.user.profile?.organization || ""
+              }
+              
+              // Update profileData with the fetched data
+              setProfileData(prevData => ({
+                ...prevData,
+                personalInfo: {
+                  ...prevData.personalInfo,
+                  firstName: profile.first_name,
+                  lastName: profile.last_name,
+                  bio: profile.bio,
+                  location: profile.location,
+                  profession: profile.profession,
+                  organization: profile.organization,
+                  profileImage: profile.profile_image_url || null,
+                },
+                expertise: apiData.user.mentor?.expertise || apiData.user.profile?.expertise || [],
+                experience: apiData.user.mentor?.experience || apiData.user.profile?.experience || [],
+                availability: {
+                  ...prevData.availability,
+                  ...(apiData.user.mentor?.availability || {})
+                },
+              }))
+              
+              // Continue with populating the mentor data...
+              await populateMentorData(profile)
+              return
+            }
+          }
+        } catch (apiError) {
+          console.log("Falling back to direct Supabase auth:", apiError)
+        }
+        
+        // Fallback to Supabase auth
         const { data: sessionData } = await supabase.auth.getSession()
         
         if (!sessionData.session) {
@@ -69,6 +119,17 @@ export default function MentorOnboardingPage() {
           setIsLoading(false)
           return
         }
+        
+        // Populate mentor data using the profile
+        await populateMentorData(profile)
+      } catch (error) {
+        console.error("Error loading mentor data:", error)
+        setIsLoading(false)
+      }
+    }
+    
+    // Helper function to populate mentor data from profile
+    async function populateMentorData(profile) {
         
         // Fetch mentor specific profile data
         const { data: mentorProfile, error: mentorError } = await supabase
@@ -182,6 +243,122 @@ export default function MentorOnboardingPage() {
     
     fetchMentorData()
   }, [])
+  
+  // This is the refactored function to populate mentor data from a profile
+  async function populateMentorData(profile) {
+    try {
+      // Get session for user ID
+      const { data: sessionData } = await supabase.auth.getSession()
+      const userId = sessionData.session?.user.id || profile.id
+      
+      // Fetch mentor specific profile data
+      const { data: mentorProfile, error: mentorError } = await supabase
+        .from('mentor_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+        
+      if (mentorError && mentorError.code !== 'PGRST116') { // PGRST116 means no rows found
+        console.error("Error fetching mentor profile:", mentorError)
+      }
+      
+      // Fetch mentor expertise
+      const { data: mentorExpertise, error: expertiseError } = await supabase
+        .from('mentor_expertise')
+        .select('*')
+        .eq('mentor_id', userId)
+        
+      if (expertiseError) {
+        console.error("Error fetching expertise:", expertiseError)
+      }
+      
+      // Fetch mentor experience
+      const { data: mentorExperience, error: experienceError } = await supabase
+        .from('mentor_experience')
+        .select('*')
+        .eq('mentor_id', userId)
+        
+      if (experienceError) {
+        console.error("Error fetching experience:", experienceError)
+      }
+      
+      // Fetch mentor availability
+      const { data: mentorAvailability, error: availabilityError } = await supabase
+        .from('mentor_availability')
+        .select('*')
+        .eq('mentor_id', userId)
+        
+      if (availabilityError) {
+        console.error("Error fetching availability:", availabilityError)
+      }
+      
+      // Format expertise, experience and availability data
+      const expertise = mentorExpertise?.map(item => ({
+        id: item.id,
+        subject: item.subject,
+        description: item.description,
+        yearsExperience: item.years_experience
+      })) || []
+      
+      const experience = mentorExperience?.map(item => ({
+        id: item.id,
+        title: item.title,
+        organization: item.organization,
+        startDate: item.start_date,
+        endDate: item.end_date,
+        current: item.current,
+        description: item.description,
+        type: item.type,
+        credentialId: item.credential_id,
+        credentialUrl: item.credential_url
+      })) || []
+      
+      // Update state with fetched data
+      setProfileData({
+        personalInfo: {
+          firstName: profile.first_name || "",
+          lastName: profile.last_name || "",
+          bio: profile.bio || "",
+          location: profile.location || "",
+          profession: mentorProfile?.profession || "",
+          organization: mentorProfile?.organization || "",
+          profileImage: profile.profile_image_url || null,
+        },
+        expertise,
+        experience,
+        availability: {
+          hoursPerWeek: mentorProfile?.hours_per_week || 0,
+          preferredTimes: mentorAvailability?.map(item => item.time_slot) || [],
+          menteeCount: mentorProfile?.max_mentees || 0,
+        },
+      })
+      
+      // Set completed steps based on data availability
+      const completed: Record<string, boolean> = {}
+      
+      if (profile.first_name && profile.last_name) {
+        completed.personalInfo = true
+      }
+      
+      if (expertise.length > 0) {
+        completed.expertise = true
+      }
+      
+      if (experience.length > 0) {
+        completed.experience = true
+      }
+      
+      if (mentorProfile?.hours_per_week && mentorProfile.max_mentees) {
+        completed.availability = true
+      }
+      
+      setCompletedSteps(completed)
+    } catch (error) {
+      console.error("Error populating mentor data:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // Calculate completion percentage
   const completionPercentage = Math.round(
