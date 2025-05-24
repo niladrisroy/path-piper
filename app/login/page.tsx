@@ -51,9 +51,15 @@ export default function Login() {
 
   // Set the redirect path when component mounts or search params change
   useEffect(() => {
-    const from = searchParams.get('from')
-    if (from) {
-      setRedirectPath(from)
+    // Check for both 'from' and 'redirectURL' parameters
+    const from = searchParams.get('from');
+    const redirectURL = searchParams.get('redirectURL');
+    
+    // Priority: redirectURL, then from, otherwise default to '/feed'
+    if (redirectURL) {
+      setRedirectPath(redirectURL);
+    } else if (from) {
+      setRedirectPath(from);
     }
   }, [searchParams])
 
@@ -102,8 +108,19 @@ export default function Login() {
       // Navigation based on user role and onboarding status
       setTimeout(() => {
         if (result.onboardingCompleted) {
-          // If onboarding is completed, go to feed
-          router.push(redirectPath);
+          // If onboarding is completed and the redirect path is accessible, go there
+          // Check if the redirect path is one of the protected pages that user should have access to
+          const protectedPaths = ['/feed', '/explore', '/immersive-feed', '/profile', '/student', '/mentor', '/institution'];
+          
+          // Only redirect to the path if it's a valid path
+          if (redirectPath && 
+              (protectedPaths.some(pp => redirectPath === pp || redirectPath.startsWith(`${pp}/`)) || 
+               redirectPath === '/')) {
+            router.push(redirectPath);
+          } else {
+            // Default to feed if the redirect path is not valid or accessible
+            router.push('/feed');
+          }
         } else {
           // If onboarding not completed, direct to appropriate onboarding page
           if (result.role === 'mentor') {

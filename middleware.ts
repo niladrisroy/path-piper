@@ -41,6 +41,12 @@ export function middleware(request: NextRequest) {
       const redirectUrl = new URL('/login', request.url);
       redirectUrl.searchParams.set('from', path);
       
+      // Preserve any existing redirectURL parameter if it exists in the original request
+      const originalRedirectURL = request.nextUrl.searchParams.get('redirectURL');
+      if (originalRedirectURL) {
+        redirectUrl.searchParams.set('redirectURL', originalRedirectURL);
+      }
+      
       return NextResponse.redirect(redirectUrl);
     }
   }
