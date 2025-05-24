@@ -46,7 +46,20 @@ export function middleware(request: NextRequest) {
                            c.name.includes('auth')
                          );
     
-    // Skip detailed cookie logging for cleaner console output
+    // More detailed cookie logging
+    const allCookies = Array.from(request.cookies.getAll());
+    const cookieValues = {};
+    allCookies.forEach(c => {
+      cookieValues[c.name] = c.value.substring(0, 5) + '...'; // Show first 5 chars only for security
+    });
+    
+    console.log('Cookie check in middleware:', {
+      path,
+      hasAuthCookie,
+      cookieCount: allCookies.length,
+      cookieNames: allCookies.map(c => c.name),
+      cookieValues
+    });
     
     // If no auth cookie, redirect to login
     if (!hasAuthCookie) {
@@ -60,7 +73,8 @@ export function middleware(request: NextRequest) {
         redirectUrl.searchParams.set('redirectURL', originalRedirectURL);
       }
       
-      // Redirect unauthenticated request
+      // Log the redirect for debugging
+      console.log(`Redirecting unauthenticated request from ${path} to ${redirectUrl.toString()}`);
       
       return NextResponse.redirect(redirectUrl);
     }

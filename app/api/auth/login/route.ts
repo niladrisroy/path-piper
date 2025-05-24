@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { loginUser } from '@/lib/services/auth-service';
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
     if (result.success && result.user) {
       // Extract Supabase's session cookie
       const supabaseCookies = result.session?.cookieString;
-
+      
       // Create response with user data
       const response = NextResponse.json({
         success: true,
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
           response.headers.append('Set-Cookie', cookie.trim());
         });
       }
-
+      
       // Set our own backup cookies as well
       response.cookies.set('sb-auth-token', result.user.id, {
         httpOnly: true,
@@ -48,9 +49,12 @@ export async function POST(request: NextRequest) {
         maxAge: 60 * 60 * 24 * 7, // 1 week
         path: '/',
       });
-
-      // Set cookies for authentication
-
+      
+      console.log('Setting auth cookies', { 
+        userId: result.user.id,
+        hasSupabaseCookies: !!supabaseCookies
+      });
+      
       return response;
     }
 
