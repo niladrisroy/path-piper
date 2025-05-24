@@ -33,11 +33,18 @@ export function middleware(request: NextRequest) {
   // If it's a protected path, check for authentication
   if (isProtectedPath && !isPublicPath) {
     // Get the auth cookie to check if the user is logged in
-    // Check both possible cookie names that Supabase might use
+    // Check all possible cookie names that Supabase might use
     const hasAuthCookie = request.cookies.has('sb-auth-token') || 
                          request.cookies.has('sb:token') || 
                          request.cookies.has('sb-access-token') ||
-                         request.cookies.has('supabase-auth-token');
+                         request.cookies.has('supabase-auth-token') ||
+                         request.cookies.has('sb-refresh-token') ||
+                         request.cookies.has('sb-provider-token') ||
+                         Array.from(request.cookies.getAll()).some(c => 
+                           c.name.startsWith('sb-') || 
+                           c.name.includes('supabase') || 
+                           c.name.includes('auth')
+                         );
     
     // More detailed cookie logging
     const allCookies = Array.from(request.cookies.getAll());

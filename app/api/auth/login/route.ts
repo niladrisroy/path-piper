@@ -20,7 +20,10 @@ export async function POST(request: NextRequest) {
 
     // If login successful, set session cookie
     if (result.success && result.user) {
-      // Set the auth cookie manually to ensure it's properly set
+      // Extract Supabase's session cookie
+      const supabaseCookies = result.session?.cookieString;
+      
+      // Create response with user data
       const response = NextResponse.json({
         success: true,
         role: result.role,
@@ -29,8 +32,16 @@ export async function POST(request: NextRequest) {
         email: result.user.email,
         name: `${result.user.user_metadata?.first_name || ''} ${result.user.user_metadata?.last_name || ''}`.trim()
       });
+
+      // Let Supabase handle setting cookies - this is critical
+      if (supabaseCookies) {
+        // Set the Supabase cookies from the session
+        supabaseCookies.split(';').forEach(cookie => {
+          response.headers.append('Set-Cookie', cookie.trim());
+        });
+      }
       
-      // Set cookie for authentication with proper settings
+      // Set our own backup cookies as well
       response.cookies.set('sb-auth-token', result.user.id, {
         httpOnly: true,
         secure: false, // Set to false for local development
@@ -39,16 +50,10 @@ export async function POST(request: NextRequest) {
         path: '/',
       });
       
-      // Set a duplicate with a different name for compatibility
-      response.cookies.set('supabase-auth-token', result.user.id, {
-        httpOnly: true,
-        secure: false, // Set to false for local development
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7, // 1 week
-        path: '/',
+      console.log('Setting auth cookies', { 
+        userId: result.user.id,
+        hasSupabaseCookies: !!supabaseCookies
       });
-      
-      console.log('Setting auth cookies', { userId: result.user.id });
       
       return response;
     }

@@ -234,6 +234,7 @@ export async function loginUser(data: LoginData) {
     return { 
       success: true, 
       user: authData.user,
+      session: authData.session,
       role: profile.role,
       onboardingCompleted
     };

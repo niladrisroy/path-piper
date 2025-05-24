@@ -112,9 +112,15 @@ export default function Login() {
 
       // Navigation based on user role and onboarding status
       setTimeout(async () => {
-        // Check if cookies were set properly
+        // Check if cookies were set properly and log them
         const cookies = document.cookie.split(';').map(c => c.trim());
         console.log("Browser cookies:", cookies);
+        
+        // Force refresh to ensure cookies are properly set
+        if (result.success) {
+          // Wait a brief moment for cookies to be saved in browser
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
         
         console.log("Auth result:", {
           success: result.success,
