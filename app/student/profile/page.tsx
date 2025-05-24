@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import StudentProfile from "@/components/profile/student-profile"
 import InternalNavbar from "@/components/internal-navbar"
 import Footer from "@/components/footer"
+import ProtectedLayout from "../../protected-layout"
 
 export const metadata: Metadata = {
   title: "Student Profile | PathPiper",
@@ -18,12 +19,14 @@ export default function StudentProfilePage({
   const studentId = searchParams?.id
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <InternalNavbar />
-      <main className="flex-grow pt-16 sm:pt-24">
-        <StudentProfile studentId={studentId} />
-      </main>
-      <Footer />
-    </div>
+    <ProtectedLayout>
+      <div className="min-h-screen flex flex-col">
+        <InternalNavbar />
+        <main className="flex-grow pt-16 sm:pt-24">
+          <StudentProfile studentId={studentId} />
+        </main>
+        <Footer />
+      </div>
+    </ProtectedLayout>
   )
 }

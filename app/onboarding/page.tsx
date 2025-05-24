@@ -11,6 +11,7 @@ import InterestsStep from "@/components/onboarding/interests-step"
 import SkillsStep from "@/components/onboarding/skills-step"
 import GoalsStep from "@/components/onboarding/goals-step"
 import CompletionStep from "@/components/onboarding/completion-step"
+import InternalNavbar from "@/components/internal-navbar"
 
 export default function Onboarding() {
   const router = useRouter()
@@ -150,52 +151,55 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
-      <OnboardingHeader completionPercentage={completionPercentage} />
+    <main className="min-h-screen flex flex-col bg-slate-50">
+      <InternalNavbar />
+      <div className="pt-16 sm:pt-24">
+        <OnboardingHeader completionPercentage={completionPercentage} />
 
-      <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
-        <div className="w-full max-w-3xl bg-white rounded-xl shadow-sm p-6 md:p-8">
-          {step === 1 && (
-            <PersonalInfoStep 
-              userData={userData} 
-              setUserData={setUserData}
-              onNext={handleNext}
-            />
-          )}
+        <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
+          <div className="w-full max-w-3xl bg-white rounded-xl shadow-sm p-6 md:p-8">
+            {step === 1 && (
+              <PersonalInfoStep 
+                userData={userData} 
+                setUserData={setUserData}
+                onNext={handleNext}
+              />
+            )}
 
-          {step === 2 && (
-            <InterestsStep
-              userData={userData}
-              setUserData={setUserData}
-              onNext={handleNext}
-              onBack={handleBack}
-            />
-          )}
+            {step === 2 && (
+              <InterestsStep
+                userData={userData}
+                setUserData={setUserData}
+                onNext={handleNext}
+                onBack={handleBack}
+              />
+            )}
 
-          {step === 3 && (
-            <SkillsStep
-              userData={userData}
-              setUserData={setUserData}
-              onNext={handleNext}
-              onBack={handleBack}
-            />
-          )}
+            {step === 3 && (
+              <SkillsStep
+                userData={userData}
+                setUserData={setUserData}
+                onNext={handleNext}
+                onBack={handleBack}
+              />
+            )}
 
-          {step === 4 && (
-            <GoalsStep
-              userData={userData}
-              setUserData={setUserData}
-              onNext={handleSubmit}
-              onBack={handleBack}
-              isSubmitting={isSubmitting}
-            />
-          )}
+            {step === 4 && (
+              <GoalsStep
+                userData={userData}
+                setUserData={setUserData}
+                onNext={handleSubmit}
+                onBack={handleBack}
+                isSubmitting={isSubmitting}
+              />
+            )}
 
-          {step === 5 && (
-            <CompletionStep />
-          )}
+            {step === 5 && (
+              <CompletionStep />
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </main>
   )
 }
