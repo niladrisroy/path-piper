@@ -61,7 +61,22 @@ export default function Onboarding() {
           console.warn("Error accessing session storage:", err);
         }
 
-        const response = await fetch("/api/auth/user")
+        // Get auth token from localStorage
+        let token = null;
+        try {
+          const supabase = JSON.parse(localStorage.getItem('supabase.auth.token') || '{}');
+          token = supabase?.currentSession?.access_token;
+          console.log("Found authentication token:", token ? "Yes" : "No");
+        } catch (err) {
+          console.warn("Error accessing localStorage for token:", err);
+        }
+
+        const response = await fetch("/api/auth/user", {
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : ''
+          }
+        });
+        
         if (response.ok) {
           const data = await response.json()
           console.log("User data from API (detailed):", JSON.stringify(data, null, 2));

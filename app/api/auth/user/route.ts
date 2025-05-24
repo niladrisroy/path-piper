@@ -18,15 +18,22 @@ export async function GET(request: NextRequest) {
     // Parse the token
     const token = authHeader.replace('Bearer ', '');
     
+    console.log("API: Verifying token");
+    
     // Verify the user's session with Supabase
     const { data, error } = await supabase.auth.getUser(token);
     
     if (error || !data.user) {
+      console.error("API: Auth error or no user data:", error);
       return NextResponse.json(
-        { success: false, error: 'Invalid session' },
+        { success: false, error: 'Invalid session', details: error },
         { status: 401 }
       );
     }
+    
+    console.log("API: User authenticated successfully:", data.user.id);
+    
+    console.log("API: Fetching profile for user:", data.user.id);
     
     // Get the user's profile from Prisma
     const profile = await prisma.profile.findUnique({
@@ -34,10 +41,20 @@ export async function GET(request: NextRequest) {
     });
     
     if (!profile) {
-      return NextResponse.json(
-        { success: false, error: 'User profile not found' },
-        { status: 404 }
-      );
+      console.error("API: Profile not found for user:", data.user.id);
+      
+      // Return basic user data even if profile not found
+      return NextResponse.json({
+        success: true,
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+          firstName: data.user.user_metadata?.first_name || '',
+          lastName: data.user.user_metadata?.last_name || '',
+          role: data.user.user_metadata?.role || 'student',
+          onboardingCompleted: false
+        }
+      });
     }
     
     // Get role-specific profile data
