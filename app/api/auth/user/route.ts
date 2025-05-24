@@ -56,6 +56,12 @@ export async function GET(request: NextRequest) {
       });
     }
     
+    // Get age group if it's a student profile
+    let ageGroup = 'young-adult';
+    if (profile.role === 'student' && roleProfile) {
+      ageGroup = roleProfile.ageGroup || 'young-adult';
+    }
+
     return NextResponse.json({
       success: true,
       user: {
@@ -64,6 +70,15 @@ export async function GET(request: NextRequest) {
         lastName: profile.lastName,
         role: profile.role,
         email: data.user.email,
+        profile: {
+          first_name: profile.firstName,
+          last_name: profile.lastName,
+          bio: profile.bio || '',
+          location: profile.location || '',
+          education_level: roleProfile?.educationLevel || '',
+          age_group: ageGroup,
+          onboarding_completed: roleProfile?.onboardingCompleted || false
+        },
         ...roleProfile
       }
     });

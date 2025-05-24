@@ -9,7 +9,6 @@ import { motion } from "framer-motion"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 
 import InternalNavbar from "@/components/internal-navbar"
-import OnboardingHeader from "@/components/onboarding/onboarding-header"
 import PersonalInfoStep from "@/components/onboarding/personal-info-step"
 import InterestsStep from "@/components/onboarding/interests-step"
 import SkillsStep from "@/components/onboarding/skills-step"
@@ -169,7 +168,6 @@ export default function Onboarding() {
       
       {/* Add padding to account for fixed navbar */}
       <div className="pt-16 md:pt-14 w-full">
-        <OnboardingHeader completionPercentage={completionPercentage} />
 
         <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
           <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -248,8 +246,25 @@ export default function Onboarding() {
           <div className="p-6 md:p-8">
             {step === 1 && (
               <PersonalInfoStep 
-                userData={userData} 
-                setUserData={setUserData}
+                initialData={{
+                  firstName: userData.firstName,
+                  lastName: userData.lastName,
+                  bio: userData.bio,
+                  location: userData.location,
+                  educationLevel: userData.educationLevel,
+                  ageGroup: userData.ageGroup || "young-adult",
+                  profileImage: null
+                }}
+                onComplete={(data) => {
+                  setUserData({
+                    ...userData,
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    bio: data.bio,
+                    location: data.location,
+                    educationLevel: data.educationLevel
+                  });
+                }}
                 onNext={handleNext}
               />
             )}
