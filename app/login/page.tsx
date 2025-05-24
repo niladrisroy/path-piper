@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -21,6 +21,8 @@ export default function Login() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [isLoading, setIsLoading] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const searchParams = useSearchParams()
+  const [redirectPath, setRedirectPath] = useState<string>('/feed')
 
   // Track mouse position for interactive elements
   useEffect(() => {
@@ -46,13 +48,21 @@ export default function Login() {
       }
     }
   }, [])
-  
+
+  // Set the redirect path when component mounts or search params change
+  useEffect(() => {
+    const from = searchParams.get('from')
+    if (from) {
+      setRedirectPath(from)
+    }
+  }, [searchParams])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     // Show loading state
     setIsLoading(true)
-    
+
     try {
       // Call login API
       const response = await fetch('/api/auth/login', {
@@ -62,19 +72,19 @@ export default function Login() {
         },
         body: JSON.stringify({ email, password }),
       });
-      
+
       const result = await response.json();
-      
+
       if (!result.success) {
         // Show error toast instead of alert
         toast.error(result.error || 'Login failed. Please check your credentials.');
         setIsLoading(false);
         return;
       }
-      
+
       // Show success toast
       toast.success(`Welcome back${result.name ? ', ' + result.name : ''}!`);
-      
+
       // Save user data to localStorage or sessionStorage if needed
       // This can be useful to maintain user state across the app
       try {
@@ -88,12 +98,12 @@ export default function Login() {
       } catch (err) {
         console.warn("Could not save user data to session storage:", err);
       }
-      
+
       // Navigation based on user role and onboarding status
       setTimeout(() => {
         if (result.onboardingCompleted) {
           // If onboarding is completed, go to feed
-          router.push('/feed');
+          router.push(redirectPath);
         } else {
           // If onboarding not completed, direct to appropriate onboarding page
           if (result.role === 'mentor') {
@@ -117,7 +127,7 @@ export default function Login() {
   const handleSocialLogin = async (provider: string) => {
     try {
       setIsLoading(true);
-      
+
       const response = await fetch('/api/auth/social', {
         method: 'POST',
         headers: {
@@ -125,9 +135,9 @@ export default function Login() {
         },
         body: JSON.stringify({ provider }),
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success && result.url) {
         // Redirect to the OAuth provider URL
         window.location.href = result.url;
