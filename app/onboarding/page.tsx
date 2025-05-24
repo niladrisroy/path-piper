@@ -45,6 +45,8 @@ export default function Onboarding() {
         if (response.ok) {
           const data = await response.json()
           
+          console.log("Fetched user data:", data)
+          
           // If user is already onboarded, redirect to feed
           if (data.user && data.user.onboardingCompleted) {
             router.push("/feed")
@@ -52,26 +54,26 @@ export default function Onboarding() {
           }
 
           // If user has existing profile data, populate the form
-          if (data.user) {
-            setExistingData(data.user.profile || {})
+          if (data.user && data.user.profile) {
+            setExistingData(data.user.profile)
             
-            // Populate form with existing data - use data from registration
+            // Populate form with existing data
             setUserData({
-              firstName: data.user.profile?.firstName || data.user.firstName || "",
-              lastName: data.user.profile?.lastName || data.user.lastName || "",
+              firstName: data.user.profile.firstName || "",
+              lastName: data.user.profile.lastName || "",
               email: data.user.email || "",
-              birthdate: data.user.profile?.birthdate || "",
-              location: data.user.profile?.location || "",
-              interests: data.user.profile?.interests || [],
-              skills: data.user.profile?.skills || [],
-              skillLevels: data.user.profile?.skillLevels || {},
-              goals: data.user.profile?.goals || [],
-              educationLevel: data.user.student?.educationLevel || data.user.profile?.educationLevel || "",
-              bio: data.user.profile?.bio || "",
+              birthdate: data.user.profile.birthdate || "",
+              location: data.user.profile.location || "",
+              interests: data.user.profile.interests || [],
+              skills: data.user.profile.skills || [],
+              skillLevels: data.user.profile.skillLevels || {},
+              goals: data.user.profile.goals || [],
+              educationLevel: data.user.profile.educationLevel || "",
+              bio: data.user.profile.bio || "",
             })
 
             // Calculate how far along they are in the process
-            calculateCompletionPercentage(data.user.profile || {})
+            calculateCompletionPercentage(data.user.profile)
           }
         }
       } catch (error) {

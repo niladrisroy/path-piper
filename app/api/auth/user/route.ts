@@ -48,14 +48,8 @@ export async function GET() {
     const userData = {
       id: profile.id,
       email: profile.email,
-      firstName: profile.firstName,
-      lastName: profile.lastName,
       role: profile.role,
       onboardingCompleted,
-      // Include the specific profile based on role
-      student: profile.role === 'student' ? profile.student : null,
-      mentor: profile.role === 'mentor' ? profile.mentor : null,
-      institution: profile.role === 'institution' ? profile.institution : null,
       profile: {
         firstName: profile.firstName,
         lastName: profile.lastName,

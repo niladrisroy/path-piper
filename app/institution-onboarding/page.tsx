@@ -60,37 +60,19 @@ export default function InstitutionOnboardingPage() {
           if (response.ok) {
             const apiData = await response.json()
             
-            if (apiData.user) {
+            if (apiData.user && apiData.user.profile) {
               // Use API data if available
               const profile = {
                 id: apiData.user.id,
-                name: apiData.user.institution?.name || apiData.user.profile?.firstName || "",
-                type: apiData.user.institution?.type || "",
-                category: apiData.user.institution?.category || "",
-                bio: apiData.user.profile?.bio || "",
-                location: apiData.user.profile?.location || "",
-                website: apiData.user.institution?.website || "",
-                email: apiData.user.email || "",
-                logo_url: apiData.user.profile?.profileImageUrl || ""
+                first_name: apiData.user.profile.firstName,
+                last_name: apiData.user.profile.lastName,
+                bio: apiData.user.profile.bio,
+                location: apiData.user.profile.location,
+                email: apiData.user.email,
+                profile_image_url: apiData.user.profile.profileImageUrl
               }
               
-              // Update profileData with the fetched data
-              setProfileData(prevData => ({
-                ...prevData,
-                institutionInfo: {
-                  ...prevData.institutionInfo,
-                  name: profile.name,
-                  type: profile.type,
-                  category: profile.category,
-                  bio: profile.bio,
-                  location: profile.location,
-                  website: profile.website,
-                  logo: profile.logo_url || null,
-                },
-                programs: apiData.user.institution?.programs || [],
-                events: apiData.user.institution?.events || [],
-                gallery: apiData.user.institution?.gallery || [],
-              }))
+              // Continue with populating the institution data...
               await populateInstitutionData(profile)
               return
             }
