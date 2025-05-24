@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -44,108 +43,169 @@ export default function Onboarding() {
   const [completionPercentage, setCompletionPercentage] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [existingData, setExistingData] = useState(null)
+  const [loading, setLoading] = useState(false);
 
   // Fetch user data on component mount
   useEffect(() => {
     const fetchUserData = async () => {
+      setLoading(true);
+
+      // First, test if the database connection is working
       try {
-        // Get user data from sessionStorage first
-        let sessionData = null;
+        console.log("Testing database connection...");
+        const dbTestResponse = await fetch("/api/db-test");
+        const dbTestData = await dbTestResponse.json();
+        console.log("Database connection test:", dbTestData);
+
+        if (!dbTestData.success) {
+          console.error("Database connection failed:", dbTestData.error);
+        }
+      } catch (err) {
+        console.error("Error testing database connection:", err);
+      }
+
+      try {
+        // First try to get user data from session storage
+        let storedData = null;
         try {
-          const storedUser = sessionStorage.getItem('user');
-          if (storedUser) {
-            sessionData = JSON.parse(storedUser);
-            console.log("User data from session storage:", sessionData);
+          const sessionData = sessionStorage.getItem('user_data');
+          if (sessionData) {
+            storedData = JSON.parse(sessionData);
+            console.log("Found user data in session storage");
           }
         } catch (err) {
           console.warn("Error accessing session storage:", err);
         }
 
-        // Get auth token from localStorage - try different possible locations
+        // IMPORTANT: The token might be in different formats or locations depending on how authentication is set up
+        // Let's try to get it from various sources
+
         let token = null;
-        try {
-          // Try different possible storage locations
-          console.log("Attempting to find auth token...");
-          
-          // Option 1: Check cookies
+
+        // Try getting token from cookies first - this is most reliable with Next.js + Supabase
+        if (document.cookie) {
+          console.log("Checking cookies for auth token");
           const cookies = document.cookie.split(';');
-          const authCookie = cookies.find(c => 
-            c.trim().startsWith('sb-') || 
-            c.trim().startsWith('supabase-auth-token')
-          );
-          
-          if (authCookie) {
-            const cookieValue = authCookie.split('=')[1];
-            try {
-              const parsed = JSON.parse(decodeURIComponent(cookieValue));
-              token = parsed?.access_token;
-              console.log("Found token in cookies");
-            } catch (e) {
-              console.warn("Could not parse auth cookie", e);
+          for (const cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            // Check for common Supabase cookie names
+            if (name.startsWith('sb-') || name.includes('auth') || name.includes('token')) {
+              console.log(`Found potential auth cookie: ${name}`);
+              try {
+                // Try to decode and parse if it's a JSON
+                const decodedValue = decodeURIComponent(value);
+                if (decodedValue.includes('{') && decodedValue.includes('}')) {
+                  const parsed = JSON.parse(decodedValue);
+                  if (parsed.access_token) {
+                    token = parsed.access_token;
+                    console.log("Found access_token in cookie JSON");
+                    break;
+                  }
+                } else if (decodedValue.length > 20) {
+                  // This might be the raw token
+                  token = decodedValue;
+                  console.log("Using raw cookie value as token");
+                  break;
+                }
+              } catch (e) {
+                console.log(`Could not parse cookie ${name}:`, e);
+              }
             }
           }
-          
-          // Option 2: Check localStorage with different key patterns
-          if (!token) {
-            // Try various storage keys that Supabase might use
-            const storageKeys = [
-              'supabase.auth.token',
-              'sb-access-token',
-              'supabase-auth'
-            ];
-            
-            for (const key of storageKeys) {
-              const storedValue = localStorage.getItem(key);
-              if (storedValue) {
+        }
+
+        // If not found in cookies, check localStorage and sessionStorage
+        if (!token) {
+          // Common keys where Supabase might store tokens
+          const possibleKeys = [
+            'supabase.auth.token',
+            'sb-access-token',
+            'sb-auth-token',
+            'supabase-auth',
+            'auth-token',
+            'access-token',
+            'token'
+          ];
+
+          // Check localStorage
+          for (const key of possibleKeys) {
+            try {
+              const value = localStorage.getItem(key);
+              if (value) {
+                console.log(`Found value in localStorage at key: ${key}`);
                 try {
-                  const parsed = JSON.parse(storedValue);
-                  token = parsed?.access_token || parsed?.currentSession?.access_token;
-                  console.log(`Found token in localStorage with key: ${key}`);
-                  break;
+                  const parsed = JSON.parse(value);
+                  if (parsed.access_token) {
+                    token = parsed.access_token;
+                    console.log("Found token in localStorage JSON");
+                    break;
+                  } else if (parsed.currentSession?.access_token) {
+                    token = parsed.currentSession.access_token;
+                    console.log("Found token in currentSession object");
+                    break;
+                  }
                 } catch (e) {
-                  console.warn(`Could not parse localStorage item with key ${key}`, e);
                   // If it's not JSON, it might be the token itself
-                  if (typeof storedValue === 'string' && storedValue.length > 20) {
-                    token = storedValue;
-                    console.log(`Using raw string as token from key: ${key}`);
+                  if (value.length > 20) {
+                    token = value;
+                    console.log("Using raw localStorage value as token");
                     break;
                   }
                 }
               }
+            } catch (e) {
+              console.warn(`Error accessing localStorage key ${key}:`, e);
             }
           }
-          
-          // Option 3: Check sessionStorage
+
+          // Check sessionStorage if still not found
           if (!token) {
-            const sessionUser = sessionStorage.getItem('supabase.auth.token');
-            if (sessionUser) {
+            for (const key of possibleKeys) {
               try {
-                const parsed = JSON.parse(sessionUser);
-                token = parsed?.access_token || parsed?.currentSession?.access_token;
-                console.log("Found token in sessionStorage");
+                const value = sessionStorage.getItem(key);
+                if (value) {
+                  console.log(`Found value in sessionStorage at key: ${key}`);
+                  try {
+                    const parsed = JSON.parse(value);
+                    if (parsed.access_token) {
+                      token = parsed.access_token;
+                      console.log("Found token in sessionStorage JSON");
+                      break;
+                    } else if (parsed.currentSession?.access_token) {
+                      token = parsed.currentSession.access_token;
+                      console.log("Found token in sessionStorage currentSession");
+                      break;
+                    }
+                  } catch (e) {
+                    // If it's not JSON, it might be the token itself
+                    if (value.length > 20) {
+                      token = value;
+                      console.log("Using raw sessionStorage value as token");
+                      break;
+                    }
+                  }
+                }
               } catch (e) {
-                console.warn("Could not parse sessionStorage auth token", e);
+                console.warn(`Error accessing sessionStorage key ${key}:`, e);
               }
             }
           }
-          
-          console.log("Authentication token found:", token ? "Yes" : "No");
-          
-          // Dump browser storage for debugging
-          console.log("LocalStorage keys:", Object.keys(localStorage));
-          console.log("SessionStorage keys:", Object.keys(sessionStorage));
-          console.log("Cookies:", document.cookie);
-        } catch (err) {
-          console.warn("Error accessing storage for token:", err);
         }
 
+        // Debug information
+        console.log("Token found:", !!token);
+        if (token) {
+          console.log("Token preview:", token.substring(0, 10) + "...");
+        }
+
+        // First try with our secured endpoint
         const response = await fetch("/api/auth/user", {
           headers: {
             'Authorization': token ? `Bearer ${token}` : ''
           },
           cache: 'no-store' // Prevent caching
         });
-        
+
         if (response.ok) {
           const data = await response.json()
           console.log("User data from API (detailed):", JSON.stringify(data, null, 2));
@@ -160,9 +220,9 @@ export default function Onboarding() {
           if (data.user) {
             // Set basic user data from main profile
             const initialUserData = {
-              firstName: data.user.firstName || sessionData?.name?.split(' ')[0] || "",
-              lastName: data.user.lastName || (sessionData?.name?.split(' ').slice(1).join(' ') || ""),
-              email: data.user.email || sessionData?.email || "",
+              firstName: data.user.firstName || storedData?.name?.split(' ')[0] || "",
+              lastName: data.user.lastName || (storedData?.name?.split(' ').slice(1).join(' ') || ""),
+              email: data.user.email || storedData?.email || "",
               birthdate: "",
               location: data.user.location || "",
               interests: [],
@@ -173,19 +233,19 @@ export default function Onboarding() {
               bio: data.user.bio || "",
               ageGroup: data.user.ageGroup || "young-adult",
             };
-            
+
             console.log("Setting initial user data:", initialUserData);
             setUserData(initialUserData);
 
             // If there's more detailed profile data, use it
             if (data.user.profile) {
               setExistingData(data.user.profile);
-              
+
               const updatedUserData = {
                 ...initialUserData,
-                firstName: data.user.profile.first_name || data.user.firstName || sessionData?.name?.split(' ')[0] || "",
-                lastName: data.user.profile.last_name || data.user.lastName || (sessionData?.name?.split(' ').slice(1).join(' ') || ""),
-                email: data.user.email || sessionData?.email || "",
+                firstName: data.user.profile.first_name || data.user.firstName || storedData?.name?.split(' ')[0] || "",
+                lastName: data.user.profile.last_name || data.user.lastName || (storedData?.name?.split(' ').slice(1).join(' ') || ""),
+                email: data.user.email || storedData?.email || "",
                 birthdate: data.user.profile.birthdate || "",
                 location: data.user.profile.location || data.user.location || "",
                 interests: data.user.profile.interests || [],
@@ -196,7 +256,7 @@ export default function Onboarding() {
                 bio: data.user.profile.bio || data.user.bio || "",
                 ageGroup: data.user.profile.age_group || data.user.ageGroup || "young-adult",
               };
-              
+
               console.log("Setting updated user data from profile:", updatedUserData);
               setUserData(updatedUserData);
 
@@ -207,12 +267,12 @@ export default function Onboarding() {
         } else {
           console.error("Failed to fetch user data:", response.status, response.statusText);
           // Try to use session data if API fails
-          if (sessionData) {
+          if (storedData) {
             console.log("Using session data as fallback");
             setUserData({
-              firstName: sessionData.name?.split(' ')[0] || "",
-              lastName: sessionData.name?.split(' ').slice(1).join(' ') || "",
-              email: sessionData.email || "",
+              firstName: storedData.name?.split(' ')[0] || "",
+              lastName: storedData.name?.split(' ').slice(1).join(' ') || "",
+              email: storedData.email || "",
               birthdate: "",
               location: "",
               interests: [],
@@ -227,6 +287,8 @@ export default function Onboarding() {
         }
       } catch (error) {
         console.error("Error fetching user data:", error)
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -310,7 +372,7 @@ export default function Onboarding() {
   return (
     <main className="min-h-screen flex flex-col bg-slate-50">
       <InternalNavbar />
-      
+
       {/* Add padding to account for fixed navbar */}
       <div className="pt-16 md:pt-14 w-full">
 
@@ -330,13 +392,13 @@ export default function Onboarding() {
                 >
                   <ArrowLeft size={20} />
                 </button>
-                
+
                 <div className="flex-1 mx-4">
                   <div className="flex items-center justify-between">
                     {STEPS.map((s, index) => {
                       const isActive = step === index + 1;
                       const isCompleted = step > index + 1;
-                      
+
                       return (
                         <div key={s.id} className="flex flex-col items-center">
                           <div
@@ -365,7 +427,7 @@ export default function Onboarding() {
                       );
                     })}
                   </div>
-                  
+
                   <div className="relative mt-2 hidden sm:block">
                     <div className="absolute top-0 left-0 right-0 h-1 bg-slate-200 rounded-full"></div>
                     <div 
@@ -374,7 +436,7 @@ export default function Onboarding() {
                     ></div>
                   </div>
                 </div>
-                
+
                 <button
                   onClick={step < 4 ? handleNext : handleSubmit}
                   disabled={step === 5}

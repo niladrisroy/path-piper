@@ -3,14 +3,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { supabase } from '@/lib/supabase';
 
+// Test the database connection when the file is loaded
+(async () => {
+  try {
+    const count = await prisma.profile.count();
+    console.log("API: Database connection test - Profile count:", count);
+  } catch (error) {
+    console.error("API: Database connection test failed:", error);
+  }
+})();
+
 export async function GET(request: NextRequest) {
   try {
     // Get the auth cookie from the headers
     const authHeader = request.headers.get('Authorization');
     
+    console.log("API: Received auth request, header present:", !!authHeader);
+    
     if (!authHeader) {
       return NextResponse.json(
-        { success: false, error: 'Not authenticated' },
+        { success: false, error: 'Not authenticated', message: 'No Authorization header provided' },
         { status: 401 }
       );
     }
@@ -18,18 +30,32 @@ export async function GET(request: NextRequest) {
     // Parse the token
     const token = authHeader.replace('Bearer ', '');
     
-    console.log("API: Verifying token");
+    // Log token preview for debugging (first 10 chars only for security)
+    console.log("API: Token preview:", token.substring(0, 10) + "...");
     
     // Verify the user's session with Supabase
-    const { data, error } = await supabase.auth.getUser(token);
+    console.log("API: Verifying token with Supabase");
     
-    if (error || !data.user) {
-      console.error("API: Auth error or no user data:", error);
-      return NextResponse.json(
-        { success: false, error: 'Invalid session', details: error },
-        { status: 401 }
-      );
-    }
+    try {
+      const { data, error } = await supabase.auth.getUser(token);
+      
+      if (error) {
+        console.error("API: Supabase auth error:", error.message);
+        return NextResponse.json(
+          { success: false, error: 'Invalid session', message: error.message },
+          { status: 401 }
+        );
+      }
+      
+      if (!data || !data.user) {
+        console.error("API: No user data returned from Supabase");
+        return NextResponse.json(
+          { success: false, error: 'No user data', message: 'User data not found' },
+          { status: 401 }
+        );
+      }
+      
+      console.log("API: User authenticated successfully:", data.user.id);
     
     console.log("API: User authenticated successfully:", data.user.id);
     
