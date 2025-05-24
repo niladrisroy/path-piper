@@ -36,26 +36,23 @@ export async function GET(request: NextRequest) {
     // Verify the user's session with Supabase
     console.log("API: Verifying token with Supabase");
     
-    try {
-      const { data, error } = await supabase.auth.getUser(token);
+    const { data, error } = await supabase.auth.getUser(token);
       
-      if (error) {
-        console.error("API: Supabase auth error:", error.message);
-        return NextResponse.json(
-          { success: false, error: 'Invalid session', message: error.message },
-          { status: 401 }
-        );
-      }
-      
-      if (!data || !data.user) {
-        console.error("API: No user data returned from Supabase");
-        return NextResponse.json(
-          { success: false, error: 'No user data', message: 'User data not found' },
-          { status: 401 }
-        );
-      }
-      
-      console.log("API: User authenticated successfully:", data.user.id);
+    if (error) {
+      console.error("API: Supabase auth error:", error.message);
+      return NextResponse.json(
+        { success: false, error: 'Invalid session', message: error.message },
+        { status: 401 }
+      );
+    }
+    
+    if (!data || !data.user) {
+      console.error("API: No user data returned from Supabase");
+      return NextResponse.json(
+        { success: false, error: 'No user data', message: 'User data not found' },
+        { status: 401 }
+      );
+    }
     
     console.log("API: User authenticated successfully:", data.user.id);
     
@@ -144,6 +141,87 @@ export async function GET(request: NextRequest) {
     
   } catch (error) {
     console.error('User API error:', error);
+    return NextResponse.json(
+      { success: false, error: 'An unexpected error occurred' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    // Get the auth cookie from the headers
+    const authHeader = request.headers.get('Authorization');
+    
+    if (!authHeader) {
+      return NextResponse.json(
+        { success: false, error: 'Not authenticated', message: 'No Authorization header provided' },
+        { status: 401 }
+      );
+    }
+    
+    // Parse the token
+    const token = authHeader.replace('Bearer ', '');
+    
+    // Verify the user's session with Supabase
+    const { data, error } = await supabase.auth.getUser(token);
+    
+    if (error || !data.user) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid session' },
+        { status: 401 }
+      );
+    }
+    
+    // Get the request body
+    const body = await request.json();
+    
+    // Update the profile
+    const profile = await prisma.profile.findUnique({
+      where: { id: data.user.id },
+    });
+    
+    if (!profile) {
+      return NextResponse.json(
+        { success: false, error: 'Profile not found' },
+        { status: 404 }
+      );
+    }
+    
+    // Update the profile
+    await prisma.profile.update({
+      where: { id: data.user.id },
+      data: {
+        firstName: body.profile?.first_name || profile.firstName,
+        lastName: body.profile?.last_name || profile.lastName,
+        bio: body.profile?.bio || profile.bio,
+        location: body.profile?.location || profile.location,
+      },
+    });
+    
+    // Update role-specific profile
+    if (profile.role === 'student') {
+      await prisma.studentProfile.update({
+        where: { id: data.user.id },
+        data: {
+          educationLevel: body.profile?.education_level,
+          ageGroup: body.profile?.age_group,
+          onboardingCompleted: body.profile?.onboarding_completed || false,
+        },
+      });
+    } else if (profile.role === 'mentor') {
+      await prisma.mentorProfile.update({
+        where: { id: data.user.id },
+        data: {
+          educationLevel: body.profile?.education_level,
+          onboardingCompleted: body.profile?.onboarding_completed || false,
+        },
+      });
+    }
+    
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error updating profile:', error);
     return NextResponse.json(
       { success: false, error: 'An unexpected error occurred' },
       { status: 500 }

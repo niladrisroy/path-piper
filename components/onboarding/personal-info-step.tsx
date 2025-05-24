@@ -78,27 +78,37 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
     profileImage: null,
   }
 
-  // Merge initial data with form data
+  // Merge initial data with form data, ensuring we properly handle undefined values
   const initialFormData = {
-    firstName: "",
-    lastName: "",
-    bio: "",
-    location: "",
-    educationLevel: "",
-    ageGroup: "young-adult",
-    profileImage: null,
-    ...initialData
+    ...defaultData,
+    ...Object.fromEntries(
+      Object.entries(initialData).filter(([_, v]) => v !== undefined && v !== null)
+    )
   }
 
-  console.log("PersonalInfoStep - initialData:", initialData);
-  console.log("PersonalInfoStep - initialFormData:", initialFormData);
+  console.log("PersonalInfoStep - initialData (raw):", initialData);
+  console.log("PersonalInfoStep - initialFormData (merged):", initialFormData);
 
   // Debug: Log more details about what we received
-  console.log("PersonalInfoStep - firstName value:", initialData.firstName);
-  console.log("PersonalInfoStep - lastName value:", initialData.lastName);
-  console.log("PersonalInfoStep - ageGroup value:", initialData.ageGroup);
+  console.log("PersonalInfoStep - firstName value:", initialData.firstName || "NOT SET");
+  console.log("PersonalInfoStep - lastName value:", initialData.lastName || "NOT SET");
+  console.log("PersonalInfoStep - ageGroup value:", initialData.ageGroup || "NOT SET");
+  console.log("PersonalInfoStep - educationLevel value:", initialData.educationLevel || "NOT SET");
 
-  const [formData, setFormData] = useState<PersonalInfo>(initialFormData)
+  const [formData, setFormData] = useState<PersonalInfo>(initialFormData);
+  
+  // Apply initial data when it changes (useful for async data loading)
+  useEffect(() => {
+    if (initialData && Object.keys(initialData).some(key => initialData[key])) {
+      console.log("PersonalInfoStep - Updating form data from new initialData");
+      setFormData(prev => ({
+        ...prev,
+        ...Object.fromEntries(
+          Object.entries(initialData).filter(([_, v]) => v !== undefined && v !== null)
+        )
+      }));
+    }
+  }, [initialData]);
 
   // Debug effect to log form data changes
   useEffect(() => {

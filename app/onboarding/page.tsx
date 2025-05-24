@@ -198,22 +198,53 @@ export default function Onboarding() {
           console.log("Token preview:", token.substring(0, 10) + "...");
         }
 
-        // First try with our secured endpoint
+        // Debug current cookies and local storage to check auth status
+        console.log("Current cookies:", document.cookie);
+        console.log("Available localStorage keys:", Object.keys(localStorage));
+        console.log("Available sessionStorage keys:", Object.keys(sessionStorage));
+        
+        // First try to get session directly from Supabase
+        let directToken = null;
+        try {
+          // This approach directly uses the Supabase JS client to get the session
+          // The client should handle the cookie retrieval for us
+          const { data: { session } } = await fetch('/api/auth/check-token', {
+            headers: {
+              'Authorization': token ? `Bearer ${token}` : ''
+            }
+          }).then(res => res.json());
+          
+          if (session) {
+            console.log("Found session directly from Supabase client");
+            directToken = session.access_token;
+          }
+        } catch (err) {
+          console.error("Error getting session directly:", err);
+        }
+        
+        // Use the best token we have
+        const bestToken = directToken || token;
+        console.log("Using token:", bestToken ? "Yes (found)" : "No (not found)");
+        
+        // Try with our secured endpoint
         const response = await fetch("/api/auth/user", {
           headers: {
-            'Authorization': token ? `Bearer ${token}` : ''
+            'Authorization': bestToken ? `Bearer ${bestToken}` : '',
+            'Cache-Control': 'no-cache', // Prevent caching
+            'Pragma': 'no-cache'
           },
-          cache: 'no-store' // Prevent caching
+          cache: 'no-store', // Prevent caching
+          next: { revalidate: 0 } // Force revalidation
         });
 
         if (response.ok) {
-          const data = await response.json()
+          const data = await response.json();
           console.log("User data from API (detailed):", JSON.stringify(data, null, 2));
 
           // If user is already onboarded, redirect to feed
           if (data.user && data.user.onboardingCompleted) {
-            router.push("/feed")
-            return
+            router.push("/feed");
+            return;
           }
 
           // If user has existing profile data, populate the form
@@ -263,6 +294,13 @@ export default function Onboarding() {
               // Calculate how far along they are in the process
               calculateCompletionPercentage(data.user.profile);
             }
+            
+            // Explicitly add a direct debug to verify data binding
+            console.log("FINAL VALUES TO BE USED:");
+            console.log("- firstName:", userData.firstName);
+            console.log("- lastName:", userData.lastName); 
+            console.log("- ageGroup:", userData.ageGroup);
+            console.log("- educationLevel:", userData.educationLevel);
           }
         } else {
           console.error("Failed to fetch user data:", response.status, response.statusText);
