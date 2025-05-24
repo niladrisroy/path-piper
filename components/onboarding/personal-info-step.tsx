@@ -80,8 +80,16 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
 
   // Merge initialData with defaultData to ensure all fields exist
   const mergedInitialData = { ...defaultData, ...initialData }
+  
+  console.log("PersonalInfoStep - initialData:", initialData);
+  console.log("PersonalInfoStep - mergedInitialData:", mergedInitialData);
 
   const [formData, setFormData] = useState<PersonalInfo>(mergedInitialData)
+  
+  // Debug effect to log form data changes
+  useEffect(() => {
+    console.log("PersonalInfoStep - formData updated:", formData);
+  }, [formData]);
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [educationHelperText, setEducationHelperText] = useState<string>("")
   const [userChangedEducation, setUserChangedEducation] = useState<boolean>(false)

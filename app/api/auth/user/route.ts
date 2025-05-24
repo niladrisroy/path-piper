@@ -62,6 +62,17 @@ export async function GET(request: NextRequest) {
       ageGroup = roleProfile.ageGroup || 'young-adult';
     }
 
+    // Log the data for debugging
+    console.log("API response data:", {
+      id: profile.id,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      role: profile.role,
+      email: data.user.email,
+      ageGroup,
+      roleProfile
+    });
+    
     return NextResponse.json({
       success: true,
       user: {
@@ -70,6 +81,11 @@ export async function GET(request: NextRequest) {
         lastName: profile.lastName,
         role: profile.role,
         email: data.user.email,
+        ageGroup: ageGroup,
+        educationLevel: roleProfile?.educationLevel || '',
+        bio: profile.bio || '',
+        location: profile.location || '',
+        onboardingCompleted: roleProfile?.onboardingCompleted || false,
         profile: {
           first_name: profile.firstName,
           last_name: profile.lastName,

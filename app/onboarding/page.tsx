@@ -49,10 +49,22 @@ export default function Onboarding() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
+        // Get user data from sessionStorage first
+        let sessionData = null;
+        try {
+          const storedUser = sessionStorage.getItem('user');
+          if (storedUser) {
+            sessionData = JSON.parse(storedUser);
+            console.log("User data from session storage:", sessionData);
+          }
+        } catch (err) {
+          console.warn("Error accessing session storage:", err);
+        }
+
         const response = await fetch("/api/auth/user")
         if (response.ok) {
           const data = await response.json()
-          console.log("User data from API:", data)
+          console.log("User data from API (detailed):", JSON.stringify(data, null, 2));
 
           // If user is already onboarded, redirect to feed
           if (data.user && data.user.onboardingCompleted) {
@@ -63,10 +75,10 @@ export default function Onboarding() {
           // If user has existing profile data, populate the form
           if (data.user) {
             // Set basic user data from main profile
-            setUserData({
-              firstName: data.user.firstName || "",
-              lastName: data.user.lastName || "",
-              email: data.user.email || "",
+            const initialUserData = {
+              firstName: data.user.firstName || sessionData?.name?.split(' ')[0] || "",
+              lastName: data.user.lastName || (sessionData?.name?.split(' ').slice(1).join(' ') || ""),
+              email: data.user.email || sessionData?.email || "",
               birthdate: "",
               location: data.user.location || "",
               interests: [],
@@ -76,16 +88,20 @@ export default function Onboarding() {
               educationLevel: data.user.educationLevel || "",
               bio: data.user.bio || "",
               ageGroup: data.user.ageGroup || "young-adult",
-            })
+            };
+            
+            console.log("Setting initial user data:", initialUserData);
+            setUserData(initialUserData);
 
             // If there's more detailed profile data, use it
             if (data.user.profile) {
-              setExistingData(data.user.profile)
-              setUserData(prevData => ({
-                ...prevData,
-                firstName: data.user.profile.first_name || data.user.firstName || "",
-                lastName: data.user.profile.last_name || data.user.lastName || "",
-                email: data.user.email || "",
+              setExistingData(data.user.profile);
+              
+              const updatedUserData = {
+                ...initialUserData,
+                firstName: data.user.profile.first_name || data.user.firstName || sessionData?.name?.split(' ')[0] || "",
+                lastName: data.user.profile.last_name || data.user.lastName || (sessionData?.name?.split(' ').slice(1).join(' ') || ""),
+                email: data.user.email || sessionData?.email || "",
                 birthdate: data.user.profile.birthdate || "",
                 location: data.user.profile.location || data.user.location || "",
                 interests: data.user.profile.interests || [],
@@ -95,11 +111,34 @@ export default function Onboarding() {
                 educationLevel: data.user.profile.education_level || data.user.educationLevel || "",
                 bio: data.user.profile.bio || data.user.bio || "",
                 ageGroup: data.user.profile.age_group || data.user.ageGroup || "young-adult",
-              }))
+              };
+              
+              console.log("Setting updated user data from profile:", updatedUserData);
+              setUserData(updatedUserData);
 
               // Calculate how far along they are in the process
-              calculateCompletionPercentage(data.user.profile)
+              calculateCompletionPercentage(data.user.profile);
             }
+          }
+        } else {
+          console.error("Failed to fetch user data:", response.status, response.statusText);
+          // Try to use session data if API fails
+          if (sessionData) {
+            console.log("Using session data as fallback");
+            setUserData({
+              firstName: sessionData.name?.split(' ')[0] || "",
+              lastName: sessionData.name?.split(' ').slice(1).join(' ') || "",
+              email: sessionData.email || "",
+              birthdate: "",
+              location: "",
+              interests: [],
+              skills: [],
+              skillLevels: {},
+              goals: [],
+              educationLevel: "",
+              bio: "",
+              ageGroup: "young-adult",
+            });
           }
         }
       } catch (error) {
