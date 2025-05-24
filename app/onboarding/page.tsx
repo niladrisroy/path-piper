@@ -1,217 +1,152 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, ArrowRight, CheckCircle, User, BookOpen, Target, Award } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { z } from "zod"
+import { toast } from "sonner"
+
 import OnboardingHeader from "@/components/onboarding/onboarding-header"
 import PersonalInfoStep from "@/components/onboarding/personal-info-step"
 import InterestsStep from "@/components/onboarding/interests-step"
-import GoalsStep from "@/components/onboarding/goals-step"
 import SkillsStep from "@/components/onboarding/skills-step"
+import GoalsStep from "@/components/onboarding/goals-step"
 import CompletionStep from "@/components/onboarding/completion-step"
-import type { AgeGroup } from "@/components/onboarding/personal-info-step"
-import { supabase } from "@/lib/supabase"
 
-// Define the steps for the onboarding process
-const STEPS = [
-  { id: "personal-info", title: "Personal Info", icon: <User className="h-5 w-5" /> },
-  { id: "interests", title: "Interests", icon: <BookOpen className="h-5 w-5" /> },
-  { id: "goals", title: "Goals", icon: <Target className="h-5 w-5" /> },
-  { id: "skills", title: "Skills", icon: <Award className="h-5 w-5" /> },
-  { id: "completion", title: "Complete", icon: <CheckCircle className="h-5 w-5" /> },
-]
-
-export default function OnboardingPage() {
-  const [currentStep, setCurrentStep] = useState(0)
-  const [isLoading, setIsLoading] = useState(true)
-  const [profileData, setProfileData] = useState({
-    personalInfo: {
-      firstName: "",
-      lastName: "",
-      bio: "",
-      location: "",
-      educationLevel: "",
-      ageGroup: "young-adult" as AgeGroup,
-      profileImage: null,
-    },
+export default function Onboarding() {
+  const router = useRouter()
+  const [step, setStep] = useState(1)
+  const [userData, setUserData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    birthdate: "",
+    location: "",
     interests: [],
-    goals: [],
     skills: [],
+    skillLevels: {},
+    goals: [],
+    educationLevel: "",
+    bio: "",
   })
-  const [completedSteps, setCompletedSteps] = useState<Record<string, boolean>>({})
+  const [completionPercentage, setCompletionPercentage] = useState(0)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [existingData, setExistingData] = useState(null)
 
   // Fetch user data on component mount
   useEffect(() => {
-    async function fetchUserData() {
+    const fetchUserData = async () => {
       try {
-        setIsLoading(true)
+        const response = await fetch("/api/auth/user")
+        if (response.ok) {
+          const data = await response.json()
 
-        // Get current user session
-        const { data: sessionData } = await supabase.auth.getSession()
+          // If user is already onboarded, redirect to feed
+          if (data.user && data.user.onboarding_completed) {
+            router.push("/feed")
+            return
+          }
 
-        if (!sessionData.session) {
-          console.error("No active session found")
-          setIsLoading(false)
-          return
+          // If user has existing profile data, populate the form
+          if (data.user && data.user.profile) {
+            setExistingData(data.user.profile)
+            setUserData({
+              firstName: data.user.profile.first_name || "",
+              lastName: data.user.profile.last_name || "",
+              email: data.user.email || "",
+              birthdate: data.user.profile.birthdate || "",
+              location: data.user.profile.location || "",
+              interests: data.user.profile.interests || [],
+              skills: data.user.profile.skills || [],
+              skillLevels: data.user.profile.skill_levels || {},
+              goals: data.user.profile.goals || [],
+              educationLevel: data.user.profile.education_level || "",
+              bio: data.user.profile.bio || "",
+            })
+
+            // Calculate how far along they are in the process
+            calculateCompletionPercentage(data.user.profile)
+          }
         }
-
-        // Fetch user profile data
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', sessionData.session.user.id)
-          .single()
-
-        if (profileError) {
-          console.error("Error fetching profile:", profileError)
-          setIsLoading(false)
-          return
-        }
-
-        // Fetch student profile data
-        const { data: studentProfile, error: studentError } = await supabase
-          .from('student_profiles')
-          .select('*')
-          .eq('id', sessionData.session.user.id)
-          .single()
-
-        if (studentError && studentError.code !== 'PGRST116') { // PGRST116 means no rows found
-          console.error("Error fetching student profile:", studentError)
-        }
-
-        // Fetch user interests
-        const { data: userInterests, error: interestsError } = await supabase
-          .from('user_interests')
-          .select('interest_id, interests(name, category)')
-          .eq('user_id', sessionData.session.user.id)
-
-        if (interestsError) {
-          console.error("Error fetching interests:", interestsError)
-        }
-
-        // Fetch user goals
-        const { data: userGoals, error: goalsError } = await supabase
-          .from('goals')
-          .select('*')
-          .eq('user_id', sessionData.session.user.id)
-
-        if (goalsError) {
-          console.error("Error fetching goals:", goalsError)
-        }
-
-        // Fetch user skills
-        const { data: userSkills, error: skillsError } = await supabase
-          .from('user_skills')
-          .select('skill_id, proficiency_level, skills(name, category)')
-          .eq('user_id', sessionData.session.user.id)
-
-        if (skillsError) {
-          console.error("Error fetching skills:", skillsError)
-        }
-
-        // Format interests, goals and skills data
-        const interests = userInterests?.map(item => ({
-          id: item.interest_id,
-          name: item.interests?.name || '',
-          category: item.interests?.category || ''
-        })) || []
-
-        const goals = userGoals?.map(goal => ({
-          id: goal.id,
-          title: goal.title,
-          description: goal.description,
-          category: goal.category,
-          timeframe: goal.timeframe,
-        })) || []
-
-        const skills = userSkills?.map(item => ({
-          id: item.skill_id,
-          name: item.skills?.name || '',
-          category: item.skills?.category || '',
-          level: item.proficiency_level
-        })) || []
-
-        // Update state with fetched data
-        setProfileData({
-          personalInfo: {
-            firstName: profile.first_name || "",
-            lastName: profile.last_name || "",
-            bio: profile.bio || "",
-            location: profile.location || "",
-            educationLevel: studentProfile?.education_level || "",
-            ageGroup: studentProfile?.age_group as AgeGroup || "young-adult",
-            profileImage: profile.profile_image_url || null,
-          },
-          interests,
-          goals,
-          skills,
-        })
-
-        // Set completed steps based on data availability
-        const completed: Record<string, boolean> = {}
-
-        if (profile.first_name && profile.last_name) {
-          completed["personalInfo"] = true
-        }
-
-        if (interests.length > 0) {
-          completed["interests"] = true
-        }
-
-        if (goals.length > 0) {
-          completed["goals"] = true
-        }
-
-        if (skills.length > 0) {
-          completed["skills"] = true
-        }
-
-        setCompletedSteps(completed)
-
       } catch (error) {
-        console.error("Error loading user data:", error)
-      } finally {
-        setIsLoading(false)
+        console.error("Error fetching user data:", error)
       }
     }
 
     fetchUserData()
-  }, [])
+  }, [router])
 
-  // Calculate completion percentage
-  const completionPercentage = Math.round(
-    (Object.values(completedSteps).filter(Boolean).length / (STEPS.length - 1)) * 100,
-  )
+  // Calculate completion percentage based on filled fields
+  const calculateCompletionPercentage = (profile) => {
+    let fieldsCompleted = 0
+    let totalFields = 8 // Total number of required fields across all steps
 
-  const handleStepComplete = (stepId: string, data: any) => {
-    setProfileData((prev) => ({
-      ...prev,
-      [stepId]: data,
-    }))
-    setCompletedSteps((prev) => ({
-      ...prev,
-      [stepId]: true,
-    }))
+    if (profile.first_name) fieldsCompleted++
+    if (profile.last_name) fieldsCompleted++
+    if (profile.birthdate) fieldsCompleted++
+    if (profile.location) fieldsCompleted++
+    if (profile.interests && profile.interests.length > 0) fieldsCompleted++
+    if (profile.skills && profile.skills.length > 0) fieldsCompleted++
+    if (profile.goals && profile.goals.length > 0) fieldsCompleted++
+    if (profile.bio) fieldsCompleted++
+
+    const percentage = Math.round((fieldsCompleted / totalFields) * 100)
+    setCompletionPercentage(percentage)
+
+    // Set starting step based on completion
+    if (percentage >= 75) setStep(4) // Goals step
+    else if (percentage >= 50) setStep(3) // Skills step
+    else if (percentage >= 25) setStep(2) // Interests step
+    else setStep(1) // Personal info step
   }
 
   const handleNext = () => {
-    if (currentStep < STEPS.length - 1) {
-      setCurrentStep(currentStep + 1)
-    }
+    setStep(step + 1)
+    window.scrollTo(0, 0)
   }
 
   const handleBack = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1)
+    setStep(step - 1)
+    window.scrollTo(0, 0)
+  }
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true)
+
+    try {
+      const response = await fetch("/api/auth/user", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          profile: {
+            first_name: userData.firstName,
+            last_name: userData.lastName,
+            birthdate: userData.birthdate,
+            location: userData.location,
+            interests: userData.interests,
+            skills: userData.skills,
+            skill_levels: userData.skillLevels,
+            goals: userData.goals,
+            education_level: userData.educationLevel,
+            bio: userData.bio,
+            onboarding_completed: true,
+          },
+        }),
+      })
+
+      if (response.ok) {
+        toast.success("Profile updated successfully!")
+        setStep(5) // Move to completion step
+      } else {
+        const error = await response.json()
+        toast.error("Failed to update profile: " + (error.message || "Unknown error"))
+      }
+    } catch (error) {
+      toast.error("An error occurred: " + error.message)
+    } finally {
+      setIsSubmitting(false)
     }
-  }
-
-  const handleSkip = () => {
-    handleNext()
-  }
-
-  const handleJumpToStep = (index: number) => {
-    setCurrentStep(index)
   }
 
   return (
@@ -219,131 +154,47 @@ export default function OnboardingPage() {
       <OnboardingHeader completionPercentage={completionPercentage} />
 
       <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
-        {isLoading ? (
-          <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg p-8 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-4">
-              <div className="h-12 w-12 rounded-full border-4 border-teal-400 border-t-transparent animate-spin"></div>
-              <p className="text-slate-600">Loading your profile data...</p>
-            </div>
-          </div>
-        ) : (
-          <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg overflow-hidden">
-            {/* Step navigation */}
-            <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={handleBack}
-                  disabled={currentStep === 0}
-                  className={`p-2 rounded-full ${
-                    currentStep === 0
-                      ? "text-slate-300 cursor-not-allowed"
-                      : "text-slate-500 hover:text-teal-500 hover:bg-teal-50"
-                  }`}
-                >
-                  <ArrowLeft size={20} />
-                </button>
+        <div className="w-full max-w-3xl bg-white rounded-xl shadow-sm p-6 md:p-8">
+          {step === 1 && (
+            <PersonalInfoStep 
+              userData={userData} 
+              setUserData={setUserData}
+              onNext={handleNext}
+            />
+          )}
 
-                <div className="flex items-center space-x-2 md:space-x-4 overflow-x-auto py-2 scrollbar-hide">
-                  {STEPS.map((step, index) => (
-                    <div
-                      key={step.id}
-                      className="flex items-center"
-                      onClick={() => {
-                        // Only allow jumping to completed steps or the current step
-                        if (completedSteps[step.id] || index <= currentStep) {
-                          handleJumpToStep(index)
-                        }
-                      }}
-                    >
-                      <div
-                        className={`flex items-center justify-center h-10 w-10 rounded-full ${
-                          index === currentStep
-                            ? "bg-teal-500 text-white"
-                            : completedSteps[step.id]
-                              ? "bg-teal-100 text-teal-600 cursor-pointer"
-                              : "bg-slate-200 text-slate-500"
-                        } ${index <= currentStep ? "cursor-pointer" : ""}`}
-                      >
-                        {completedSteps[step.id] ? <CheckCircle className="h-5 w-5" /> : step.icon}
-                      </div>
-                      <span
-                        className={`hidden md:block ml-2 text-sm ${
-                          index === currentStep
-                            ? "text-teal-500 font-medium"
-                            : completedSteps[step.id]
-                              ? "text-slate-700"
-                              : "text-slate-500"
-                        }`}
-                      >
-                        {step.title}
-                      </span>
-                      {index < STEPS.length - 1 && (
-                        <div
-                          className={`hidden md:block w-8 h-0.5 mx-2 ${
-                            index < currentStep || (completedSteps[step.id] && completedSteps[STEPS[index + 1].id])
-                              ? "bg-teal-500"
-                              : "bg-slate-200"
-                          }`}
-                        />
-                      )}
-                    </div>
-                  ))}
-                </div>
+          {step === 2 && (
+            <InterestsStep
+              userData={userData}
+              setUserData={setUserData}
+              onNext={handleNext}
+              onBack={handleBack}
+            />
+          )}
 
-                {currentStep < STEPS.length - 1 ? (
-                  <button
-                    onClick={handleNext}
-                    className="p-2 rounded-full text-slate-500 hover:text-teal-500 hover:bg-teal-50"
-                  >
-                    <ArrowRight size={20} />
-                  </button>
-                ) : (
-                  <div className="w-10"></div> // Placeholder for alignment
-                )}
-              </div>
-            </div>
+          {step === 3 && (
+            <SkillsStep
+              userData={userData}
+              setUserData={setUserData}
+              onNext={handleNext}
+              onBack={handleBack}
+            />
+          )}
 
-            {/* Step content */}
-            <div className="p-6 md:p-8">
-              {currentStep === 0 && (
-                <PersonalInfoStep
-                  initialData={profileData.personalInfo}
-                  onComplete={(data) => handleStepComplete("personalInfo", data)}
-                  onNext={handleNext}
-                />
-              )}
-              {currentStep === 1 && (
-                <InterestsStep
-                  initialData={profileData.interests}
-                  onComplete={(data) => handleStepComplete("interests", data)}
-                  onNext={handleNext}
-                  onSkip={handleSkip}
-                  ageGroup={profileData.personalInfo.ageGroup}
-                />
-              )}
-              {currentStep === 2 && (
-                <GoalsStep
-                  initialData={profileData.goals}
-                  onComplete={(data) => handleStepComplete("goals", data)}
-                  onNext={handleNext}
-                  onSkip={handleSkip}
-                />
-              )}
-              {currentStep === 3 && (
-                <SkillsStep
-                  initialData={profileData.skills}
-                  onComplete={(data) => handleStepComplete("skills", data)}
-                  onNext={handleNext}
-                  onSkip={handleSkip}
-                  ageGroup={profileData.personalInfo.ageGroup}
-                />
-              )}
-              {currentStep === 4 && (
-                <CompletionStep profileData={profileData} completionPercentage={completionPercentage} />
-              )}
-            </div>
-          </div>
-        )}
+          {step === 4 && (
+            <GoalsStep
+              userData={userData}
+              setUserData={setUserData}
+              onNext={handleSubmit}
+              onBack={handleBack}
+              isSubmitting={isSubmitting}
+            />
+          )}
+
+          {step === 5 && (
+            <CompletionStep />
+          )}
+        </div>
       </div>
     </div>
   )
