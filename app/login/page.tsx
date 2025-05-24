@@ -54,7 +54,7 @@ export default function Login() {
     // Check for both 'from' and 'redirectURL' parameters
     const from = searchParams.get('from');
     const redirectURL = searchParams.get('redirectURL');
-    
+
     // Priority: redirectURL, then from, otherwise default to '/feed'
     if (redirectURL) {
       console.log('Setting redirect path from redirectURL:', redirectURL);
@@ -115,20 +115,20 @@ export default function Login() {
         // Check if cookies were set properly and log them
         const cookies = document.cookie.split(';').map(c => c.trim());
         console.log("Browser cookies:", cookies);
-        
+
         // Force refresh to ensure cookies are properly set
         if (result.success) {
           // Wait a brief moment for cookies to be saved in browser
           await new Promise(resolve => setTimeout(resolve, 100));
         }
-        
+
         console.log("Auth result:", {
           success: result.success,
           userId: result.userId,
           role: result.role,
           onboardingCompleted: result.onboardingCompleted
         });
-        
+
         if (result.onboardingCompleted) {
           // If onboarding is completed, try to redirect to the requested path
           console.log("Redirecting to:", redirectPath);
