@@ -47,6 +47,9 @@ export function middleware(request: NextRequest) {
         redirectUrl.searchParams.set('redirectURL', originalRedirectURL);
       }
       
+      // Log the redirect for debugging
+      console.log(`Redirecting unauthenticated request from ${path} to ${redirectUrl.toString()}`);
+      
       return NextResponse.redirect(redirectUrl);
     }
   }

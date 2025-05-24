@@ -57,9 +57,14 @@ export default function Login() {
     
     // Priority: redirectURL, then from, otherwise default to '/feed'
     if (redirectURL) {
+      console.log('Setting redirect path from redirectURL:', redirectURL);
       setRedirectPath(redirectURL);
     } else if (from) {
+      console.log('Setting redirect path from "from" parameter:', from);
       setRedirectPath(from);
+    } else {
+      console.log('No redirect parameters found, defaulting to /feed');
+      setRedirectPath('/feed');
     }
   }, [searchParams])
 
@@ -108,21 +113,12 @@ export default function Login() {
       // Navigation based on user role and onboarding status
       setTimeout(() => {
         if (result.onboardingCompleted) {
-          // If onboarding is completed and the redirect path is accessible, go there
-          // Check if the redirect path is one of the protected pages that user should have access to
-          const protectedPaths = ['/feed', '/explore', '/immersive-feed', '/profile', '/student', '/mentor', '/institution'];
-          
-          // Only redirect to the path if it's a valid path
-          if (redirectPath && 
-              (protectedPaths.some(pp => redirectPath === pp || redirectPath.startsWith(`${pp}/`)) || 
-               redirectPath === '/')) {
-            router.push(redirectPath);
-          } else {
-            // Default to feed if the redirect path is not valid or accessible
-            router.push('/feed');
-          }
+          // If onboarding is completed, try to redirect to the requested path
+          console.log("Redirecting to:", redirectPath);
+          router.push(redirectPath || '/feed');
         } else {
           // If onboarding not completed, direct to appropriate onboarding page
+          console.log("Redirecting to onboarding for role:", result.role);
           if (result.role === 'mentor') {
             router.push('/mentor-onboarding');
           } else if (result.role === 'institution') {
