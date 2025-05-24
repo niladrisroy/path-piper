@@ -38,83 +38,83 @@ export default function OnboardingPage() {
     skills: [],
   })
   const [completedSteps, setCompletedSteps] = useState<Record<string, boolean>>({})
-  
+
   // Fetch user data on component mount
   useEffect(() => {
     async function fetchUserData() {
       try {
         setIsLoading(true)
-        
+
         // Get current user session
         const { data: sessionData } = await supabase.auth.getSession()
-        
+
         if (!sessionData.session) {
           console.error("No active session found")
           setIsLoading(false)
           return
         }
-        
+
         // Fetch user profile data
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', sessionData.session.user.id)
           .single()
-          
+
         if (profileError) {
           console.error("Error fetching profile:", profileError)
           setIsLoading(false)
           return
         }
-        
+
         // Fetch student profile data
         const { data: studentProfile, error: studentError } = await supabase
           .from('student_profiles')
           .select('*')
           .eq('id', sessionData.session.user.id)
           .single()
-          
+
         if (studentError && studentError.code !== 'PGRST116') { // PGRST116 means no rows found
           console.error("Error fetching student profile:", studentError)
         }
-        
+
         // Fetch user interests
         const { data: userInterests, error: interestsError } = await supabase
           .from('user_interests')
           .select('interest_id, interests(name, category)')
           .eq('user_id', sessionData.session.user.id)
-          
+
         if (interestsError) {
           console.error("Error fetching interests:", interestsError)
         }
-        
+
         // Fetch user goals
         const { data: userGoals, error: goalsError } = await supabase
           .from('goals')
           .select('*')
           .eq('user_id', sessionData.session.user.id)
-          
+
         if (goalsError) {
           console.error("Error fetching goals:", goalsError)
         }
-        
+
         // Fetch user skills
         const { data: userSkills, error: skillsError } = await supabase
           .from('user_skills')
           .select('skill_id, proficiency_level, skills(name, category)')
           .eq('user_id', sessionData.session.user.id)
-          
+
         if (skillsError) {
           console.error("Error fetching skills:", skillsError)
         }
-        
+
         // Format interests, goals and skills data
         const interests = userInterests?.map(item => ({
           id: item.interest_id,
           name: item.interests?.name || '',
           category: item.interests?.category || ''
         })) || []
-        
+
         const goals = userGoals?.map(goal => ({
           id: goal.id,
           title: goal.title,
@@ -122,14 +122,14 @@ export default function OnboardingPage() {
           category: goal.category,
           timeframe: goal.timeframe,
         })) || []
-        
+
         const skills = userSkills?.map(item => ({
           id: item.skill_id,
           name: item.skills?.name || '',
           category: item.skills?.category || '',
           level: item.proficiency_level
         })) || []
-        
+
         // Update state with fetched data
         setProfileData({
           personalInfo: {
@@ -145,35 +145,35 @@ export default function OnboardingPage() {
           goals,
           skills,
         })
-        
+
         // Set completed steps based on data availability
         const completed: Record<string, boolean> = {}
-        
+
         if (profile.first_name && profile.last_name) {
           completed["personalInfo"] = true
         }
-        
+
         if (interests.length > 0) {
           completed["interests"] = true
         }
-        
+
         if (goals.length > 0) {
           completed["goals"] = true
         }
-        
+
         if (skills.length > 0) {
           completed["skills"] = true
         }
-        
+
         setCompletedSteps(completed)
-        
+
       } catch (error) {
         console.error("Error loading user data:", error)
       } finally {
         setIsLoading(false)
       }
     }
-    
+
     fetchUserData()
   }, [])
 
@@ -345,13 +345,6 @@ export default function OnboardingPage() {
       </div>
         )}
       </div>
-
-      {/* Footer */}
-      <footer className="w-full py-4 px-6 bg-white border-t border-slate-200">
-        <div className="container mx-auto flex justify-center">
-          <p className="text-slate-500 text-sm">© {new Date().getFullYear()} PathPiper. All rights reserved.</p>
-        </div>
-      </footer>
-    </main>
+    </div>
   )
 }
