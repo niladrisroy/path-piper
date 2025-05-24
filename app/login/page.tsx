@@ -112,6 +112,13 @@ export default function Login() {
 
       // Navigation based on user role and onboarding status
       setTimeout(() => {
+        console.log("Auth result:", {
+          success: result.success,
+          userId: result.userId,
+          role: result.role,
+          onboardingCompleted: result.onboardingCompleted
+        });
+        
         if (result.onboardingCompleted) {
           // If onboarding is completed, try to redirect to the requested path
           console.log("Redirecting to:", redirectPath);

@@ -20,8 +20,8 @@ export async function POST(request: NextRequest) {
 
     // If login successful, set session cookie
     if (result.success && result.user) {
-      // The session is managed by Supabase Auth automatically
-      return NextResponse.json({
+      // Set the auth cookie manually to ensure it's properly set
+      const response = NextResponse.json({
         success: true,
         role: result.role,
         onboardingCompleted: result.onboardingCompleted,
@@ -29,6 +29,16 @@ export async function POST(request: NextRequest) {
         email: result.user.email,
         name: `${result.user.user_metadata?.first_name || ''} ${result.user.user_metadata?.last_name || ''}`.trim()
       });
+      
+      // Set cookie for authentication
+      response.cookies.set('sb-auth-token', result.user.id, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 60 * 60 * 24 * 7, // 1 week
+        path: '/',
+      });
+      
+      return response;
     }
 
     return NextResponse.json(

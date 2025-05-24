@@ -33,7 +33,17 @@ export function middleware(request: NextRequest) {
   // If it's a protected path, check for authentication
   if (isProtectedPath && !isPublicPath) {
     // Get the auth cookie to check if the user is logged in
-    const hasAuthCookie = request.cookies.has('sb-auth-token');
+    // Check both possible cookie names that Supabase might use
+    const hasAuthCookie = request.cookies.has('sb-auth-token') || 
+                         request.cookies.has('sb:token') || 
+                         request.cookies.has('sb-access-token') ||
+                         request.cookies.has('supabase-auth-token');
+    
+    console.log('Cookie check in middleware:', {
+      path,
+      hasAuthCookie,
+      cookies: Array.from(request.cookies.getAll()).map(c => c.name)
+    });
     
     // If no auth cookie, redirect to login
     if (!hasAuthCookie) {
