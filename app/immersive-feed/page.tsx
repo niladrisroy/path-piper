@@ -1,13 +1,13 @@
-
-import ProtectedLayout from "../protected-layout"
+import Navbar from "@/components/navbar"
 import DesktopImmersiveFeed from "@/components/feed/desktop-immersive-feed"
 
 export default function ImmersiveFeedPage() {
   return (
-    <ProtectedLayout>
-      <div className="flex-grow">
+    <div className="h-screen flex flex-col">
+      <Navbar />
+      <div className="flex-grow pt-16">
         <DesktopImmersiveFeed />
       </div>
-    </ProtectedLayout>
+    </div>
   )
 }

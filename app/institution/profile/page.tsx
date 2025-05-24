@@ -2,7 +2,6 @@ import type { Metadata } from "next"
 import InstitutionProfile from "@/components/profile/institution-profile"
 import InternalNavbar from "@/components/internal-navbar"
 import Footer from "@/components/footer"
-import ProtectedLayout from "../../protected-layout"
 
 export const metadata: Metadata = {
   title: "Stanford University | PathPiper",
@@ -11,14 +10,12 @@ export const metadata: Metadata = {
 
 export default function InstitutionProfilePage() {
   return (
-    <ProtectedLayout>
-      <div className="min-h-screen bg-white">
-        <InternalNavbar />
-        <main className="pt-16 sm:pt-24">
-          <InstitutionProfile />
-        </main>
-        <Footer />
-      </div>
-    </ProtectedLayout>
+    <div className="min-h-screen bg-white">
+      <InternalNavbar />
+      <main className="pt-16 sm:pt-24">
+        <InstitutionProfile />
+      </main>
+      <Footer />
+    </div>
   )
 }
