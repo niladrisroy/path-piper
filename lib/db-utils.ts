@@ -1,14 +1,14 @@
 
 import { prisma } from './prisma'
 
-export async function testConnection() {
+export async function testConnection(silent = false) {
   try {
     // Test connection by querying the profiles table
     const count = await prisma.profile.count()
-    console.log('Database connection successful')
+    if (!silent) console.log('Database connection successful')
     return true
   } catch (error) {
-    console.error('Database connection failed:', error)
+    if (!silent) console.error('Database connection failed:', error)
     return false
   }
 }

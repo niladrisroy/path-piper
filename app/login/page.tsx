@@ -54,16 +54,13 @@ export default function Login() {
     // Check for both 'from' and 'redirectURL' parameters
     const from = searchParams.get('from');
     const redirectURL = searchParams.get('redirectURL');
-    
+
     // Priority: redirectURL, then from, otherwise default to '/feed'
     if (redirectURL) {
-      console.log('Setting redirect path from redirectURL:', redirectURL);
       setRedirectPath(redirectURL);
     } else if (from) {
-      console.log('Setting redirect path from "from" parameter:', from);
       setRedirectPath(from);
     } else {
-      console.log('No redirect parameters found, defaulting to /feed');
       setRedirectPath('/feed');
     }
   }, [searchParams])
@@ -112,31 +109,18 @@ export default function Login() {
 
       // Navigation based on user role and onboarding status
       setTimeout(async () => {
-        // Check if cookies were set properly and log them
-        const cookies = document.cookie.split(';').map(c => c.trim());
-        console.log("Browser cookies:", cookies);
-        
         // Force refresh to ensure cookies are properly set
         if (result.success) {
           // Wait a brief moment for cookies to be saved in browser
           await new Promise(resolve => setTimeout(resolve, 100));
         }
-        
-        console.log("Auth result:", {
-          success: result.success,
-          userId: result.userId,
-          role: result.role,
-          onboardingCompleted: result.onboardingCompleted
-        });
-        
+
         if (result.onboardingCompleted) {
           // If onboarding is completed, try to redirect to the requested path
-          console.log("Redirecting to:", redirectPath);
           // Use window.location for a full page navigation instead of router.push
           window.location.href = redirectPath || '/feed';
         } else {
           // If onboarding not completed, direct to appropriate onboarding page
-          console.log("Redirecting to onboarding for role:", result.role);
           if (result.role === 'mentor') {
             window.location.href = '/mentor-onboarding';
           } else if (result.role === 'institution') {
