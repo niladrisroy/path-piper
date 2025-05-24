@@ -115,17 +115,18 @@ export default function Login() {
         if (result.onboardingCompleted) {
           // If onboarding is completed, try to redirect to the requested path
           console.log("Redirecting to:", redirectPath);
-          router.push(redirectPath || '/feed');
+          // Use window.location for a full page navigation instead of router.push
+          window.location.href = redirectPath || '/feed';
         } else {
           // If onboarding not completed, direct to appropriate onboarding page
           console.log("Redirecting to onboarding for role:", result.role);
           if (result.role === 'mentor') {
-            router.push('/mentor-onboarding');
+            window.location.href = '/mentor-onboarding';
           } else if (result.role === 'institution') {
-            router.push('/institution-onboarding');
+            window.location.href = '/institution-onboarding';
           } else {
             // Default to student onboarding
-            router.push('/onboarding');
+            window.location.href = '/onboarding';
           }
         }
       }, 800); // Small delay to allow the toast to be visible
