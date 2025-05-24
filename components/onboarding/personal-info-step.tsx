@@ -69,20 +69,6 @@ function getEducationLevelHelperText(ageGroup: AgeGroup): string {
 export default function PersonalInfoStep({ initialData, onComplete, onNext }: PersonalInfoStepProps) {
   // Ensure initialData has default values for all fields
   const defaultData: PersonalInfo = {
-
-  // Debug: More explicit form data output
-  useEffect(() => {
-    console.log("Form data after useState initialization:", formData);
-    // Check if the form fields actually have values
-    const formFields = document.querySelectorAll('input, select, textarea');
-    console.log("Form field count:", formFields.length);
-    formFields.forEach((field: any) => {
-      if (field.id) {
-        console.log(`Field ${field.id} value:`, field.value);
-      }
-    });
-  }, [formData]);
-
     firstName: "",
     lastName: "",
     bio: "",
@@ -91,6 +77,8 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
     ageGroup: "young-adult", // Default to young-adult
     profileImage: null,
   }
+  
+  // Debug: More explicit form data output (moved outside the object declaration)
 
   // Merge initial data with form data, ensuring we properly handle undefined values
   const initialFormData = {
@@ -110,6 +98,19 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
   console.log("PersonalInfoStep - educationLevel value:", initialData.educationLevel || "NOT SET");
 
   const [formData, setFormData] = useState<PersonalInfo>(initialFormData);
+  
+  // Debug: More explicit form data output
+  useEffect(() => {
+    console.log("Form data after useState initialization:", formData);
+    // Check if the form fields actually have values
+    const formFields = document.querySelectorAll('input, select, textarea');
+    console.log("Form field count:", formFields.length);
+    formFields.forEach((field: any) => {
+      if (field.id) {
+        console.log(`Field ${field.id} value:`, field.value);
+      }
+    });
+  }, [formData]);
   
   // Apply initial data when it changes (useful for async data loading)
   useEffect(() => {
