@@ -54,17 +54,40 @@ export default function MentorOnboardingPage() {
           if (response.ok) {
             const apiData = await response.json()
             
-            if (apiData.user && apiData.user.profile) {
+            if (apiData.user) {
               // Use API data if available
               const profile = {
                 id: apiData.user.id,
-                first_name: apiData.user.profile.firstName,
-                last_name: apiData.user.profile.lastName,
-                bio: apiData.user.profile.bio,
-                location: apiData.user.profile.location,
-                email: apiData.user.email,
-                profile_image_url: apiData.user.profile.profileImageUrl
+                first_name: apiData.user.profile?.firstName || apiData.user.firstName || "",
+                last_name: apiData.user.profile?.lastName || apiData.user.lastName || "",
+                bio: apiData.user.profile?.bio || "",
+                location: apiData.user.profile?.location || "",
+                email: apiData.user.email || "",
+                profile_image_url: apiData.user.profile?.profileImageUrl || "",
+                profession: apiData.user.mentor?.profession || apiData.user.profile?.profession || "",
+                organization: apiData.user.mentor?.organization || apiData.user.profile?.organization || ""
               }
+              
+              // Update profileData with the fetched data
+              setProfileData(prevData => ({
+                ...prevData,
+                personalInfo: {
+                  ...prevData.personalInfo,
+                  firstName: profile.first_name,
+                  lastName: profile.last_name,
+                  bio: profile.bio,
+                  location: profile.location,
+                  profession: profile.profession,
+                  organization: profile.organization,
+                  profileImage: profile.profile_image_url || null,
+                },
+                expertise: apiData.user.mentor?.expertise || apiData.user.profile?.expertise || [],
+                experience: apiData.user.mentor?.experience || apiData.user.profile?.experience || [],
+                availability: {
+                  ...prevData.availability,
+                  ...(apiData.user.mentor?.availability || {})
+                },
+              }))
               
               // Continue with populating the mentor data...
               await populateMentorData(profile)
