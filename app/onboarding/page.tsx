@@ -52,32 +52,54 @@ export default function Onboarding() {
         const response = await fetch("/api/auth/user")
         if (response.ok) {
           const data = await response.json()
+          console.log("User data from API:", data)
 
           // If user is already onboarded, redirect to feed
-          if (data.user && data.user.onboarding_completed) {
+          if (data.user && data.user.onboardingCompleted) {
             router.push("/feed")
             return
           }
 
           // If user has existing profile data, populate the form
-          if (data.user && data.user.profile) {
-            setExistingData(data.user.profile)
+          if (data.user) {
+            // Set basic user data from main profile
             setUserData({
-              firstName: data.user.profile.first_name || "",
-              lastName: data.user.profile.last_name || "",
+              firstName: data.user.firstName || "",
+              lastName: data.user.lastName || "",
               email: data.user.email || "",
-              birthdate: data.user.profile.birthdate || "",
-              location: data.user.profile.location || "",
-              interests: data.user.profile.interests || [],
-              skills: data.user.profile.skills || [],
-              skillLevels: data.user.profile.skill_levels || {},
-              goals: data.user.profile.goals || [],
-              educationLevel: data.user.profile.education_level || "",
-              bio: data.user.profile.bio || "",
+              birthdate: "",
+              location: data.user.location || "",
+              interests: [],
+              skills: [],
+              skillLevels: {},
+              goals: [],
+              educationLevel: data.user.educationLevel || "",
+              bio: data.user.bio || "",
+              ageGroup: data.user.ageGroup || "young-adult",
             })
 
-            // Calculate how far along they are in the process
-            calculateCompletionPercentage(data.user.profile)
+            // If there's more detailed profile data, use it
+            if (data.user.profile) {
+              setExistingData(data.user.profile)
+              setUserData(prevData => ({
+                ...prevData,
+                firstName: data.user.profile.first_name || data.user.firstName || "",
+                lastName: data.user.profile.last_name || data.user.lastName || "",
+                email: data.user.email || "",
+                birthdate: data.user.profile.birthdate || "",
+                location: data.user.profile.location || data.user.location || "",
+                interests: data.user.profile.interests || [],
+                skills: data.user.profile.skills || [],
+                skillLevels: data.user.profile.skill_levels || {},
+                goals: data.user.profile.goals || [],
+                educationLevel: data.user.profile.education_level || data.user.educationLevel || "",
+                bio: data.user.profile.bio || data.user.bio || "",
+                ageGroup: data.user.profile.age_group || data.user.ageGroup || "young-adult",
+              }))
+
+              // Calculate how far along they are in the process
+              calculateCompletionPercentage(data.user.profile)
+            }
           }
         }
       } catch (error) {
@@ -262,7 +284,8 @@ export default function Onboarding() {
                     lastName: data.lastName,
                     bio: data.bio,
                     location: data.location,
-                    educationLevel: data.educationLevel
+                    educationLevel: data.educationLevel,
+                    ageGroup: data.ageGroup
                   });
                 }}
                 onNext={handleNext}

@@ -158,7 +158,11 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onComplete(formData)
+    // Ensure we preserve ageGroup and all fields
+    onComplete({
+      ...formData,
+      ageGroup: formData.ageGroup || 'young-adult'
+    })
     onNext()
   }
 
