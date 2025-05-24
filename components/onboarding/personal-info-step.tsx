@@ -91,7 +91,12 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
   }
 
   console.log("PersonalInfoStep - initialData:", initialData);
-  console.log("PersonalInfoStep - mergedInitialData:", initialFormData);
+  console.log("PersonalInfoStep - initialFormData:", initialFormData);
+
+  // Debug: Log more details about what we received
+  console.log("PersonalInfoStep - firstName value:", initialData.firstName);
+  console.log("PersonalInfoStep - lastName value:", initialData.lastName);
+  console.log("PersonalInfoStep - ageGroup value:", initialData.ageGroup);
 
   const [formData, setFormData] = useState<PersonalInfo>(initialFormData)
 

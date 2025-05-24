@@ -61,20 +61,89 @@ export default function Onboarding() {
           console.warn("Error accessing session storage:", err);
         }
 
-        // Get auth token from localStorage
+        // Get auth token from localStorage - try different possible locations
         let token = null;
         try {
-          const supabase = JSON.parse(localStorage.getItem('supabase.auth.token') || '{}');
-          token = supabase?.currentSession?.access_token;
-          console.log("Found authentication token:", token ? "Yes" : "No");
+          // Try different possible storage locations
+          console.log("Attempting to find auth token...");
+          
+          // Option 1: Check cookies
+          const cookies = document.cookie.split(';');
+          const authCookie = cookies.find(c => 
+            c.trim().startsWith('sb-') || 
+            c.trim().startsWith('supabase-auth-token')
+          );
+          
+          if (authCookie) {
+            const cookieValue = authCookie.split('=')[1];
+            try {
+              const parsed = JSON.parse(decodeURIComponent(cookieValue));
+              token = parsed?.access_token;
+              console.log("Found token in cookies");
+            } catch (e) {
+              console.warn("Could not parse auth cookie", e);
+            }
+          }
+          
+          // Option 2: Check localStorage with different key patterns
+          if (!token) {
+            // Try various storage keys that Supabase might use
+            const storageKeys = [
+              'supabase.auth.token',
+              'sb-access-token',
+              'supabase-auth'
+            ];
+            
+            for (const key of storageKeys) {
+              const storedValue = localStorage.getItem(key);
+              if (storedValue) {
+                try {
+                  const parsed = JSON.parse(storedValue);
+                  token = parsed?.access_token || parsed?.currentSession?.access_token;
+                  console.log(`Found token in localStorage with key: ${key}`);
+                  break;
+                } catch (e) {
+                  console.warn(`Could not parse localStorage item with key ${key}`, e);
+                  // If it's not JSON, it might be the token itself
+                  if (typeof storedValue === 'string' && storedValue.length > 20) {
+                    token = storedValue;
+                    console.log(`Using raw string as token from key: ${key}`);
+                    break;
+                  }
+                }
+              }
+            }
+          }
+          
+          // Option 3: Check sessionStorage
+          if (!token) {
+            const sessionUser = sessionStorage.getItem('supabase.auth.token');
+            if (sessionUser) {
+              try {
+                const parsed = JSON.parse(sessionUser);
+                token = parsed?.access_token || parsed?.currentSession?.access_token;
+                console.log("Found token in sessionStorage");
+              } catch (e) {
+                console.warn("Could not parse sessionStorage auth token", e);
+              }
+            }
+          }
+          
+          console.log("Authentication token found:", token ? "Yes" : "No");
+          
+          // Dump browser storage for debugging
+          console.log("LocalStorage keys:", Object.keys(localStorage));
+          console.log("SessionStorage keys:", Object.keys(sessionStorage));
+          console.log("Cookies:", document.cookie);
         } catch (err) {
-          console.warn("Error accessing localStorage for token:", err);
+          console.warn("Error accessing storage for token:", err);
         }
 
         const response = await fetch("/api/auth/user", {
           headers: {
             'Authorization': token ? `Bearer ${token}` : ''
-          }
+          },
+          cache: 'no-store' // Prevent caching
         });
         
         if (response.ok) {
