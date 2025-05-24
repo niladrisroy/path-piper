@@ -69,6 +69,20 @@ function getEducationLevelHelperText(ageGroup: AgeGroup): string {
 export default function PersonalInfoStep({ initialData, onComplete, onNext }: PersonalInfoStepProps) {
   // Ensure initialData has default values for all fields
   const defaultData: PersonalInfo = {
+
+  // Debug: More explicit form data output
+  useEffect(() => {
+    console.log("Form data after useState initialization:", formData);
+    // Check if the form fields actually have values
+    const formFields = document.querySelectorAll('input, select, textarea');
+    console.log("Form field count:", formFields.length);
+    formFields.forEach((field: any) => {
+      if (field.id) {
+        console.log(`Field ${field.id} value:`, field.value);
+      }
+    });
+  }, [formData]);
+
     firstName: "",
     lastName: "",
     bio: "",

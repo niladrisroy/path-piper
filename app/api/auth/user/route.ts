@@ -15,20 +15,69 @@ import { supabase } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get the auth cookie from the headers
+    // Get the auth cookie from the headers or request cookies
+    let token = null;
+    
+    // Method 1: Try Authorization header
     const authHeader = request.headers.get('Authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.replace('Bearer ', '');
+      console.log("API: Found token in Authorization header");
+    }
     
-    console.log("API: Received auth request, header present:", !!authHeader);
+    // Method 2: Try cookies if no Authorization header
+    if (!token) {
+      console.log("API: Checking cookies for auth token");
+      const cookies = request.cookies.getAll();
+      console.log("API: Available cookies:", cookies.map(c => c.name).join(', '));
+      
+      // Look for Supabase-related cookies
+      for (const cookie of cookies) {
+        if (cookie.name.startsWith('sb-') || 
+            cookie.name.includes('supabase') || 
+            cookie.name.includes('auth')) {
+          try {
+            // Try to extract token from cookie value
+            const cookieValue = cookie.value;
+            // If it looks like JSON, try to parse it
+            if (cookieValue.includes('{') && cookieValue.includes('}')) {
+              const parsed = JSON.parse(decodeURIComponent(cookieValue));
+              token = parsed?.access_token || parsed?.currentSession?.access_token;
+              if (token) {
+                console.log(`API: Found token in cookie ${cookie.name}`);
+                break;
+              }
+            } else if (cookieValue.length > 20) {
+              // It might be the token itself
+              token = cookieValue;
+              console.log(`API: Using raw cookie value as token from ${cookie.name}`);
+              break;
+            }
+          } catch (e) {
+            console.warn(`API: Could not parse cookie ${cookie.name}`, e);
+          }
+        }
+      }
+    }
     
-    if (!authHeader) {
+    // Method 3: Try to get session directly from Supabase using cookies
+    if (!token) {
+      console.log("API: Attempting to get session from Supabase directly");
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData?.session?.access_token) {
+        token = sessionData.session.access_token;
+        console.log("API: Retrieved token from Supabase session");
+      }
+    }
+    
+    console.log("API: Token found:", !!token);
+    
+    if (!token) {
       return NextResponse.json(
-        { success: false, error: 'Not authenticated', message: 'No Authorization header provided' },
+        { success: false, error: 'Not authenticated', message: 'No valid authentication token found' },
         { status: 401 }
       );
     }
-    
-    // Parse the token
-    const token = authHeader.replace('Bearer ', '');
     
     // Log token preview for debugging (first 10 chars only for security)
     console.log("API: Token preview:", token.substring(0, 10) + "...");

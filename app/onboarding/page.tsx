@@ -77,164 +77,33 @@ export default function Onboarding() {
           console.warn("Error accessing session storage:", err);
         }
 
-        // IMPORTANT: The token might be in different formats or locations depending on how authentication is set up
-        // Let's try to get it from various sources
+        // Use a simpler approach - direct API call without token handling in the client
+        // The server should use the session cookie automatically
+        console.log("Fetching user data from API...");
 
-        let token = null;
-
-        // Try getting token from cookies first - this is most reliable with Next.js + Supabase
-        if (document.cookie) {
-          console.log("Checking cookies for auth token");
+        // First check if we can get the token from cookies directly
+        let authHeader = '';
+        try {
           const cookies = document.cookie.split(';');
           for (const cookie of cookies) {
-            const [name, value] = cookie.trim().split('=');
-            // Check for common Supabase cookie names
-            if (name.startsWith('sb-') || name.includes('auth') || name.includes('token')) {
-              console.log(`Found potential auth cookie: ${name}`);
-              try {
-                // Try to decode and parse if it's a JSON
-                const decodedValue = decodeURIComponent(value);
-                if (decodedValue.includes('{') && decodedValue.includes('}')) {
-                  const parsed = JSON.parse(decodedValue);
-                  if (parsed.access_token) {
-                    token = parsed.access_token;
-                    console.log("Found access_token in cookie JSON");
-                    break;
-                  }
-                } else if (decodedValue.length > 20) {
-                  // This might be the raw token
-                  token = decodedValue;
-                  console.log("Using raw cookie value as token");
-                  break;
-                }
-              } catch (e) {
-                console.log(`Could not parse cookie ${name}:`, e);
-              }
+            if (cookie.trim().startsWith('sb-')) {
+              console.log("Found Supabase cookie:", cookie.trim().substring(0, 10) + "...");
+              authHeader = cookie.trim().split('=')[1];
+              break;
             }
-          }
-        }
-
-        // If not found in cookies, check localStorage and sessionStorage
-        if (!token) {
-          // Common keys where Supabase might store tokens
-          const possibleKeys = [
-            'supabase.auth.token',
-            'sb-access-token',
-            'sb-auth-token',
-            'supabase-auth',
-            'auth-token',
-            'access-token',
-            'token'
-          ];
-
-          // Check localStorage
-          for (const key of possibleKeys) {
-            try {
-              const value = localStorage.getItem(key);
-              if (value) {
-                console.log(`Found value in localStorage at key: ${key}`);
-                try {
-                  const parsed = JSON.parse(value);
-                  if (parsed.access_token) {
-                    token = parsed.access_token;
-                    console.log("Found token in localStorage JSON");
-                    break;
-                  } else if (parsed.currentSession?.access_token) {
-                    token = parsed.currentSession.access_token;
-                    console.log("Found token in currentSession object");
-                    break;
-                  }
-                } catch (e) {
-                  // If it's not JSON, it might be the token itself
-                  if (value.length > 20) {
-                    token = value;
-                    console.log("Using raw localStorage value as token");
-                    break;
-                  }
-                }
-              }
-            } catch (e) {
-              console.warn(`Error accessing localStorage key ${key}:`, e);
-            }
-          }
-
-          // Check sessionStorage if still not found
-          if (!token) {
-            for (const key of possibleKeys) {
-              try {
-                const value = sessionStorage.getItem(key);
-                if (value) {
-                  console.log(`Found value in sessionStorage at key: ${key}`);
-                  try {
-                    const parsed = JSON.parse(value);
-                    if (parsed.access_token) {
-                      token = parsed.access_token;
-                      console.log("Found token in sessionStorage JSON");
-                      break;
-                    } else if (parsed.currentSession?.access_token) {
-                      token = parsed.currentSession.access_token;
-                      console.log("Found token in sessionStorage currentSession");
-                      break;
-                    }
-                  } catch (e) {
-                    // If it's not JSON, it might be the token itself
-                    if (value.length > 20) {
-                      token = value;
-                      console.log("Using raw sessionStorage value as token");
-                      break;
-                    }
-                  }
-                }
-              } catch (e) {
-                console.warn(`Error accessing sessionStorage key ${key}:`, e);
-              }
-            }
-          }
-        }
-
-        // Debug information
-        console.log("Token found:", !!token);
-        if (token) {
-          console.log("Token preview:", token.substring(0, 10) + "...");
-        }
-
-        // Debug current cookies and local storage to check auth status
-        console.log("Current cookies:", document.cookie);
-        console.log("Available localStorage keys:", Object.keys(localStorage));
-        console.log("Available sessionStorage keys:", Object.keys(sessionStorage));
-        
-        // First try to get session directly from Supabase
-        let directToken = null;
-        try {
-          // This approach directly uses the Supabase JS client to get the session
-          // The client should handle the cookie retrieval for us
-          const { data: { session } } = await fetch('/api/auth/check-token', {
-            headers: {
-              'Authorization': token ? `Bearer ${token}` : ''
-            }
-          }).then(res => res.json());
-          
-          if (session) {
-            console.log("Found session directly from Supabase client");
-            directToken = session.access_token;
           }
         } catch (err) {
-          console.error("Error getting session directly:", err);
+          console.warn("Error parsing cookies:", err);
         }
-        
-        // Use the best token we have
-        const bestToken = directToken || token;
-        console.log("Using token:", bestToken ? "Yes (found)" : "No (not found)");
-        
-        // Try with our secured endpoint
+
+        // Direct API call - middleware should handle the cookie validation
         const response = await fetch("/api/auth/user", {
           headers: {
-            'Authorization': bestToken ? `Bearer ${bestToken}` : '',
-            'Cache-Control': 'no-cache', // Prevent caching
-            'Pragma': 'no-cache'
+            // Try to add the Authorization header if we found a token
+            ...(authHeader ? { 'Authorization': `Bearer ${authHeader}` } : {}),
           },
-          cache: 'no-store', // Prevent caching
-          next: { revalidate: 0 } // Force revalidation
+          credentials: 'include', // Important: include credentials/cookies in the request
+          cache: 'no-store' // Prevent caching
         });
 
         if (response.ok) {
@@ -294,7 +163,7 @@ export default function Onboarding() {
               // Calculate how far along they are in the process
               calculateCompletionPercentage(data.user.profile);
             }
-            
+
             // Explicitly add a direct debug to verify data binding
             console.log("FINAL VALUES TO BE USED:");
             console.log("- firstName:", userData.firstName);
