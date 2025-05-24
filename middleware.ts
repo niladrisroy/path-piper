@@ -39,10 +39,19 @@ export function middleware(request: NextRequest) {
                          request.cookies.has('sb-access-token') ||
                          request.cookies.has('supabase-auth-token');
     
+    // More detailed cookie logging
+    const allCookies = Array.from(request.cookies.getAll());
+    const cookieValues = {};
+    allCookies.forEach(c => {
+      cookieValues[c.name] = c.value.substring(0, 5) + '...'; // Show first 5 chars only for security
+    });
+    
     console.log('Cookie check in middleware:', {
       path,
       hasAuthCookie,
-      cookies: Array.from(request.cookies.getAll()).map(c => c.name)
+      cookieCount: allCookies.length,
+      cookieNames: allCookies.map(c => c.name),
+      cookieValues
     });
     
     // If no auth cookie, redirect to login

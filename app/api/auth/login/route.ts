@@ -30,13 +30,25 @@ export async function POST(request: NextRequest) {
         name: `${result.user.user_metadata?.first_name || ''} ${result.user.user_metadata?.last_name || ''}`.trim()
       });
       
-      // Set cookie for authentication
+      // Set cookie for authentication with proper settings
       response.cookies.set('sb-auth-token', result.user.id, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: false, // Set to false for local development
+        sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 7, // 1 week
         path: '/',
       });
+      
+      // Set a duplicate with a different name for compatibility
+      response.cookies.set('supabase-auth-token', result.user.id, {
+        httpOnly: true,
+        secure: false, // Set to false for local development
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7, // 1 week
+        path: '/',
+      });
+      
+      console.log('Setting auth cookies', { userId: result.user.id });
       
       return response;
     }

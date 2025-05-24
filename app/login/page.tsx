@@ -111,7 +111,11 @@ export default function Login() {
       }
 
       // Navigation based on user role and onboarding status
-      setTimeout(() => {
+      setTimeout(async () => {
+        // Check if cookies were set properly
+        const cookies = document.cookie.split(';').map(c => c.trim());
+        console.log("Browser cookies:", cookies);
+        
         console.log("Auth result:", {
           success: result.success,
           userId: result.userId,
