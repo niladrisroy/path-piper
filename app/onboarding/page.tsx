@@ -6,13 +6,25 @@ import { useRouter } from "next/navigation"
 import { z } from "zod"
 import { toast } from "sonner"
 import { motion } from "framer-motion"
+import { ArrowLeft, ArrowRight } from "lucide-react"
 
 import InternalNavbar from "@/components/internal-navbar"
+import OnboardingHeader from "@/components/onboarding/onboarding-header"
 import PersonalInfoStep from "@/components/onboarding/personal-info-step"
 import InterestsStep from "@/components/onboarding/interests-step"
 import SkillsStep from "@/components/onboarding/skills-step"
 import GoalsStep from "@/components/onboarding/goals-step"
 import CompletionStep from "@/components/onboarding/completion-step"
+import { User, BookOpen, Code, Target, CheckCircle } from "lucide-react"
+
+// Define the steps for the student onboarding process
+const STEPS = [
+  { id: "personal-info", title: "Personal Info", icon: <User className="h-5 w-5" /> },
+  { id: "interests", title: "Interests", icon: <BookOpen className="h-5 w-5" /> },
+  { id: "skills", title: "Skills", icon: <Code className="h-5 w-5" /> },
+  { id: "goals", title: "Goals", icon: <Target className="h-5 w-5" /> },
+  { id: "completion", title: "Complete", icon: <CheckCircle className="h-5 w-5" /> },
+]
 
 export default function Onboarding() {
   const router = useRouter()
@@ -157,31 +169,83 @@ export default function Onboarding() {
       
       {/* Add padding to account for fixed navbar */}
       <div className="pt-16 md:pt-14 w-full">
-        {/* Profile completion progress bar */}
-        <div className="w-full px-4 py-3 bg-white border-b border-slate-100 shadow-sm">
-          <div className="container mx-auto">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-2">
-              <h2 className="text-lg font-medium text-slate-800">Complete Your Profile</h2>
-              <div className="w-full md:w-1/2 flex items-center">
-                <span className="mr-3 text-sm text-slate-500 whitespace-nowrap">Profile Completion</span>
-                <div className="flex items-center flex-1">
-                  <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-                    <motion.div
-                      className="h-full bg-gradient-to-r from-teal-400 to-blue-500"
-                      initial={{ width: "0%" }}
-                      animate={{ width: `${completionPercentage}%` }}
-                      transition={{ duration: 0.5 }}
-                    />
-                  </div>
-                  <span className="ml-3 text-sm font-medium text-slate-700">{completionPercentage}%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <OnboardingHeader completionPercentage={completionPercentage} />
 
         <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
-          <div className="w-full max-w-3xl bg-white rounded-xl shadow-sm p-6 md:p-8">
+          <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg overflow-hidden">
+            {/* Step navigation */}
+            <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={handleBack}
+                  disabled={step === 1}
+                  className={`p-2 rounded-full ${
+                    step === 1
+                      ? "text-slate-300 cursor-not-allowed"
+                      : "text-slate-500 hover:text-teal-500 hover:bg-teal-50"
+                  }`}
+                >
+                  <ArrowLeft size={20} />
+                </button>
+                
+                <div className="flex-1 mx-4">
+                  <div className="flex items-center justify-between">
+                    {STEPS.map((s, index) => {
+                      const isActive = step === index + 1;
+                      const isCompleted = step > index + 1;
+                      
+                      return (
+                        <div key={s.id} className="flex flex-col items-center">
+                          <div
+                            className={`flex items-center justify-center h-10 w-10 rounded-full 
+                              ${isActive 
+                                ? "bg-teal-500 text-white" 
+                                : isCompleted 
+                                  ? "bg-teal-100 text-teal-700" 
+                                  : "bg-slate-100 text-slate-400"
+                              } transition-all duration-200`}
+                          >
+                            {s.icon}
+                          </div>
+                          <span 
+                            className={`mt-1 text-xs font-medium hidden sm:block
+                              ${isActive 
+                                ? "text-teal-600" 
+                                : isCompleted 
+                                  ? "text-slate-700" 
+                                  : "text-slate-400"
+                              }`}
+                          >
+                            {s.title}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  <div className="relative mt-2 hidden sm:block">
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-slate-200 rounded-full"></div>
+                    <div 
+                      className="absolute top-0 left-0 h-1 bg-teal-500 rounded-full" 
+                      style={{ width: `${((step - 1) / (STEPS.length - 1)) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+                
+                <button
+                  onClick={step < 4 ? handleNext : handleSubmit}
+                  disabled={step === 5}
+                  className={`p-2 rounded-full ${
+                    step === 5
+                      ? "text-slate-300 cursor-not-allowed"
+                      : "text-slate-500 hover:text-teal-500 hover:bg-teal-50"
+                  }`}
+                >
+                  <ArrowRight size={20} />
+                </button>
+              </div>
+            </div>
+          <div className="p-6 md:p-8">
             {step === 1 && (
               <PersonalInfoStep 
                 userData={userData} 
@@ -221,6 +285,7 @@ export default function Onboarding() {
             {step === 5 && (
               <CompletionStep />
             )}
+            </div>
           </div>
         </div>
       </div>
