@@ -84,9 +84,7 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
   const onSubmit = (data: PersonalInfo) => {
     console.log("Form submitted with data:", data);
     onComplete(data);
-    if (onNext) {
-      onNext();
-    }
+    // Navigation will be handled by the parent component after successful submission
   };
 
   return (

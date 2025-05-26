@@ -280,9 +280,81 @@ export async function PUT(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('Error updating profile:', error);
+    console.error('Error fetching profile:', error);
     return NextResponse.json(
       { success: false, error: 'An unexpected error occurred' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    console.log("API: Profile update request received");
+    
+    // Get the request body
+    const body = await request.json();
+    console.log("API: Update data:", body);
+
+    // Get user from session cookie
+    const cookieStore = cookies();
+    const accessToken = cookieStore.get('sb-access-token')?.value;
+
+    if (!accessToken) {
+      console.log("API: No access token found");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Verify token with Supabase
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    
+    if (authError || !user) {
+      console.log("API: Invalid token or user not found");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    console.log("API: Authenticated user:", user.id);
+
+    // Update profile in database
+    const updatedProfile = await prisma.profile.update({
+      where: { id: user.id },
+      data: {
+        firstName: body.firstName,
+        lastName: body.lastName,
+        bio: body.bio || null,
+        location: body.location || null,
+      }
+    });
+
+    console.log("API: Profile updated successfully");
+
+    // If user is a student, also update student profile
+    if (body.educationLevel) {
+      await prisma.studentProfile.update({
+        where: { id: user.id },
+        data: {
+          educationLevel: body.educationLevel,
+        }
+      });
+      console.log("API: Student profile updated successfully");
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Profile updated successfully",
+      user: {
+        id: updatedProfile.id,
+        firstName: updatedProfile.firstName,
+        lastName: updatedProfile.lastName,
+        bio: updatedProfile.bio,
+        location: updatedProfile.location,
+      }
+    });
+
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to update profile' },
       { status: 500 }
     );
   }
