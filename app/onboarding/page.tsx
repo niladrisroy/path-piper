@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { motion } from "framer-motion"
@@ -42,6 +42,68 @@ export default function Onboarding() {
     birthYear: "",
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  // Fetch user data on component mount using session cookie
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        console.log("Fetching user data from API...")
+
+        const response = await fetch("/api/auth/user", {
+          method: "GET",
+          credentials: 'include',
+          cache: 'no-store'
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          console.log("User data received:", data)
+
+          // If user is already onboarded, redirect to feed
+          if (data.user?.onboardingCompleted) {
+            router.push("/feed")
+            return
+          }
+
+          if (data.user) {
+            // Set user data from API response
+            setUserData({
+              firstName: data.user.firstName || "",
+              lastName: data.user.lastName || "",
+              email: data.user.email || "",
+              birthdate: data.user.birthdate || "",
+              location: data.user.location || "",
+              interests: [],
+              skills: [],
+              skillLevels: {},
+              goals: [],
+              educationLevel: data.user.educationLevel || "",
+              bio: data.user.bio || "",
+              birthMonth: data.user.birthMonth || "",
+              birthYear: data.user.birthYear || "",
+            })
+          } else {
+            console.warn("No user data found in response")
+          }
+        } else {
+          console.error("Failed to fetch user data:", response.status)
+          // Redirect to login if unauthorized
+          if (response.status === 401) {
+            router.push("/login")
+            return
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error)
+        toast.error("Failed to load user data")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUserData()
+  }, [router])
 
   const handleNext = () => {
     setStep(step + 1)
@@ -62,6 +124,7 @@ export default function Onboarding() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: 'include',
         body: JSON.stringify({
           profile: {
             first_name: userData.firstName,
@@ -90,6 +153,20 @@ export default function Onboarding() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <main className="min-h-screen flex flex-col bg-slate-50">
+        <InternalNavbar />
+        <div className="pt-16 md:pt-14 w-full flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500 mx-auto mb-4"></div>
+            <p className="text-slate-600">Loading your profile...</p>
+          </div>
+        </div>
+      </main>
+    )
   }
 
   return (

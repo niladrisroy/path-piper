@@ -140,69 +140,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // FALLBACK: If we reach here, try to use the demo/test data
-    // This is for development/debugging only
-    console.log("API: Trying fallback with direct database query for demo data");
-
-    // For testing purposes, use the first user from the database
-    try {
-      // Just get the first available profile from the database
-      const demoProfile = await prisma.profile.findFirst({
-        include: {
-          student: true,
-          mentor: true,
-          institution: true
-        }
-      });
-
-      if (demoProfile) {
-        console.log("API: Using demo profile for testing:", demoProfile.id);
-            // Format birth month and year for display
-            let birthMonth = "";
-            let birthYear = "";
-
-            if (demoProfile.student) {
-              birthMonth = demoProfile.student.birthMonth ? demoProfile.student.birthMonth.toString() : "";
-              birthYear = demoProfile.student.birthYear ? demoProfile.student.birthYear.toString() : "";
-            }
-        return NextResponse.json({
-          user: {
-            id: demoProfile.id,
-            firstName: demoProfile.firstName,
-            lastName: demoProfile.lastName,
-            email: "demo@example.com", // Not the real email
-            role: demoProfile.role,
-            bio: demoProfile.bio,
-            location: demoProfile.location,
-            profileImageUrl: demoProfile.profileImageUrl,
-            // Add role-specific data based on the profile type
-            ...(demoProfile.student && {
-              ageGroup: demoProfile.student.ageGroup,
-              educationLevel: demoProfile.student.educationLevel,
-              onboardingCompleted: demoProfile.student.onboardingCompleted,
-              birthMonth: birthMonth,
-              birthYear: birthYear,
-            }),
-            ...(demoProfile.mentor && {
-              profession: demoProfile.mentor.profession,
-              organization: demoProfile.mentor.organization,
-              yearsExperience: demoProfile.mentor.yearsExperience,
-              onboardingCompleted: demoProfile.mentor.onboardingCompleted
-            }),
-            ...(demoProfile.institution && {
-              institutionName: demoProfile.institution.institutionName,
-              institutionType: demoProfile.institution.institutionType,
-              category: demoProfile.institution.category,
-              website: demoProfile.institution.website,
-              onboardingCompleted: demoProfile.institution.onboardingCompleted
-            })
-          },
-          warning: "Demo mode: Using first available profile"
-        });
-      }
-    } catch (dbError) {
-      console.error("API: Error fetching demo profile:", dbError);
-    }
+    
 
     // If we reach here, we couldn't authenticate or find any profile
     return NextResponse.json(
@@ -220,18 +158,52 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    // Get the auth cookie from the headers
+    // Get the auth token from headers or cookies
     const authHeader = request.headers.get('Authorization');
+    const cookieString = request.headers.get('cookie') || '';
+    
+    // Parse cookies properly
+    const cookies = Object.fromEntries(
+      cookieString.split(';').map(cookie => {
+        const [name, ...rest] = cookie.trim().split('=');
+        return [name, decodeURIComponent(rest.join('='))];
+      })
+    );
 
-    if (!authHeader) {
+    let token = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    } else {
+      // Look for Supabase session cookies
+      const sbAuthTokens = Object.keys(cookies).filter(key => 
+        key.startsWith('sb-') && key.includes('auth-token')
+      );
+      
+      for (const cookieName of sbAuthTokens) {
+        try {
+          const cookieValue = cookies[cookieName];
+          if (cookieValue.startsWith('[') || cookieValue.startsWith('{')) {
+            const parsed = JSON.parse(cookieValue);
+            if (parsed && parsed.access_token) {
+              token = parsed.access_token;
+              break;
+            }
+          } else if (cookieValue.includes('.')) {
+            token = cookieValue;
+            break;
+          }
+        } catch (parseError) {
+          continue;
+        }
+      }
+    }
+
+    if (!token) {
       return NextResponse.json(
-        { success: false, error: 'Not authenticated', message: 'No Authorization header provided' },
+        { success: false, error: 'Not authenticated', message: 'No valid token found' },
         { status: 401 }
       );
     }
-
-    // Parse the token
-    const token = authHeader.replace('Bearer ', '');
 
     // Verify the user's session with Supabase
     const { data, error } = await supabase.auth.getUser(token);
