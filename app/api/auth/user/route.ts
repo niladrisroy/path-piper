@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { supabase } from '@/lib/supabase';
@@ -218,7 +217,7 @@ export async function PUT(request: Request) {
     // If user is a student, also update student profile
     if (profileData.educationLevel || profileData.birthMonth || profileData.birthYear) {
       const studentUpdateData: any = {};
-      
+
       if (profileData.educationLevel) {
         studentUpdateData.educationLevel = profileData.educationLevel;
       }

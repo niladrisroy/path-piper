@@ -309,11 +309,11 @@ export default function Onboarding() {
                     educationLevel: userData.educationLevel,
                     birthMonth: userData.birthMonth,
                     birthYear: userData.birthYear,
+                    ageGroup: userData.ageGroup,
                     profileImage: null
                   }}
                   onComplete={(data) => {
                     console.log("PersonalInfoStep onComplete called with data:", data);
-                     const ageGroup = calculateAgeGroup(data.birthYear)
                     setUserData({
                       ...userData,
                       firstName: data.firstName,
@@ -323,7 +323,7 @@ export default function Onboarding() {
                       educationLevel: data.educationLevel,
                       birthMonth: data.birthMonth,
                       birthYear: data.birthYear,
-                      ageGroup: ageGroup
+                      ageGroup: data.ageGroup
                     });
                     handlePersonalInfoComplete(data);
                   }}
@@ -333,13 +333,14 @@ export default function Onboarding() {
 
               {step === 2 && (
                 <InterestsStep
-                  initialData={{interests: userData.interests}}
+                  initialData={userData.interests || []}
                   onComplete={(interests) => {
                     setUserData({ ...userData, interests });
                     handleNext();
                   }}
                   onNext={handleNext}
-                  onBack={handleBack}
+                  onSkip={handleNext}
+                  ageGroup={userData.ageGroup}
                 />
               )}
 

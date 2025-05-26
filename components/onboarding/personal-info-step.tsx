@@ -21,6 +21,7 @@ const personalInfoSchema = z.object({
   educationLevel: z.string().optional(),
   birthMonth: z.string(),
   birthYear: z.string(),
+  ageGroup: z.string(),
   profileImage: z.any().optional(),
 });
 
@@ -33,6 +34,34 @@ interface PersonalInfoStepProps {
   onNext?: () => void;
 }
 
+// Function to calculate age group based on birth month and year
+const calculateAgeGroup = (birthMonth: string, birthYear: string): string => {
+  if (!birthMonth || !birthYear) return "";
+  
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth() + 1; // Convert to 1-based month
+  
+  const birthYearNum = parseInt(birthYear);
+  const birthMonthNum = parseInt(birthMonth);
+  
+  // Calculate age in months
+  let ageInMonths = (currentYear - birthYearNum) * 12 + (currentMonth - birthMonthNum);
+  
+  // Determine age group based on age in months
+  if (ageInMonths < 60) { // Under 5 years
+    return "early-childhood";
+  } else if (ageInMonths < 132) { // 5-10 years
+    return "elementary";
+  } else if (ageInMonths < 156) { // 11-12 years
+    return "middle-school";
+  } else if (ageInMonths < 216) { // 13-17 years
+    return "high-school";
+  } else { // 18+ years
+    return "young-adult";
+  }
+};
+
 export default function PersonalInfoStep({ initialData, onComplete, onNext }: PersonalInfoStepProps) {
   // Ensure initialData has default values for all fields
   const defaultData: PersonalInfo = {
@@ -43,6 +72,7 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
     educationLevel: "",
     birthMonth: "",
     birthYear: "",
+    ageGroup: "",
     profileImage: null,
   }
 
@@ -72,6 +102,7 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
         educationLevel: initialData.educationLevel || "",
         birthMonth: initialData.birthMonth || "",
         birthYear: initialData.birthYear || "",
+        ageGroup: initialData.ageGroup || "",
         profileImage: initialData.profileImage || null
       };
 
@@ -79,6 +110,17 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
       form.reset(initialFormData);
     }
   }, [initialData, form]);
+
+  // Watch for changes in birth month and year to auto-calculate age group
+  const watchedBirthMonth = form.watch("birthMonth");
+  const watchedBirthYear = form.watch("birthYear");
+
+  useEffect(() => {
+    if (watchedBirthMonth && watchedBirthYear) {
+      const calculatedAgeGroup = calculateAgeGroup(watchedBirthMonth, watchedBirthYear);
+      form.setValue("ageGroup", calculatedAgeGroup);
+    }
+  }, [watchedBirthMonth, watchedBirthYear, form]);
 
   // Handle form submission
   const onSubmit = (data: PersonalInfo) => {
@@ -280,6 +322,50 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
               )}
             />
           </div>
+
+          <FormField
+            control={form.control}
+            name="ageGroup"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Age Group</FormLabel>
+                <div className="relative">
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled
+                  >
+                    <FormControl>
+                      <SelectTrigger className="bg-slate-50 border-slate-200 cursor-not-allowed">
+                        <SelectValue placeholder="Auto-calculated based on birth date">
+                          {field.value ? 
+                            {
+                              "early-childhood": "Early Childhood (Under 5)",
+                              "elementary": "Elementary (5-10 years)",
+                              "middle-school": "Middle School (11-12 years)",
+                              "high-school": "High School (13-17 years)",
+                              "young-adult": "Young Adult (18+ years)"
+                            }[field.value] || "Auto-calculated based on birth date"
+                            : "Auto-calculated based on birth date"
+                          }
+                        </SelectValue>
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-lg">
+                      <SelectGroup>
+                        <SelectItem value="early-childhood">Early Childhood (Under 5)</SelectItem>
+                        <SelectItem value="elementary">Elementary (5-10 years)</SelectItem>
+                        <SelectItem value="middle-school">Middle School (11-12 years)</SelectItem>
+                        <SelectItem value="high-school">High School (13-17 years)</SelectItem>
+                        <SelectItem value="young-adult">Young Adult (18+ years)</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <div className="flex justify-end">
             <Button type="submit">

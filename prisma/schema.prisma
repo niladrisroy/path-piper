@@ -1,4 +1,3 @@
-
 // This is your Prisma schema file
 datasource db {
   provider = "postgresql"
@@ -20,7 +19,7 @@ enum UserRole {
 /// This model maps to the enum in the database
 model UserRoleEnum {
   name String @id @map("name")
-  
+
   @@map("user_role")
 }
 
@@ -71,9 +70,7 @@ model StudentProfile {
   educationLevel      EducationLevel @map("education_level")
   birthMonth          String?        @map("birth_month")
   birthYear           String?        @map("birth_year")
-  parentEmail         String?        @map("parent_email")
-  parentVerified      Boolean        @default(false) @map("parent_verified")
-  onboardingCompleted Boolean        @default(false) @map("onboarding_completed")
+  ageGroup          String?
   createdAt           DateTime       @default(now()) @map("created_at")
   updatedAt           DateTime       @updatedAt @map("updated_at")
 
