@@ -193,27 +193,43 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Education Level</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your education level" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectItem value="pre_school">Pre-School</SelectItem>
-                        <SelectItem value="school">School</SelectItem>
-                        <SelectItem value="high_school">High School</SelectItem>
-                        <SelectItem value="undergraduate">Undergraduate</SelectItem>
-                        <SelectItem value="graduate">Graduate</SelectItem>
-                        <SelectItem value="post_graduate">Post Graduate</SelectItem>
-                        <SelectItem value="phd">PhD</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
+                  <div className="relative">
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-white border-slate-200 hover:border-slate-300 focus:border-teal-500 focus:ring-teal-500">
+                          <SelectValue placeholder="Choose your education level" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-lg">
+                        <SelectGroup>
+                          <SelectItem value="pre_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Pre-School
+                          </SelectItem>
+                          <SelectItem value="school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            School
+                          </SelectItem>
+                          <SelectItem value="high_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            High School
+                          </SelectItem>
+                          <SelectItem value="undergraduate" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Undergraduate
+                          </SelectItem>
+                          <SelectItem value="graduate" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Graduate
+                          </SelectItem>
+                          <SelectItem value="post_graduate" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Post Graduate
+                          </SelectItem>
+                          <SelectItem value="phd" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            PhD
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -226,25 +242,52 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Age Group</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your age group" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="early-childhood">Early Childhood (0-8)</SelectItem>
-                      <SelectItem value="elementary">Elementary (9-11)</SelectItem>
-                      <SelectItem value="middle-school">Middle School (12-14)</SelectItem>
-                      <SelectItem value="high-school">High School (15-18)</SelectItem>
-                      <SelectItem value="young-adult">Young Adult (19+)</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="bg-white border-slate-200 hover:border-slate-300 focus:border-teal-500 focus:ring-teal-500">
+                        <SelectValue placeholder="Select your age group" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-lg">
+                      <SelectGroup>
+                        <SelectItem value="early-childhood" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                          <div className="flex flex-col">
+                            <span className="font-medium">Early Childhood</span>
+                            <span className="text-xs text-slate-500">Ages 0-8</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="elementary" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                          <div className="flex flex-col">
+                            <span className="font-medium">Elementary</span>
+                            <span className="text-xs text-slate-500">Ages 9-11</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="middle-school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                          <div className="flex flex-col">
+                            <span className="font-medium">Middle School</span>
+                            <span className="text-xs text-slate-500">Ages 12-14</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="high-school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                          <div className="flex flex-col">
+                            <span className="font-medium">High School</span>
+                            <span className="text-xs text-slate-500">Ages 15-18</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="young-adult" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                          <div className="flex flex-col">
+                            <span className="font-medium">Young Adult</span>
+                            <span className="text-xs text-slate-500">Ages 19+</span>
+                          </div>
+                        </SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
