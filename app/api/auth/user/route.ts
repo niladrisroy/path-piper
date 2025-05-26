@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { supabase } from '@/lib/supabase';
@@ -179,8 +180,8 @@ export async function PUT(request: Request) {
     const body = await request.json();
     console.log("API: Update data:", body);
 
-    // Get user from session cookie
-    const cookieStore = cookies();
+    // Get user from session cookie - properly await cookies() for NextJS 15
+    const cookieStore = await cookies();
     const accessToken = cookieStore.get('sb-access-token')?.value;
 
     if (!accessToken) {
@@ -198,26 +199,39 @@ export async function PUT(request: Request) {
 
     console.log("API: Authenticated user:", user.id);
 
+    // Extract profile data from the nested structure
+    const profileData = body.profile || body;
+
     // Update profile in database
     const updatedProfile = await prisma.profile.update({
       where: { id: user.id },
       data: {
-        firstName: body.firstName,
-        lastName: body.lastName,
-        bio: body.bio || null,
-        location: body.location || null,
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        bio: profileData.bio || null,
+        location: profileData.location || null,
       }
     });
 
     console.log("API: Profile updated successfully");
 
     // If user is a student, also update student profile
-    if (body.educationLevel) {
+    if (profileData.educationLevel || profileData.birthMonth || profileData.birthYear) {
+      const studentUpdateData: any = {};
+      
+      if (profileData.educationLevel) {
+        studentUpdateData.educationLevel = profileData.educationLevel;
+      }
+      if (profileData.birthMonth) {
+        studentUpdateData.birthMonth = profileData.birthMonth;
+      }
+      if (profileData.birthYear) {
+        studentUpdateData.birthYear = profileData.birthYear;
+      }
+
       await prisma.studentProfile.update({
         where: { id: user.id },
-        data: {
-          educationLevel: body.educationLevel,
-        }
+        data: studentUpdateData
       });
       console.log("API: Student profile updated successfully");
     }
