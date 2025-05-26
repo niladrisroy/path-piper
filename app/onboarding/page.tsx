@@ -42,37 +42,6 @@ export default function Onboarding() {
     birthYear: "",
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  // Debug: Check what cookies are available when page loads
-  useEffect(() => {
-    console.log("Onboarding page loaded");
-    console.log("Document cookies:", document.cookie);
-
-    // Check if we can make an API call to get user data
-    const checkUserSession = async () => {
-      try {
-        console.log("Checking user session...");
-        const response = await fetch("/api/auth/user", {
-          method: "GET",
-          credentials: 'include',
-          cache: 'no-store'
-        });
-
-        console.log("User session response status:", response.status);
-        if (response.ok) {
-          const data = await response.json();
-          console.log("User session data:", data);
-        } else {
-          console.log("User session check failed");
-        }
-      } catch (error) {
-        console.error("Error checking user session:", error);
-      }
-    };
-
-    checkUserSession();
-  }, []);
-
   const [loading, setLoading] = useState(true)
 
   // Fetch user data on component mount using session cookie
