@@ -23,35 +23,55 @@ export async function GET(request: NextRequest) {
     // Try to get token from cookies or auth header
     const authHeader = request.headers.get('Authorization');
     const cookieString = request.headers.get('cookie') || '';
+    
+    // Parse cookies properly
     const cookies = Object.fromEntries(
       cookieString.split(';').map(cookie => {
         const [name, ...rest] = cookie.trim().split('=');
-        return [name, rest.join('=')];
+        return [name, decodeURIComponent(rest.join('='))];
       })
     );
 
-    // Prioritize auth header, then look for Supabase cookies
+    console.log("API: Available cookies:", Object.keys(cookies).join(', '));
+
+    // Prioritize auth header, then look for Supabase session cookies
     let token = null;
     if (authHeader && authHeader.startsWith('Bearer ')) {
       token = authHeader.substring(7);
       console.log("API: Using token from Authorization header");
     } else {
-      // Look for various Supabase auth cookies
-      const possibleCookies = ['sb-auth-token', 'supabase-auth-token', 'sb-access-token'];
-      for (const cookieName of possibleCookies) {
-        if (cookies[cookieName]) {
-          token = cookies[cookieName];
-          console.log(`API: Using raw cookie value as token from ${cookieName}`);
-          break;
+      // Look for Supabase session cookies and parse them properly
+      const sbAuthTokens = Object.keys(cookies).filter(key => 
+        key.startsWith('sb-') && key.includes('auth-token')
+      );
+      
+      for (const cookieName of sbAuthTokens) {
+        try {
+          const cookieValue = cookies[cookieName];
+          // Try to parse as JSON if it looks like a session object
+          if (cookieValue.startsWith('[') || cookieValue.startsWith('{')) {
+            const parsed = JSON.parse(cookieValue);
+            if (parsed && parsed.access_token) {
+              token = parsed.access_token;
+              console.log(`API: Extracted access_token from ${cookieName}`);
+              break;
+            }
+          } else if (cookieValue.includes('.')) {
+            // If it looks like a JWT (has dots), use it directly
+            token = cookieValue;
+            console.log(`API: Using JWT token from ${cookieName}`);
+            break;
+          }
+        } catch (parseError) {
+          console.log(`API: Failed to parse cookie ${cookieName}:`, parseError.message);
         }
       }
     }
 
-    console.log("API: Available cookies:", Object.keys(cookies).join(', '));
     console.log("API: Token found:", !!token);
 
     if (token) {
-      console.log("API: Token preview:", token.substring(0, 10) + "...");
+      console.log("API: Token preview:", token.substring(0, 20) + "...");
 
       // Try to verify the token with Supabase
       console.log("API: Verifying token with Supabase");
