@@ -28,6 +28,9 @@ const personalInfoSchema = z.object({
 // Create a type from the schema
 export type PersonalInfo = z.infer<typeof personalInfoSchema>;
 
+// Export AgeGroup type
+export type AgeGroup = "early-childhood" | "elementary" | "middle-school" | "high-school" | "young-adult";
+
 interface PersonalInfoStepProps {
   initialData: PersonalInfo;
   onComplete: (data: PersonalInfo) => void;
@@ -262,13 +265,42 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
               control={form.control}
-              name="location"
+              name="ageGroup"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Location</FormLabel>
-                  <FormControl>
-                    <Input placeholder="City, Country" {...field} />
-                  </FormControl>
+                  <FormLabel>Age Group</FormLabel>
+                  <div className="relative">
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-white border-slate-200 hover:border-slate-300 focus:border-teal-500 focus:ring-teal-500">
+                          <SelectValue placeholder="Choose your age group">
+                            {field.value ? 
+                              {
+                                "early-childhood": "Early Childhood (Under 5)",
+                                "elementary": "Elementary (5-10 years)",
+                                "middle-school": "Middle School (11-12 years)",
+                                "high-school": "High School (13-17 years)",
+                                "young-adult": "Young Adult (18+ years)"
+                              }[field.value] || "Choose your age group"
+                              : "Choose your age group"
+                            }
+                          </SelectValue>
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-lg">
+                        <SelectGroup>
+                          <SelectItem value="early-childhood" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">Early Childhood (Under 5)</SelectItem>
+                          <SelectItem value="elementary" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">Elementary (5-10 years)</SelectItem>
+                          <SelectItem value="middle-school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">Middle School (11-12 years)</SelectItem>
+                          <SelectItem value="high-school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">High School (13-17 years)</SelectItem>
+                          <SelectItem value="young-adult" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">Young Adult (18+ years)</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -325,43 +357,13 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
 
           <FormField
             control={form.control}
-            name="ageGroup"
+            name="location"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Age Group</FormLabel>
-                <div className="relative">
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    disabled
-                  >
-                    <FormControl>
-                      <SelectTrigger className="bg-slate-50 border-slate-200 cursor-not-allowed">
-                        <SelectValue placeholder="Auto-calculated based on birth date">
-                          {field.value ? 
-                            {
-                              "early-childhood": "Early Childhood (Under 5)",
-                              "elementary": "Elementary (5-10 years)",
-                              "middle-school": "Middle School (11-12 years)",
-                              "high-school": "High School (13-17 years)",
-                              "young-adult": "Young Adult (18+ years)"
-                            }[field.value] || "Auto-calculated based on birth date"
-                            : "Auto-calculated based on birth date"
-                          }
-                        </SelectValue>
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-lg">
-                      <SelectGroup>
-                        <SelectItem value="early-childhood">Early Childhood (Under 5)</SelectItem>
-                        <SelectItem value="elementary">Elementary (5-10 years)</SelectItem>
-                        <SelectItem value="middle-school">Middle School (11-12 years)</SelectItem>
-                        <SelectItem value="high-school">High School (13-17 years)</SelectItem>
-                        <SelectItem value="young-adult">Young Adult (18+ years)</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <FormLabel>Location</FormLabel>
+                <FormControl>
+                  <Input placeholder="City, Country" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
