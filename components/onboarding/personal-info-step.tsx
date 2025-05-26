@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect } from 'react';
@@ -52,35 +53,6 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
       Object.entries(initialData).filter(([_, v]) => v !== undefined && v !== null)
     )
   }
-
-  console.log("PersonalInfoStep - initialData (raw):", initialData);
-  console.log("PersonalInfoStep - initialFormData (merged):", initialFormData);
-
-  // Debug: Log more details about what we received
-  console.log("PersonalInfoStep - firstName value:", initialData.firstName || "NOT SET");
-  console.log("PersonalInfoStep - lastName value:", initialData.lastName || "NOT SET");
-  console.log("PersonalInfoStep - birthMonth value:", initialData.birthMonth || "NOT SET");
-  console.log("PersonalInfoStep - birthYear value:", initialData.birthYear || "NOT SET");
-  console.log("PersonalInfoStep - educationLevel value:", initialData.educationLevel || "NOT SET");
-
-  // Additional debug for empty data
-  console.log("PersonalInfoStep - All initialData keys:", Object.keys(initialData));
-  console.log("PersonalInfoStep - Empty fields:", Object.entries(initialData).filter(([k, v]) => !v || v === "").map(([k]) => k));
-
-  const [formData, setFormData] = useState<PersonalInfo>(initialFormData);
-
-  // Debug: More explicit form data output
-  useEffect(() => {
-    console.log("Form data after useState initialization:", formData);
-    // Check if the form fields actually have values
-    const formFields = document.querySelectorAll('input, select, textarea');
-    console.log("DOM form fields:");
-    formFields.forEach((field: any) => {
-      if (field.id) {
-        console.log(`${field.id}: ${field.value || "EMPTY"}`);
-      }
-    });
-  }, [formData]);
 
   // Setup react-hook-form
   const form = useForm<PersonalInfo>({
