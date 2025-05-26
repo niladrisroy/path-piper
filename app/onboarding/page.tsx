@@ -118,7 +118,7 @@ export default function Onboarding() {
 
           if (data.user) {
             console.log("Setting user data from API response");
-            
+
             // Use data from the API response
             setUserData({
               ...userData,
@@ -130,7 +130,7 @@ export default function Onboarding() {
               ageGroup: data.user.ageGroup || "young-adult",
               educationLevel: data.user.educationLevel || "",
             });
-            
+
             // Additional debugging
             console.log("API data loaded into state:", {
               firstName: data.user.firstName,
@@ -225,11 +225,11 @@ export default function Onboarding() {
           try {
             const dbTestResponse = await fetch("/api/db-test");
             const dbTestData = await dbTestResponse.json();
-            
+
             if (dbTestData.success && dbTestData.sample_profiles && dbTestData.sample_profiles.length > 0) {
               const firstProfile = dbTestData.sample_profiles[0];
               console.log("Using profile from DB test:", firstProfile);
-              
+
               setUserData({
                 ...userData,
                 firstName: firstProfile.firstName || "",
@@ -238,14 +238,14 @@ export default function Onboarding() {
                 ageGroup: "young-adult", // Default value
                 educationLevel: "undergraduate", // Default value
               });
-              
+
               console.log("Set user data from DB test fallback");
             }
           } catch (dbError) {
             console.error("Error with DB test fallback:", dbError);
           }
         }
-        
+
         setLoading(false);
       }
     }
@@ -417,7 +417,8 @@ export default function Onboarding() {
                   bio: userData.bio,
                   location: userData.location,
                   educationLevel: userData.educationLevel,
-                  ageGroup: userData.ageGroup || "young-adult",
+                  birthMonth: userData.birthMonth,
+                  birthYear: userData.birthYear,
                   profileImage: null
                 }}
                 onComplete={(data) => {
@@ -428,7 +429,8 @@ export default function Onboarding() {
                     bio: data.bio,
                     location: data.location,
                     educationLevel: data.educationLevel,
-                    ageGroup: data.ageGroup
+                    birthMonth: data.birthMonth,
+                    birthYear: data.birthYear
                   });
                 }}
                 onNext={handleNext}

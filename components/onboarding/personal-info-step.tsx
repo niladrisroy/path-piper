@@ -18,7 +18,8 @@ const personalInfoSchema = z.object({
   bio: z.string().max(300, { message: "Bio must be less than 300 characters" }).optional(),
   location: z.string().optional(),
   educationLevel: z.string().optional(),
-  ageGroup: z.string(),
+  birthMonth: z.string(),
+  birthYear: z.string(),
   profileImage: z.any().optional(),
 });
 
@@ -39,7 +40,8 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
     bio: "",
     location: "",
     educationLevel: "",
-    ageGroup: "young-adult", // Default to young-adult
+    birthMonth: "",
+    birthYear: "",
     profileImage: null,
   }
 
@@ -57,7 +59,8 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
   // Debug: Log more details about what we received
   console.log("PersonalInfoStep - firstName value:", initialData.firstName || "NOT SET");
   console.log("PersonalInfoStep - lastName value:", initialData.lastName || "NOT SET");
-  console.log("PersonalInfoStep - ageGroup value:", initialData.ageGroup || "NOT SET");
+  console.log("PersonalInfoStep - birthMonth value:", initialData.birthMonth || "NOT SET");
+  console.log("PersonalInfoStep - birthYear value:", initialData.birthYear || "NOT SET");
   console.log("PersonalInfoStep - educationLevel value:", initialData.educationLevel || "NOT SET");
 
   const [formData, setFormData] = useState<PersonalInfo>(initialFormData);
@@ -175,6 +178,67 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
               control={form.control}
+              name="birthMonth"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Birth Month</FormLabel>
+                  <div className="relative">
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      disabled
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-slate-50 border-slate-200 cursor-not-allowed">
+                          <SelectValue placeholder="Month from registration" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-lg">
+                        <SelectGroup>
+                          <SelectItem value="1">January</SelectItem>
+                          <SelectItem value="2">February</SelectItem>
+                          <SelectItem value="3">March</SelectItem>
+                          <SelectItem value="4">April</SelectItem>
+                          <SelectItem value="5">May</SelectItem>
+                          <SelectItem value="6">June</SelectItem>
+                          <SelectItem value="7">July</SelectItem>
+                          <SelectItem value="8">August</SelectItem>
+                          <SelectItem value="9">September</SelectItem>
+                          <SelectItem value="10">October</SelectItem>
+                          <SelectItem value="11">November</SelectItem>
+                          <SelectItem value="12">December</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="birthYear"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Birth Year</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Year from registration" 
+                      {...field} 
+                      disabled
+                      className="bg-slate-50 border-slate-200 cursor-not-allowed"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
               name="location"
               render={({ field }) => (
                 <FormItem>
@@ -235,63 +299,6 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
               )}
             />
           </div>
-
-          <FormField
-            control={form.control}
-            name="ageGroup"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Age Group</FormLabel>
-                <div className="relative">
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="bg-white border-slate-200 hover:border-slate-300 focus:border-teal-500 focus:ring-teal-500">
-                        <SelectValue placeholder="Select your age group" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-lg">
-                      <SelectGroup>
-                        <SelectItem value="early-childhood" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
-                          <div className="flex flex-col">
-                            <span className="font-medium">Early Childhood</span>
-                            <span className="text-xs text-slate-500">Ages 0-8</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="elementary" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
-                          <div className="flex flex-col">
-                            <span className="font-medium">Elementary</span>
-                            <span className="text-xs text-slate-500">Ages 9-11</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="middle-school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
-                          <div className="flex flex-col">
-                            <span className="font-medium">Middle School</span>
-                            <span className="text-xs text-slate-500">Ages 12-14</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="high-school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
-                          <div className="flex flex-col">
-                            <span className="font-medium">High School</span>
-                            <span className="text-xs text-slate-500">Ages 15-18</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="young-adult" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
-                          <div className="flex flex-col">
-                            <span className="font-medium">Young Adult</span>
-                            <span className="text-xs text-slate-500">Ages 19+</span>
-                          </div>
-                        </SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
 
           <div className="flex justify-end">
             <Button type="submit">
