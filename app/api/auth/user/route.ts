@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { supabase } from '@/lib/supabase';
+import { cookies } from 'next/headers';
 
 // Database connection will be tested when actually needed
 
@@ -125,7 +126,6 @@ export async function GET(request: NextRequest) {
                 profileImageUrl: userProfile.profileImageUrl,
                 // Add student-specific data if this is a student
                 ...(userProfile.student && {
-                  ageGroup: userProfile.student.ageGroup,
                   educationLevel: userProfile.student.educationLevel,
                   onboardingCompleted: userProfile.student.onboardingCompleted,
                   birthMonth: birthMonth,
@@ -157,8 +157,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-
-
     // If we reach here, we couldn't authenticate or find any profile
     return NextResponse.json(
       { error: "Unauthorized or no profile found" },
@@ -173,125 +171,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
-  try {
-    // Get the auth token from headers or cookies
-    const authHeader = request.headers.get('Authorization');
-    const cookieString = request.headers.get('cookie') || '';
-
-    // Parse cookies properly
-    const cookies = Object.fromEntries(
-      cookieString.split(';').map(cookie => {
-        const [name, ...rest] = cookie.trim().split('=');
-        return [name, decodeURIComponent(rest.join('='))];
-      })
-    );
-
-    let token = null;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.substring(7);
-    } else {
-      // Look for Supabase session cookies
-      const sbAuthTokens = Object.keys(cookies).filter(key => 
-        key.startsWith('sb-') && key.includes('auth-token')
-      );
-
-      for (const cookieName of sbAuthTokens) {
-        try {
-          const cookieValue = cookies[cookieName];
-          if (cookieValue.startsWith('[') || cookieValue.startsWith('{')) {
-            const parsed = JSON.parse(cookieValue);
-            if (parsed && parsed.access_token) {
-              token = parsed.access_token;
-              break;
-            }
-          } else if (cookieValue.includes('.')) {
-            token = cookieValue;
-            break;
-          }
-        } catch (parseError) {
-          continue;
-        }
-      }
-    }
-
-    if (!token) {
-      return NextResponse.json(
-        { success: false, error: 'Not authenticated', message: 'No valid token found' },
-        { status: 401 }
-      );
-    }
-
-    // Verify the user's session with Supabase
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-
-    if (error || !user) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid session' },
-        { status: 401 }
-      );
-    }
-
-    // Get the request body
-    const body = await request.json();
-
-    // Get user profile from database with student profile data if applicable
-    const profile = await prisma.profile.findUnique({
-      where: { id: user.id },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        bio: true,
-        location: true,
-        role: true,
-        profileImageUrl: true,
-        student: {
-          select: {
-            birthMonth: true,
-            birthYear: true,
-            educationLevel: true,
-          }
-        }
-      }
-    });
-
-    if (!profile) {
-      console.log("API: User profile not found in database");
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-    }
-
-    console.log("API: User profile found in database");
-    console.log("API: Student profile data:", profile.student);
-
-    return NextResponse.json({
-      success: true,
-      user: {
-        id: profile.id,
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        bio: profile.bio || "",
-        location: profile.location || "",
-        role: profile.role,
-        profileImage: profile.profileImageUrl,
-        birthMonth: profile.student?.birthMonth || "",
-        birthYear: profile.student?.birthYear || "",
-        educationLevel: profile.student?.educationLevel || "",
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching profile:', error);
-    return NextResponse.json(
-      { success: false, error: 'An unexpected error occurred' },
-      { status: 500 }
-    );
-  }
-}
-
 export async function PUT(request: Request) {
   try {
     console.log("API: Profile update request received");
-    
+
     // Get the request body
     const body = await request.json();
     console.log("API: Update data:", body);
@@ -307,7 +190,7 @@ export async function PUT(request: Request) {
 
     // Verify token with Supabase
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-    
+
     if (authError || !user) {
       console.log("API: Invalid token or user not found");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
