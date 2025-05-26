@@ -156,9 +156,15 @@ export default function Onboarding() {
               educationLevel: data.user.educationLevel || "",
               bio: data.user.bio || "",
               ageGroup: data.user.ageGroup || "young-adult",
+              birthMonth: data.user.birthMonth || "",
+              birthYear: data.user.birthYear || "",
             };
 
             console.log("Setting initial user data:", initialUserData);
+            console.log("Birth data from API:", {
+              birthMonth: data.user.birthMonth,
+              birthYear: data.user.birthYear
+            });
             setUserData(initialUserData);
 
             // If there's more detailed profile data, use it
@@ -179,6 +185,8 @@ export default function Onboarding() {
                 educationLevel: data.user.profile.education_level || data.user.educationLevel || "",
                 bio: data.user.profile.bio || data.user.bio || "",
                 ageGroup: data.user.profile.age_group || data.user.ageGroup || "young-adult",
+                birthMonth: data.user.birthMonth || "",
+                birthYear: data.user.birthYear || "",
               };
 
               console.log("Setting updated user data from profile:", updatedUserData);

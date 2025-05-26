@@ -76,6 +76,14 @@ export async function GET(request: NextRequest) {
 
           if (userProfile) {
             console.log("API: User profile found in database");
+            // Format birth month and year for display
+            let birthMonth = "";
+            let birthYear = "";
+
+            if (userProfile.student) {
+              birthMonth = userProfile.student.birthMonth ? userProfile.student.birthMonth.toString() : "";
+              birthYear = userProfile.student.birthYear ? userProfile.student.birthYear.toString() : "";
+            }
             return NextResponse.json({
               user: {
                 id: userProfile.id,
@@ -90,7 +98,9 @@ export async function GET(request: NextRequest) {
                 ...(userProfile.student && {
                   ageGroup: userProfile.student.ageGroup,
                   educationLevel: userProfile.student.educationLevel,
-                  onboardingCompleted: userProfile.student.onboardingCompleted
+                  onboardingCompleted: userProfile.student.onboardingCompleted,
+                  birthMonth: birthMonth,
+                  birthYear: birthYear,
                 }),
                 // Add mentor-specific data if this is a mentor
                 ...(userProfile.mentor && {
@@ -135,6 +145,14 @@ export async function GET(request: NextRequest) {
 
       if (demoProfile) {
         console.log("API: Using demo profile for testing:", demoProfile.id);
+            // Format birth month and year for display
+            let birthMonth = "";
+            let birthYear = "";
+
+            if (demoProfile.student) {
+              birthMonth = demoProfile.student.birthMonth ? demoProfile.student.birthMonth.toString() : "";
+              birthYear = demoProfile.student.birthYear ? demoProfile.student.birthYear.toString() : "";
+            }
         return NextResponse.json({
           user: {
             id: demoProfile.id,
@@ -149,7 +167,9 @@ export async function GET(request: NextRequest) {
             ...(demoProfile.student && {
               ageGroup: demoProfile.student.ageGroup,
               educationLevel: demoProfile.student.educationLevel,
-              onboardingCompleted: demoProfile.student.onboardingCompleted
+              onboardingCompleted: demoProfile.student.onboardingCompleted,
+              birthMonth: birthMonth,
+              birthYear: birthYear,
             }),
             ...(demoProfile.mentor && {
               profession: demoProfile.mentor.profession,
@@ -190,42 +210,42 @@ export async function PUT(request: NextRequest) {
   try {
     // Get the auth cookie from the headers
     const authHeader = request.headers.get('Authorization');
-    
+
     if (!authHeader) {
       return NextResponse.json(
         { success: false, error: 'Not authenticated', message: 'No Authorization header provided' },
         { status: 401 }
       );
     }
-    
+
     // Parse the token
     const token = authHeader.replace('Bearer ', '');
-    
+
     // Verify the user's session with Supabase
     const { data, error } = await supabase.auth.getUser(token);
-    
+
     if (error || !data.user) {
       return NextResponse.json(
         { success: false, error: 'Invalid session' },
         { status: 401 }
       );
     }
-    
+
     // Get the request body
     const body = await request.json();
-    
+
     // Update the profile
     const profile = await prisma.profile.findUnique({
       where: { id: data.user.id },
     });
-    
+
     if (!profile) {
       return NextResponse.json(
         { success: false, error: 'Profile not found' },
         { status: 404 }
       );
     }
-    
+
     // Update the profile
     await prisma.profile.update({
       where: { id: data.user.id },
@@ -236,7 +256,7 @@ export async function PUT(request: NextRequest) {
         location: body.profile?.location || profile.location,
       },
     });
-    
+
     // Update role-specific profile
     if (profile.role === 'student') {
       await prisma.studentProfile.update({
@@ -256,7 +276,7 @@ export async function PUT(request: NextRequest) {
         },
       });
     }
-    
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error updating profile:', error);

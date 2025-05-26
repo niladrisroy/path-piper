@@ -185,12 +185,18 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
                   <div className="relative">
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                       disabled
                     >
                       <FormControl>
                         <SelectTrigger className="bg-slate-50 border-slate-200 cursor-not-allowed">
-                          <SelectValue placeholder="Month from registration" />
+                          <SelectValue placeholder="Month from registration">
+                            {field.value && field.value !== "" ? 
+                              ["", "January", "February", "March", "April", "May", "June", 
+                               "July", "August", "September", "October", "November", "December"][parseInt(field.value)] || "Month from registration"
+                              : "Month from registration"
+                            }
+                          </SelectValue>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-lg">
@@ -224,8 +230,9 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
                   <FormLabel>Birth Year</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="Year from registration" 
-                      {...field} 
+                      placeholder="Year from registration"
+                      value={field.value || ""}
+                      onChange={field.onChange}
                       disabled
                       className="bg-slate-50 border-slate-200 cursor-not-allowed"
                     />
