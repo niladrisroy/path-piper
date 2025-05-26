@@ -120,7 +120,7 @@ export default function Onboarding() {
             console.log("Setting user data from API response");
 
             // Use data from the API response
-            setUserData({
+            const newUserData = {
               ...userData,
               firstName: data.user.firstName || "",
               lastName: data.user.lastName || "",
@@ -129,7 +129,11 @@ export default function Onboarding() {
               location: data.user.location || "",
               ageGroup: data.user.ageGroup || "young-adult",
               educationLevel: data.user.educationLevel || "",
-            });
+              birthMonth: data.user.birthMonth || "",
+              birthYear: data.user.birthYear || "",
+            };
+            
+            setUserData(newUserData);
 
             // Additional debugging
             console.log("API data loaded into state:", {
@@ -137,71 +141,53 @@ export default function Onboarding() {
               lastName: data.user.lastName,
               ageGroup: data.user.ageGroup,
               educationLevel: data.user.educationLevel,
+              birthMonth: data.user.birthMonth,
+              birthYear: data.user.birthYear,
             });
           }
 
-          // If user has existing profile data, populate the form
+          // Process user data in a single pass to avoid multiple setUserData calls
           if (data.user) {
-            // Set basic user data from main profile
-            const initialUserData = {
-              firstName: data.user.firstName || storedData?.name?.split(' ')[0] || "",
-              lastName: data.user.lastName || (storedData?.name?.split(' ').slice(1).join(' ') || ""),
+            // Determine the best source of data for each field
+            const finalUserData = {
+              firstName: data.user.profile?.first_name || data.user.firstName || storedData?.name?.split(' ')[0] || "",
+              lastName: data.user.profile?.last_name || data.user.lastName || (storedData?.name?.split(' ').slice(1).join(' ') || ""),
               email: data.user.email || storedData?.email || "",
-              birthdate: "",
-              location: data.user.location || "",
-              interests: [],
-              skills: [],
-              skillLevels: {},
-              goals: [],
-              educationLevel: data.user.educationLevel || "",
-              bio: data.user.bio || "",
-              ageGroup: data.user.ageGroup || "young-adult",
+              birthdate: data.user.profile?.birthdate || "",
+              location: data.user.profile?.location || data.user.location || "",
+              interests: data.user.profile?.interests || [],
+              skills: data.user.profile?.skills || [],
+              skillLevels: data.user.profile?.skill_levels || {},
+              goals: data.user.profile?.goals || [],
+              educationLevel: data.user.profile?.education_level || data.user.educationLevel || "",
+              bio: data.user.profile?.bio || data.user.bio || "",
+              ageGroup: data.user.profile?.age_group || data.user.ageGroup || "young-adult",
               birthMonth: data.user.birthMonth || "",
               birthYear: data.user.birthYear || "",
             };
 
-            console.log("Setting initial user data:", initialUserData);
+            console.log("Setting final user data:", finalUserData);
             console.log("Birth data from API:", {
               birthMonth: data.user.birthMonth,
               birthYear: data.user.birthYear
             });
-            setUserData(initialUserData);
+            
+            setUserData(finalUserData);
 
-            // If there's more detailed profile data, use it
+            // Set existing data if available
             if (data.user.profile) {
               setExistingData(data.user.profile);
-
-              const updatedUserData = {
-                ...initialUserData,
-                firstName: data.user.profile.first_name || data.user.firstName || storedData?.name?.split(' ')[0] || "",
-                lastName: data.user.profile.last_name || data.user.lastName || (storedData?.name?.split(' ').slice(1).join(' ') || ""),
-                email: data.user.email || storedData?.email || "",
-                birthdate: data.user.profile.birthdate || "",
-                location: data.user.profile.location || data.user.location || "",
-                interests: data.user.profile.interests || [],
-                skills: data.user.profile.skills || [],
-                skillLevels: data.user.profile.skill_levels || {},
-                goals: data.user.profile.goals || [],
-                educationLevel: data.user.profile.education_level || data.user.educationLevel || "",
-                bio: data.user.profile.bio || data.user.bio || "",
-                ageGroup: data.user.profile.age_group || data.user.ageGroup || "young-adult",
-                birthMonth: data.user.birthMonth || "",
-                birthYear: data.user.birthYear || "",
-              };
-
-              console.log("Setting updated user data from profile:", updatedUserData);
-              setUserData(updatedUserData);
-
-              // Calculate how far along they are in the process
               calculateCompletionPercentage(data.user.profile);
             }
 
-            // Explicitly add a direct debug to verify data binding
-            console.log("FINAL VALUES TO BE USED:");
-            console.log("- firstName:", userData.firstName);
-            console.log("- lastName:", userData.lastName); 
-            console.log("- ageGroup:", userData.ageGroup);
-            console.log("- educationLevel:", userData.educationLevel);
+            // Debug the final state
+            console.log("FINAL VALUES SET:");
+            console.log("- firstName:", finalUserData.firstName);
+            console.log("- lastName:", finalUserData.lastName); 
+            console.log("- ageGroup:", finalUserData.ageGroup);
+            console.log("- educationLevel:", finalUserData.educationLevel);
+            console.log("- birthMonth:", finalUserData.birthMonth);
+            console.log("- birthYear:", finalUserData.birthYear);
           }
         } else {
           console.error("Failed to fetch user data:", response.status, response.statusText);
@@ -417,9 +403,9 @@ export default function Onboarding() {
               </div>
             </div>
           <div className="p-6 md:p-8">
-            {step === 1 && (
+            {step === 1 && !loading && (
               <PersonalInfoStep 
-                key={`${userData.firstName}-${userData.lastName}-${userData.birthMonth}-${userData.birthYear}`}
+                key={`personalinfo-${userData.firstName}-${userData.lastName}-${userData.birthMonth}-${userData.birthYear}-${Date.now()}`}
                 initialData={{
                   firstName: userData.firstName || "",
                   lastName: userData.lastName || "",
@@ -444,6 +430,12 @@ export default function Onboarding() {
                 }}
                 onNext={handleNext}
               />
+            )}
+
+            {step === 1 && loading && (
+              <div className="text-center py-8">
+                <p className="text-slate-600">Loading your profile...</p>
+              </div>
             )}
 
             {step === 2 && (
