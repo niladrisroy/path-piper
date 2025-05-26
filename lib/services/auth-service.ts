@@ -1,4 +1,3 @@
-
 'use server'
 
 import { prisma } from '@/lib/prisma'
@@ -62,7 +61,9 @@ export async function registerStudent(data: UserRegistrationData) {
         educationLevel: 'undergraduate', // Default value, can be updated later
         parentEmail: data.parentEmail || null,
         parentVerified: false,
-        onboardingCompleted: false
+        onboardingCompleted: false,
+        birthMonth: data.birthMonth || null,
+        birthYear: data.birthYear || null,
       }
     });
 
@@ -76,7 +77,7 @@ export async function registerStudent(data: UserRegistrationData) {
     // }
 
     return { success: true, needsParentApproval, parentEmail: data.parentEmail, userId: authData.user.id };
-    
+
   } catch (error) {
     console.error('Registration failed:', error);
     return { success: false, error: (error as Error).message || 'Registration failed' };
@@ -123,7 +124,7 @@ export async function registerMentor(data: UserRegistrationData) {
     });
 
     return { success: true, userId: authData.user.id };
-    
+
   } catch (error) {
     console.error('Registration failed:', error);
     return { success: false, error: (error as Error).message || 'Registration failed' };
@@ -172,7 +173,7 @@ export async function registerInstitution(data: UserRegistrationData) {
     });
 
     return { success: true, userId: authData.user.id };
-    
+
   } catch (error) {
     console.error('Registration failed:', error);
     return { success: false, error: (error as Error).message || 'Registration failed' };
