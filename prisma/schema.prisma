@@ -69,6 +69,8 @@ model StudentProfile {
   profile             Profile        @relation(fields: [id], references: [id])
   ageGroup            AgeGroup       @map("age_group")
   educationLevel      EducationLevel @map("education_level")
+  birthMonth          String?        @map("birth_month")
+  birthYear           String?        @map("birth_year")
   parentEmail         String?        @map("parent_email")
   parentVerified      Boolean        @default(false) @map("parent_verified")
   onboardingCompleted Boolean        @default(false) @map("onboarding_completed")

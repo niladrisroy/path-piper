@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     // Try to get token from cookies or auth header
     const authHeader = request.headers.get('Authorization');
     const cookieString = request.headers.get('cookie') || '';
-    
+
     // Parse cookies properly
     const cookies = Object.fromEntries(
       cookieString.split(';').map(cookie => {
@@ -45,14 +45,14 @@ export async function GET(request: NextRequest) {
         const sbAuthTokens = Object.keys(cookies).filter(key => 
           key.startsWith('sb-') && (key.includes('auth-token') || key.includes('access'))
         );
-        
+
         console.log("API: Found potential auth cookies:", sbAuthTokens);
-        
+
         for (const cookieName of sbAuthTokens) {
           try {
             const cookieValue = cookies[cookieName];
             console.log(`API: Checking cookie ${cookieName} (length: ${cookieValue?.length || 0})`);
-            
+
             // Try to parse as JSON if it looks like a session object
             if (cookieValue.startsWith('[') || cookieValue.startsWith('{')) {
               const parsed = JSON.parse(cookieValue);
@@ -157,7 +157,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    
+
 
     // If we reach here, we couldn't authenticate or find any profile
     return NextResponse.json(
@@ -178,7 +178,7 @@ export async function PUT(request: NextRequest) {
     // Get the auth token from headers or cookies
     const authHeader = request.headers.get('Authorization');
     const cookieString = request.headers.get('cookie') || '';
-    
+
     // Parse cookies properly
     const cookies = Object.fromEntries(
       cookieString.split(';').map(cookie => {
@@ -195,7 +195,7 @@ export async function PUT(request: NextRequest) {
       const sbAuthTokens = Object.keys(cookies).filter(key => 
         key.startsWith('sb-') && key.includes('auth-token')
       );
-      
+
       for (const cookieName of sbAuthTokens) {
         try {
           const cookieValue = cookies[cookieName];
@@ -223,9 +223,9 @@ export async function PUT(request: NextRequest) {
     }
 
     // Verify the user's session with Supabase
-    const { data, error } = await supabase.auth.getUser(token);
+    const { data: { user }, error } = await supabase.auth.getUser(token);
 
-    if (error || !data.user) {
+    if (error || !user) {
       return NextResponse.json(
         { success: false, error: 'Invalid session' },
         { status: 401 }
@@ -235,50 +235,50 @@ export async function PUT(request: NextRequest) {
     // Get the request body
     const body = await request.json();
 
-    // Update the profile
+    // Get user profile from database with student profile data if applicable
     const profile = await prisma.profile.findUnique({
-      where: { id: data.user.id },
+      where: { id: user.id },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        bio: true,
+        location: true,
+        role: true,
+        profileImageUrl: true,
+        student: {
+          select: {
+            birthMonth: true,
+            birthYear: true,
+            educationLevel: true,
+          }
+        }
+      }
     });
 
     if (!profile) {
-      return NextResponse.json(
-        { success: false, error: 'Profile not found' },
-        { status: 404 }
-      );
+      console.log("API: User profile not found in database");
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    // Update the profile
-    await prisma.profile.update({
-      where: { id: data.user.id },
-      data: {
-        firstName: body.profile?.first_name || profile.firstName,
-        lastName: body.profile?.last_name || profile.lastName,
-        bio: body.profile?.bio || profile.bio,
-        location: body.profile?.location || profile.location,
-      },
+    console.log("API: User profile found in database");
+    console.log("API: Student profile data:", profile.student);
+
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: profile.id,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        bio: profile.bio || "",
+        location: profile.location || "",
+        role: profile.role,
+        profileImage: profile.profileImageUrl,
+        birthMonth: profile.student?.birthMonth || "",
+        birthYear: profile.student?.birthYear || "",
+        educationLevel: profile.student?.educationLevel || "",
+      }
     });
-
-    // Update role-specific profile
-    if (profile.role === 'student') {
-      await prisma.studentProfile.update({
-        where: { id: data.user.id },
-        data: {
-          educationLevel: body.profile?.education_level,
-          ageGroup: body.profile?.age_group,
-          onboardingCompleted: body.profile?.onboarding_completed || false,
-        },
-      });
-    } else if (profile.role === 'mentor') {
-      await prisma.mentorProfile.update({
-        where: { id: data.user.id },
-        data: {
-          educationLevel: body.profile?.education_level,
-          onboardingCompleted: body.profile?.onboarding_completed || false,
-        },
-      });
-    }
-
-    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error updating profile:', error);
     return NextResponse.json(
