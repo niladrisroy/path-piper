@@ -40,6 +40,7 @@ export default function Onboarding() {
     bio: "",
     birthMonth: "",
     birthYear: "",
+    ageGroup: 'young-adult'
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -82,6 +83,7 @@ export default function Onboarding() {
               bio: data.user.bio || "",
               birthMonth: data.user.birthMonth || "",
               birthYear: data.user.birthYear || "",
+              ageGroup: 'young-adult'
             })
           } else {
             console.warn("No user data found in response")
@@ -201,6 +203,20 @@ export default function Onboarding() {
     }
   };
 
+    // Function to calculate age group based on birth year
+    const calculateAgeGroup = (birthYear) => {
+      const currentYear = new Date().getFullYear();
+      const age = currentYear - parseInt(birthYear);
+  
+      if (age <= 25) {
+          return 'young-adult';
+      } else if (age <= 40) {
+          return 'adult';
+      } else {
+          return 'senior';
+      }
+  };
+
   return (
     <main className="min-h-screen flex flex-col bg-slate-50">
       <InternalNavbar />
@@ -297,6 +313,7 @@ export default function Onboarding() {
                   }}
                   onComplete={(data) => {
                     console.log("PersonalInfoStep onComplete called with data:", data);
+                     const ageGroup = calculateAgeGroup(data.birthYear)
                     setUserData({
                       ...userData,
                       firstName: data.firstName,
@@ -305,7 +322,8 @@ export default function Onboarding() {
                       location: data.location,
                       educationLevel: data.educationLevel,
                       birthMonth: data.birthMonth,
-                      birthYear: data.birthYear
+                      birthYear: data.birthYear,
+                      ageGroup: ageGroup
                     });
                     handlePersonalInfoComplete(data);
                   }}
@@ -315,8 +333,11 @@ export default function Onboarding() {
 
               {step === 2 && (
                 <InterestsStep
-                  userData={userData}
-                  setUserData={setUserData}
+                  initialData={{interests: userData.interests}}
+                  onComplete={(interests) => {
+                    setUserData({ ...userData, interests });
+                    handleNext();
+                  }}
                   onNext={handleNext}
                   onBack={handleBack}
                 />
