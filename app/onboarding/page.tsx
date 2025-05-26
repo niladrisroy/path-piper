@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { z } from "zod"
 import { toast } from "sonner"
 import { motion } from "framer-motion"
 import { ArrowLeft, ArrowRight } from "lucide-react"
@@ -39,207 +38,72 @@ export default function Onboarding() {
     goals: [],
     educationLevel: "",
     bio: "",
+    birthMonth: "",
+    birthYear: "",
   })
-  const [completionPercentage, setCompletionPercentage] = useState(0)
+  const [loading, setLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [existingData, setExistingData] = useState(null)
-  const [loading, setLoading] = useState(false);
 
   // Fetch user data on component mount
   useEffect(() => {
     const fetchUserData = async () => {
-      setLoading(true);
-
-      // First, test if the database connection is working
       try {
-        console.log("Testing database connection...");
-        const dbTestResponse = await fetch("/api/db-test");
-        const dbTestData = await dbTestResponse.json();
-        console.log("Database connection test:", dbTestData);
+        console.log("Fetching user data from API...")
 
-        if (!dbTestData.success) {
-          console.error("Database connection failed:", dbTestData.error);
-        }
-      } catch (err) {
-        console.error("Error testing database connection:", err);
-      }
-
-      try {
-        // First try to get user data from session storage
-        let storedData = null;
-        try {
-          const sessionData = sessionStorage.getItem('user_data');
-          if (sessionData) {
-            storedData = JSON.parse(sessionData);
-            console.log("Found user data in session storage");
-          }
-        } catch (err) {
-          console.warn("Error accessing session storage:", err);
-        }
-
-        // Use a simpler approach - direct API call without token handling in the client
-        // The server should use the session cookie automatically
-        console.log("Fetching user data from API...");
-
-        // First check if we can get the token from cookies directly
-        let authHeader = '';
-        try {
-          const cookies = document.cookie.split(';');
-          for (const cookie of cookies) {
-            if (cookie.trim().startsWith('sb-')) {
-              console.log("Found Supabase cookie:", cookie.trim().substring(0, 10) + "...");
-              authHeader = cookie.trim().split('=')[1];
-              break;
-            }
-          }
-        } catch (err) {
-          console.warn("Error parsing cookies:", err);
-        }
-
-        // Direct API call - middleware should handle the cookie validation
         const response = await fetch("/api/auth/user", {
-          headers: {
-            // Try to add the Authorization header if we found a token
-            ...(authHeader ? { 'Authorization': `Bearer ${authHeader}` } : {}),
-          },
-          credentials: 'include', // Important: include credentials/cookies in the request
-          cache: 'no-store' // Prevent caching
-        });
+          method: "GET",
+          credentials: 'include',
+          cache: 'no-store'
+        })
 
         if (response.ok) {
-          const data = await response.json();
-          console.log("User data from API (detailed):", JSON.stringify(data, null, 2));
+          const data = await response.json()
+          console.log("User data received:", data)
 
           // If user is already onboarded, redirect to feed
-          if (data.user && data.user.onboardingCompleted) {
-            router.push("/feed");
-            return;
+          if (data.user?.onboardingCompleted) {
+            router.push("/feed")
+            return
           }
 
           if (data.user) {
-            console.log("Processing user data from API response");
-
-            // Create final user data object from API response
-            const finalUserData = {
+            // Set user data from API response
+            setUserData({
               firstName: data.user.firstName || "",
               lastName: data.user.lastName || "",
               email: data.user.email || "",
-              birthdate: data.user.profile?.birthdate || "",
+              birthdate: data.user.birthdate || "",
               location: data.user.location || "",
-              interests: data.user.profile?.interests || [],
-              skills: data.user.profile?.skills || [],
-              skillLevels: data.user.profile?.skill_levels || {},
-              goals: data.user.profile?.goals || [],
-              educationLevel: data.user.educationLevel || "",
-              bio: data.user.bio || "",
-              ageGroup: data.user.ageGroup || "young-adult",
-              birthMonth: data.user.birthMonth || "",
-              birthYear: data.user.birthYear || "",
-            };
-
-            console.log("Final user data being set:", finalUserData);
-            console.log("Birth data from API:", {
-              birthMonth: data.user.birthMonth,
-              birthYear: data.user.birthYear
-            });
-            
-            setUserData(finalUserData);
-
-            // Set existing data if available
-            if (data.user.profile) {
-              setExistingData(data.user.profile);
-              calculateCompletionPercentage(data.user.profile);
-            }
-
-            // Debug the final state
-            console.log("FINAL VALUES SET:");
-            console.log("- firstName:", finalUserData.firstName);
-            console.log("- lastName:", finalUserData.lastName); 
-            console.log("- educationLevel:", finalUserData.educationLevel);
-            console.log("- birthMonth:", finalUserData.birthMonth);
-            console.log("- birthYear:", finalUserData.birthYear);
-          }
-        } else {
-          console.error("Failed to fetch user data:", response.status, response.statusText);
-          // Try to use session data if API fails
-          if (storedData) {
-            console.log("Using session data as fallback");
-            setUserData({
-              firstName: storedData.name?.split(' ')[0] || "",
-              lastName: storedData.name?.split(' ').slice(1).join(' ') || "",
-              email: storedData.email || "",
-              birthdate: "",
-              location: "",
               interests: [],
               skills: [],
               skillLevels: {},
               goals: [],
-              educationLevel: "",
-              bio: "",
-              ageGroup: "young-adult",
-            });
+              educationLevel: data.user.educationLevel || "",
+              bio: data.user.bio || "",
+              birthMonth: data.user.birthMonth || "",
+              birthYear: data.user.birthYear || "",
+            })
+          } else {
+            console.warn("No user data found in response")
+          }
+        } else {
+          console.error("Failed to fetch user data:", response.status)
+          // Redirect to login if unauthorized
+          if (response.status === 401) {
+            router.push("/login")
+            return
           }
         }
       } catch (error) {
         console.error("Error fetching user data:", error)
+        toast.error("Failed to load user data")
       } finally {
-        // Last-resort fallback: If all else fails, try to get data from the DB test endpoint
-        if (!userData.firstName && !userData.lastName) {
-          console.log("Attempting last-resort fallback using DB test data");
-          try {
-            const dbTestResponse = await fetch("/api/db-test");
-            const dbTestData = await dbTestResponse.json();
-
-            if (dbTestData.success && dbTestData.sample_profiles && dbTestData.sample_profiles.length > 0) {
-              const firstProfile = dbTestData.sample_profiles[0];
-              console.log("Using profile from DB test:", firstProfile);
-
-              setUserData({
-                ...userData,
-                firstName: firstProfile.firstName || "",
-                lastName: firstProfile.lastName || "",
-                email: `${firstProfile.firstName.toLowerCase()}@example.com`,
-                ageGroup: "young-adult", // Default value
-                educationLevel: "undergraduate", // Default value
-              });
-
-              console.log("Set user data from DB test fallback");
-            }
-          } catch (dbError) {
-            console.error("Error with DB test fallback:", dbError);
-          }
-        }
-
-        setLoading(false);
+        setLoading(false)
       }
     }
 
     fetchUserData()
-  }, []) // Remove router dependency to prevent unnecessary re-fetches
-
-  // Calculate completion percentage based on filled fields
-  const calculateCompletionPercentage = (profile) => {
-    let fieldsCompleted = 0
-    let totalFields = 8 // Total number of required fields across all steps
-
-    if (profile.first_name) fieldsCompleted++
-    if (profile.last_name) fieldsCompleted++
-    if (profile.birthdate) fieldsCompleted++
-    if (profile.location) fieldsCompleted++
-    if (profile.interests && profile.interests.length > 0) fieldsCompleted++
-    if (profile.skills && profile.skills.length > 0) fieldsCompleted++
-    if (profile.goals && profile.goals.length > 0) fieldsCompleted++
-    if (profile.bio) fieldsCompleted++
-
-    const percentage = Math.round((fieldsCompleted / totalFields) * 100)
-    setCompletionPercentage(percentage)
-
-    // Set starting step based on completion
-    if (percentage >= 75) setStep(4) // Goals step
-    else if (percentage >= 50) setStep(3) // Skills step
-    else if (percentage >= 25) setStep(2) // Interests step
-    else setStep(1) // Personal info step
-  }
+  }, [router])
 
   const handleNext = () => {
     setStep(step + 1)
@@ -291,13 +155,26 @@ export default function Onboarding() {
     }
   }
 
+  if (loading) {
+    return (
+      <main className="min-h-screen flex flex-col bg-slate-50">
+        <InternalNavbar />
+        <div className="pt-16 md:pt-14 w-full flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500 mx-auto mb-4"></div>
+            <p className="text-slate-600">Loading your profile...</p>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen flex flex-col bg-slate-50">
       <InternalNavbar />
 
       {/* Add padding to account for fixed navbar */}
       <div className="pt-16 md:pt-14 w-full">
-
         <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
           <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg overflow-hidden">
             {/* Step navigation */}
@@ -372,74 +249,68 @@ export default function Onboarding() {
                 </button>
               </div>
             </div>
-          <div className="p-6 md:p-8">
-            {step === 1 && !loading && (
-              <PersonalInfoStep 
-                key={`personalinfo-${userData.firstName}-${userData.lastName}-${userData.birthMonth}-${userData.birthYear}`}
-                initialData={{
-                  firstName: userData.firstName,
-                  lastName: userData.lastName,
-                  bio: userData.bio,
-                  location: userData.location,
-                  educationLevel: userData.educationLevel,
-                  birthMonth: userData.birthMonth,
-                  birthYear: userData.birthYear,
-                  profileImage: null
-                }}
-                onComplete={(data) => {
-                  console.log("PersonalInfoStep onComplete called with data:", data);
-                  setUserData({
-                    ...userData,
-                    firstName: data.firstName,
-                    lastName: data.lastName,
-                    bio: data.bio,
-                    location: data.location,
-                    educationLevel: data.educationLevel,
-                    birthMonth: data.birthMonth,
-                    birthYear: data.birthYear
-                  });
-                }}
-                onNext={handleNext}
-              />
-            )}
 
-            {step === 1 && loading && (
-              <div className="text-center py-8">
-                <p className="text-slate-600">Loading your profile...</p>
-              </div>
-            )}
+            <div className="p-6 md:p-8">
+              {step === 1 && (
+                <PersonalInfoStep 
+                  initialData={{
+                    firstName: userData.firstName,
+                    lastName: userData.lastName,
+                    bio: userData.bio,
+                    location: userData.location,
+                    educationLevel: userData.educationLevel,
+                    birthMonth: userData.birthMonth,
+                    birthYear: userData.birthYear,
+                    profileImage: null
+                  }}
+                  onComplete={(data) => {
+                    console.log("PersonalInfoStep onComplete called with data:", data);
+                    setUserData({
+                      ...userData,
+                      firstName: data.firstName,
+                      lastName: data.lastName,
+                      bio: data.bio,
+                      location: data.location,
+                      educationLevel: data.educationLevel,
+                      birthMonth: data.birthMonth,
+                      birthYear: data.birthYear
+                    });
+                  }}
+                  onNext={handleNext}
+                />
+              )}
 
-            {step === 2 && (
-              <InterestsStep
-                userData={userData}
-                setUserData={setUserData}
-                onNext={handleNext}
-                onBack={handleBack}
-              />
-            )}
+              {step === 2 && (
+                <InterestsStep
+                  userData={userData}
+                  setUserData={setUserData}
+                  onNext={handleNext}
+                  onBack={handleBack}
+                />
+              )}
 
-            {step === 3 && (
-              <SkillsStep
-                userData={userData}
-                setUserData={setUserData}
-                onNext={handleNext}
-                onBack={handleBack}
-              />
-            )}
+              {step === 3 && (
+                <SkillsStep
+                  userData={userData}
+                  setUserData={setUserData}
+                  onNext={handleNext}
+                  onBack={handleBack}
+                />
+              )}
 
-            {step === 4 && (
-              <GoalsStep
-                userData={userData}
-                setUserData={setUserData}
-                onNext={handleSubmit}
-                onBack={handleBack}
-                isSubmitting={isSubmitting}
-              />
-            )}
+              {step === 4 && (
+                <GoalsStep
+                  userData={userData}
+                  setUserData={setUserData}
+                  onNext={handleSubmit}
+                  onBack={handleBack}
+                  isSubmitting={isSubmitting}
+                />
+              )}
 
-            {step === 5 && (
-              <CompletionStep />
-            )}
+              {step === 5 && (
+                <CompletionStep />
+              )}
             </div>
           </div>
         </div>
