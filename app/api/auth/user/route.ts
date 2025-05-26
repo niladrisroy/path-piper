@@ -2,15 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { supabase } from '@/lib/supabase';
 
-// Test the database connection when the file is loaded
-(async () => {
-  try {
-    const count = await prisma.profile.count();
-    console.log("API: Database connection test - Profile count:", count);
-  } catch (error) {
-    console.error("API: Database connection test failed:", error);
-  }
-})();
+// Database connection will be tested when actually needed
 
 export async function GET(request: NextRequest) {
   console.log("API: User data request received");

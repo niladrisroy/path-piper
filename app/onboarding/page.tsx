@@ -259,7 +259,7 @@ export default function Onboarding() {
     }
 
     fetchUserData()
-  }, [router])
+  }, []) // Remove router dependency to prevent unnecessary re-fetches
 
   // Calculate completion percentage based on filled fields
   const calculateCompletionPercentage = (profile) => {

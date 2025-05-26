@@ -111,7 +111,7 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
       
       console.log("Form values after manual setting:", form.getValues());
     }
-  }, [initialData]);
+  }, [initialData, form.reset, form.setValue]);
 
   // Handle form submission
   const onSubmit = (data: PersonalInfo) => {
