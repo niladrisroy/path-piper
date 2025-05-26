@@ -62,6 +62,10 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
   console.log("PersonalInfoStep - birthMonth value:", initialData.birthMonth || "NOT SET");
   console.log("PersonalInfoStep - birthYear value:", initialData.birthYear || "NOT SET");
   console.log("PersonalInfoStep - educationLevel value:", initialData.educationLevel || "NOT SET");
+  
+  // Additional debug for empty data
+  console.log("PersonalInfoStep - All initialData keys:", Object.keys(initialData));
+  console.log("PersonalInfoStep - Empty fields:", Object.entries(initialData).filter(([k, v]) => !v || v === "").map(([k]) => k));
 
   const [formData, setFormData] = useState<PersonalInfo>(initialFormData);
 
@@ -86,32 +90,39 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
 
   // Apply initial data when it changes (useful for async data loading)
   useEffect(() => {
-    if (initialData && Object.keys(initialData).length > 0) {
-      console.log("Updating form data with new initial data:", initialData);
+    console.log("PersonalInfoStep useEffect triggered with initialData:", initialData);
+    
+    // Check if we have meaningful data (not just empty strings)
+    const hasValidData = initialData && (
+      initialData.firstName || 
+      initialData.lastName || 
+      initialData.birthMonth || 
+      initialData.birthYear ||
+      initialData.educationLevel ||
+      initialData.bio ||
+      initialData.location
+    );
+    
+    if (hasValidData) {
+      console.log("PersonalInfoStep: Found valid data, updating form");
       const newData = {
         ...defaultData,
         ...Object.fromEntries(
-          Object.entries(initialData).filter(([_, v]) => v !== undefined && v !== null && v !== "")
+          Object.entries(initialData).filter(([_, v]) => v !== undefined && v !== null)
         )
       };
-      console.log("New form data will be:", newData);
+      console.log("PersonalInfoStep: New form data will be:", newData);
       setFormData(newData);
 
-      // Force update react-hook-form values
-      form.reset(newData);
-      
-      // Manually set each field to ensure they update
-      if (newData.firstName) form.setValue("firstName", newData.firstName);
-      if (newData.lastName) form.setValue("lastName", newData.lastName);
-      if (newData.bio) form.setValue("bio", newData.bio);
-      if (newData.location) form.setValue("location", newData.location);
-      if (newData.educationLevel) form.setValue("educationLevel", newData.educationLevel);
-      if (newData.birthMonth) form.setValue("birthMonth", newData.birthMonth);
-      if (newData.birthYear) form.setValue("birthYear", newData.birthYear);
-      
-      console.log("Form values after manual setting:", form.getValues());
+      // Force update react-hook-form values - use setTimeout to ensure state updates
+      setTimeout(() => {
+        form.reset(newData);
+        console.log("PersonalInfoStep: Form values after reset:", form.getValues());
+      }, 0);
+    } else {
+      console.log("PersonalInfoStep: No valid data found in initialData");
     }
-  }, [initialData, form.reset, form.setValue]);
+  }, [initialData, form]);
 
   // Handle form submission
   const onSubmit = (data: PersonalInfo) => {
