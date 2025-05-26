@@ -78,6 +78,12 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
     });
   }, [formData]);
 
+  // Setup react-hook-form
+  const form = useForm<PersonalInfo>({
+    resolver: zodResolver(personalInfoSchema),
+    defaultValues: initialFormData
+  });
+
   // Apply initial data when it changes (useful for async data loading)
   useEffect(() => {
     if (initialData && Object.keys(initialData).length > 0) {
@@ -105,13 +111,7 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
       
       console.log("Form values after manual setting:", form.getValues());
     }
-  }, [initialData, form]);
-
-  // Setup react-hook-form
-  const form = useForm<PersonalInfo>({
-    resolver: zodResolver(personalInfoSchema),
-    defaultValues: initialFormData
-  });
+  }, [initialData]);
 
   // Handle form submission
   const onSubmit = (data: PersonalInfo) => {
