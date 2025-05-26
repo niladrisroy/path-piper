@@ -81,22 +81,31 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
   // Apply initial data when it changes (useful for async data loading)
   useEffect(() => {
     if (initialData && Object.keys(initialData).length > 0) {
-      console.log("Updating form data with new initial data");
+      console.log("Updating form data with new initial data:", initialData);
       const newData = {
         ...defaultData,
         ...Object.fromEntries(
-          Object.entries(initialData).filter(([_, v]) => v !== undefined && v !== null)
+          Object.entries(initialData).filter(([_, v]) => v !== undefined && v !== null && v !== "")
         )
       };
+      console.log("New form data will be:", newData);
       setFormData(newData);
 
-      // Also update react-hook-form data
-      if (form) {
-        console.log("Updating react-hook-form values");
-        form.reset(newData);
-      }
+      // Force update react-hook-form values
+      form.reset(newData);
+      
+      // Manually set each field to ensure they update
+      if (newData.firstName) form.setValue("firstName", newData.firstName);
+      if (newData.lastName) form.setValue("lastName", newData.lastName);
+      if (newData.bio) form.setValue("bio", newData.bio);
+      if (newData.location) form.setValue("location", newData.location);
+      if (newData.educationLevel) form.setValue("educationLevel", newData.educationLevel);
+      if (newData.birthMonth) form.setValue("birthMonth", newData.birthMonth);
+      if (newData.birthYear) form.setValue("birthYear", newData.birthYear);
+      
+      console.log("Form values after manual setting:", form.getValues());
     }
-  }, [initialData]);
+  }, [initialData, form]);
 
   // Setup react-hook-form
   const form = useForm<PersonalInfo>({

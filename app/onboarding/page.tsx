@@ -419,14 +419,15 @@ export default function Onboarding() {
           <div className="p-6 md:p-8">
             {step === 1 && (
               <PersonalInfoStep 
+                key={`${userData.firstName}-${userData.lastName}-${userData.birthMonth}-${userData.birthYear}`}
                 initialData={{
-                  firstName: userData.firstName,
-                  lastName: userData.lastName,
-                  bio: userData.bio,
-                  location: userData.location,
-                  educationLevel: userData.educationLevel,
-                  birthMonth: userData.birthMonth,
-                  birthYear: userData.birthYear,
+                  firstName: userData.firstName || "",
+                  lastName: userData.lastName || "",
+                  bio: userData.bio || "",
+                  location: userData.location || "",
+                  educationLevel: userData.educationLevel || "",
+                  birthMonth: userData.birthMonth || "",
+                  birthYear: userData.birthYear || "",
                   profileImage: null
                 }}
                 onComplete={(data) => {
