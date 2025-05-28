@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
@@ -8,7 +7,7 @@ export async function GET(request: NextRequest) {
     // Check for valid session cookie
     const cookieStore = await cookies()
     const accessTokenCookie = cookieStore.get('sb-access-token')
-    
+
     if (!accessTokenCookie) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -42,11 +41,11 @@ export async function GET(request: NextRequest) {
     if (profile.role === 'student') {
       const studentProfile = await prisma.studentProfile.findUnique({
         where: { userId: user.id },
-        select: { ageGroup: true }
+        select: { age_group: true }
       })
-      
-      if (studentProfile?.ageGroup) {
-        ageGroup = studentProfile.ageGroup
+
+      if (studentProfile?.age_group) {
+        ageGroup = studentProfile.age_group
       }
     }
 
