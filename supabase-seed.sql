@@ -2,6 +2,42 @@
 -- Supabase Seed Script for Interests and Skills
 -- Run this directly in the Supabase SQL editor
 
+-- Create interest_categories table with integer ID
+CREATE TABLE IF NOT EXISTS interest_categories (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  age_group TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create interests table with foreign key to interest_categories
+CREATE TABLE IF NOT EXISTS interests (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  category_id INTEGER NOT NULL REFERENCES interest_categories(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create skill_categories table with integer ID
+CREATE TABLE IF NOT EXISTS skill_categories (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  age_group TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create skills table with foreign key to skill_categories
+CREATE TABLE IF NOT EXISTS skills (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  category_id INTEGER NOT NULL REFERENCES skill_categories(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Clear existing data first (optional - remove these lines if you want to preserve existing data)
 DELETE FROM user_interests;
 DELETE FROM user_skills;
