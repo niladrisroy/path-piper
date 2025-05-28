@@ -1,3 +1,4 @@
+
 // This is your Prisma schema file
 datasource db {
   provider = "postgresql"
@@ -113,7 +114,7 @@ model InstitutionProfile {
 }
 
 model InterestCategory {
-  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          Int        @id @default(autoincrement())
   name        String
   ageGroup    AgeGroup   @map("age_group")
   createdAt   DateTime   @default(now()) @map("created_at")
@@ -124,21 +125,21 @@ model InterestCategory {
 }
 
 model Interest {
-  id                String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                Int              @id @default(autoincrement())
   name              String
-  categoryId        String               @map("category_id") @db.Uuid
-  category          InterestCategory     @relation(fields: [categoryId], references: [id])
-  createdAt         DateTime             @default(now()) @map("created_at")
-  updatedAt         DateTime             @updatedAt @map("updated_at")
+  categoryId        Int              @map("category_id")
+  category          InterestCategory @relation(fields: [categoryId], references: [id])
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
   userInterests     UserInterest[]
 
   @@map("interests")
 }
 
 model UserInterest {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          Int      @id @default(autoincrement())
   userId      String   @map("user_id") @db.Uuid
-  interestId  String   @map("interest_id") @db.Uuid
+  interestId  Int      @map("interest_id")
   user        Profile  @relation(fields: [userId], references: [id])
   interest    Interest @relation(fields: [interestId], references: [id])
   createdAt   DateTime @default(now()) @map("created_at")
@@ -148,7 +149,7 @@ model UserInterest {
 }
 
 model SkillCategory {
-  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          Int        @id @default(autoincrement())
   name        String
   ageGroup    AgeGroup   @map("age_group")
   createdAt   DateTime   @default(now()) @map("created_at")
@@ -159,21 +160,21 @@ model SkillCategory {
 }
 
 model Skill {
-  id                String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                Int           @id @default(autoincrement())
   name              String
-  categoryId        String               @map("category_id") @db.Uuid
-  category          SkillCategory        @relation(fields: [categoryId], references: [id])
-  createdAt         DateTime             @default(now()) @map("created_at")
-  updatedAt         DateTime             @updatedAt @map("updated_at")
+  categoryId        Int           @map("category_id")
+  category          SkillCategory @relation(fields: [categoryId], references: [id])
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
   userSkills        UserSkill[]
 
   @@map("skills")
 }
 
 model UserSkill {
-  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          Int         @id @default(autoincrement())
   userId      String      @map("user_id") @db.Uuid
-  skillId     String      @map("skill_id") @db.Uuid
+  skillId     Int         @map("skill_id")
   level       Int         @default(1) // 1-10 skill level
   user        Profile     @relation(fields: [userId], references: [id])
   skill       Skill       @relation(fields: [skillId], references: [id])

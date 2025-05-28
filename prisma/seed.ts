@@ -7,6 +7,14 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('Seeding interests and skills data...')
 
+  // Clear existing data first
+  await prisma.userInterest.deleteMany()
+  await prisma.userSkill.deleteMany()
+  await prisma.interest.deleteMany()
+  await prisma.skill.deleteMany()
+  await prisma.interestCategory.deleteMany()
+  await prisma.skillCategory.deleteMany()
+
   // Seed Interest Categories and Interests
   for (const [ageGroup, categories] of Object.entries(INTEREST_CATEGORIES_BY_AGE)) {
     for (const category of categories) {

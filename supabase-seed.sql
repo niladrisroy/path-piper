@@ -14,69 +14,69 @@ DELETE FROM skill_categories;
 DO $$
 DECLARE
   -- Early Childhood Interest Category IDs
-  fun_activities_id UUID;
-  learning_topics_id UUID;
-  outdoor_activities_id UUID;
+  fun_activities_id INTEGER;
+  learning_topics_id INTEGER;
+  outdoor_activities_id INTEGER;
   
   -- Elementary Interest Category IDs
-  school_subjects_id UUID;
-  fun_games_id UUID;
-  creative_activities_id UUID;
-  science_discovery_id UUID;
+  school_subjects_id INTEGER;
+  fun_games_id INTEGER;
+  creative_activities_id INTEGER;
+  science_discovery_id INTEGER;
   
   -- Middle School Interest Category IDs
-  ms_academic_subjects_id UUID;
-  sports_activities_id UUID;
-  ms_creative_arts_id UUID;
-  ms_technology_id UUID;
-  social_community_id UUID;
+  ms_academic_subjects_id INTEGER;
+  sports_activities_id INTEGER;
+  ms_creative_arts_id INTEGER;
+  ms_technology_id INTEGER;
+  social_community_id INTEGER;
   
   -- High School Interest Category IDs
-  hs_academic_subjects_id UUID;
-  hs_arts_creativity_id UUID;
-  hs_technology_id UUID;
-  career_exploration_id UUID;
-  social_impact_id UUID;
+  hs_academic_subjects_id INTEGER;
+  hs_arts_creativity_id INTEGER;
+  hs_technology_id INTEGER;
+  career_exploration_id INTEGER;
+  social_impact_id INTEGER;
   
   -- Young Adult Interest Category IDs
-  ya_academic_subjects_id UUID;
-  ya_arts_creativity_id UUID;
-  ya_technology_id UUID;
-  career_fields_id UUID;
-  personal_development_id UUID;
+  ya_academic_subjects_id INTEGER;
+  ya_arts_creativity_id INTEGER;
+  ya_technology_id INTEGER;
+  career_fields_id INTEGER;
+  personal_development_id INTEGER;
   
   -- Early Childhood Skill Category IDs
-  basic_skills_id UUID;
-  ec_social_skills_id UUID;
-  ec_physical_skills_id UUID;
+  basic_skills_id INTEGER;
+  ec_social_skills_id INTEGER;
+  ec_physical_skills_id INTEGER;
   
   -- Elementary Skill Category IDs
-  elem_academic_skills_id UUID;
-  elem_creative_skills_id UUID;
-  elem_physical_skills_id UUID;
-  elem_technology_skills_id UUID;
-  elem_life_skills_id UUID;
+  elem_academic_skills_id INTEGER;
+  elem_creative_skills_id INTEGER;
+  elem_physical_skills_id INTEGER;
+  elem_technology_skills_id INTEGER;
+  elem_life_skills_id INTEGER;
   
   -- Middle School Skill Category IDs
-  ms_academic_skills_id UUID;
-  ms_technology_skills_id UUID;
-  ms_creative_skills_id UUID;
-  ms_social_skills_id UUID;
-  ms_life_skills_id UUID;
+  ms_academic_skills_id INTEGER;
+  ms_technology_skills_id INTEGER;
+  ms_creative_skills_id INTEGER;
+  ms_social_skills_id INTEGER;
+  ms_life_skills_id INTEGER;
   
   -- High School Skill Category IDs
-  hs_academic_skills_id UUID;
-  hs_technology_skills_id UUID;
-  career_skills_id UUID;
-  hs_life_skills_id UUID;
-  hs_social_skills_id UUID;
+  hs_academic_skills_id INTEGER;
+  hs_technology_skills_id INTEGER;
+  career_skills_id INTEGER;
+  hs_life_skills_id INTEGER;
+  hs_social_skills_id INTEGER;
   
   -- Young Adult Skill Category IDs
-  technical_skills_id UUID;
-  language_skills_id UUID;
-  soft_skills_id UUID;
-  ya_academic_skills_id UUID;
-  professional_skills_id UUID;
+  technical_skills_id INTEGER;
+  language_skills_id INTEGER;
+  soft_skills_id INTEGER;
+  ya_academic_skills_id INTEGER;
+  professional_skills_id INTEGER;
 BEGIN
 
 -- Insert Interest Categories and get their IDs
