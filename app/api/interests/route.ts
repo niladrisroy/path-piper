@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     // Get user's profile to determine age group
     const profile = await prisma.profile.findUnique({
       where: { id: user.id },
-      select: { userRole: true }
+      select: { role: true }
     })
 
     if (!profile) {
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     let ageGroup = 'young_adult' // default
 
     // If user is a student, get their age group from student profile
-    if (profile.userRole === 'student') {
+    if (profile.role === 'student') {
       const studentProfile = await prisma.studentProfile.findUnique({
         where: { userId: user.id },
         select: { ageGroup: true }

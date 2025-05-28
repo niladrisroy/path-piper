@@ -215,7 +215,7 @@ export async function PUT(request: Request) {
     console.log("API: Profile updated successfully");
 
     // If user is a student, also update student profile
-    if (profileData.educationLevel || profileData.birthMonth || profileData.birthYear) {
+    if (profileData.educationLevel || profileData.birthMonth || profileData.birthYear || profileData.ageGroup) {
       const studentUpdateData: any = {};
 
       if (profileData.educationLevel) {
@@ -226,6 +226,9 @@ export async function PUT(request: Request) {
       }
       if (profileData.birthYear) {
         studentUpdateData.birthYear = profileData.birthYear;
+      }
+      if (profileData.ageGroup) {
+        studentUpdateData.ageGroup = profileData.ageGroup;
       }
 
       await prisma.studentProfile.update({
