@@ -25,11 +25,11 @@ model UserRoleEnum {
 }
 
 enum AgeGroup {
-  early_childhood @map("early-childhood")
+  early_childhood @map("early_childhood")
   elementary
-  middle_school @map("middle-school")
-  high_school @map("high-school")
-  young_adult @map("young-adult")
+  middle_school @map("middle_school")
+  high_school @map("high_school")
+  young_adult @map("young_adult")
 
   @@map("age_group")
 }
@@ -73,7 +73,6 @@ model StudentProfile {
   educationLevel      EducationLevel @map("education_level")
   birthMonth          String?        @map("birth_month")
   birthYear           String?        @map("birth_year")
-  ageGroup          String?
   createdAt           DateTime       @default(now()) @map("created_at")
   updatedAt           DateTime       @updatedAt @map("updated_at")
 
@@ -128,7 +127,7 @@ model Interest {
   id                Int              @id @default(autoincrement())
   name              String
   categoryId        Int              @map("category_id")
-  category          InterestCategory @relation(fields: [categoryId], references: [id])
+  category          InterestCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   createdAt         DateTime         @default(now()) @map("created_at")
   updatedAt         DateTime         @updatedAt @map("updated_at")
   userInterests     UserInterest[]
@@ -140,9 +139,10 @@ model UserInterest {
   id          Int      @id @default(autoincrement())
   userId      String   @map("user_id") @db.Uuid
   interestId  Int      @map("interest_id")
-  user        Profile  @relation(fields: [userId], references: [id])
-  interest    Interest @relation(fields: [interestId], references: [id])
+  user        Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interest    Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@unique([userId, interestId])
   @@map("user_interests")
@@ -163,7 +163,7 @@ model Skill {
   id                Int           @id @default(autoincrement())
   name              String
   categoryId        Int           @map("category_id")
-  category          SkillCategory @relation(fields: [categoryId], references: [id])
+  category          SkillCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   createdAt         DateTime      @default(now()) @map("created_at")
   updatedAt         DateTime      @updatedAt @map("updated_at")
   userSkills        UserSkill[]
@@ -172,14 +172,14 @@ model Skill {
 }
 
 model UserSkill {
-  id          Int         @id @default(autoincrement())
-  userId      String      @map("user_id") @db.Uuid
-  skillId     Int         @map("skill_id")
-  level       Int         @default(1) // 1-10 skill level
-  user        Profile     @relation(fields: [userId], references: [id])
-  skill       Skill       @relation(fields: [skillId], references: [id])
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime    @updatedAt @map("updated_at")
+  id                Int         @id @default(autoincrement())
+  userId            String      @map("user_id") @db.Uuid
+  skillId           Int         @map("skill_id")
+  proficiencyLevel  Int         @map("proficiency_level") // 1-5 skill level
+  user              Profile     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill             Skill       @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  createdAt         DateTime    @default(now()) @map("created_at")
+  updatedAt         DateTime    @updatedAt @map("updated_at")
 
   @@unique([userId, skillId])
   @@map("user_skills")
