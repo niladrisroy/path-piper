@@ -24,11 +24,11 @@ model UserRoleEnum {
 }
 
 enum AgeGroup {
-  early_childhood @map("early_childhood")
+  early_childhood
   elementary
-  middle_school @map("middle_school")
-  high_school @map("high_school")
-  young_adult @map("young_adult")
+  middle_school
+  high_school
+  young_adult
 
   @@map("age_group")
 }
@@ -68,7 +68,7 @@ model Profile {
 model StudentProfile {
   id                  String    @id @db.Uuid
   profile             Profile   @relation(fields: [id], references: [id])
-  ageGroup            AgeGroup       @map("age_group")
+  age_group           AgeGroup  @map("age_group")
   educationLevel      EducationLevel @map("education_level")
   birthMonth          String?        @map("birth_month")
   birthYear           String?        @map("birth_year")
