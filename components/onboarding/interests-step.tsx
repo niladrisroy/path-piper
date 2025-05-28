@@ -7,8 +7,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Plus, X, Search } from "lucide-react"
-import { INTEREST_CATEGORIES_BY_AGE } from "@/data/age-appropriate-content"
+import { toast } from "sonner"
 import type { AgeGroup } from "@/components/onboarding/personal-info-step"
+
+interface InterestCategory {
+  name: string
+  interests: string[]
+}
 
 interface InterestsStepProps {
   initialData: string[]
@@ -28,11 +33,56 @@ export default function InterestsStep({
   const [selectedInterests, setSelectedInterests] = useState<string[]>(initialData)
   const [searchTerm, setSearchTerm] = useState("")
   const [customInterest, setCustomInterest] = useState("")
+  const [interestCategories, setInterestCategories] = useState<InterestCategory[]>([])
+  const [filteredCategories, setFilteredCategories] = useState<InterestCategory[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isDirty, setIsDirty] = useState(false)
 
-  // Get the appropriate interest categories based on age group
-  const interestCategories = INTEREST_CATEGORIES_BY_AGE[ageGroup]
+  // Fetch interests from database based on age group
+  useEffect(() => {
+    const fetchInterests = async () => {
+      try {
+        const response = await fetch(`/api/interests?ageGroup=${ageGroup}`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch interests')
+        }
+        const categories = await response.json()
+        setInterestCategories(categories)
+        setFilteredCategories(categories)
+      } catch (error) {
+        console.error('Error fetching interests:', error)
+        toast.error('Failed to load interests. Please try again.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
 
-  const [filteredCategories, setFilteredCategories] = useState(interestCategories)
+    fetchInterests()
+  }, [ageGroup])
+
+  // Load user's existing interests
+  useEffect(() => {
+    const fetchUserInterests = async () => {
+      try {
+        const response = await fetch('/api/user/interests')
+        if (response.ok) {
+          const { interests } = await response.json()
+          setSelectedInterests(interests)
+        }
+      } catch (error) {
+        console.error('Error fetching user interests:', error)
+      }
+    }
+
+    if (initialData.length === 0) {
+      fetchUserInterests()
+    }
+  }, [initialData])
+
+  // Track dirty state
+  useEffect(() => {
+    setIsDirty(selectedInterests.length > 0 && !selectedInterests.every(interest => initialData.includes(interest)))
+  }, [selectedInterests, initialData])
 
   useEffect(() => {
     if (searchTerm.trim() === "") {
@@ -57,7 +107,21 @@ export default function InterestsStep({
     } else {
       setSelectedInterests([...selectedInterests, interest])
     }
+    setIsDirty(true)
   }
+
+  // Warn user about unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault()
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?'
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [isDirty])
 
   const addCustomInterest = () => {
     if (customInterest.trim() === "" || selectedInterests.includes(customInterest)) return
@@ -65,14 +129,46 @@ export default function InterestsStep({
     setCustomInterest("")
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    onComplete(selectedInterests)
-    onNext()
+    
+    try {
+      // Save interests to database
+      const response = await fetch('/api/user/interests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ interests: selectedInterests }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save interests')
+      }
+
+      toast.success('Interests saved successfully!')
+      setIsDirty(false)
+      onComplete(selectedInterests)
+      onNext()
+    } catch (error) {
+      console.error('Error saving interests:', error)
+      toast.error('Failed to save interests. Please try again.')
+    }
   }
 
   // Determine if we should show simplified UI for younger children
   const isYoungChild = ageGroup === "early-childhood" || ageGroup === "elementary"
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading interests...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div>

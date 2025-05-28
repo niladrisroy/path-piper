@@ -59,6 +59,8 @@ model Profile {
   mentor          MentorProfile?
   institution     InstitutionProfile?
   posts           FeedPost[]
+  userInterests   UserInterest[]
+  userSkills      UserSkill[]
 
   @@map("profiles")
 }
@@ -108,6 +110,78 @@ model InstitutionProfile {
   updatedAt          DateTime  @updatedAt @map("updated_at")
 
   @@map("institution_profiles")
+}
+
+model InterestCategory {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  ageGroup    AgeGroup   @map("age_group")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  interests   Interest[]
+
+  @@map("interest_categories")
+}
+
+model Interest {
+  id                String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String
+  categoryId        String               @map("category_id") @db.Uuid
+  category          InterestCategory     @relation(fields: [categoryId], references: [id])
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+  userInterests     UserInterest[]
+
+  @@map("interests")
+}
+
+model UserInterest {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  interestId  String   @map("interest_id") @db.Uuid
+  user        Profile  @relation(fields: [userId], references: [id])
+  interest    Interest @relation(fields: [interestId], references: [id])
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, interestId])
+  @@map("user_interests")
+}
+
+model SkillCategory {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  ageGroup    AgeGroup   @map("age_group")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  skills      Skill[]
+
+  @@map("skill_categories")
+}
+
+model Skill {
+  id                String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String
+  categoryId        String               @map("category_id") @db.Uuid
+  category          SkillCategory        @relation(fields: [categoryId], references: [id])
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+  userSkills        UserSkill[]
+
+  @@map("skills")
+}
+
+model UserSkill {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String      @map("user_id") @db.Uuid
+  skillId     String      @map("skill_id") @db.Uuid
+  level       Int         @default(1) // 1-10 skill level
+  user        Profile     @relation(fields: [userId], references: [id])
+  skill       Skill       @relation(fields: [skillId], references: [id])
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  @@unique([userId, skillId])
+  @@map("user_skills")
 }
 
 model FeedPost {
