@@ -2,44 +2,13 @@
 -- Supabase Seed Script for Interests and Skills
 -- Run this directly in the Supabase SQL editor
 
--- Create interest_categories table
-CREATE TABLE IF NOT EXISTS interest_categories (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL,
-  age_group TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Create interests table
-CREATE TABLE IF NOT EXISTS interests (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL,
-  category_id UUID NOT NULL REFERENCES interest_categories(id) ON DELETE CASCADE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Create skill_categories table
-CREATE TABLE IF NOT EXISTS skill_categories (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL,
-  age_group TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Create skills table
-CREATE TABLE IF NOT EXISTS skills (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL,
-  category_id UUID NOT NULL REFERENCES skill_categories(id) ON DELETE CASCADE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Clear existing data (optional - remove these lines if you want to preserve existing data)
-TRUNCATE TABLE interests, interest_categories, skills, skill_categories CASCADE;
+-- Clear existing data first (optional - remove these lines if you want to preserve existing data)
+DELETE FROM user_interests;
+DELETE FROM user_skills;
+DELETE FROM interests;
+DELETE FROM skills;
+DELETE FROM interest_categories;
+DELETE FROM skill_categories;
 
 -- Use DO block to properly handle foreign key relationships
 DO $$
