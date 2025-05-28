@@ -42,11 +42,11 @@ export async function GET(request: NextRequest) {
     if (profile.role === 'student') {
       const studentProfile = await prisma.studentProfile.findUnique({
         where: { userId: user.id },
-        select: { ageGroup: true }
+        select: { age_group: true }
       })
       
-      if (studentProfile?.ageGroup) {
-        ageGroup = studentProfile.ageGroup
+      if (studentProfile?.age_group) {
+        ageGroup = studentProfile.age_group
       }
     }
 

@@ -228,7 +228,7 @@ export async function PUT(request: Request) {
         studentUpdateData.birthYear = profileData.birthYear;
       }
       if (profileData.ageGroup) {
-        studentUpdateData.ageGroup = profileData.ageGroup;
+        studentUpdateData.age_group = profileData.ageGroup;
       }
 
       await prisma.studentProfile.update({
