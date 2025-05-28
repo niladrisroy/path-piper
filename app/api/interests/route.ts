@@ -6,17 +6,17 @@ import { cookies } from 'next/headers'
 export async function GET(request: NextRequest) {
   try {
     // Check for valid session cookie
-    const cookieStore = cookies()
-    const sessionCookie = cookieStore.get('auth-session')
+    const cookieStore = await cookies()
+    const accessTokenCookie = cookieStore.get('sb-access-token')
     
-    if (!sessionCookie) {
+    if (!accessTokenCookie) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Get user from session
     const userResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/user`, {
       headers: {
-        cookie: `auth-session=${sessionCookie.value}`,
+        cookie: `sb-access-token=${accessTokenCookie.value}`,
       },
     })
 

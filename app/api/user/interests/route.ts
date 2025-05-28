@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
@@ -6,17 +5,17 @@ import { cookies } from 'next/headers'
 export async function POST(request: NextRequest) {
   try {
     // Check for valid session cookie
-    const cookieStore = cookies()
-    const sessionCookie = cookieStore.get('auth-session')
-    
-    if (!sessionCookie) {
+    const cookieStore = await cookies()
+    const accessTokenCookie = cookieStore.get('sb-access-token')
+
+    if (!accessTokenCookie) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Get user from session
     const userResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/user`, {
       headers: {
-        cookie: `auth-session=${sessionCookie.value}`,
+        cookie: `sb-access-token=${accessTokenCookie.value}`,
       },
     })
 
@@ -60,7 +59,7 @@ export async function POST(request: NextRequest) {
     // Handle custom interests that don't exist in database
     const existingInterestNames = interestRecords.map(record => record.name)
     const customInterests = interests.filter(interest => !existingInterestNames.includes(interest))
-    
+
     // For now, we'll skip custom interests that don't exist in the database
     // In a production system, you might want to handle these differently
     if (customInterests.length > 0) {
@@ -83,17 +82,17 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Check for valid session cookie
-    const cookieStore = cookies()
-    const sessionCookie = cookieStore.get('auth-session')
-    
-    if (!sessionCookie) {
+    const cookieStore = await cookies()
+    const accessTokenCookie = cookieStore.get('sb-access-token')
+
+    if (!accessTokenCookie) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Get user from session
     const userResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/user`, {
       headers: {
-        cookie: `auth-session=${sessionCookie.value}`,
+        cookie: `sb-access-token=${accessTokenCookie.value}`,
       },
     })
 
