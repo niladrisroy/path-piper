@@ -41,519 +41,625 @@ CREATE TABLE IF NOT EXISTS skills (
 -- Clear existing data (optional - remove these lines if you want to preserve existing data)
 TRUNCATE TABLE interests, interest_categories, skills, skill_categories CASCADE;
 
--- Insert Interest Categories and Interests
+-- Use DO block to properly handle foreign key relationships
+DO $$
+DECLARE
+  -- Early Childhood Interest Category IDs
+  fun_activities_id UUID;
+  learning_topics_id UUID;
+  outdoor_activities_id UUID;
+  
+  -- Elementary Interest Category IDs
+  school_subjects_id UUID;
+  fun_games_id UUID;
+  creative_activities_id UUID;
+  science_discovery_id UUID;
+  
+  -- Middle School Interest Category IDs
+  ms_academic_subjects_id UUID;
+  sports_activities_id UUID;
+  ms_creative_arts_id UUID;
+  ms_technology_id UUID;
+  social_community_id UUID;
+  
+  -- High School Interest Category IDs
+  hs_academic_subjects_id UUID;
+  hs_arts_creativity_id UUID;
+  hs_technology_id UUID;
+  career_exploration_id UUID;
+  social_impact_id UUID;
+  
+  -- Young Adult Interest Category IDs
+  ya_academic_subjects_id UUID;
+  ya_arts_creativity_id UUID;
+  ya_technology_id UUID;
+  career_fields_id UUID;
+  personal_development_id UUID;
+  
+  -- Early Childhood Skill Category IDs
+  basic_skills_id UUID;
+  ec_social_skills_id UUID;
+  ec_physical_skills_id UUID;
+  
+  -- Elementary Skill Category IDs
+  elem_academic_skills_id UUID;
+  elem_creative_skills_id UUID;
+  elem_physical_skills_id UUID;
+  elem_technology_skills_id UUID;
+  elem_life_skills_id UUID;
+  
+  -- Middle School Skill Category IDs
+  ms_academic_skills_id UUID;
+  ms_technology_skills_id UUID;
+  ms_creative_skills_id UUID;
+  ms_social_skills_id UUID;
+  ms_life_skills_id UUID;
+  
+  -- High School Skill Category IDs
+  hs_academic_skills_id UUID;
+  hs_technology_skills_id UUID;
+  career_skills_id UUID;
+  hs_life_skills_id UUID;
+  hs_social_skills_id UUID;
+  
+  -- Young Adult Skill Category IDs
+  technical_skills_id UUID;
+  language_skills_id UUID;
+  soft_skills_id UUID;
+  ya_academic_skills_id UUID;
+  professional_skills_id UUID;
+BEGIN
+
+-- Insert Interest Categories and get their IDs
 
 -- Early Childhood Interest Categories
-INSERT INTO interest_categories (name, age_group) VALUES 
-('Fun Activities', 'early_childhood'),
-('Learning Topics', 'early_childhood'),
-('Outdoor Activities', 'early_childhood');
+INSERT INTO interest_categories (name, age_group) VALUES ('Fun Activities', 'early_childhood') RETURNING id INTO fun_activities_id;
+INSERT INTO interest_categories (name, age_group) VALUES ('Learning Topics', 'early_childhood') RETURNING id INTO learning_topics_id;
+INSERT INTO interest_categories (name, age_group) VALUES ('Outdoor Activities', 'early_childhood') RETURNING id INTO outdoor_activities_id;
 
 -- Early Childhood Interests
-INSERT INTO interests (name, category_id) SELECT 'Drawing', id FROM interest_categories WHERE name = 'Fun Activities' AND age_group = 'early_childhood';
-INSERT INTO interests (name, category_id) SELECT 'Coloring', id FROM interest_categories WHERE name = 'Fun Activities' AND age_group = 'early_childhood';
-INSERT INTO interests (name, category_id) SELECT 'Singing', id FROM interest_categories WHERE name = 'Fun Activities' AND age_group = 'early_childhood';
-INSERT INTO interests (name, category_id) SELECT 'Dancing', id FROM interest_categories WHERE name = 'Fun Activities' AND age_group = 'early_childhood';
-INSERT INTO interests (name, category_id) SELECT 'Storytelling', id FROM interest_categories WHERE name = 'Fun Activities' AND age_group = 'early_childhood';
-INSERT INTO interests (name, category_id) SELECT 'Playing with Toys', id FROM interest_categories WHERE name = 'Fun Activities' AND age_group = 'early_childhood';
-INSERT INTO interests (name, category_id) SELECT 'Building Blocks', id FROM interest_categories WHERE name = 'Fun Activities' AND age_group = 'early_childhood';
-INSERT INTO interests (name, category_id) SELECT 'Pretend Play', id FROM interest_categories WHERE name = 'Fun Activities' AND age_group = 'early_childhood';
+INSERT INTO interests (name, category_id) VALUES 
+('Drawing', fun_activities_id),
+('Coloring', fun_activities_id),
+('Singing', fun_activities_id),
+('Dancing', fun_activities_id),
+('Storytelling', fun_activities_id),
+('Playing with Toys', fun_activities_id),
+('Building Blocks', fun_activities_id),
+('Pretend Play', fun_activities_id);
 
-INSERT INTO interests (name, category_id) SELECT 'Animals', id FROM interest_categories WHERE name = 'Learning Topics' AND age_group = 'early_childhood';
-INSERT INTO interests (name, category_id) SELECT 'Dinosaurs', id FROM interest_categories WHERE name = 'Learning Topics' AND age_group = 'early_childhood';
-INSERT INTO interests (name, category_id) SELECT 'Space', id FROM interest_categories WHERE name = 'Learning Topics' AND age_group = 'early_childhood';
-INSERT INTO interests (name, category_id) SELECT 'Nature', id FROM interest_categories WHERE name = 'Learning Topics' AND age_group = 'early_childhood';
-INSERT INTO interests (name, category_id) SELECT 'Shapes', id FROM interest_categories WHERE name = 'Learning Topics' AND age_group = 'early_childhood';
-INSERT INTO interests (name, category_id) SELECT 'Colors', id FROM interest_categories WHERE name = 'Learning Topics' AND age_group = 'early_childhood';
-INSERT INTO interests (name, category_id) SELECT 'Numbers', id FROM interest_categories WHERE name = 'Learning Topics' AND age_group = 'early_childhood';
-INSERT INTO interests (name, category_id) SELECT 'Letters', id FROM interest_categories WHERE name = 'Learning Topics' AND age_group = 'early_childhood';
-INSERT INTO interests (name, category_id) SELECT 'Music', id FROM interest_categories WHERE name = 'Learning Topics' AND age_group = 'early_childhood';
+INSERT INTO interests (name, category_id) VALUES 
+('Animals', learning_topics_id),
+('Dinosaurs', learning_topics_id),
+('Space', learning_topics_id),
+('Nature', learning_topics_id),
+('Shapes', learning_topics_id),
+('Colors', learning_topics_id),
+('Numbers', learning_topics_id),
+('Letters', learning_topics_id),
+('Music', learning_topics_id);
 
-INSERT INTO interests (name, category_id) SELECT 'Playing Outside', id FROM interest_categories WHERE name = 'Outdoor Activities' AND age_group = 'early_childhood';
-INSERT INTO interests (name, category_id) SELECT 'Playground', id FROM interest_categories WHERE name = 'Outdoor Activities' AND age_group = 'early_childhood';
-INSERT INTO interests (name, category_id) SELECT 'Swimming', id FROM interest_categories WHERE name = 'Outdoor Activities' AND age_group = 'early_childhood';
-INSERT INTO interests (name, category_id) SELECT 'Running', id FROM interest_categories WHERE name = 'Outdoor Activities' AND age_group = 'early_childhood';
-INSERT INTO interests (name, category_id) SELECT 'Ball Games', id FROM interest_categories WHERE name = 'Outdoor Activities' AND age_group = 'early_childhood';
-INSERT INTO interests (name, category_id) SELECT 'Nature Walks', id FROM interest_categories WHERE name = 'Outdoor Activities' AND age_group = 'early_childhood';
-INSERT INTO interests (name, category_id) SELECT 'Gardening', id FROM interest_categories WHERE name = 'Outdoor Activities' AND age_group = 'early_childhood';
+INSERT INTO interests (name, category_id) VALUES 
+('Playing Outside', outdoor_activities_id),
+('Playground', outdoor_activities_id),
+('Swimming', outdoor_activities_id),
+('Running', outdoor_activities_id),
+('Ball Games', outdoor_activities_id),
+('Nature Walks', outdoor_activities_id),
+('Gardening', outdoor_activities_id);
 
 -- Elementary Interest Categories
-INSERT INTO interest_categories (name, age_group) VALUES 
-('School Subjects', 'elementary'),
-('Fun & Games', 'elementary'),
-('Creative Activities', 'elementary'),
-('Science & Discovery', 'elementary');
+INSERT INTO interest_categories (name, age_group) VALUES ('School Subjects', 'elementary') RETURNING id INTO school_subjects_id;
+INSERT INTO interest_categories (name, age_group) VALUES ('Fun & Games', 'elementary') RETURNING id INTO fun_games_id;
+INSERT INTO interest_categories (name, age_group) VALUES ('Creative Activities', 'elementary') RETURNING id INTO creative_activities_id;
+INSERT INTO interest_categories (name, age_group) VALUES ('Science & Discovery', 'elementary') RETURNING id INTO science_discovery_id;
 
 -- Elementary Interests
-INSERT INTO interests (name, category_id) SELECT 'Reading', id FROM interest_categories WHERE name = 'School Subjects' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Writing', id FROM interest_categories WHERE name = 'School Subjects' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Math', id FROM interest_categories WHERE name = 'School Subjects' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Science', id FROM interest_categories WHERE name = 'School Subjects' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Art', id FROM interest_categories WHERE name = 'School Subjects' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Music', id FROM interest_categories WHERE name = 'School Subjects' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Physical Education', id FROM interest_categories WHERE name = 'School Subjects' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Social Studies', id FROM interest_categories WHERE name = 'School Subjects' AND age_group = 'elementary';
+INSERT INTO interests (name, category_id) VALUES 
+('Reading', school_subjects_id),
+('Writing', school_subjects_id),
+('Math', school_subjects_id),
+('Science', school_subjects_id),
+('Art', school_subjects_id),
+('Music', school_subjects_id),
+('Physical Education', school_subjects_id),
+('Social Studies', school_subjects_id);
 
-INSERT INTO interests (name, category_id) SELECT 'Board Games', id FROM interest_categories WHERE name = 'Fun & Games' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Card Games', id FROM interest_categories WHERE name = 'Fun & Games' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Video Games', id FROM interest_categories WHERE name = 'Fun & Games' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Puzzles', id FROM interest_categories WHERE name = 'Fun & Games' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Sports', id FROM interest_categories WHERE name = 'Fun & Games' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Crafts', id FROM interest_categories WHERE name = 'Fun & Games' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Collecting', id FROM interest_categories WHERE name = 'Fun & Games' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Building Models', id FROM interest_categories WHERE name = 'Fun & Games' AND age_group = 'elementary';
+INSERT INTO interests (name, category_id) VALUES 
+('Board Games', fun_games_id),
+('Card Games', fun_games_id),
+('Video Games', fun_games_id),
+('Puzzles', fun_games_id),
+('Sports', fun_games_id),
+('Crafts', fun_games_id),
+('Collecting', fun_games_id),
+('Building Models', fun_games_id);
 
-INSERT INTO interests (name, category_id) SELECT 'Drawing', id FROM interest_categories WHERE name = 'Creative Activities' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Painting', id FROM interest_categories WHERE name = 'Creative Activities' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Crafting', id FROM interest_categories WHERE name = 'Creative Activities' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Singing', id FROM interest_categories WHERE name = 'Creative Activities' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Dancing', id FROM interest_categories WHERE name = 'Creative Activities' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Acting', id FROM interest_categories WHERE name = 'Creative Activities' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Storytelling', id FROM interest_categories WHERE name = 'Creative Activities' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Photography', id FROM interest_categories WHERE name = 'Creative Activities' AND age_group = 'elementary';
+INSERT INTO interests (name, category_id) VALUES 
+('Drawing', creative_activities_id),
+('Painting', creative_activities_id),
+('Crafting', creative_activities_id),
+('Singing', creative_activities_id),
+('Dancing', creative_activities_id),
+('Acting', creative_activities_id),
+('Storytelling', creative_activities_id),
+('Photography', creative_activities_id);
 
-INSERT INTO interests (name, category_id) SELECT 'Animals', id FROM interest_categories WHERE name = 'Science & Discovery' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Plants', id FROM interest_categories WHERE name = 'Science & Discovery' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Space', id FROM interest_categories WHERE name = 'Science & Discovery' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Dinosaurs', id FROM interest_categories WHERE name = 'Science & Discovery' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Robots', id FROM interest_categories WHERE name = 'Science & Discovery' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Experiments', id FROM interest_categories WHERE name = 'Science & Discovery' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Nature', id FROM interest_categories WHERE name = 'Science & Discovery' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Weather', id FROM interest_categories WHERE name = 'Science & Discovery' AND age_group = 'elementary';
-INSERT INTO interests (name, category_id) SELECT 'Oceans', id FROM interest_categories WHERE name = 'Science & Discovery' AND age_group = 'elementary';
+INSERT INTO interests (name, category_id) VALUES 
+('Animals', science_discovery_id),
+('Plants', science_discovery_id),
+('Space', science_discovery_id),
+('Dinosaurs', science_discovery_id),
+('Robots', science_discovery_id),
+('Experiments', science_discovery_id),
+('Nature', science_discovery_id),
+('Weather', science_discovery_id),
+('Oceans', science_discovery_id);
 
 -- Middle School Interest Categories
-INSERT INTO interest_categories (name, age_group) VALUES 
-('Academic Subjects', 'middle_school'),
-('Sports & Activities', 'middle_school'),
-('Creative Arts', 'middle_school'),
-('Technology', 'middle_school'),
-('Social & Community', 'middle_school');
+INSERT INTO interest_categories (name, age_group) VALUES ('Academic Subjects', 'middle_school') RETURNING id INTO ms_academic_subjects_id;
+INSERT INTO interest_categories (name, age_group) VALUES ('Sports & Activities', 'middle_school') RETURNING id INTO sports_activities_id;
+INSERT INTO interest_categories (name, age_group) VALUES ('Creative Arts', 'middle_school') RETURNING id INTO ms_creative_arts_id;
+INSERT INTO interest_categories (name, age_group) VALUES ('Technology', 'middle_school') RETURNING id INTO ms_technology_id;
+INSERT INTO interest_categories (name, age_group) VALUES ('Social & Community', 'middle_school') RETURNING id INTO social_community_id;
 
 -- Middle School Interests
-INSERT INTO interests (name, category_id) SELECT 'Math', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Science', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Language Arts', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Social Studies', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Foreign Languages', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Computer Science', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Art', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Music', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'middle_school';
+INSERT INTO interests (name, category_id) VALUES 
+('Math', ms_academic_subjects_id),
+('Science', ms_academic_subjects_id),
+('Language Arts', ms_academic_subjects_id),
+('Social Studies', ms_academic_subjects_id),
+('Foreign Languages', ms_academic_subjects_id),
+('Computer Science', ms_academic_subjects_id),
+('Art', ms_academic_subjects_id),
+('Music', ms_academic_subjects_id);
 
-INSERT INTO interests (name, category_id) SELECT 'Team Sports', id FROM interest_categories WHERE name = 'Sports & Activities' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Individual Sports', id FROM interest_categories WHERE name = 'Sports & Activities' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Martial Arts', id FROM interest_categories WHERE name = 'Sports & Activities' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Dance', id FROM interest_categories WHERE name = 'Sports & Activities' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Swimming', id FROM interest_categories WHERE name = 'Sports & Activities' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Running', id FROM interest_categories WHERE name = 'Sports & Activities' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Cycling', id FROM interest_categories WHERE name = 'Sports & Activities' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Skateboarding', id FROM interest_categories WHERE name = 'Sports & Activities' AND age_group = 'middle_school';
+INSERT INTO interests (name, category_id) VALUES 
+('Team Sports', sports_activities_id),
+('Individual Sports', sports_activities_id),
+('Martial Arts', sports_activities_id),
+('Dance', sports_activities_id),
+('Swimming', sports_activities_id),
+('Running', sports_activities_id),
+('Cycling', sports_activities_id),
+('Skateboarding', sports_activities_id);
 
-INSERT INTO interests (name, category_id) SELECT 'Drawing', id FROM interest_categories WHERE name = 'Creative Arts' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Painting', id FROM interest_categories WHERE name = 'Creative Arts' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Digital Art', id FROM interest_categories WHERE name = 'Creative Arts' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Photography', id FROM interest_categories WHERE name = 'Creative Arts' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Video Creation', id FROM interest_categories WHERE name = 'Creative Arts' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Music Production', id FROM interest_categories WHERE name = 'Creative Arts' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Creative Writing', id FROM interest_categories WHERE name = 'Creative Arts' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Drama', id FROM interest_categories WHERE name = 'Creative Arts' AND age_group = 'middle_school';
+INSERT INTO interests (name, category_id) VALUES 
+('Drawing', ms_creative_arts_id),
+('Painting', ms_creative_arts_id),
+('Digital Art', ms_creative_arts_id),
+('Photography', ms_creative_arts_id),
+('Video Creation', ms_creative_arts_id),
+('Music Production', ms_creative_arts_id),
+('Creative Writing', ms_creative_arts_id),
+('Drama', ms_creative_arts_id);
 
-INSERT INTO interests (name, category_id) SELECT 'Coding', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Robotics', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Game Design', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT '3D Printing', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Animation', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Web Design', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'App Development', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Digital Media', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'middle_school';
+INSERT INTO interests (name, category_id) VALUES 
+('Coding', ms_technology_id),
+('Robotics', ms_technology_id),
+('Game Design', ms_technology_id),
+('3D Printing', ms_technology_id),
+('Animation', ms_technology_id),
+('Web Design', ms_technology_id),
+('App Development', ms_technology_id),
+('Digital Media', ms_technology_id);
 
-INSERT INTO interests (name, category_id) SELECT 'Volunteering', id FROM interest_categories WHERE name = 'Social & Community' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Environmental Projects', id FROM interest_categories WHERE name = 'Social & Community' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Student Government', id FROM interest_categories WHERE name = 'Social & Community' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Debate Club', id FROM interest_categories WHERE name = 'Social & Community' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'School Newspaper', id FROM interest_categories WHERE name = 'Social & Community' AND age_group = 'middle_school';
-INSERT INTO interests (name, category_id) SELECT 'Community Service', id FROM interest_categories WHERE name = 'Social & Community' AND age_group = 'middle_school';
+INSERT INTO interests (name, category_id) VALUES 
+('Volunteering', social_community_id),
+('Environmental Projects', social_community_id),
+('Student Government', social_community_id),
+('Debate Club', social_community_id),
+('School Newspaper', social_community_id),
+('Community Service', social_community_id);
 
 -- High School Interest Categories
-INSERT INTO interest_categories (name, age_group) VALUES 
-('Academic Subjects', 'high_school'),
-('Arts & Creativity', 'high_school'),
-('Technology', 'high_school'),
-('Career Exploration', 'high_school'),
-('Social Impact', 'high_school');
+INSERT INTO interest_categories (name, age_group) VALUES ('Academic Subjects', 'high_school') RETURNING id INTO hs_academic_subjects_id;
+INSERT INTO interest_categories (name, age_group) VALUES ('Arts & Creativity', 'high_school') RETURNING id INTO hs_arts_creativity_id;
+INSERT INTO interest_categories (name, age_group) VALUES ('Technology', 'high_school') RETURNING id INTO hs_technology_id;
+INSERT INTO interest_categories (name, age_group) VALUES ('Career Exploration', 'high_school') RETURNING id INTO career_exploration_id;
+INSERT INTO interest_categories (name, age_group) VALUES ('Social Impact', 'high_school') RETURNING id INTO social_impact_id;
 
 -- High School Interests
-INSERT INTO interests (name, category_id) SELECT 'Mathematics', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Physics', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Chemistry', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Biology', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Literature', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'History', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Geography', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Economics', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Psychology', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Computer Science', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'high_school';
+INSERT INTO interests (name, category_id) VALUES 
+('Mathematics', hs_academic_subjects_id),
+('Physics', hs_academic_subjects_id),
+('Chemistry', hs_academic_subjects_id),
+('Biology', hs_academic_subjects_id),
+('Literature', hs_academic_subjects_id),
+('History', hs_academic_subjects_id),
+('Geography', hs_academic_subjects_id),
+('Economics', hs_academic_subjects_id),
+('Psychology', hs_academic_subjects_id),
+('Computer Science', hs_academic_subjects_id);
 
-INSERT INTO interests (name, category_id) SELECT 'Visual Arts', id FROM interest_categories WHERE name = 'Arts & Creativity' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Music', id FROM interest_categories WHERE name = 'Arts & Creativity' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Theater', id FROM interest_categories WHERE name = 'Arts & Creativity' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Film Production', id FROM interest_categories WHERE name = 'Arts & Creativity' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Creative Writing', id FROM interest_categories WHERE name = 'Arts & Creativity' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Photography', id FROM interest_categories WHERE name = 'Arts & Creativity' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Digital Design', id FROM interest_categories WHERE name = 'Arts & Creativity' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Fashion Design', id FROM interest_categories WHERE name = 'Arts & Creativity' AND age_group = 'high_school';
+INSERT INTO interests (name, category_id) VALUES 
+('Visual Arts', hs_arts_creativity_id),
+('Music', hs_arts_creativity_id),
+('Theater', hs_arts_creativity_id),
+('Film Production', hs_arts_creativity_id),
+('Creative Writing', hs_arts_creativity_id),
+('Photography', hs_arts_creativity_id),
+('Digital Design', hs_arts_creativity_id),
+('Fashion Design', hs_arts_creativity_id);
 
-INSERT INTO interests (name, category_id) SELECT 'Programming', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Web Development', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'App Development', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Robotics', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Artificial Intelligence', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Game Development', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Cybersecurity', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Data Science', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'high_school';
+INSERT INTO interests (name, category_id) VALUES 
+('Programming', hs_technology_id),
+('Web Development', hs_technology_id),
+('App Development', hs_technology_id),
+('Robotics', hs_technology_id),
+('Artificial Intelligence', hs_technology_id),
+('Game Development', hs_technology_id),
+('Cybersecurity', hs_technology_id),
+('Data Science', hs_technology_id);
 
-INSERT INTO interests (name, category_id) SELECT 'Business', id FROM interest_categories WHERE name = 'Career Exploration' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Engineering', id FROM interest_categories WHERE name = 'Career Exploration' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Medicine', id FROM interest_categories WHERE name = 'Career Exploration' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Law', id FROM interest_categories WHERE name = 'Career Exploration' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Education', id FROM interest_categories WHERE name = 'Career Exploration' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Journalism', id FROM interest_categories WHERE name = 'Career Exploration' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Marketing', id FROM interest_categories WHERE name = 'Career Exploration' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Finance', id FROM interest_categories WHERE name = 'Career Exploration' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Architecture', id FROM interest_categories WHERE name = 'Career Exploration' AND age_group = 'high_school';
+INSERT INTO interests (name, category_id) VALUES 
+('Business', career_exploration_id),
+('Engineering', career_exploration_id),
+('Medicine', career_exploration_id),
+('Law', career_exploration_id),
+('Education', career_exploration_id),
+('Journalism', career_exploration_id),
+('Marketing', career_exploration_id),
+('Finance', career_exploration_id),
+('Architecture', career_exploration_id);
 
-INSERT INTO interests (name, category_id) SELECT 'Environmental Activism', id FROM interest_categories WHERE name = 'Social Impact' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Social Justice', id FROM interest_categories WHERE name = 'Social Impact' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Community Service', id FROM interest_categories WHERE name = 'Social Impact' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Political Engagement', id FROM interest_categories WHERE name = 'Social Impact' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Global Issues', id FROM interest_categories WHERE name = 'Social Impact' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Public Speaking', id FROM interest_categories WHERE name = 'Social Impact' AND age_group = 'high_school';
-INSERT INTO interests (name, category_id) SELECT 'Leadership', id FROM interest_categories WHERE name = 'Social Impact' AND age_group = 'high_school';
+INSERT INTO interests (name, category_id) VALUES 
+('Environmental Activism', social_impact_id),
+('Social Justice', social_impact_id),
+('Community Service', social_impact_id),
+('Political Engagement', social_impact_id),
+('Global Issues', social_impact_id),
+('Public Speaking', social_impact_id),
+('Leadership', social_impact_id);
 
 -- Young Adult Interest Categories
-INSERT INTO interest_categories (name, age_group) VALUES 
-('Academic Subjects', 'young_adult'),
-('Arts & Creativity', 'young_adult'),
-('Technology', 'young_adult'),
-('Career Fields', 'young_adult'),
-('Personal Development', 'young_adult');
+INSERT INTO interest_categories (name, age_group) VALUES ('Academic Subjects', 'young_adult') RETURNING id INTO ya_academic_subjects_id;
+INSERT INTO interest_categories (name, age_group) VALUES ('Arts & Creativity', 'young_adult') RETURNING id INTO ya_arts_creativity_id;
+INSERT INTO interest_categories (name, age_group) VALUES ('Technology', 'young_adult') RETURNING id INTO ya_technology_id;
+INSERT INTO interest_categories (name, age_group) VALUES ('Career Fields', 'young_adult') RETURNING id INTO career_fields_id;
+INSERT INTO interest_categories (name, age_group) VALUES ('Personal Development', 'young_adult') RETURNING id INTO personal_development_id;
 
 -- Young Adult Interests
-INSERT INTO interests (name, category_id) SELECT 'Mathematics', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Physics', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Chemistry', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Biology', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Computer Science', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Literature', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'History', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Geography', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Economics', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Psychology', id FROM interest_categories WHERE name = 'Academic Subjects' AND age_group = 'young_adult';
+INSERT INTO interests (name, category_id) VALUES 
+('Mathematics', ya_academic_subjects_id),
+('Physics', ya_academic_subjects_id),
+('Chemistry', ya_academic_subjects_id),
+('Biology', ya_academic_subjects_id),
+('Computer Science', ya_academic_subjects_id),
+('Literature', ya_academic_subjects_id),
+('History', ya_academic_subjects_id),
+('Geography', ya_academic_subjects_id),
+('Economics', ya_academic_subjects_id),
+('Psychology', ya_academic_subjects_id);
 
-INSERT INTO interests (name, category_id) SELECT 'Drawing', id FROM interest_categories WHERE name = 'Arts & Creativity' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Painting', id FROM interest_categories WHERE name = 'Arts & Creativity' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Photography', id FROM interest_categories WHERE name = 'Arts & Creativity' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Music', id FROM interest_categories WHERE name = 'Arts & Creativity' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Dance', id FROM interest_categories WHERE name = 'Arts & Creativity' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Theater', id FROM interest_categories WHERE name = 'Arts & Creativity' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Creative Writing', id FROM interest_categories WHERE name = 'Arts & Creativity' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Film Making', id FROM interest_categories WHERE name = 'Arts & Creativity' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Design', id FROM interest_categories WHERE name = 'Arts & Creativity' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Crafts', id FROM interest_categories WHERE name = 'Arts & Creativity' AND age_group = 'young_adult';
+INSERT INTO interests (name, category_id) VALUES 
+('Drawing', ya_arts_creativity_id),
+('Painting', ya_arts_creativity_id),
+('Photography', ya_arts_creativity_id),
+('Music', ya_arts_creativity_id),
+('Dance', ya_arts_creativity_id),
+('Theater', ya_arts_creativity_id),
+('Creative Writing', ya_arts_creativity_id),
+('Film Making', ya_arts_creativity_id),
+('Design', ya_arts_creativity_id),
+('Crafts', ya_arts_creativity_id);
 
-INSERT INTO interests (name, category_id) SELECT 'Programming', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Web Development', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Mobile Apps', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Artificial Intelligence', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Robotics', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Game Development', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Cybersecurity', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Data Science', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Virtual Reality', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Blockchain', id FROM interest_categories WHERE name = 'Technology' AND age_group = 'young_adult';
+INSERT INTO interests (name, category_id) VALUES 
+('Programming', ya_technology_id),
+('Web Development', ya_technology_id),
+('Mobile Apps', ya_technology_id),
+('Artificial Intelligence', ya_technology_id),
+('Robotics', ya_technology_id),
+('Game Development', ya_technology_id),
+('Cybersecurity', ya_technology_id),
+('Data Science', ya_technology_id),
+('Virtual Reality', ya_technology_id),
+('Blockchain', ya_technology_id);
 
-INSERT INTO interests (name, category_id) SELECT 'Medicine', id FROM interest_categories WHERE name = 'Career Fields' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Engineering', id FROM interest_categories WHERE name = 'Career Fields' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Law', id FROM interest_categories WHERE name = 'Career Fields' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Business', id FROM interest_categories WHERE name = 'Career Fields' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Education', id FROM interest_categories WHERE name = 'Career Fields' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Research', id FROM interest_categories WHERE name = 'Career Fields' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Social Work', id FROM interest_categories WHERE name = 'Career Fields' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Environmental Science', id FROM interest_categories WHERE name = 'Career Fields' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Journalism', id FROM interest_categories WHERE name = 'Career Fields' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Architecture', id FROM interest_categories WHERE name = 'Career Fields' AND age_group = 'young_adult';
+INSERT INTO interests (name, category_id) VALUES 
+('Medicine', career_fields_id),
+('Engineering', career_fields_id),
+('Law', career_fields_id),
+('Business', career_fields_id),
+('Education', career_fields_id),
+('Research', career_fields_id),
+('Social Work', career_fields_id),
+('Environmental Science', career_fields_id),
+('Journalism', career_fields_id),
+('Architecture', career_fields_id);
 
-INSERT INTO interests (name, category_id) SELECT 'Entrepreneurship', id FROM interest_categories WHERE name = 'Personal Development' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Leadership', id FROM interest_categories WHERE name = 'Personal Development' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Public Speaking', id FROM interest_categories WHERE name = 'Personal Development' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Financial Literacy', id FROM interest_categories WHERE name = 'Personal Development' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Productivity', id FROM interest_categories WHERE name = 'Personal Development' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Mindfulness', id FROM interest_categories WHERE name = 'Personal Development' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Fitness', id FROM interest_categories WHERE name = 'Personal Development' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Nutrition', id FROM interest_categories WHERE name = 'Personal Development' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Travel', id FROM interest_categories WHERE name = 'Personal Development' AND age_group = 'young_adult';
-INSERT INTO interests (name, category_id) SELECT 'Languages', id FROM interest_categories WHERE name = 'Personal Development' AND age_group = 'young_adult';
+INSERT INTO interests (name, category_id) VALUES 
+('Entrepreneurship', personal_development_id),
+('Leadership', personal_development_id),
+('Public Speaking', personal_development_id),
+('Financial Literacy', personal_development_id),
+('Productivity', personal_development_id),
+('Mindfulness', personal_development_id),
+('Fitness', personal_development_id),
+('Nutrition', personal_development_id),
+('Travel', personal_development_id),
+('Languages', personal_development_id);
 
 -- Insert Skill Categories and Skills
 
 -- Early Childhood Skill Categories
-INSERT INTO skill_categories (name, age_group) VALUES 
-('Basic Skills', 'early_childhood'),
-('Social Skills', 'early_childhood'),
-('Physical Skills', 'early_childhood');
+INSERT INTO skill_categories (name, age_group) VALUES ('Basic Skills', 'early_childhood') RETURNING id INTO basic_skills_id;
+INSERT INTO skill_categories (name, age_group) VALUES ('Social Skills', 'early_childhood') RETURNING id INTO ec_social_skills_id;
+INSERT INTO skill_categories (name, age_group) VALUES ('Physical Skills', 'early_childhood') RETURNING id INTO ec_physical_skills_id;
 
 -- Early Childhood Skills
-INSERT INTO skills (name, category_id) SELECT 'Counting', id FROM skill_categories WHERE name = 'Basic Skills' AND age_group = 'early_childhood';
-INSERT INTO skills (name, category_id) SELECT 'Recognizing Letters', id FROM skill_categories WHERE name = 'Basic Skills' AND age_group = 'early_childhood';
-INSERT INTO skills (name, category_id) SELECT 'Recognizing Colors', id FROM skill_categories WHERE name = 'Basic Skills' AND age_group = 'early_childhood';
-INSERT INTO skills (name, category_id) SELECT 'Recognizing Shapes', id FROM skill_categories WHERE name = 'Basic Skills' AND age_group = 'early_childhood';
-INSERT INTO skills (name, category_id) SELECT 'Drawing', id FROM skill_categories WHERE name = 'Basic Skills' AND age_group = 'early_childhood';
-INSERT INTO skills (name, category_id) SELECT 'Coloring', id FROM skill_categories WHERE name = 'Basic Skills' AND age_group = 'early_childhood';
-INSERT INTO skills (name, category_id) SELECT 'Cutting with Scissors', id FROM skill_categories WHERE name = 'Basic Skills' AND age_group = 'early_childhood';
-INSERT INTO skills (name, category_id) SELECT 'Following Instructions', id FROM skill_categories WHERE name = 'Basic Skills' AND age_group = 'early_childhood';
+INSERT INTO skills (name, category_id) VALUES 
+('Counting', basic_skills_id),
+('Recognizing Letters', basic_skills_id),
+('Recognizing Colors', basic_skills_id),
+('Recognizing Shapes', basic_skills_id),
+('Drawing', basic_skills_id),
+('Coloring', basic_skills_id),
+('Cutting with Scissors', basic_skills_id),
+('Following Instructions', basic_skills_id);
 
-INSERT INTO skills (name, category_id) SELECT 'Sharing', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'early_childhood';
-INSERT INTO skills (name, category_id) SELECT 'Taking Turns', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'early_childhood';
-INSERT INTO skills (name, category_id) SELECT 'Listening', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'early_childhood';
-INSERT INTO skills (name, category_id) SELECT 'Using Manners', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'early_childhood';
-INSERT INTO skills (name, category_id) SELECT 'Making Friends', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'early_childhood';
-INSERT INTO skills (name, category_id) SELECT 'Expressing Feelings', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'early_childhood';
-INSERT INTO skills (name, category_id) SELECT 'Working Together', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'early_childhood';
+INSERT INTO skills (name, category_id) VALUES 
+('Sharing', ec_social_skills_id),
+('Taking Turns', ec_social_skills_id),
+('Listening', ec_social_skills_id),
+('Using Manners', ec_social_skills_id),
+('Making Friends', ec_social_skills_id),
+('Expressing Feelings', ec_social_skills_id),
+('Working Together', ec_social_skills_id);
 
-INSERT INTO skills (name, category_id) SELECT 'Running', id FROM skill_categories WHERE name = 'Physical Skills' AND age_group = 'early_childhood';
-INSERT INTO skills (name, category_id) SELECT 'Jumping', id FROM skill_categories WHERE name = 'Physical Skills' AND age_group = 'early_childhood';
-INSERT INTO skills (name, category_id) SELECT 'Throwing', id FROM skill_categories WHERE name = 'Physical Skills' AND age_group = 'early_childhood';
-INSERT INTO skills (name, category_id) SELECT 'Catching', id FROM skill_categories WHERE name = 'Physical Skills' AND age_group = 'early_childhood';
-INSERT INTO skills (name, category_id) SELECT 'Balancing', id FROM skill_categories WHERE name = 'Physical Skills' AND age_group = 'early_childhood';
-INSERT INTO skills (name, category_id) SELECT 'Climbing', id FROM skill_categories WHERE name = 'Physical Skills' AND age_group = 'early_childhood';
-INSERT INTO skills (name, category_id) SELECT 'Dancing', id FROM skill_categories WHERE name = 'Physical Skills' AND age_group = 'early_childhood';
-INSERT INTO skills (name, category_id) SELECT 'Riding a Tricycle', id FROM skill_categories WHERE name = 'Physical Skills' AND age_group = 'early_childhood';
+INSERT INTO skills (name, category_id) VALUES 
+('Running', ec_physical_skills_id),
+('Jumping', ec_physical_skills_id),
+('Throwing', ec_physical_skills_id),
+('Catching', ec_physical_skills_id),
+('Balancing', ec_physical_skills_id),
+('Climbing', ec_physical_skills_id),
+('Dancing', ec_physical_skills_id),
+('Riding a Tricycle', ec_physical_skills_id);
 
 -- Elementary Skill Categories
-INSERT INTO skill_categories (name, age_group) VALUES 
-('Academic Skills', 'elementary'),
-('Creative Skills', 'elementary'),
-('Physical Skills', 'elementary'),
-('Technology Skills', 'elementary'),
-('Life Skills', 'elementary');
+INSERT INTO skill_categories (name, age_group) VALUES ('Academic Skills', 'elementary') RETURNING id INTO elem_academic_skills_id;
+INSERT INTO skill_categories (name, age_group) VALUES ('Creative Skills', 'elementary') RETURNING id INTO elem_creative_skills_id;
+INSERT INTO skill_categories (name, age_group) VALUES ('Physical Skills', 'elementary') RETURNING id INTO elem_physical_skills_id;
+INSERT INTO skill_categories (name, age_group) VALUES ('Technology Skills', 'elementary') RETURNING id INTO elem_technology_skills_id;
+INSERT INTO skill_categories (name, age_group) VALUES ('Life Skills', 'elementary') RETURNING id INTO elem_life_skills_id;
 
 -- Elementary Skills
-INSERT INTO skills (name, category_id) SELECT 'Reading', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Writing', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Basic Math', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Spelling', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Telling Time', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Using a Calendar', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Basic Science', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Geography', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'elementary';
+INSERT INTO skills (name, category_id) VALUES 
+('Reading', elem_academic_skills_id),
+('Writing', elem_academic_skills_id),
+('Basic Math', elem_academic_skills_id),
+('Spelling', elem_academic_skills_id),
+('Telling Time', elem_academic_skills_id),
+('Using a Calendar', elem_academic_skills_id),
+('Basic Science', elem_academic_skills_id),
+('Geography', elem_academic_skills_id);
 
-INSERT INTO skills (name, category_id) SELECT 'Drawing', id FROM skill_categories WHERE name = 'Creative Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Painting', id FROM skill_categories WHERE name = 'Creative Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Crafting', id FROM skill_categories WHERE name = 'Creative Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Singing', id FROM skill_categories WHERE name = 'Creative Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Playing an Instrument', id FROM skill_categories WHERE name = 'Creative Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Acting', id FROM skill_categories WHERE name = 'Creative Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Storytelling', id FROM skill_categories WHERE name = 'Creative Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Dancing', id FROM skill_categories WHERE name = 'Creative Skills' AND age_group = 'elementary';
+INSERT INTO skills (name, category_id) VALUES 
+('Drawing', elem_creative_skills_id),
+('Painting', elem_creative_skills_id),
+('Crafting', elem_creative_skills_id),
+('Singing', elem_creative_skills_id),
+('Playing an Instrument', elem_creative_skills_id),
+('Acting', elem_creative_skills_id),
+('Storytelling', elem_creative_skills_id),
+('Dancing', elem_creative_skills_id);
 
-INSERT INTO skills (name, category_id) SELECT 'Running', id FROM skill_categories WHERE name = 'Physical Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Swimming', id FROM skill_categories WHERE name = 'Physical Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Biking', id FROM skill_categories WHERE name = 'Physical Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Ball Sports', id FROM skill_categories WHERE name = 'Physical Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Gymnastics', id FROM skill_categories WHERE name = 'Physical Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Martial Arts', id FROM skill_categories WHERE name = 'Physical Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Skating', id FROM skill_categories WHERE name = 'Physical Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Jumping Rope', id FROM skill_categories WHERE name = 'Physical Skills' AND age_group = 'elementary';
+INSERT INTO skills (name, category_id) VALUES 
+('Running', elem_physical_skills_id),
+('Swimming', elem_physical_skills_id),
+('Biking', elem_physical_skills_id),
+('Ball Sports', elem_physical_skills_id),
+('Gymnastics', elem_physical_skills_id),
+('Martial Arts', elem_physical_skills_id),
+('Skating', elem_physical_skills_id),
+('Jumping Rope', elem_physical_skills_id);
 
-INSERT INTO skills (name, category_id) SELECT 'Using a Computer', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Basic Typing', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Internet Safety', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Educational Games', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Basic Coding', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Digital Art', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Taking Photos', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'elementary';
+INSERT INTO skills (name, category_id) VALUES 
+('Using a Computer', elem_technology_skills_id),
+('Basic Typing', elem_technology_skills_id),
+('Internet Safety', elem_technology_skills_id),
+('Educational Games', elem_technology_skills_id),
+('Basic Coding', elem_technology_skills_id),
+('Digital Art', elem_technology_skills_id),
+('Taking Photos', elem_technology_skills_id);
 
-INSERT INTO skills (name, category_id) SELECT 'Organization', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Following Directions', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Completing Homework', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Basic Cooking', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Cleaning Up', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Pet Care', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Plant Care', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'elementary';
-INSERT INTO skills (name, category_id) SELECT 'Money Basics', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'elementary';
+INSERT INTO skills (name, category_id) VALUES 
+('Organization', elem_life_skills_id),
+('Following Directions', elem_life_skills_id),
+('Completing Homework', elem_life_skills_id),
+('Basic Cooking', elem_life_skills_id),
+('Cleaning Up', elem_life_skills_id),
+('Pet Care', elem_life_skills_id),
+('Plant Care', elem_life_skills_id),
+('Money Basics', elem_life_skills_id);
 
 -- Middle School Skill Categories
-INSERT INTO skill_categories (name, age_group) VALUES 
-('Academic Skills', 'middle_school'),
-('Technology Skills', 'middle_school'),
-('Creative Skills', 'middle_school'),
-('Social Skills', 'middle_school'),
-('Life Skills', 'middle_school');
+INSERT INTO skill_categories (name, age_group) VALUES ('Academic Skills', 'middle_school') RETURNING id INTO ms_academic_skills_id;
+INSERT INTO skill_categories (name, age_group) VALUES ('Technology Skills', 'middle_school') RETURNING id INTO ms_technology_skills_id;
+INSERT INTO skill_categories (name, age_group) VALUES ('Creative Skills', 'middle_school') RETURNING id INTO ms_creative_skills_id;
+INSERT INTO skill_categories (name, age_group) VALUES ('Social Skills', 'middle_school') RETURNING id INTO ms_social_skills_id;
+INSERT INTO skill_categories (name, age_group) VALUES ('Life Skills', 'middle_school') RETURNING id INTO ms_life_skills_id;
 
 -- Middle School Skills
-INSERT INTO skills (name, category_id) SELECT 'Essay Writing', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Research', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Pre-Algebra', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Science Projects', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Critical Reading', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Note Taking', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Study Skills', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Presentations', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'middle_school';
+INSERT INTO skills (name, category_id) VALUES 
+('Essay Writing', ms_academic_skills_id),
+('Research', ms_academic_skills_id),
+('Pre-Algebra', ms_academic_skills_id),
+('Science Projects', ms_academic_skills_id),
+('Critical Reading', ms_academic_skills_id),
+('Note Taking', ms_academic_skills_id),
+('Study Skills', ms_academic_skills_id),
+('Presentations', ms_academic_skills_id);
 
-INSERT INTO skills (name, category_id) SELECT 'Typing', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Digital Research', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Basic Coding', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Presentation Software', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Word Processing', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Spreadsheets', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Digital Safety', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Video Editing', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'middle_school';
+INSERT INTO skills (name, category_id) VALUES 
+('Typing', ms_technology_skills_id),
+('Digital Research', ms_technology_skills_id),
+('Basic Coding', ms_technology_skills_id),
+('Presentation Software', ms_technology_skills_id),
+('Word Processing', ms_technology_skills_id),
+('Spreadsheets', ms_technology_skills_id),
+('Digital Safety', ms_technology_skills_id),
+('Video Editing', ms_technology_skills_id);
 
-INSERT INTO skills (name, category_id) SELECT 'Drawing', id FROM skill_categories WHERE name = 'Creative Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Painting', id FROM skill_categories WHERE name = 'Creative Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Digital Art', id FROM skill_categories WHERE name = 'Creative Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Photography', id FROM skill_categories WHERE name = 'Creative Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Creative Writing', id FROM skill_categories WHERE name = 'Creative Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Music Performance', id FROM skill_categories WHERE name = 'Creative Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Drama', id FROM skill_categories WHERE name = 'Creative Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Crafting', id FROM skill_categories WHERE name = 'Creative Skills' AND age_group = 'middle_school';
+INSERT INTO skills (name, category_id) VALUES 
+('Drawing', ms_creative_skills_id),
+('Painting', ms_creative_skills_id),
+('Digital Art', ms_creative_skills_id),
+('Photography', ms_creative_skills_id),
+('Creative Writing', ms_creative_skills_id),
+('Music Performance', ms_creative_skills_id),
+('Drama', ms_creative_skills_id),
+('Crafting', ms_creative_skills_id);
 
-INSERT INTO skills (name, category_id) SELECT 'Communication', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Teamwork', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Conflict Resolution', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Active Listening', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Public Speaking', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Leadership', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Empathy', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Cultural Awareness', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'middle_school';
+INSERT INTO skills (name, category_id) VALUES 
+('Communication', ms_social_skills_id),
+('Teamwork', ms_social_skills_id),
+('Conflict Resolution', ms_social_skills_id),
+('Active Listening', ms_social_skills_id),
+('Public Speaking', ms_social_skills_id),
+('Leadership', ms_social_skills_id),
+('Empathy', ms_social_skills_id),
+('Cultural Awareness', ms_social_skills_id);
 
-INSERT INTO skills (name, category_id) SELECT 'Organization', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Time Management', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Goal Setting', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Basic Cooking', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Money Management', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Self-Care', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'First Aid', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'middle_school';
-INSERT INTO skills (name, category_id) SELECT 'Problem Solving', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'middle_school';
+INSERT INTO skills (name, category_id) VALUES 
+('Organization', ms_life_skills_id),
+('Time Management', ms_life_skills_id),
+('Goal Setting', ms_life_skills_id),
+('Basic Cooking', ms_life_skills_id),
+('Money Management', ms_life_skills_id),
+('Self-Care', ms_life_skills_id),
+('First Aid', ms_life_skills_id),
+('Problem Solving', ms_life_skills_id);
 
 -- High School Skill Categories
-INSERT INTO skill_categories (name, age_group) VALUES 
-('Academic Skills', 'high_school'),
-('Technology Skills', 'high_school'),
-('Career Skills', 'high_school'),
-('Life Skills', 'high_school'),
-('Social Skills', 'high_school');
+INSERT INTO skill_categories (name, age_group) VALUES ('Academic Skills', 'high_school') RETURNING id INTO hs_academic_skills_id;
+INSERT INTO skill_categories (name, age_group) VALUES ('Technology Skills', 'high_school') RETURNING id INTO hs_technology_skills_id;
+INSERT INTO skill_categories (name, age_group) VALUES ('Career Skills', 'high_school') RETURNING id INTO career_skills_id;
+INSERT INTO skill_categories (name, age_group) VALUES ('Life Skills', 'high_school') RETURNING id INTO hs_life_skills_id;
+INSERT INTO skill_categories (name, age_group) VALUES ('Social Skills', 'high_school') RETURNING id INTO hs_social_skills_id;
 
 -- High School Skills
-INSERT INTO skills (name, category_id) SELECT 'Advanced Writing', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Research Methods', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Algebra', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Geometry', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Chemistry', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Physics', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Literary Analysis', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Critical Thinking', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Foreign Language', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'high_school';
+INSERT INTO skills (name, category_id) VALUES 
+('Advanced Writing', hs_academic_skills_id),
+('Research Methods', hs_academic_skills_id),
+('Algebra', hs_academic_skills_id),
+('Geometry', hs_academic_skills_id),
+('Chemistry', hs_academic_skills_id),
+('Physics', hs_academic_skills_id),
+('Literary Analysis', hs_academic_skills_id),
+('Critical Thinking', hs_academic_skills_id),
+('Foreign Language', hs_academic_skills_id);
 
-INSERT INTO skills (name, category_id) SELECT 'Programming', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Web Design', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Data Analysis', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Digital Media', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Computer Applications', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Information Literacy', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Cybersecurity Basics', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT '3D Modeling', id FROM skill_categories WHERE name = 'Technology Skills' AND age_group = 'high_school';
+INSERT INTO skills (name, category_id) VALUES 
+('Programming', hs_technology_skills_id),
+('Web Design', hs_technology_skills_id),
+('Data Analysis', hs_technology_skills_id),
+('Digital Media', hs_technology_skills_id),
+('Computer Applications', hs_technology_skills_id),
+('Information Literacy', hs_technology_skills_id),
+('Cybersecurity Basics', hs_technology_skills_id),
+('3D Modeling', hs_technology_skills_id);
 
-INSERT INTO skills (name, category_id) SELECT 'Resume Writing', id FROM skill_categories WHERE name = 'Career Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Interview Skills', id FROM skill_categories WHERE name = 'Career Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Professional Communication', id FROM skill_categories WHERE name = 'Career Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Networking', id FROM skill_categories WHERE name = 'Career Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Project Management', id FROM skill_categories WHERE name = 'Career Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Leadership', id FROM skill_categories WHERE name = 'Career Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Public Speaking', id FROM skill_categories WHERE name = 'Career Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Entrepreneurship', id FROM skill_categories WHERE name = 'Career Skills' AND age_group = 'high_school';
+INSERT INTO skills (name, category_id) VALUES 
+('Resume Writing', career_skills_id),
+('Interview Skills', career_skills_id),
+('Professional Communication', career_skills_id),
+('Networking', career_skills_id),
+('Project Management', career_skills_id),
+('Leadership', career_skills_id),
+('Public Speaking', career_skills_id),
+('Entrepreneurship', career_skills_id);
 
-INSERT INTO skills (name, category_id) SELECT 'Financial Literacy', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Time Management', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Goal Setting', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Decision Making', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Stress Management', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Healthy Habits', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Cooking', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Basic Car Maintenance', id FROM skill_categories WHERE name = 'Life Skills' AND age_group = 'high_school';
+INSERT INTO skills (name, category_id) VALUES 
+('Financial Literacy', hs_life_skills_id),
+('Time Management', hs_life_skills_id),
+('Goal Setting', hs_life_skills_id),
+('Decision Making', hs_life_skills_id),
+('Stress Management', hs_life_skills_id),
+('Healthy Habits', hs_life_skills_id),
+('Cooking', hs_life_skills_id),
+('Basic Car Maintenance', hs_life_skills_id);
 
-INSERT INTO skills (name, category_id) SELECT 'Collaboration', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Conflict Resolution', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Cultural Competence', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Emotional Intelligence', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Mentoring', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Community Engagement', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Negotiation', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'high_school';
-INSERT INTO skills (name, category_id) SELECT 'Relationship Building', id FROM skill_categories WHERE name = 'Social Skills' AND age_group = 'high_school';
+INSERT INTO skills (name, category_id) VALUES 
+('Collaboration', hs_social_skills_id),
+('Conflict Resolution', hs_social_skills_id),
+('Cultural Competence', hs_social_skills_id),
+('Emotional Intelligence', hs_social_skills_id),
+('Mentoring', hs_social_skills_id),
+('Community Engagement', hs_social_skills_id),
+('Negotiation', hs_social_skills_id),
+('Relationship Building', hs_social_skills_id);
 
 -- Young Adult Skill Categories
-INSERT INTO skill_categories (name, age_group) VALUES 
-('Technical Skills', 'young_adult'),
-('Language Skills', 'young_adult'),
-('Soft Skills', 'young_adult'),
-('Academic Skills', 'young_adult'),
-('Professional Skills', 'young_adult');
+INSERT INTO skill_categories (name, age_group) VALUES ('Technical Skills', 'young_adult') RETURNING id INTO technical_skills_id;
+INSERT INTO skill_categories (name, age_group) VALUES ('Language Skills', 'young_adult') RETURNING id INTO language_skills_id;
+INSERT INTO skill_categories (name, age_group) VALUES ('Soft Skills', 'young_adult') RETURNING id INTO soft_skills_id;
+INSERT INTO skill_categories (name, age_group) VALUES ('Academic Skills', 'young_adult') RETURNING id INTO ya_academic_skills_id;
+INSERT INTO skill_categories (name, age_group) VALUES ('Professional Skills', 'young_adult') RETURNING id INTO professional_skills_id;
 
 -- Young Adult Skills
-INSERT INTO skills (name, category_id) SELECT 'Programming', id FROM skill_categories WHERE name = 'Technical Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Web Development', id FROM skill_categories WHERE name = 'Technical Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Data Analysis', id FROM skill_categories WHERE name = 'Technical Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Graphic Design', id FROM skill_categories WHERE name = 'Technical Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Video Editing', id FROM skill_categories WHERE name = 'Technical Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT '3D Modeling', id FROM skill_categories WHERE name = 'Technical Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Mobile App Development', id FROM skill_categories WHERE name = 'Technical Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Database Management', id FROM skill_categories WHERE name = 'Technical Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Network Administration', id FROM skill_categories WHERE name = 'Technical Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Cybersecurity', id FROM skill_categories WHERE name = 'Technical Skills' AND age_group = 'young_adult';
+INSERT INTO skills (name, category_id) VALUES 
+('Programming', technical_skills_id),
+('Web Development', technical_skills_id),
+('Data Analysis', technical_skills_id),
+('Graphic Design', technical_skills_id),
+('Video Editing', technical_skills_id),
+('3D Modeling', technical_skills_id),
+('Mobile App Development', technical_skills_id),
+('Database Management', technical_skills_id),
+('Network Administration', technical_skills_id),
+('Cybersecurity', technical_skills_id);
 
-INSERT INTO skills (name, category_id) SELECT 'English', id FROM skill_categories WHERE name = 'Language Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Spanish', id FROM skill_categories WHERE name = 'Language Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'French', id FROM skill_categories WHERE name = 'Language Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'German', id FROM skill_categories WHERE name = 'Language Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Chinese', id FROM skill_categories WHERE name = 'Language Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Japanese', id FROM skill_categories WHERE name = 'Language Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Russian', id FROM skill_categories WHERE name = 'Language Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Arabic', id FROM skill_categories WHERE name = 'Language Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Portuguese', id FROM skill_categories WHERE name = 'Language Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Italian', id FROM skill_categories WHERE name = 'Language Skills' AND age_group = 'young_adult';
+INSERT INTO skills (name, category_id) VALUES 
+('English', language_skills_id),
+('Spanish', language_skills_id),
+('French', language_skills_id),
+('German', language_skills_id),
+('Chinese', language_skills_id),
+('Japanese', language_skills_id),
+('Russian', language_skills_id),
+('Arabic', language_skills_id),
+('Portuguese', language_skills_id),
+('Italian', language_skills_id);
 
-INSERT INTO skills (name, category_id) SELECT 'Communication', id FROM skill_categories WHERE name = 'Soft Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Leadership', id FROM skill_categories WHERE name = 'Soft Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Teamwork', id FROM skill_categories WHERE name = 'Soft Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Problem Solving', id FROM skill_categories WHERE name = 'Soft Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Critical Thinking', id FROM skill_categories WHERE name = 'Soft Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Time Management', id FROM skill_categories WHERE name = 'Soft Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Adaptability', id FROM skill_categories WHERE name = 'Soft Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Creativity', id FROM skill_categories WHERE name = 'Soft Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Emotional Intelligence', id FROM skill_categories WHERE name = 'Soft Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Conflict Resolution', id FROM skill_categories WHERE name = 'Soft Skills' AND age_group = 'young_adult';
+INSERT INTO skills (name, category_id) VALUES 
+('Communication', soft_skills_id),
+('Leadership', soft_skills_id),
+('Teamwork', soft_skills_id),
+('Problem Solving', soft_skills_id),
+('Critical Thinking', soft_skills_id),
+('Time Management', soft_skills_id),
+('Adaptability', soft_skills_id),
+('Creativity', soft_skills_id),
+('Emotional Intelligence', soft_skills_id),
+('Conflict Resolution', soft_skills_id);
 
-INSERT INTO skills (name, category_id) SELECT 'Research', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Writing', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Public Speaking', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Mathematical Reasoning', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Scientific Method', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Literary Analysis', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Historical Analysis', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Statistical Analysis', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Laboratory Techniques', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Academic Writing', id FROM skill_categories WHERE name = 'Academic Skills' AND age_group = 'young_adult';
+INSERT INTO skills (name, category_id) VALUES 
+('Research', ya_academic_skills_id),
+('Writing', ya_academic_skills_id),
+('Public Speaking', ya_academic_skills_id),
+('Mathematical Reasoning', ya_academic_skills_id),
+('Scientific Method', ya_academic_skills_id),
+('Literary Analysis', ya_academic_skills_id),
+('Historical Analysis', ya_academic_skills_id),
+('Statistical Analysis', ya_academic_skills_id),
+('Laboratory Techniques', ya_academic_skills_id),
+('Academic Writing', ya_academic_skills_id);
 
-INSERT INTO skills (name, category_id) SELECT 'Project Management', id FROM skill_categories WHERE name = 'Professional Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Strategic Planning', id FROM skill_categories WHERE name = 'Professional Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Financial Analysis', id FROM skill_categories WHERE name = 'Professional Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Marketing', id FROM skill_categories WHERE name = 'Professional Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Sales', id FROM skill_categories WHERE name = 'Professional Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Customer Service', id FROM skill_categories WHERE name = 'Professional Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Negotiation', id FROM skill_categories WHERE name = 'Professional Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Presentation', id FROM skill_categories WHERE name = 'Professional Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Networking', id FROM skill_categories WHERE name = 'Professional Skills' AND age_group = 'young_adult';
-INSERT INTO skills (name, category_id) SELECT 'Mentoring', id FROM skill_categories WHERE name = 'Professional Skills' AND age_group = 'young_adult';
+INSERT INTO skills (name, category_id) VALUES 
+('Project Management', professional_skills_id),
+('Strategic Planning', professional_skills_id),
+('Financial Analysis', professional_skills_id),
+('Marketing', professional_skills_id),
+('Sales', professional_skills_id),
+('Customer Service', professional_skills_id),
+('Negotiation', professional_skills_id),
+('Presentation', professional_skills_id),
+('Networking', professional_skills_id),
+('Mentoring', professional_skills_id);
+
+END $$;
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_interests_category_id ON interests(category_id);
