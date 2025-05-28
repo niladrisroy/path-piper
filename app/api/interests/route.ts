@@ -13,11 +13,48 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { searchParams } = new URL(request.url)
-    const ageGroup = searchParams.get('ageGroup')
+    // Get user from session
+    const userResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/user`, {
+      headers: {
+        cookie: `auth-session=${sessionCookie.value}`,
+      },
+    })
 
-    if (!ageGroup) {
-      return NextResponse.json({ error: 'Age group is required' }, { status: 400 })
+    if (!userResponse.ok) {
+      return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
+    }
+
+    const { user } = await userResponse.json()
+
+    // Get user's profile to determine age group
+    const profile = await prisma.profile.findUnique({
+      where: { id: user.id },
+      select: { userRole: true }
+    })
+
+    if (!profile) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+    }
+
+    let ageGroup = 'young_adult' // default
+
+    // If user is a student, get their age group from student profile
+    if (profile.userRole === 'student') {
+      const studentProfile = await prisma.studentProfile.findUnique({
+        where: { userId: user.id },
+        select: { ageGroup: true }
+      })
+      
+      if (studentProfile?.ageGroup) {
+        ageGroup = studentProfile.ageGroup
+      }
+    }
+
+    // Allow override via query parameter for testing
+    const { searchParams } = new URL(request.url)
+    const ageGroupOverride = searchParams.get('ageGroup')
+    if (ageGroupOverride) {
+      ageGroup = ageGroupOverride
     }
 
     // Fetch interest categories and interests for the specified age group

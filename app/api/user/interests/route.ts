@@ -45,6 +45,10 @@ export async function POST(request: NextRequest) {
           in: interests,
         },
       },
+      select: {
+        id: true,
+        name: true,
+      },
     })
 
     // Create new user interests
@@ -52,6 +56,16 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       interestId: interest.id,
     }))
+
+    // Handle custom interests that don't exist in database
+    const existingInterestNames = interestRecords.map(record => record.name)
+    const customInterests = interests.filter(interest => !existingInterestNames.includes(interest))
+    
+    // For now, we'll skip custom interests that don't exist in the database
+    // In a production system, you might want to handle these differently
+    if (customInterests.length > 0) {
+      console.log('Custom interests not saved (not in database):', customInterests)
+    }
 
     if (userInterestData.length > 0) {
       await prisma.userInterest.createMany({

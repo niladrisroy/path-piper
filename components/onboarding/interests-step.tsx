@@ -37,12 +37,13 @@ export default function InterestsStep({
   const [filteredCategories, setFilteredCategories] = useState<InterestCategory[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isDirty, setIsDirty] = useState(false)
+  const [userAgeGroup, setUserAgeGroup] = useState<AgeGroup>(ageGroup)
 
-  // Fetch interests from database based on age group
+  // Fetch interests from database based on user's age group
   useEffect(() => {
     const fetchInterests = async () => {
       try {
-        const response = await fetch(`/api/interests?ageGroup=${ageGroup}`)
+        const response = await fetch('/api/interests')
         if (!response.ok) {
           throw new Error('Failed to fetch interests')
         }
@@ -58,7 +59,7 @@ export default function InterestsStep({
     }
 
     fetchInterests()
-  }, [ageGroup])
+  }, [])
 
   // Load user's existing interests
   useEffect(() => {
@@ -157,7 +158,7 @@ export default function InterestsStep({
   }
 
   // Determine if we should show simplified UI for younger children
-  const isYoungChild = ageGroup === "early-childhood" || ageGroup === "elementary"
+  const isYoungChild = userAgeGroup === "early-childhood" || userAgeGroup === "elementary"
 
   if (isLoading) {
     return (
