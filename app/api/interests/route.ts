@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     // If user is a student, get their age group from student profile
     if (profile.role === 'student') {
       const studentProfile = await prisma.studentProfile.findUnique({
-        where: { userId: user.id },
+        where: { id: user.id },
         select: { age_group: true }
       })
 
