@@ -53,15 +53,15 @@ const calculateAgeGroup = (birthMonth: string, birthYear: string): string => {
   
   // Determine age group based on age in months
   if (ageInMonths < 60) { // Under 5 years
-    return "early-childhood";
+    return "early_childhood";
   } else if (ageInMonths < 132) { // 5-10 years
     return "elementary";
   } else if (ageInMonths < 156) { // 11-12 years
-    return "middle-school";
+    return "middle_school";
   } else if (ageInMonths < 216) { // 13-17 years
-    return "high-school";
+    return "high_school";
   } else { // 18+ years
-    return "young-adult";
+    return "young_adult";
   }
 };
 
@@ -279,11 +279,11 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
                           <SelectValue placeholder="Choose your age group">
                             {field.value ? 
                               {
-                                "early-childhood": "Early Childhood (Under 5)",
+                                "early_childhood": "Early Childhood (Under 5)",
                                 "elementary": "Elementary (5-10 years)",
-                                "middle-school": "Middle School (11-12 years)",
-                                "high-school": "High School (13-17 years)",
-                                "young-adult": "Young Adult (18+ years)"
+                                "middle_school": "Middle School (11-12 years)",
+                                "high_school": "High School (13-17 years)",
+                                "young_adult": "Young Adult (18+ years)"
                               }[field.value] || "Choose your age group"
                               : "Choose your age group"
                             }
@@ -292,11 +292,11 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
                       </FormControl>
                       <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-lg">
                         <SelectGroup>
-                          <SelectItem value="early-childhood" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">Early Childhood (Under 5)</SelectItem>
+                          <SelectItem value="early_childhood" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">Early Childhood (Under 5)</SelectItem>
                           <SelectItem value="elementary" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">Elementary (5-10 years)</SelectItem>
-                          <SelectItem value="middle-school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">Middle School (11-12 years)</SelectItem>
-                          <SelectItem value="high-school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">High School (13-17 years)</SelectItem>
-                          <SelectItem value="young-adult" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">Young Adult (18+ years)</SelectItem>
+                          <SelectItem value="middle_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">Middle School (11-12 years)</SelectItem>
+                          <SelectItem value="high_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">High School (13-17 years)</SelectItem>
+                          <SelectItem value="young_adult" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">Young Adult (18+ years)</SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>
