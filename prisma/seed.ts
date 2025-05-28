@@ -14,7 +14,7 @@ async function main() {
       const interestCategory = await prisma.interestCategory.create({
         data: {
           name: category.name,
-          ageGroup: ageGroup as any, // Type assertion for enum
+          ageGroup: ageGroup.replace('-', '_') as any, // Convert kebab-case to snake_case for enum
         },
       })
 
@@ -37,7 +37,7 @@ async function main() {
       const skillCategory = await prisma.skillCategory.create({
         data: {
           name: category.name,
-          ageGroup: ageGroup as any, // Type assertion for enum
+          ageGroup: ageGroup.replace('-', '_') as any, // Convert kebab-case to snake_case for enum
         },
       })
 
