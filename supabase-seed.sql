@@ -2,8 +2,16 @@
 -- Supabase Seed Script for Interests and Skills
 -- Run this directly in the Supabase SQL editor
 
+-- Drop existing tables and their dependencies first
+DROP TABLE IF EXISTS user_interests CASCADE;
+DROP TABLE IF EXISTS user_skills CASCADE;
+DROP TABLE IF EXISTS interests CASCADE;
+DROP TABLE IF EXISTS skills CASCADE;
+DROP TABLE IF EXISTS interest_categories CASCADE;
+DROP TABLE IF EXISTS skill_categories CASCADE;
+
 -- Create interest_categories table with integer ID
-CREATE TABLE IF NOT EXISTS interest_categories (
+CREATE TABLE interest_categories (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
   age_group TEXT NOT NULL,
@@ -12,7 +20,7 @@ CREATE TABLE IF NOT EXISTS interest_categories (
 );
 
 -- Create interests table with foreign key to interest_categories
-CREATE TABLE IF NOT EXISTS interests (
+CREATE TABLE interests (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
   category_id INTEGER NOT NULL REFERENCES interest_categories(id) ON DELETE CASCADE,
@@ -21,7 +29,7 @@ CREATE TABLE IF NOT EXISTS interests (
 );
 
 -- Create skill_categories table with integer ID
-CREATE TABLE IF NOT EXISTS skill_categories (
+CREATE TABLE skill_categories (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
   age_group TEXT NOT NULL,
@@ -30,7 +38,7 @@ CREATE TABLE IF NOT EXISTS skill_categories (
 );
 
 -- Create skills table with foreign key to skill_categories
-CREATE TABLE IF NOT EXISTS skills (
+CREATE TABLE skills (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
   category_id INTEGER NOT NULL REFERENCES skill_categories(id) ON DELETE CASCADE,
@@ -38,13 +46,11 @@ CREATE TABLE IF NOT EXISTS skills (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Clear existing data first (optional - remove these lines if you want to preserve existing data)
-DELETE FROM user_interests;
-DELETE FROM user_skills;
-DELETE FROM interests;
-DELETE FROM skills;
-DELETE FROM interest_categories;
-DELETE FROM skill_categories;
+-- Create indexes for better performance
+CREATE INDEX idx_interests_category_id ON interests(category_id);
+CREATE INDEX idx_skills_category_id ON skills(category_id);
+CREATE INDEX idx_interest_categories_age_group ON interest_categories(age_group);
+CREATE INDEX idx_skill_categories_age_group ON skill_categories(age_group);
 
 -- Use DO block to properly handle foreign key relationships
 DO $$
@@ -665,12 +671,6 @@ INSERT INTO skills (name, category_id) VALUES
 ('Mentoring', professional_skills_id);
 
 END $$;
-
--- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_interests_category_id ON interests(category_id);
-CREATE INDEX IF NOT EXISTS idx_skills_category_id ON skills(category_id);
-CREATE INDEX IF NOT EXISTS idx_interest_categories_age_group ON interest_categories(age_group);
-CREATE INDEX IF NOT EXISTS idx_skill_categories_age_group ON skill_categories(age_group);
 
 -- Display summary
 SELECT 
