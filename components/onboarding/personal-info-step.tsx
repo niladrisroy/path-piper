@@ -284,7 +284,7 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
                   <div className="relative">
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value || "early_childhood"}
                     >
                       <FormControl>
                         <SelectTrigger className="bg-white border-slate-200 hover:border-slate-300 focus:border-teal-500 focus:ring-teal-500">
