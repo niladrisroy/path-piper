@@ -94,6 +94,9 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
 
   // Apply initial data when it changes (useful for async data loading)
   useEffect(() => {
+    console.log("🔄 PersonalInfoStep useEffect triggered");
+    console.log("📊 Initial data received:", initialData);
+    
     if (initialData) {
       // Create form data with proper defaults
       const initialFormData = {
@@ -108,21 +111,29 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
         profileImage: initialData.profileImage || null
       };
 
-      // Console log the field values fetched from db
-      console.log("Personal Info Step - Field values from DB:", {
-        firstName: initialData.firstName,
-        lastName: initialData.lastName,
-        bio: initialData.bio,
-        location: initialData.location,
-        educationLevel: initialData.educationLevel,
-        birthMonth: initialData.birthMonth,
-        birthYear: initialData.birthYear,
-        ageGroup: initialData.ageGroup,
-        profileImage: initialData.profileImage
-      });
+      // Console log the field values fetched from db with clear markers
+      console.log("🎯 =================================");
+      console.log("🎯 PERSONAL INFO - FIELD VALUES FROM DB:");
+      console.log("🎯 =================================");
+      console.log("🎯 First Name:", initialData.firstName);
+      console.log("🎯 Last Name:", initialData.lastName);
+      console.log("🎯 Bio:", initialData.bio);
+      console.log("🎯 Location:", initialData.location);
+      console.log("🎯 Education Level:", initialData.educationLevel);
+      console.log("🎯 Birth Month:", initialData.birthMonth);
+      console.log("🎯 Birth Year:", initialData.birthYear);
+      console.log("🎯 Age Group:", initialData.ageGroup);
+      console.log("🎯 Profile Image:", initialData.profileImage);
+      console.log("🎯 =================================");
+
+      // Also log the form data being set
+      console.log("📝 Form data being set:", initialFormData);
 
       // Reset the form with the initial data
       form.reset(initialFormData);
+      console.log("✅ Form reset completed");
+    } else {
+      console.log("❌ No initial data provided to PersonalInfoStep");
     }
   }, [initialData, form]);
 
