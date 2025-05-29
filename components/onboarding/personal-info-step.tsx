@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect } from 'react';
@@ -40,17 +39,17 @@ interface PersonalInfoStepProps {
 // Function to calculate age group based on birth month and year
 const calculateAgeGroup = (birthMonth: string, birthYear: string): string => {
   if (!birthMonth || !birthYear) return "";
-  
+
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth() + 1; // Convert to 1-based month
-  
+
   const birthYearNum = parseInt(birthYear);
   const birthMonthNum = parseInt(birthMonth);
-  
+
   // Calculate age in months
   let ageInMonths = (currentYear - birthYearNum) * 12 + (currentMonth - birthMonthNum);
-  
+
   // Determine age group based on age in months
   if (ageInMonths < 60) { // Under 5 years
     return "early_childhood";
@@ -271,6 +270,7 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
                   <FormLabel>Age Group</FormLabel>
                   <div className="relative">
                     <Select
+                      key={`age-group-${field.value || 'empty'}`}
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
