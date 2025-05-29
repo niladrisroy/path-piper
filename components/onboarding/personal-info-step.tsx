@@ -272,7 +272,7 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
                   <div className="relative">
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger className="bg-white border-slate-200 hover:border-slate-300 focus:border-teal-500 focus:ring-teal-500">
@@ -281,11 +281,21 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
                       </FormControl>
                       <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-lg">
                         <SelectGroup>
-                          <SelectItem value="early_childhood" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">Early Childhood (Under 5)</SelectItem>
-                          <SelectItem value="elementary" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">Elementary (5-10 years)</SelectItem>
-                          <SelectItem value="middle_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">Middle School (11-12 years)</SelectItem>
-                          <SelectItem value="high_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">High School (13-17 years)</SelectItem>
-                          <SelectItem value="young_adult" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">Young Adult (18+ years)</SelectItem>
+                          <SelectItem value="early_childhood" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Early Childhood (Under 5)
+                          </SelectItem>
+                          <SelectItem value="elementary" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Elementary (5-10 years)
+                          </SelectItem>
+                          <SelectItem value="middle_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Middle School (11-12 years)
+                          </SelectItem>
+                          <SelectItem value="high_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            High School (13-17 years)
+                          </SelectItem>
+                          <SelectItem value="young_adult" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Young Adult (18+ years)
+                          </SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>
