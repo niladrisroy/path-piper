@@ -268,38 +268,35 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Age Group</FormLabel>
-                  <div className="relative">
-                    <Select
-                      key={`age-group-${field.value || 'empty'}`}
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="bg-white border-slate-200 hover:border-slate-300 focus:border-teal-500 focus:ring-teal-500">
-                          <SelectValue placeholder="Choose your age group" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-lg">
-                        <SelectGroup>
-                          <SelectItem value="early_childhood" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
-                            Early Childhood (Under 5)
-                          </SelectItem>
-                          <SelectItem value="elementary" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
-                            Elementary (5-10 years)
-                          </SelectItem>
-                          <SelectItem value="middle_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
-                            Middle School (11-12 years)
-                          </SelectItem>
-                          <SelectItem value="high_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
-                            High School (13-17 years)
-                          </SelectItem>
-                          <SelectItem value="young_adult" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
-                            Young Adult (18+ years)
-                          </SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <FormControl>
+                    <div className="space-y-3 p-4 bg-white border border-slate-200 rounded-lg">
+                      {[
+                        { value: "early_childhood", label: "Early Childhood (Under 5)" },
+                        { value: "elementary", label: "Elementary (5-10 years)" },
+                        { value: "middle_school", label: "Middle School (11-12 years)" },
+                        { value: "high_school", label: "High School (13-17 years)" },
+                        { value: "young_adult", label: "Young Adult (18+ years)" },
+                      ].map((option) => (
+                        <div key={option.value} className="flex items-center space-x-3">
+                          <input
+                            type="radio"
+                            id={`age-group-${option.value}`}
+                            name="ageGroup"
+                            value={option.value}
+                            checked={field.value === option.value}
+                            onChange={(e) => field.onChange(e.target.value)}
+                            className="w-4 h-4 text-teal-600 bg-gray-100 border-gray-300 focus:ring-teal-500 focus:ring-2"
+                          />
+                          <label
+                            htmlFor={`age-group-${option.value}`}
+                            className="text-sm font-medium text-gray-900 cursor-pointer"
+                          >
+                            {option.label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
