@@ -29,7 +29,7 @@ const personalInfoSchema = z.object({
 export type PersonalInfo = z.infer<typeof personalInfoSchema>;
 
 // Export AgeGroup type
-export type AgeGroup = "early-childhood" | "elementary" | "middle-school" | "high-school" | "young-adult";
+export type AgeGroup = "early_childhood" | "elementary" | "middle_school" | "high_school" | "young_adult";
 
 interface PersonalInfoStepProps {
   initialData: PersonalInfo;
@@ -276,18 +276,7 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
                     >
                       <FormControl>
                         <SelectTrigger className="bg-white border-slate-200 hover:border-slate-300 focus:border-teal-500 focus:ring-teal-500">
-                          <SelectValue placeholder="Choose your age group">
-                            {field.value ? 
-                              {
-                                "early_childhood": "Early Childhood (Under 5)",
-                                "elementary": "Elementary (5-10 years)",
-                                "middle_school": "Middle School (11-12 years)",
-                                "high_school": "High School (13-17 years)",
-                                "young_adult": "Young Adult (18+ years)"
-                              }[field.value] || "Choose your age group"
-                              : "Choose your age group"
-                            }
-                          </SelectValue>
+                          <SelectValue placeholder="Choose your age group" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-lg">
