@@ -2,7 +2,7 @@ import type { AgeGroup } from "@/components/onboarding/personal-info-step"
 
 // Define interest categories by age group
 export const INTEREST_CATEGORIES_BY_AGE: Record<AgeGroup, Array<{ name: string; interests: string[] }>> = {
-  "early-childhood": [
+  "early_childhood": [
     {
       name: "Fun Activities",
       interests: [
@@ -267,7 +267,7 @@ export const INTEREST_CATEGORIES_BY_AGE: Record<AgeGroup, Array<{ name: string; 
 
 // Define skill categories by age group
 export const SKILL_CATEGORIES_BY_AGE: Record<AgeGroup, Array<{ name: string; skills: string[] }>> = {
-  "early-childhood": [
+  "early_childhood": [
     {
       name: "Basic Skills",
       skills: [

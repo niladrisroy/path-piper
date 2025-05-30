@@ -29,7 +29,7 @@ export default function SkillsStep({
   onComplete,
   onNext,
   onSkip,
-  ageGroup = "young-adult",
+  ageGroup = "young_adult",
 }: SkillsStepProps) {
   const [skills, setSkills] = useState<Skill[]>(initialData)
   const [searchTerm, setSearchTerm] = useState("")
@@ -80,7 +80,7 @@ export default function SkillsStep({
   }
 
   // Determine if we should show simplified UI for younger children
-  const isYoungChild = ageGroup === "early-childhood" || ageGroup === "elementary"
+  const isYoungChild = ageGroup === "early_childhood" || ageGroup === "elementary"
 
   const getLevelLabel = (level: number) => {
     if (isYoungChild) {
