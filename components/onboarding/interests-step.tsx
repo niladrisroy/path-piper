@@ -39,45 +39,59 @@ export default function InterestsStep({
   const [isDirty, setIsDirty] = useState(false)
   const [userAgeGroup, setUserAgeGroup] = useState<AgeGroup>(ageGroup)
 
-  // Fetch interests from database based on user's age group
+  // Fetch user data and interests from database
   useEffect(() => {
-    const fetchInterests = async () => {
+    const fetchUserDataAndInterests = async () => {
       try {
-        const response = await fetch('/api/interests')
-        if (!response.ok) {
+        // First, get user data to determine age group
+        const userResponse = await fetch('/api/auth/user')
+        if (!userResponse.ok) {
+          throw new Error('Failed to fetch user data')
+        }
+        const { user } = await userResponse.json()
+        console.log('🔍 User data for interests:', user)
+        
+        if (user.ageGroup) {
+          setUserAgeGroup(user.ageGroup as AgeGroup)
+          console.log('✅ User age group set to:', user.ageGroup)
+        }
+
+        // Fetch interests based on user's age group
+        const interestsUrl = user.ageGroup 
+          ? `/api/interests?ageGroup=${user.ageGroup}` 
+          : '/api/interests'
+        
+        console.log('🔍 Fetching interests from:', interestsUrl)
+        const interestsResponse = await fetch(interestsUrl)
+        if (!interestsResponse.ok) {
           throw new Error('Failed to fetch interests')
         }
-        const categories = await response.json()
+        const categories = await interestsResponse.json()
+        console.log('✅ Interest categories loaded:', categories.length, 'categories')
         setInterestCategories(categories)
         setFilteredCategories(categories)
+
+        // Load user's existing interests if not provided as initial data
+        if (initialData.length === 0) {
+          const userInterestsResponse = await fetch('/api/user/interests')
+          if (userInterestsResponse.ok) {
+            const { interests } = await userInterestsResponse.json()
+            console.log('✅ User existing interests loaded:', interests)
+            setSelectedInterests(interests)
+          }
+        } else {
+          setSelectedInterests(initialData)
+          console.log('✅ Using provided initial interests:', initialData)
+        }
       } catch (error) {
-        console.error('Error fetching interests:', error)
+        console.error('Error fetching user data and interests:', error)
         toast.error('Failed to load interests. Please try again.')
       } finally {
         setIsLoading(false)
       }
     }
 
-    fetchInterests()
-  }, [])
-
-  // Load user's existing interests
-  useEffect(() => {
-    const fetchUserInterests = async () => {
-      try {
-        const response = await fetch('/api/user/interests')
-        if (response.ok) {
-          const { interests } = await response.json()
-          setSelectedInterests(interests)
-        }
-      } catch (error) {
-        console.error('Error fetching user interests:', error)
-      }
-    }
-
-    if (initialData.length === 0) {
-      fetchUserInterests()
-    }
+    fetchUserDataAndInterests()
   }, [initialData])
 
   // Track dirty state
@@ -158,7 +172,7 @@ export default function InterestsStep({
   }
 
   // Determine if we should show simplified UI for younger children
-  const isYoungChild = userAgeGroup === "early-childhood" || userAgeGroup === "elementary"
+  const isYoungChild = userAgeGroup === "early_childhood" || userAgeGroup === "elementary"
 
   if (isLoading) {
     return (

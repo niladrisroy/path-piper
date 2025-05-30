@@ -52,7 +52,7 @@ export const INTEREST_CATEGORIES_BY_AGE: Record<AgeGroup, Array<{ name: string; 
       interests: ["Animals", "Plants", "Space", "Dinosaurs", "Robots", "Experiments", "Nature", "Weather", "Oceans"],
     },
   ],
-  "middle_school": [
+  middle_school: [
     {
       name: "Academic Subjects",
       interests: [
@@ -117,7 +117,7 @@ export const INTEREST_CATEGORIES_BY_AGE: Record<AgeGroup, Array<{ name: string; 
       ],
     },
   ],
-  "high_school": [
+  high_school: [
     {
       name: "Academic Subjects",
       interests: [
@@ -186,7 +186,7 @@ export const INTEREST_CATEGORIES_BY_AGE: Record<AgeGroup, Array<{ name: string; 
       ],
     },
   ],
-  "young_adult": [
+  young_adult: [
     {
       name: "Academic Subjects",
       interests: [
@@ -355,7 +355,7 @@ export const SKILL_CATEGORIES_BY_AGE: Record<AgeGroup, Array<{ name: string; ski
       ],
     },
   ],
-  "middle_school": [
+  middle_school: [
     {
       name: "Academic Skills",
       skills: [
@@ -422,7 +422,7 @@ export const SKILL_CATEGORIES_BY_AGE: Record<AgeGroup, Array<{ name: string; ski
       ],
     },
   ],
-  "high_school": [
+  high_school: [
     {
       name: "Academic Skills",
       skills: [
@@ -490,7 +490,7 @@ export const SKILL_CATEGORIES_BY_AGE: Record<AgeGroup, Array<{ name: string; ski
       ],
     },
   ],
-  "young_adult": [
+  young_adult: [
     {
       name: "Technical Skills",
       skills: [

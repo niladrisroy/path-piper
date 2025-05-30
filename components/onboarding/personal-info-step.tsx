@@ -27,7 +27,7 @@ const personalInfoSchema = z.object({
 // Create a type from the schema
 export type PersonalInfo = z.infer<typeof personalInfoSchema>;
 
-// Export AgeGroup type
+// Age group type definition - matches database enum with snake_case
 export type AgeGroup = "early_childhood" | "elementary" | "middle_school" | "high_school" | "young_adult";
 
 interface PersonalInfoStepProps {
@@ -96,7 +96,7 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
   useEffect(() => {
     console.log("🔄 PersonalInfoStep useEffect triggered");
     console.log("📊 Initial data received:", initialData);
-    
+
     if (initialData) {
       // Create form data with proper defaults
       const initialFormData = {
@@ -132,7 +132,7 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
       // Reset the form with the initial data
       form.reset(initialFormData);
       console.log("✅ Form reset completed");
-      
+
       // Log what value the age group field actually has after reset
       setTimeout(() => {
         console.log("🔍 Age Group field value after reset:", form.getValues("ageGroup"));

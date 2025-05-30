@@ -46,7 +46,12 @@ export async function GET(request: NextRequest) {
 
       if (studentProfile?.age_group) {
         ageGroup = studentProfile.age_group
+        console.log('✅ Found student age group:', ageGroup)
+      } else {
+        console.log('⚠️ Student profile found but no age_group set, using default:', ageGroup)
       }
+    } else {
+      console.log('ℹ️ User is not a student, using default age group:', ageGroup)
     }
 
     // Allow override via query parameter for testing
@@ -57,6 +62,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch interest categories and interests for the specified age group
+    console.log('🔍 Fetching interest categories for age group:', ageGroup)
     const interestCategories = await prisma.interestCategory.findMany({
       where: {
         ageGroup: ageGroup as any,
@@ -74,11 +80,15 @@ export async function GET(request: NextRequest) {
       },
     })
 
+    console.log('✅ Found', interestCategories.length, 'interest categories for age group:', ageGroup)
+
     // Transform data to match the expected format
     const formattedCategories = interestCategories.map(category => ({
       name: category.name,
       interests: category.interests.map(interest => interest.name),
     }))
+
+    console.log('✅ Formatted categories with interests:', formattedCategories.map(c => `${c.name}: ${c.interests.length} interests`))
 
     return NextResponse.json(formattedCategories)
   } catch (error) {
