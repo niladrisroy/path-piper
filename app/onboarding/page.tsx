@@ -346,10 +346,13 @@ export default function Onboarding() {
 
               {step === 3 && (
                 <SkillsStep
-                  userData={userData}
-                  setUserData={setUserData}
+                  initialData={userData.skills || []}
+                  onComplete={(skills) => {
+                    setUserData({ ...userData, skills });
+                  }}
                   onNext={handleNext}
-                  onBack={handleBack}
+                  onSkip={handleNext}
+                  ageGroup={userData.ageGroup}
                 />
               )}
 
