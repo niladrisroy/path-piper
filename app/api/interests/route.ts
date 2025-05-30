@@ -86,6 +86,7 @@ export async function GET(request: NextRequest) {
     }))
 
     console.log('✅ Formatted categories with interests:', formattedCategories.map(cat => `${cat.name}: ${cat.interests.length} interests`))
+    console.log('🔍 Sample interest IDs from category data:', formattedCategories[0]?.interests.slice(0, 3).map(i => ({ id: i.id, name: i.name })))
 
     return NextResponse.json(formattedCategories)
   } catch (error) {

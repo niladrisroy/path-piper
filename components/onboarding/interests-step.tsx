@@ -81,16 +81,18 @@ export default function InterestsStep({
           const userInterestsResponse = await fetch('/api/user/interests')
           if (userInterestsResponse.ok) {
             const { interests } = await userInterestsResponse.json()
-            console.log('✅ User existing interests loaded:', interests)
+            console.log('✅ User existing interests loaded:', interests.length, 'interests:', interests)
             setSelectedInterests(interests)
+          } else {
+            console.log('❌ Failed to load user interests:', userInterestsResponse.status)
           }
-        } else {
+        } else if (initialData.length > 0) {
           // Convert initial data (names) to interest objects if any match available interests
           const availableInterests = categories.flatMap(category => category.interests)
           const matchedInterests = availableInterests.filter(interest => 
             initialData.includes(interest.name)
           )
-          console.log('✅ Matched initial interests for age group', user.ageGroup, ':', matchedInterests)
+          console.log('✅ Matched initial interests for age group', user.ageGroup, ':', matchedInterests.length, 'out of', initialData.length)
           setSelectedInterests(matchedInterests)
         }
       } catch (error) {

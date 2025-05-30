@@ -183,10 +183,24 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    // Get available interest IDs for user's current age group
-    const availableInterestIds = availableInterestCategories.flatMap(
-      category => category.interests.map(interest => interest.id)
-    )
+    // Get all available interests for user's current age group with their IDs
+    const availableInterests = await prisma.interest.findMany({
+      where: {
+        category: {
+          ageGroup: ageGroup as any
+        }
+      },
+      select: {
+        id: true,
+        name: true,
+        categoryId: true
+      }
+    })
+
+    const availableInterestIds = availableInterests.map(interest => interest.id)
+
+    console.log('🔍 Available interest IDs for age group', ageGroup, ':', availableInterestIds.length)
+    console.log('🔍 User interest IDs:', userInterests.map(ui => ui.interest.id))
 
     // Filter to only include interests valid for current age group (by ID)
     const validUserInterests = userInterests.filter(ui => 
@@ -199,7 +213,7 @@ export async function GET(request: NextRequest) {
       categoryId: ui.interest.categoryId
     }))
 
-    console.log('🔍 User interests for age group', ageGroup, '. Total:', userInterests.length, 'Valid:', interests.length)
+    console.log('🔍 User interests for age group', ageGroup, '. Total:', userInterests.length, 'Valid:', interests.length, 'Available:', availableInterestIds.length)
 
     return NextResponse.json({ interests })
   } catch (error) {
