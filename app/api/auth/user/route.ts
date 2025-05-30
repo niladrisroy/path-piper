@@ -106,6 +106,7 @@ export async function GET(request: NextRequest) {
 
           if (userProfile) {
             console.log("API: User profile found in database");
+            console.log("API: Raw age_group from database:", userProfile.student?.age_group);
             // Format birth month and year for display
             let birthMonth = "";
             let birthYear = "";
@@ -130,7 +131,7 @@ export async function GET(request: NextRequest) {
                   onboardingCompleted: userProfile.student.onboardingCompleted,
                   birthMonth: birthMonth,
                   birthYear: birthYear,
-                  ageGroup: userProfile.student.age_group,
+                  ageGroup: userProfile.student.age_group, // Return exactly as stored in DB
                 }),
                 // Add mentor-specific data if this is a mentor
                 ...(userProfile.mentor && {
