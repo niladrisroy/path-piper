@@ -257,9 +257,9 @@ export default function InterestsStep({
                 <div key={category.name}>
                   <h3 className="font-semibold text-slate-800 mb-3">{category.name}</h3>
                   <div className="flex flex-wrap gap-2">
-                    {category.interests.map((interest) => (
+                    {category.interests.map((interest, index) => (
                       <button
-                        key={interest}
+                        key={`${category.name}-${interest}-${index}`}
                         type="button"
                         onClick={() => toggleInterest(interest)}
                         className={`px-3 py-1 rounded-full text-sm transition-colors ${
@@ -305,9 +305,9 @@ export default function InterestsStep({
                 </div>
               ) : (
                 <div className="flex flex-wrap gap-2 max-h-[400px] overflow-y-auto">
-                  {selectedInterests.map((interest) => (
+                  {selectedInterests.map((interest, index) => (
                     <div
-                      key={interest}
+                      key={`selected-${interest}-${index}`}
                       className="flex items-center bg-teal-100 text-teal-700 px-3 py-2 rounded-full text-sm"
                     >
                       {interest}

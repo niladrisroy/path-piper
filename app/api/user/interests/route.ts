@@ -139,7 +139,35 @@ export async function GET(request: NextRequest) {
 
     const { user } = await userResponse.json()
 
-    // Fetch user's interests
+    // Get user's age group to filter interests
+    let ageGroup = 'young_adult' // default
+
+    const profile = await prisma.profile.findUnique({
+      where: { id: user.id },
+      select: { role: true }
+    })
+
+    if (profile?.role === 'student') {
+      const studentProfile = await prisma.studentProfile.findUnique({
+        where: { id: user.id },
+        select: { age_group: true }
+      })
+      if (studentProfile?.age_group) {
+        ageGroup = studentProfile.age_group
+      }
+    }
+
+    // Get available interests for user's current age group
+    const availableInterestCategories = await prisma.interestCategory.findMany({
+      where: { ageGroup: ageGroup as any },
+      include: { interests: { select: { name: true } } }
+    })
+
+    const availableInterestNames = availableInterestCategories.flatMap(
+      category => category.interests.map(interest => interest.name)
+    )
+
+    // Get user's interests, but only those valid for current age group
     const userInterests = await prisma.userInterest.findMany({
       where: {
         userId: user.id,
@@ -153,9 +181,13 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    const interests = userInterests.map(ui => ui.interest.name)
+    // Filter to only include interests valid for current age group
+    const allUserInterests = userInterests.map(ui => ui.interest.name)
+    const validInterests = allUserInterests.filter(interest => availableInterestNames.includes(interest))
 
-    return NextResponse.json({ interests })
+    console.log('🔍 User interests for age group', ageGroup, '. Total:', allUserInterests.length, 'Valid:', validInterests.length)
+
+    return NextResponse.json({ interests: validInterests })
   } catch (error) {
     console.error('Error fetching user interests:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
