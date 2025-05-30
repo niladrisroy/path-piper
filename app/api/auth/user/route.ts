@@ -130,6 +130,7 @@ export async function GET(request: NextRequest) {
                   onboardingCompleted: userProfile.student.onboardingCompleted,
                   birthMonth: birthMonth,
                   birthYear: birthYear,
+                  ageGroup: userProfile.student.age_group ? userProfile.student.age_group.replace(/_/g, '-') : null,
                 }),
                 // Add mentor-specific data if this is a mentor
                 ...(userProfile.mentor && {
