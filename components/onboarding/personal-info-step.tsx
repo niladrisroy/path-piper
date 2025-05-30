@@ -132,6 +132,11 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
       // Reset the form with the initial data
       form.reset(initialFormData);
       console.log("✅ Form reset completed");
+      
+      // Log what value the age group field actually has after reset
+      setTimeout(() => {
+        console.log("🔍 Age Group field value after reset:", form.getValues("ageGroup"));
+      }, 100);
     } else {
       console.log("❌ No initial data provided to PersonalInfoStep");
     }
@@ -295,7 +300,7 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
                   <div className="relative">
                     <Select
                       onValueChange={field.onChange}
-                      value={field.value || "early_childhood"}
+                      value={field.value || ""}
                     >
                       <FormControl>
                         <SelectTrigger className="bg-white border-slate-200 hover:border-slate-300 focus:border-teal-500 focus:ring-teal-500">
