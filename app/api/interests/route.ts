@@ -64,31 +64,28 @@ export async function GET(request: NextRequest) {
     // Fetch interest categories and interests for the specified age group
     console.log('🔍 Fetching interest categories for age group:', ageGroup)
     const interestCategories = await prisma.interestCategory.findMany({
-      where: {
-        ageGroup: ageGroup as any,
-      },
-      include: {
+      where: { ageGroup: ageGroup as any },
+      include: { 
         interests: {
           select: {
             id: true,
-            name: true,
-          },
-        },
-      },
-      orderBy: {
-        name: 'asc',
-      },
+            name: true
+          }
+        }
+      }
     })
 
     console.log('✅ Found', interestCategories.length, 'interest categories for age group:', ageGroup)
 
-    // Transform data to match the expected format
     const formattedCategories = interestCategories.map(category => ({
       name: category.name,
-      interests: category.interests.map(interest => interest.name),
+      interests: category.interests.map(interest => ({
+        id: interest.id,
+        name: interest.name
+      }))
     }))
 
-    console.log('✅ Formatted categories with interests:', formattedCategories.map(c => `${c.name}: ${c.interests.length} interests`))
+    console.log('✅ Formatted categories with interests:', formattedCategories.map(cat => `${cat.name}: ${cat.interests.length} interests`))
 
     return NextResponse.json(formattedCategories)
   } catch (error) {

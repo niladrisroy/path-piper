@@ -167,7 +167,7 @@ export async function GET(request: NextRequest) {
       category => category.interests.map(interest => interest.name)
     )
 
-    // Get user's interests, but only those valid for current age group
+    // Get user's interests with both ID and name
     const userInterests = await prisma.userInterest.findMany({
       where: {
         userId: user.id,
@@ -175,19 +175,33 @@ export async function GET(request: NextRequest) {
       include: {
         interest: {
           select: {
+            id: true,
             name: true,
+            categoryId: true,
           },
         },
       },
     })
 
-    // Filter to only include interests valid for current age group
-    const allUserInterests = userInterests.map(ui => ui.interest.name)
-    const validInterests = allUserInterests.filter(interest => availableInterestNames.includes(interest))
+    // Get available interest IDs for user's current age group
+    const availableInterestIds = availableInterestCategories.flatMap(
+      category => category.interests.map(interest => interest.id)
+    )
 
-    console.log('🔍 User interests for age group', ageGroup, '. Total:', allUserInterests.length, 'Valid:', validInterests.length)
+    // Filter to only include interests valid for current age group (by ID)
+    const validUserInterests = userInterests.filter(ui => 
+      availableInterestIds.includes(ui.interest.id)
+    )
 
-    return NextResponse.json({ interests: validInterests })
+    const interests = validUserInterests.map(ui => ({
+      id: ui.interest.id,
+      name: ui.interest.name,
+      categoryId: ui.interest.categoryId
+    }))
+
+    console.log('🔍 User interests for age group', ageGroup, '. Total:', userInterests.length, 'Valid:', interests.length)
+
+    return NextResponse.json({ interests })
   } catch (error) {
     console.error('Error fetching user interests:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

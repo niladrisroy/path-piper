@@ -10,9 +10,14 @@ import { Plus, X, Search } from "lucide-react"
 import { toast } from "sonner"
 import type { AgeGroup } from "@/components/onboarding/personal-info-step"
 
+interface Interest {
+  id: number
+  name: string
+}
+
 interface InterestCategory {
   name: string
-  interests: string[]
+  interests: Interest[]
 }
 
 interface InterestsStepProps {
@@ -30,7 +35,7 @@ export default function InterestsStep({
   onSkip,
   ageGroup = "young-adult",
 }: InterestsStepProps) {
-  const [selectedInterests, setSelectedInterests] = useState<string[]>(initialData)
+  const [selectedInterests, setSelectedInterests] = useState<Interest[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [customInterest, setCustomInterest] = useState("")
   const [interestCategories, setInterestCategories] = useState<InterestCategory[]>([])
@@ -77,19 +82,16 @@ export default function InterestsStep({
           if (userInterestsResponse.ok) {
             const { interests } = await userInterestsResponse.json()
             console.log('✅ User existing interests loaded:', interests)
-            
-            // Filter interests to only include those available for current age group
-            const availableInterests = categories.flatMap(category => category.interests)
-            const filteredInterests = interests.filter(interest => availableInterests.includes(interest))
-            console.log('✅ Filtered interests for age group', user.ageGroup, ':', filteredInterests)
-            setSelectedInterests(filteredInterests)
+            setSelectedInterests(interests)
           }
         } else {
-          // Filter initial data to only include interests available for current age group
+          // Convert initial data (names) to interest objects if any match available interests
           const availableInterests = categories.flatMap(category => category.interests)
-          const filteredInitialData = initialData.filter(interest => availableInterests.includes(interest))
-          console.log('✅ Filtered initial interests for age group', user.ageGroup, ':', filteredInitialData)
-          setSelectedInterests(filteredInitialData)
+          const matchedInterests = availableInterests.filter(interest => 
+            initialData.includes(interest.name)
+          )
+          console.log('✅ Matched initial interests for age group', user.ageGroup, ':', matchedInterests)
+          setSelectedInterests(matchedInterests)
         }
       } catch (error) {
         console.error('Error fetching user data and interests:', error)
@@ -105,12 +107,15 @@ export default function InterestsStep({
   // Re-filter selected interests when interest categories change (age group change)
   useEffect(() => {
     if (interestCategories.length > 0 && selectedInterests.length > 0) {
-      const availableInterests = interestCategories.flatMap(category => category.interests)
-      const filteredInterests = selectedInterests.filter(interest => availableInterests.includes(interest))
+      const availableInterestIds = interestCategories.flatMap(category => 
+        category.interests.map(interest => interest.id)
+      )
+      const filteredInterests = selectedInterests.filter(interest => 
+        availableInterestIds.includes(interest.id)
+      )
       
       // Only update if the filtered list is different
-      if (filteredInterests.length !== selectedInterests.length || 
-          !filteredInterests.every(interest => selectedInterests.includes(interest))) {
+      if (filteredInterests.length !== selectedInterests.length) {
         console.log('🔄 Re-filtering interests for new age group. Before:', selectedInterests.length, 'After:', filteredInterests.length)
         setSelectedInterests(filteredInterests)
       }
@@ -119,7 +124,8 @@ export default function InterestsStep({
 
   // Track dirty state
   useEffect(() => {
-    setIsDirty(selectedInterests.length > 0 && !selectedInterests.every(interest => initialData.includes(interest)))
+    const selectedNames = selectedInterests.map(interest => interest.name)
+    setIsDirty(selectedInterests.length > 0 && !selectedNames.every(name => initialData.includes(name)))
   }, [selectedInterests, initialData])
 
   useEffect(() => {
@@ -132,16 +138,17 @@ export default function InterestsStep({
     const filtered = interestCategories
       .map((category) => ({
         name: category.name,
-        interests: category.interests.filter((interest) => interest.toLowerCase().includes(term)),
+        interests: category.interests.filter((interest) => interest.name.toLowerCase().includes(term)),
       }))
       .filter((category) => category.interests.length > 0)
 
     setFilteredCategories(filtered)
   }, [searchTerm, interestCategories])
 
-  const toggleInterest = (interest: string) => {
-    if (selectedInterests.includes(interest)) {
-      setSelectedInterests(selectedInterests.filter((i) => i !== interest))
+  const toggleInterest = (interest: Interest) => {
+    const isSelected = selectedInterests.some(i => i.id === interest.id)
+    if (isSelected) {
+      setSelectedInterests(selectedInterests.filter((i) => i.id !== interest.id))
     } else {
       setSelectedInterests([...selectedInterests, interest])
     }
@@ -162,8 +169,16 @@ export default function InterestsStep({
   }, [isDirty])
 
   const addCustomInterest = () => {
-    if (customInterest.trim() === "" || selectedInterests.includes(customInterest)) return
-    setSelectedInterests([...selectedInterests, customInterest])
+    const trimmedInterest = customInterest.trim()
+    if (trimmedInterest === "" || selectedInterests.some(i => i.name === trimmedInterest)) return
+    
+    // Create a temporary interest object for custom interests (negative ID to distinguish)
+    const customInterestObj: Interest = {
+      id: -Date.now(), // Use negative timestamp as temporary ID
+      name: trimmedInterest
+    }
+    
+    setSelectedInterests([...selectedInterests, customInterestObj])
     setCustomInterest("")
   }
 
@@ -171,13 +186,16 @@ export default function InterestsStep({
     e.preventDefault()
     
     try {
+      // Convert interest objects to names for API
+      const interestNames = selectedInterests.map(interest => interest.name)
+      
       // Save interests to database
       const response = await fetch('/api/user/interests', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ interests: selectedInterests }),
+        body: JSON.stringify({ interests: interestNames }),
       })
 
       if (!response.ok) {
@@ -186,7 +204,7 @@ export default function InterestsStep({
 
       toast.success('Interests saved successfully!')
       setIsDirty(false)
-      onComplete(selectedInterests)
+      onComplete(interestNames)
       onNext()
     } catch (error) {
       console.error('Error saving interests:', error)
@@ -257,25 +275,28 @@ export default function InterestsStep({
                 <div key={category.name}>
                   <h3 className="font-semibold text-slate-800 mb-3">{category.name}</h3>
                   <div className="flex flex-wrap gap-2">
-                    {category.interests.map((interest, index) => (
-                      <button
-                        key={`${category.name}-${interest}-${index}`}
-                        type="button"
-                        onClick={() => toggleInterest(interest)}
-                        className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                          selectedInterests.includes(interest)
-                            ? "bg-teal-100 text-teal-700"
-                            : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                        }`}
-                      >
-                        {interest}
-                        {selectedInterests.includes(interest) ? (
-                          <X size={14} className="ml-1 inline" />
-                        ) : (
-                          <Plus size={14} className="ml-1 inline" />
-                        )}
-                      </button>
-                    ))}
+                    {category.interests.map((interest) => {
+                      const isSelected = selectedInterests.some(si => si.id === interest.id)
+                      return (
+                        <button
+                          key={`interest-${interest.id}`}
+                          type="button"
+                          onClick={() => toggleInterest(interest)}
+                          className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                            isSelected
+                              ? "bg-teal-100 text-teal-700"
+                              : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                          }`}
+                        >
+                          {interest.name}
+                          {isSelected ? (
+                            <X size={14} className="ml-1 inline" />
+                          ) : (
+                            <Plus size={14} className="ml-1 inline" />
+                          )}
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
               ))}
@@ -305,12 +326,12 @@ export default function InterestsStep({
                 </div>
               ) : (
                 <div className="flex flex-wrap gap-2 max-h-[400px] overflow-y-auto">
-                  {selectedInterests.map((interest, index) => (
+                  {selectedInterests.map((interest) => (
                     <div
-                      key={`selected-${interest}-${index}`}
+                      key={`selected-${interest.id}`}
                       className="flex items-center bg-teal-100 text-teal-700 px-3 py-2 rounded-full text-sm"
                     >
-                      {interest}
+                      {interest.name}
                       <button
                         type="button"
                         onClick={() => toggleInterest(interest)}
