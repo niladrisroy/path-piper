@@ -30,6 +30,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Interests must be an array' }, { status: 400 })
     }
 
+    // Get user's current age group
+    const profile = await prisma.profile.findUnique({
+      where: { id: user.id },
+      select: { role: true }
+    })
+
+    let ageGroup = 'young_adult' // default
+    if (profile?.role === 'student') {
+      const studentProfile = await prisma.studentProfile.findUnique({
+        where: { id: user.id },
+        select: { age_group: true }
+      })
+      if (studentProfile?.age_group) {
+        ageGroup = studentProfile.age_group
+      }
+    }
+
+    // Get available interests for user's age group
+    const availableInterestCategories = await prisma.interestCategory.findMany({
+      where: { ageGroup: ageGroup as any },
+      include: { interests: { select: { name: true } } }
+    })
+
+    const availableInterestNames = availableInterestCategories.flatMap(
+      category => category.interests.map(interest => interest.name)
+    )
+
+    // Filter interests to only include those available for current age group
+    const validInterests = interests.filter(interest => availableInterestNames.includes(interest))
+    console.log('🔍 Filtering interests for age group', ageGroup, '. Valid:', validInterests.length, 'out of', interests.length)
+
     // Delete existing user interests
     await prisma.userInterest.deleteMany({
       where: {
@@ -37,11 +68,11 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Find interest IDs based on names
+    // Find interest IDs based on valid interest names
     const interestRecords = await prisma.interest.findMany({
       where: {
         name: {
-          in: interests,
+          in: validInterests,
         },
       },
       select: {
@@ -58,12 +89,18 @@ export async function POST(request: NextRequest) {
 
     // Handle custom interests that don't exist in database
     const existingInterestNames = interestRecords.map(record => record.name)
-    const customInterests = interests.filter(interest => !existingInterestNames.includes(interest))
+    const customInterests = validInterests.filter(interest => !existingInterestNames.includes(interest))
 
     // For now, we'll skip custom interests that don't exist in the database
     // In a production system, you might want to handle these differently
     if (customInterests.length > 0) {
       console.log('Custom interests not saved (not in database):', customInterests)
+    }
+
+    // Also log filtered out interests (those not valid for current age group)
+    const filteredOutInterests = interests.filter(interest => !validInterests.includes(interest))
+    if (filteredOutInterests.length > 0) {
+      console.log('Interests filtered out (not valid for age group', ageGroup, '):', filteredOutInterests)
     }
 
     if (userInterestData.length > 0) {

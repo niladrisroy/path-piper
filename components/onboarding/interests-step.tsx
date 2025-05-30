@@ -77,11 +77,19 @@ export default function InterestsStep({
           if (userInterestsResponse.ok) {
             const { interests } = await userInterestsResponse.json()
             console.log('✅ User existing interests loaded:', interests)
-            setSelectedInterests(interests)
+            
+            // Filter interests to only include those available for current age group
+            const availableInterests = categories.flatMap(category => category.interests)
+            const filteredInterests = interests.filter(interest => availableInterests.includes(interest))
+            console.log('✅ Filtered interests for age group', user.ageGroup, ':', filteredInterests)
+            setSelectedInterests(filteredInterests)
           }
         } else {
-          setSelectedInterests(initialData)
-          console.log('✅ Using provided initial interests:', initialData)
+          // Filter initial data to only include interests available for current age group
+          const availableInterests = categories.flatMap(category => category.interests)
+          const filteredInitialData = initialData.filter(interest => availableInterests.includes(interest))
+          console.log('✅ Filtered initial interests for age group', user.ageGroup, ':', filteredInitialData)
+          setSelectedInterests(filteredInitialData)
         }
       } catch (error) {
         console.error('Error fetching user data and interests:', error)
@@ -93,6 +101,21 @@ export default function InterestsStep({
 
     fetchUserDataAndInterests()
   }, [initialData])
+
+  // Re-filter selected interests when interest categories change (age group change)
+  useEffect(() => {
+    if (interestCategories.length > 0 && selectedInterests.length > 0) {
+      const availableInterests = interestCategories.flatMap(category => category.interests)
+      const filteredInterests = selectedInterests.filter(interest => availableInterests.includes(interest))
+      
+      // Only update if the filtered list is different
+      if (filteredInterests.length !== selectedInterests.length || 
+          !filteredInterests.every(interest => selectedInterests.includes(interest))) {
+        console.log('🔄 Re-filtering interests for new age group. Before:', selectedInterests.length, 'After:', filteredInterests.length)
+        setSelectedInterests(filteredInterests)
+      }
+    }
+  }, [interestCategories])
 
   // Track dirty state
   useEffect(() => {
