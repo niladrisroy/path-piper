@@ -50,6 +50,8 @@ export default function SkillsStep({
         if (skillsResponse.ok) {
           const skillsData = await skillsResponse.json()
           setSkillCategories(skillsData.categories || [])
+        } else {
+          console.error('Failed to fetch skills:', skillsResponse.status)
         }
 
         // Fetch user's current skills
@@ -176,13 +178,9 @@ export default function SkillsStep({
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    onComplete(skills)
-    onNext()
-  }
-
-  const handleComplete = async () => {
+    
     try {
       setSaving(true)
 
@@ -194,21 +192,24 @@ export default function SkillsStep({
       // TODO: Handle custom skills by creating them in the database first
       const skillsToSave = skillsWithIds
 
-      const response = await fetch('/api/user/skills', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ skills: skillsToSave }),
-      })
+      if (skillsToSave.length > 0) {
+        const response = await fetch('/api/user/skills', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ skills: skillsToSave }),
+        })
 
-      if (response.ok) {
-        onComplete(skills)
-        onNext()
-      } else {
-        console.error('Failed to save skills')
-        // You might want to show an error message to the user here
+        if (!response.ok) {
+          console.error('Failed to save skills')
+          // You might want to show an error message to the user here
+          return
+        }
       }
+
+      onComplete(skills)
+      onNext()
     } catch (error) {
       console.error('Error saving skills:', error)
       // You might want to show an error message to the user here
@@ -372,17 +373,10 @@ export default function SkillsStep({
           </Button>
           <Button
             type="submit"
+            disabled={saving}
             className="bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full px-8"
           >
-            {isYoungChild ? "Next" : "Continue"}
-          </Button>
-
-          <Button
-            onClick={handleComplete}
-            className="bg-blue-600 hover:bg-blue-700"
-            disabled={saving}
-          >
-            {saving ? "Saving..." : (isYoungChild ? "I'm Done!" : "Complete")}
+            {saving ? "Saving..." : (isYoungChild ? "Next" : "Continue")}
           </Button>
         </div>
       </form>

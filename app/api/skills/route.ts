@@ -22,9 +22,13 @@ export async function GET(request: NextRequest) {
 
     console.log('🔍 Fetching skill categories for age group:', ageGroup)
 
+    // Map age group format (handle both dash and underscore formats)
+    const mappedAgeGroup = ageGroup.replace(/-/g, '_')
+    console.log('🔍 Mapped age group:', mappedAgeGroup)
+
     // Fetch skill categories and skills for the age group using Prisma
     const skillCategories = await prisma.skillCategory.findMany({
-      where: { ageGroup: ageGroup as any },
+      where: { ageGroup: mappedAgeGroup as any },
       include: { 
         skills: {
           select: {
