@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { Plus, X, Search, Award } from "lucide-react"
-import { SKILL_CATEGORIES_BY_AGE } from "@/data/age-appropriate-content"
 import type { AgeGroup } from "@/components/onboarding/personal-info-step"
 
 interface Skill {
@@ -35,9 +34,45 @@ export default function SkillsStep({
   const [searchTerm, setSearchTerm] = useState("")
   const [newSkill, setNewSkill] = useState("")
   const [newSkillLevel, setNewSkillLevel] = useState(3)
+  const [skillCategories, setSkillCategories] = useState<Array<{ name: string; skills: string[] }>>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
 
-  // Get the appropriate skill categories based on age group
-  const skillCategories = SKILL_CATEGORIES_BY_AGE[ageGroup]
+  // Fetch skills and user data on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+
+        // Fetch skill categories for the age group
+        const skillsResponse = await fetch(`/api/skills?ageGroup=${ageGroup}`)
+        if (skillsResponse.ok) {
+          const skillsData = await skillsResponse.json()
+          setSkillCategories(skillsData.categories || [])
+        }
+
+        // Fetch user's current skills
+        const userSkillsResponse = await fetch('/api/user/skills')
+        if (userSkillsResponse.ok) {
+          const userSkillsData = await userSkillsResponse.json()
+          // Transform user skills to match component format
+          const userSkills = userSkillsData.skills?.map((userSkill: any) => ({
+            id: userSkill.skill_id,
+            name: userSkill.skills.name,
+            level: userSkill.proficiency_level,
+            category: userSkill.skills.skill_categories.name
+          })) || []
+          setSkills(userSkills)
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [ageGroup])
 
   const [filteredCategories, setFilteredCategories] = useState(skillCategories)
 
@@ -120,6 +155,41 @@ export default function SkillsStep({
     e.preventDefault()
     onComplete(skills)
     onNext()
+  }
+
+  const handleComplete = async () => {
+    try {
+      setSaving(true)
+
+      const response = await fetch('/api/user/skills', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ skills }),
+      })
+
+      if (response.ok) {
+        onComplete(skills)
+        onNext()
+      } else {
+        console.error('Failed to save skills')
+        // You might want to show an error message to the user here
+      }
+    } catch (error) {
+      console.error('Error saving skills:', error)
+      // You might want to show an error message to the user here
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div>
+        Loading skills...
+      </div>
+    )
   }
 
   return (
@@ -270,6 +340,14 @@ export default function SkillsStep({
             className="bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full px-8"
           >
             {isYoungChild ? "Next" : "Continue"}
+          </Button>
+
+          <Button
+            onClick={handleComplete}
+            className="bg-blue-600 hover:bg-blue-700"
+            disabled={saving}
+          >
+            {saving ? "Saving..." : (isYoungChild ? "I'm Done!" : "Complete")}
           </Button>
         </div>
       </form>
