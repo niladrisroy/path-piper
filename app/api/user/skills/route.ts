@@ -98,24 +98,76 @@ export async function POST(request: NextRequest) {
 
     console.log('💾 Saving skills for user:', user.id, 'Skills count:', skills.length)
 
-    // First, delete existing user skills to replace them
-    await prisma.userSkill.deleteMany({
-      where: { userId: user.id }
+    // Get user's age group to validate skills
+    const ageGroup = user.studentProfile?.age_group || 'elementary'
+    console.log('🔍 User age group:', ageGroup)
+
+    // Get available skills for user's current age group
+    const availableSkills = await prisma.skill.findMany({
+      where: {
+        category: {
+          ageGroup: ageGroup as any
+        }
+      },
+      select: {
+        id: true,
+        name: true
+      }
     })
 
-    // Insert new skills if any are provided
-    if (skills.length > 0) {
-      const skillsData = skills.map(skill => ({
+    const availableSkillIds = availableSkills.map(skill => skill.id)
+    const availableSkillNamesMap = new Map(availableSkills.map(skill => [skill.name, skill.id]))
+
+    // Filter skills to only include those available for current age group
+    const validSkills = skills.filter(skill => 
+      skill.id ? availableSkillIds.includes(skill.id) : availableSkillNamesMap.has(skill.name)
+    )
+    console.log('🔍 Filtering skills for age group', ageGroup, '. Valid:', validSkills.length, 'out of', skills.length)
+
+    // Delete ALL existing user skills (from any age group)
+    const deletedCount = await prisma.userSkill.deleteMany({
+      where: {
         userId: user.id,
-        skillId: skill.id,
-        proficiencyLevel: skill.level
-      }))
+      },
+    })
+    console.log('🗑️ Deleted', deletedCount.count, 'existing user skills from all age groups')
 
-      await prisma.userSkill.createMany({
-        data: skillsData
+    // Only create skills that are valid for current age group
+    const userSkillData = validSkills
+      .map(skill => {
+        const skillId = skill.id || availableSkillNamesMap.get(skill.name)
+        return skillId ? {
+          userId: user.id,
+          skillId: skillId,
+          proficiencyLevel: skill.level || 1
+        } : null
       })
+      .filter(Boolean) as { userId: string; skillId: number; proficiencyLevel: number }[]
 
-      console.log('✅ Successfully saved', skillsData.length, 'skills')
+    // Log custom skills that don't exist in database
+    const existingSkills = validSkills.filter(skill => 
+      skill.id ? availableSkillIds.includes(skill.id) : availableSkillNamesMap.has(skill.name)
+    )
+    const customSkills = validSkills.filter(skill => 
+      skill.id ? !availableSkillIds.includes(skill.id) : !availableSkillNamesMap.has(skill.name)
+    )
+
+    if (customSkills.length > 0) {
+      console.log('⚠️ Custom skills not saved (not in database for age group', ageGroup, '):', customSkills.map(s => s.name))
+    }
+
+    // Log filtered out skills (those not valid for current age group)
+    const filteredOutSkills = skills.filter(skill => !validSkills.includes(skill))
+    if (filteredOutSkills.length > 0) {
+      console.log('❌ Skills filtered out (not valid for age group', ageGroup, '):', filteredOutSkills.map(s => s.name))
+    }
+
+    // Create new user skills
+    if (userSkillData.length > 0) {
+      await prisma.userSkill.createMany({
+        data: userSkillData
+      })
+      console.log('✅ Created', userSkillData.length, 'new user skills for age group', ageGroup)
     }
 
     return NextResponse.json({ success: true })
