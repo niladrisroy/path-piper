@@ -97,10 +97,13 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('💾 Saving skills for user:', user.id, 'Skills count:', skills.length)
+    console.log('🔍 Full user object keys:', Object.keys(user))
+    console.log('🔍 User student profile:', user.studentProfile)
 
     // Get user's age group to validate skills
     const ageGroup = user.studentProfile?.age_group || 'elementary'
     console.log('🔍 User age group:', ageGroup)
+    console.log('🔍 Full user profile:', JSON.stringify(user.studentProfile, null, 2))
 
     // Get available skills for user's current age group
     const availableSkills = await prisma.skill.findMany({

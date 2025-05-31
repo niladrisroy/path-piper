@@ -31,6 +31,7 @@ export default function SkillsStep({
   onSkip,
   ageGroup = "young_adult",
 }: SkillsStepProps) {
+  const [userAgeGroup, setUserAgeGroup] = useState<AgeGroup>(ageGroup)
   const [skills, setSkills] = useState<Skill[]>(initialData)
   const [searchTerm, setSearchTerm] = useState("")
   const [newSkill, setNewSkill] = useState("")
@@ -45,13 +46,32 @@ export default function SkillsStep({
       try {
         setLoading(true)
 
-        // Fetch skill categories for the age group
-        const skillsResponse = await fetch(`/api/skills?ageGroup=${ageGroup}`)
-        if (skillsResponse.ok) {
-          const skillsData = await skillsResponse.json()
-          setSkillCategories(skillsData.categories || [])
+        // First fetch user data to get actual age group
+        const userResponse = await fetch('/api/auth/user')
+        if (userResponse.ok) {
+          const userData = await userResponse.json()
+          const actualAgeGroup = userData.user?.studentProfile?.age_group || ageGroup
+          setUserAgeGroup(actualAgeGroup)
+          console.log('🔍 Using user age group for skills:', actualAgeGroup)
+
+          // Fetch skill categories for the user's actual age group
+          const skillsResponse = await fetch(`/api/skills?ageGroup=${actualAgeGroup}`)
+          if (skillsResponse.ok) {
+            const skillsData = await skillsResponse.json()
+            setSkillCategories(skillsData.categories || [])
+          } else {
+            console.error('Failed to fetch skills:', skillsResponse.status)
+          }
         } else {
-          console.error('Failed to fetch skills:', skillsResponse.status)
+          console.error('Failed to fetch user data:', userResponse.status)
+          // Fallback to provided age group
+          const skillsResponse = await fetch(`/api/skills?ageGroup=${ageGroup}`)
+          if (skillsResponse.ok) {
+            const skillsData = await skillsResponse.json()
+            setSkillCategories(skillsData.categories || [])
+          } else {
+            console.error('Failed to fetch skills:', skillsResponse.status)
+          }
         }
 
         // Fetch user's current skills
@@ -83,8 +103,7 @@ export default function SkillsStep({
     fetchData()
   }, [ageGroup])
 
-  const [filteredCategories, setFilteredCategories] = useState(skillCategories)
-
+  // Update age group reference in other effects
   useEffect(() => {
     if (searchTerm.trim() === "") {
       setFilteredCategories(skillCategories)
@@ -101,6 +120,8 @@ export default function SkillsStep({
 
     setFilteredCategories(filtered)
   }, [searchTerm, skillCategories])
+
+  const [filteredCategories, setFilteredCategories] = useState(skillCategories)
 
   const addSkill = (skillName: string, skillId?: number) => {
     if (skills.some((s) => s.name === skillName)) return

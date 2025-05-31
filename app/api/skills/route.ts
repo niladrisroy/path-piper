@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
@@ -22,8 +21,12 @@ export async function GET(request: NextRequest) {
 
     console.log('🔍 Fetching skill categories for age group:', ageGroup)
 
-    // Map age group format (handle both dash and underscore formats)
-    const mappedAgeGroup = ageGroup.replace(/-/g, '_')
+    // Map age group names for compatibility
+    let mappedAgeGroup = ageGroup
+    if (ageGroup.includes('-')) {
+      mappedAgeGroup = ageGroup.replace(/-/g, '_')
+    }
+    console.log('🔍 Original age group:', ageGroup)
     console.log('🔍 Mapped age group:', mappedAgeGroup)
 
     // Fetch skill categories and skills for the age group using Prisma
