@@ -68,6 +68,24 @@ export default function Onboarding() {
           }
 
           if (data.user) {
+            // Fetch existing goals
+            let existingGoals = [];
+            try {
+              const goalsResponse = await fetch('/api/goals', {
+                method: 'GET',
+                credentials: 'include',
+                cache: 'no-store'
+              });
+              
+              if (goalsResponse.ok) {
+                const goalsData = await goalsResponse.json();
+                existingGoals = goalsData.goals || [];
+                console.log('Loaded existing goals:', existingGoals);
+              }
+            } catch (error) {
+              console.error('Error fetching existing goals:', error);
+            }
+
             // Set user data from API response
             setUserData({
               firstName: data.user.firstName || "",
@@ -78,7 +96,7 @@ export default function Onboarding() {
               interests: [],
               skills: [],
               skillLevels: {},
-              goals: [],
+              goals: existingGoals,
               educationLevel: data.user.educationLevel || "",
               bio: data.user.bio || "",
               birthMonth: data.user.birthMonth || "",
@@ -359,8 +377,34 @@ export default function Onboarding() {
               {step === 4 && (
                 <GoalsStep
                   initialData={userData.goals || []}
-                  onComplete={(goals) => {
+                  onComplete={async (goals) => {
                     setUserData({ ...userData, goals });
+                    
+                    // Save goals to database
+                    try {
+                      const response = await fetch('/api/goals', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({ goals }),
+                      });
+
+                      if (!response.ok) {
+                        const error = await response.json();
+                        console.error('Failed to save goals:', error);
+                        toast.error('Failed to save goals: ' + (error.message || 'Unknown error'));
+                        return;
+                      }
+
+                      console.log('Goals saved successfully');
+                      toast.success('Goals saved successfully!');
+                    } catch (error) {
+                      console.error('Error saving goals:', error);
+                      toast.error('Failed to save goals');
+                      return;
+                    }
                   }}
                   onNext={handleSubmit}
                   onSkip={handleSubmit}
