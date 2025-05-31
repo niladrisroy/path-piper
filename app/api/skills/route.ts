@@ -38,7 +38,10 @@ export async function GET(request: NextRequest) {
     // Transform the data to match the expected format
     const transformedCategories = skillCategories?.map(category => ({
       name: category.name,
-      skills: category.skills?.map(skill => skill.name) || []
+      skills: category.skills?.map(skill => ({
+        id: skill.id,
+        name: skill.name
+      })) || []
     })) || []
 
     return NextResponse.json({ categories: transformedCategories })

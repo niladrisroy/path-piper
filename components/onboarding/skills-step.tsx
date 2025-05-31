@@ -13,6 +13,7 @@ import type { AgeGroup } from "@/components/onboarding/personal-info-step"
 interface Skill {
   name: string
   level: number
+  id?: number
 }
 
 interface SkillsStepProps {
@@ -57,12 +58,18 @@ export default function SkillsStep({
           const userSkillsData = await userSkillsResponse.json()
           // Transform user skills to match component format
           const userSkills = userSkillsData.skills?.map((userSkill: any) => ({
-            id: userSkill.skill_id,
             name: userSkill.skills.name,
             level: userSkill.proficiency_level,
-            category: userSkill.skills.skill_categories.name
+            id: userSkill.skill_id
           })) || []
+          
+          console.log('✅ Loaded user skills:', userSkills)
           setSkills(userSkills)
+          
+          // Update the initial data for parent component
+          if (userSkills.length > 0) {
+            onComplete(userSkills)
+          }
         }
       } catch (error) {
         console.error('Error fetching data:', error)
@@ -93,10 +100,28 @@ export default function SkillsStep({
     setFilteredCategories(filtered)
   }, [searchTerm, skillCategories])
 
-  const addSkill = (skillName: string) => {
+  const addSkill = (skillName: string, skillId?: number) => {
     if (skills.some((s) => s.name === skillName)) return
 
-    setSkills([...skills, { name: skillName, level: newSkillLevel }])
+    // Find the skill ID from categories if not provided
+    let foundSkillId = skillId
+    if (!foundSkillId) {
+      for (const category of skillCategories) {
+        const foundSkill = category.skills.find(s => 
+          typeof s === 'object' ? s.name === skillName : s === skillName
+        )
+        if (foundSkill && typeof foundSkill === 'object') {
+          foundSkillId = foundSkill.id
+          break
+        }
+      }
+    }
+
+    setSkills([...skills, { 
+      name: skillName, 
+      level: newSkillLevel,
+      id: foundSkillId 
+    }])
   }
 
   const addCustomSkill = () => {
@@ -161,12 +186,20 @@ export default function SkillsStep({
     try {
       setSaving(true)
 
+      // Filter out skills without IDs (custom skills) and handle them separately
+      const skillsWithIds = skills.filter(skill => skill.id)
+      const customSkills = skills.filter(skill => !skill.id)
+
+      // For now, we'll only save skills that have IDs from the predefined categories
+      // TODO: Handle custom skills by creating them in the database first
+      const skillsToSave = skillsWithIds
+
       const response = await fetch('/api/user/skills', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ skills }),
+        body: JSON.stringify({ skills: skillsToSave }),
       })
 
       if (response.ok) {
@@ -245,17 +278,19 @@ export default function SkillsStep({
                   <h3 className="font-semibold text-slate-800 mb-3 text-sm">{category.name}</h3>
                   <div className="flex flex-wrap gap-2">
                     {category.skills.map((skill) => {
-                      const isSelected = skills.some((s) => s.name === skill)
+                      const skillName = typeof skill === 'object' ? skill.name : skill
+                      const skillId = typeof skill === 'object' ? skill.id : undefined
+                      const isSelected = skills.some((s) => s.name === skillName)
                       return (
                         <button
-                          key={skill}
+                          key={skillId || skillName}
                           type="button"
-                          onClick={() => (isSelected ? removeSkill(skill) : addSkill(skill))}
+                          onClick={() => (isSelected ? removeSkill(skillName) : addSkill(skillName, skillId))}
                           className={`px-3 py-1 rounded-full text-sm transition-colors ${
                             isSelected ? "bg-teal-100 text-teal-700" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                           }`}
                         >
-                          {skill}
+                          {skillName}
                           {isSelected ? (
                             <X size={14} className="ml-1 inline" />
                           ) : (
