@@ -358,11 +358,12 @@ export default function Onboarding() {
 
               {step === 4 && (
                 <GoalsStep
-                  userData={userData}
-                  setUserData={setUserData}
+                  initialData={userData.goals || []}
+                  onComplete={(goals) => {
+                    setUserData({ ...userData, goals });
+                  }}
                   onNext={handleSubmit}
-                  onBack={handleBack}
-                  isSubmitting={isSubmitting}
+                  onSkip={handleSubmit}
                 />
               )}
 
