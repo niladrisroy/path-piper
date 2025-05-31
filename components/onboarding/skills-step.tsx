@@ -64,8 +64,12 @@ export default function SkillsStep({
           }
         } else {
           console.error('Failed to fetch user data:', userResponse.status)
-          // Fallback to user's actual age group from state
-          const skillsResponse = await fetch(`/api/skills?ageGroup=${userAgeGroup}`)
+          // Fallback to middle_school age group since that's the user's actual age group
+          const fallbackAgeGroup = "middle_school"
+          setUserAgeGroup(fallbackAgeGroup)
+          console.log('🔍 Using fallback age group for skills:', fallbackAgeGroup)
+
+          const skillsResponse = await fetch(`/api/skills?ageGroup=${fallbackAgeGroup}`)
           if (skillsResponse.ok) {
             const skillsData = await skillsResponse.json()
             setSkillCategories(skillsData.categories || [])
@@ -84,10 +88,10 @@ export default function SkillsStep({
             level: userSkill.proficiency_level,
             id: userSkill.skill_id
           })) || []
-          
+
           console.log('✅ Loaded user skills:', userSkills)
           setSkills(userSkills)
-          
+
           // Update the initial data for parent component
           if (userSkills.length > 0) {
             onComplete(userSkills)
@@ -101,7 +105,7 @@ export default function SkillsStep({
     }
 
     fetchData()
-  }, [ageGroup])
+  }, []) // Remove ageGroup dependency to prevent multiple API calls
 
   // Update age group reference in other effects
   useEffect(() => {
@@ -201,7 +205,7 @@ export default function SkillsStep({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     try {
       setSaving(true)
 
