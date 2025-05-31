@@ -1,41 +1,67 @@
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase'
+import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = cookies()
-    const supabase = createClient(cookieStore)
+    // Check for valid session cookie
+    const cookieStore = await cookies()
+    const accessTokenCookie = cookieStore.get('sb-access-token')
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    if (!accessTokenCookie) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user's current skills with skill details
-    const { data: userSkills, error } = await supabase
-      .from('user_skills')
-      .select(`
-        skill_id,
-        proficiency_level,
-        skills (
-          id,
-          name,
-          skill_categories (
-            name,
-            age_group
-          )
-        )
-      `)
-      .eq('user_id', user.id)
+    // Get user from session
+    const userResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/user`, {
+      headers: {
+        cookie: `sb-access-token=${accessTokenCookie.value}`,
+      },
+    })
 
-    if (error) {
-      console.error('Error fetching user skills:', error)
-      return NextResponse.json({ error: 'Failed to fetch skills' }, { status: 500 })
+    if (!userResponse.ok) {
+      return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
     }
 
-    return NextResponse.json({ skills: userSkills || [] })
+    const { user } = await userResponse.json()
+
+    console.log('🔍 Fetching skills for user:', user.id)
+
+    // Get user's current skills with skill details using Prisma
+    const userSkills = await prisma.userSkill.findMany({
+      where: { userId: user.id },
+      include: {
+        skill: {
+          include: {
+            category: {
+              select: {
+                name: true,
+                ageGroup: true
+              }
+            }
+          }
+        }
+      }
+    })
+
+    console.log('✅ Found', userSkills.length, 'skills for user')
+
+    // Transform to match the expected format
+    const transformedSkills = userSkills.map(userSkill => ({
+      skill_id: userSkill.skillId,
+      proficiency_level: userSkill.proficiencyLevel,
+      skills: {
+        id: userSkill.skill.id,
+        name: userSkill.skill.name,
+        skill_categories: {
+          name: userSkill.skill.category.name,
+          age_group: userSkill.skill.category.ageGroup
+        }
+      }
+    }))
+
+    return NextResponse.json({ skills: transformedSkills })
   } catch (error) {
     console.error('Error in GET /api/user/skills:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -44,47 +70,52 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = cookies()
-    const supabase = createClient(cookieStore)
+    // Check for valid session cookie
+    const cookieStore = await cookies()
+    const accessTokenCookie = cookieStore.get('sb-access-token')
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    if (!accessTokenCookie) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Get user from session
+    const userResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/user`, {
+      headers: {
+        cookie: `sb-access-token=${accessTokenCookie.value}`,
+      },
+    })
+
+    if (!userResponse.ok) {
+      return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
+    }
+
+    const { user } = await userResponse.json()
     const { skills } = await request.json()
 
     if (!Array.isArray(skills)) {
       return NextResponse.json({ error: 'Skills must be an array' }, { status: 400 })
     }
 
-    // First, delete existing user skills to replace them
-    const { error: deleteError } = await supabase
-      .from('user_skills')
-      .delete()
-      .eq('user_id', user.id)
+    console.log('💾 Saving skills for user:', user.id, 'Skills count:', skills.length)
 
-    if (deleteError) {
-      console.error('Error deleting existing skills:', deleteError)
-      return NextResponse.json({ error: 'Failed to update skills' }, { status: 500 })
-    }
+    // First, delete existing user skills to replace them
+    await prisma.userSkill.deleteMany({
+      where: { userId: user.id }
+    })
 
     // Insert new skills if any are provided
     if (skills.length > 0) {
       const skillsData = skills.map(skill => ({
-        user_id: user.id,
-        skill_id: skill.id,
-        proficiency_level: skill.level
+        userId: user.id,
+        skillId: skill.id,
+        proficiencyLevel: skill.level
       }))
 
-      const { error: insertError } = await supabase
-        .from('user_skills')
-        .insert(skillsData)
+      await prisma.userSkill.createMany({
+        data: skillsData
+      })
 
-      if (insertError) {
-        console.error('Error inserting skills:', insertError)
-        return NextResponse.json({ error: 'Failed to save skills' }, { status: 500 })
-      }
+      console.log('✅ Successfully saved', skillsData.length, 'skills')
     }
 
     return NextResponse.json({ success: true })
