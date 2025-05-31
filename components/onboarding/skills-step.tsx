@@ -31,7 +31,7 @@ export default function SkillsStep({
   onSkip,
   ageGroup = "young_adult",
 }: SkillsStepProps) {
-  const [userAgeGroup, setUserAgeGroup] = useState<AgeGroup>(ageGroup)
+  const [userAgeGroup, setUserAgeGroup] = useState<AgeGroup>("middle_school")
   const [skills, setSkills] = useState<Skill[]>(initialData)
   const [searchTerm, setSearchTerm] = useState("")
   const [newSkill, setNewSkill] = useState("")
@@ -64,8 +64,8 @@ export default function SkillsStep({
           }
         } else {
           console.error('Failed to fetch user data:', userResponse.status)
-          // Fallback to provided age group
-          const skillsResponse = await fetch(`/api/skills?ageGroup=${ageGroup}`)
+          // Fallback to user's actual age group from state
+          const skillsResponse = await fetch(`/api/skills?ageGroup=${userAgeGroup}`)
           if (skillsResponse.ok) {
             const skillsData = await skillsResponse.json()
             setSkillCategories(skillsData.categories || [])
@@ -163,7 +163,7 @@ export default function SkillsStep({
   }
 
   // Determine if we should show simplified UI for younger children
-  const isYoungChild = ageGroup === "early_childhood" || ageGroup === "elementary"
+  const isYoungChild = userAgeGroup === "early_childhood" || userAgeGroup === "elementary"
 
   const getLevelLabel = (level: number) => {
     if (isYoungChild) {

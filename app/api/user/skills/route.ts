@@ -100,9 +100,11 @@ export async function POST(request: NextRequest) {
     console.log('🔍 Full user object keys:', Object.keys(user))
     console.log('🔍 User student profile:', user.studentProfile)
 
-    // Get user's age group to validate skills
-    const ageGroup = user.studentProfile?.age_group || 'elementary'
-    console.log('🔍 User age group:', ageGroup)
+    // Get user's age group to validate skills - check multiple possible locations
+    const ageGroup = user.studentProfile?.age_group || user.ageGroup || 'elementary'
+    console.log('🔍 User age group from studentProfile:', user.studentProfile?.age_group)
+    console.log('🔍 User age group from user object:', user.ageGroup)
+    console.log('🔍 Final age group used:', ageGroup)
     console.log('🔍 Full user profile:', JSON.stringify(user.studentProfile, null, 2))
 
     // Get available skills for user's current age group
