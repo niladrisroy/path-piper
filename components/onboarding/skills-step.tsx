@@ -29,7 +29,7 @@ export default function SkillsStep({
   onComplete,
   onNext,
   onSkip,
-  ageGroup = "young_adult",
+  ageGroup, // Remove default value to force using database value
 }: SkillsStepProps) {
   const [userAgeGroup, setUserAgeGroup] = useState<AgeGroup>("middle_school")
   const [skills, setSkills] = useState<Skill[]>(initialData)
@@ -43,16 +43,20 @@ export default function SkillsStep({
   // Fetch skills and user data on component mount
   useEffect(() => {
     const fetchData = async () => {
+      if (loading) return // Prevent multiple calls
+      
       try {
         setLoading(true)
+        console.log('🚀 SkillsStep: Starting fetchData, prop ageGroup:', ageGroup)
 
         // First fetch user data to get actual age group
         const userResponse = await fetch('/api/auth/user')
         if (userResponse.ok) {
           const userData = await userResponse.json()
-          const actualAgeGroup = userData.user?.studentProfile?.age_group || ageGroup
+          const actualAgeGroup = userData.user?.studentProfile?.age_group || "middle_school"
           setUserAgeGroup(actualAgeGroup)
-          console.log('🔍 Using user age group for skills:', actualAgeGroup)
+          console.log('🔍 SkillsStep: Using user age group for skills:', actualAgeGroup)
+          console.log('🔍 SkillsStep: About to call /api/skills with ageGroup:', actualAgeGroup)
 
           // Fetch skill categories for the user's actual age group
           const skillsResponse = await fetch(`/api/skills?ageGroup=${actualAgeGroup}`)
