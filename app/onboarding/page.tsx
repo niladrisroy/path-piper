@@ -40,7 +40,7 @@ export default function Onboarding() {
     bio: "",
     birthMonth: "",
     birthYear: "",
-    ageGroup: 'young-adult'
+    ageGroup: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -83,7 +83,7 @@ export default function Onboarding() {
               bio: data.user.bio || "",
               birthMonth: data.user.birthMonth || "",
               birthYear: data.user.birthYear || "",
-              ageGroup: 'young-adult'
+              ageGroup: data.user?.studentProfile?.age_group || ''
             })
           } else {
             console.warn("No user data found in response")
@@ -207,7 +207,7 @@ export default function Onboarding() {
     const calculateAgeGroup = (birthYear) => {
       const currentYear = new Date().getFullYear();
       const age = currentYear - parseInt(birthYear);
-  
+
       if (age <= 25) {
           return 'young-adult';
       } else if (age <= 40) {
