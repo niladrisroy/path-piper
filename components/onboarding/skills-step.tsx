@@ -21,6 +21,7 @@ interface SkillsStepProps {
   onComplete: (data: Skill[]) => void
   onNext: () => void
   onSkip: () => void
+  ageGroup?: AgeGroup // Add ageGroup prop
 }
 
 export default function SkillsStep({
@@ -28,6 +29,7 @@ export default function SkillsStep({
   onComplete,
   onNext,
   onSkip,
+  ageGroup = "young_adult",
 }: SkillsStepProps) {
   const [userAgeGroup, setUserAgeGroup] = useState<AgeGroup>("middle_school")
   const [skills, setSkills] = useState<Skill[]>(initialData)
@@ -41,31 +43,16 @@ export default function SkillsStep({
   // Fetch skills and user data on component mount
   useEffect(() => {
     const fetchData = async () => {
-      if (loading) return // Prevent multiple calls
-      
       try {
         setLoading(true)
-        console.log('🚀 SkillsStep: Starting fetchData (no prop, using DB value only)')
 
         // First fetch user data to get actual age group
-        console.log('📡 Making request to /api/auth/user')
         const userResponse = await fetch('/api/auth/user')
         if (userResponse.ok) {
           const userData = await userResponse.json()
-          console.log('✅ User data received:', { 
-            userId: userData.user?.id, 
-            ageGroup: userData.user?.studentProfile?.age_group 
-          })
-          
-          if (!userData.user?.studentProfile?.age_group) {
-            console.error('❌ No age group found in user profile!')
-            throw new Error('User age group not found')
-          }
-          
-          const actualAgeGroup = userData.user.studentProfile.age_group
+          const actualAgeGroup = userData.user?.studentProfile?.age_group || ageGroup
           setUserAgeGroup(actualAgeGroup)
-          console.log('🔍 SkillsStep: Using user age group for skills:', actualAgeGroup)
-          console.log('📡 About to call /api/skills with ageGroup:', actualAgeGroup)
+          console.log('🔍 Using user age group for skills:', actualAgeGroup)
 
           // Fetch skill categories for the user's actual age group
           const skillsResponse = await fetch(`/api/skills?ageGroup=${actualAgeGroup}`)
@@ -76,8 +63,19 @@ export default function SkillsStep({
             console.error('Failed to fetch skills:', skillsResponse.status)
           }
         } else {
-          console.error('❌ Failed to fetch user data:', userResponse.status)
-          throw new Error('Failed to fetch user data')
+          console.error('Failed to fetch user data:', userResponse.status)
+          // Fallback to middle_school age group since that's the user's actual age group
+          const fallbackAgeGroup = "middle_school"
+          setUserAgeGroup(fallbackAgeGroup)
+          console.log('🔍 Using fallback age group for skills:', fallbackAgeGroup)
+
+          const skillsResponse = await fetch(`/api/skills?ageGroup=${fallbackAgeGroup}`)
+          if (skillsResponse.ok) {
+            const skillsData = await skillsResponse.json()
+            setSkillCategories(skillsData.categories || [])
+          } else {
+            console.error('Failed to fetch skills:', skillsResponse.status)
+          }
         }
 
         // Fetch user's current skills
