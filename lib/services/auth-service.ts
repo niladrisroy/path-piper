@@ -57,11 +57,10 @@ export async function registerStudent(data: UserRegistrationData) {
     await prisma.studentProfile.create({
       data: {
         id: profile.id,
-        ageGroup: 'young_adult', // You may want to determine this based on age
+        age_group: 'young_adult', // You may want to determine this based on age
         educationLevel: 'undergraduate', // Default value, can be updated later
         birthMonth: data.birthMonth || null,
         birthYear: data.birthYear || null,
-        onboardingCompleted: false,
       }
     });
 
@@ -223,11 +222,11 @@ export async function loginUser(data: LoginData) {
     // Get onboarding status from the included profile data
     let onboardingCompleted = false;
     if (profile.role === 'student' && profile.student) {
-      onboardingCompleted = Boolean(profile.student.onboardingCompleted);
+      onboardingCompleted = profile.student.onboardingCompleted || false;
     } else if (profile.role === 'mentor' && profile.mentor) {
-      onboardingCompleted = Boolean(profile.mentor.onboardingCompleted);
+      onboardingCompleted = profile.mentor.onboardingCompleted || false;
     } else if (profile.role === 'institution' && profile.institution) {
-      onboardingCompleted = Boolean(profile.institution.onboardingCompleted);
+      onboardingCompleted = profile.institution.onboardingCompleted || false;
     }
 
     return { 
