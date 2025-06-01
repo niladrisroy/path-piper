@@ -3,8 +3,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import type { Metadata } from "next"
+import { supabase } from "@/lib/supabase"
 import StudentProfile from "@/components/profile/student-profile"
 import InternalNavbar from "@/components/internal-navbar"
 import Footer from "@/components/footer"
@@ -20,21 +19,12 @@ export default function StudentProfilePage({
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState<any>(null)
-  const supabase = createClientComponentClient()
   
   const studentId = searchParams?.id
 
   useEffect(() => {
     const checkUserAndRedirect = async () => {
       try {
-        // Get current user
-        const { data: { user } } = await supabase.auth.getUser()
-        
-        if (!user) {
-          router.push('/login')
-          return
-        }
-
         // Fetch user profile to determine role
         const response = await fetch('/api/auth/user')
         const userData = await response.json()
@@ -72,7 +62,7 @@ export default function StudentProfilePage({
     }
 
     checkUserAndRedirect()
-  }, [studentId, router, supabase.auth])
+  }, [studentId, router])
 
   if (loading) {
     return (
