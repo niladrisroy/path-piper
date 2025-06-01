@@ -7,11 +7,11 @@ import Image from "next/image"
 import { CheckCircle, ArrowRight } from "lucide-react"
 
 interface CompletionStepProps {
-  profileData: any
-  completionPercentage: number
+  profileData?: any
+  completionPercentage?: number
 }
 
-export default function CompletionStep({ profileData, completionPercentage }: CompletionStepProps) {
+export default function CompletionStep({ profileData = {}, completionPercentage = 0 }: CompletionStepProps) {
   const getCompletionMessage = () => {
     if (completionPercentage === 100) {
       return "Congratulations! Your profile is complete."
@@ -26,24 +26,28 @@ export default function CompletionStep({ profileData, completionPercentage }: Co
 
   const getNextSteps = () => {
     const steps = []
+    const personalInfo = profileData?.personalInfo || {}
+    const interests = profileData?.interests || []
+    const goals = profileData?.goals || []
+    const skills = profileData?.skills || []
 
-    if (!profileData.personalInfo.profileImage) {
+    if (!personalInfo.profileImage) {
       steps.push("Add a profile picture to make your profile more personal")
     }
 
-    if (!profileData.personalInfo.bio || profileData.personalInfo.bio.length < 10) {
+    if (!personalInfo.bio || personalInfo.bio.length < 10) {
       steps.push("Complete your bio to tell others about yourself")
     }
 
-    if (profileData.interests.length < 3) {
+    if (interests.length < 3) {
       steps.push("Add more interests to get better recommendations")
     }
 
-    if (profileData.goals.length === 0) {
+    if (goals.length === 0) {
       steps.push("Set some goals to help us connect you with the right mentors")
     }
 
-    if (profileData.skills.length < 2) {
+    if (skills.length < 2) {
       steps.push("Add skills to showcase your abilities")
     }
 

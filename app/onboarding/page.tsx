@@ -412,7 +412,10 @@ export default function Onboarding() {
               )}
 
               {step === 5 && (
-                <CompletionStep />
+                <CompletionStep 
+                  profileData={profileData}
+                  completionPercentage={Math.round((step / 5) * 100)}
+                />
               )}
             </div>
           </div>

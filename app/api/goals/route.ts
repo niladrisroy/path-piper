@@ -19,6 +19,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
+    // Check if Goal model exists
+    if (!prisma.goal) {
+      console.error('Goal model not found in Prisma client')
+      return NextResponse.json({ error: 'Goal model not available' }, { status: 500 })
+    }
+
     // Fetch user's goals using Prisma
     const goals = await prisma.goal.findMany({
       where: {
@@ -32,7 +38,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ goals })
   } catch (error) {
     console.error('Goals API error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
 
@@ -55,6 +64,12 @@ export async function POST(request: NextRequest) {
 
     if (!Array.isArray(goals)) {
       return NextResponse.json({ error: 'Goals must be an array' }, { status: 400 })
+    }
+
+    // Check if Goal model exists
+    if (!prisma.goal) {
+      console.error('Goal model not found in Prisma client')
+      return NextResponse.json({ error: 'Goal model not available' }, { status: 500 })
     }
 
     // Delete existing goals for this user using Prisma

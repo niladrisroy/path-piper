@@ -3,22 +3,15 @@ import 'server-only'
 
 // PrismaClient is attached to the `global` object in development to prevent
 // exhausting your database connection limit.
-const globalForPrisma = global as unknown as { prisma: PrismaClient }
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined
+}
 
-export const prisma = globalForPrisma.prisma || new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL
-        ?.replace('postgres://', 'postgresql://')
-        .replace('#', '%23')
-    },
-  },
-  log: process.env.NODE_ENV === 'development' 
-    ? [] // Disable all logs even in development
-    : []
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({
+  log: ['query', 'info', 'warn', 'error'],
 })
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+if (process.env.NODE_env !== 'production') globalForPrisma.prisma = prisma
 
 // Query logging disabled to reduce console noise
 // if (process.env.NODE_ENV === 'development') {
