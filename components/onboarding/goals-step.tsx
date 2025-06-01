@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, X, Calendar, Target } from "lucide-react"
 
 interface Goal {
-  id: string
+  id: number | string // Allow both for client-side temporary IDs
   title: string
   description: string
   category: string
@@ -62,7 +62,7 @@ export default function GoalsStep({ initialData, onComplete, onNext, onSkip }: G
 
     const goalToAdd = {
       ...newGoal,
-      id: (-Date.now()).toString(),
+      id: -Date.now(), // Use negative number for temporary client-side IDs
     }
 
     setGoals((prev) => [...prev, goalToAdd])
@@ -76,7 +76,7 @@ export default function GoalsStep({ initialData, onComplete, onNext, onSkip }: G
     setIsAddingGoal(false)
   }
 
-  const handleRemoveGoal = (id: string) => {
+  const handleRemoveGoal = (id: number | string) => {
     setGoals((prev) => prev.filter((goal) => goal.id !== id))
   }
 

@@ -113,9 +113,9 @@ export default function CompletionStep({ profileData = {}, completionPercentage 
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 justify-center">
-        <Link href="/dashboard">
+        <Link href="/feed">
           <Button className="bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full px-8 py-6 w-full md:w-auto">
-            Go to Dashboard <ArrowRight size={16} className="ml-2" />
+            Go to Feed <ArrowRight size={16} className="ml-2" />
           </Button>
         </Link>
         <Link href="/profile">

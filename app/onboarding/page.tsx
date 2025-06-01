@@ -380,7 +380,7 @@ export default function Onboarding() {
                   onComplete={async (goals) => {
                     setUserData({ ...userData, goals });
                     
-                    // Save goals to database
+                    // Save goals to database and complete onboarding
                     try {
                       const response = await fetch('/api/goals', {
                         method: 'POST',
@@ -399,10 +399,32 @@ export default function Onboarding() {
                       }
 
                       console.log('Goals saved successfully');
-                      toast.success('Goals saved successfully!');
+                      
+                      // Mark onboarding as completed
+                      const profileResponse = await fetch("/api/auth/user", {
+                        method: "PUT",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                          profile: {
+                            onboarding_completed: true,
+                          },
+                        }),
+                      });
+
+                      if (profileResponse.ok) {
+                        toast.success('Onboarding completed successfully!');
+                        setStep(5); // Move to completion step
+                      } else {
+                        const error = await profileResponse.json();
+                        console.error('Failed to complete onboarding:', error);
+                        toast.error('Failed to complete onboarding: ' + (error.message || 'Unknown error'));
+                      }
                     } catch (error) {
-                      console.error('Error saving goals:', error);
-                      toast.error('Failed to save goals');
+                      console.error('Error during onboarding completion:', error);
+                      toast.error('Failed to complete onboarding');
                       return;
                     }
                   }}
