@@ -201,59 +201,51 @@ export async function PUT(request: NextRequest) {
     console.log("API: Authenticated user:", user.id);
 
     // Extract profile data from the nested structure
-    const profileData = body.profile || body;
+    const profileData = body.profile;
+    const studentProfileData = body.studentProfile;
 
-    // Update profile in database
-    const updatedProfile = await prisma.profile.update({
-      where: { id: user.id },
-      data: {
-        firstName: profileData.firstName,
-        lastName: profileData.lastName,
-        bio: profileData.bio || null,
-        location: profileData.location || null,
-      }
-    });
+    console.log("API: Profile data to update:", profileData);
+    console.log("API: Student profile data to update:", studentProfileData);
 
-    console.log("API: Profile updated successfully");
+    // Update the main profile only if profile data is explicitly provided
+    if (profileData && Object.keys(profileData).length > 0) {
+      // Filter out null and undefined values
+      const filteredProfileData = Object.fromEntries(
+        Object.entries(profileData).filter(([_, value]) => value !== null && value !== undefined)
+      );
 
-    // If user is a student, also update student profile
-    if (profileData.educationLevel || profileData.birthMonth || profileData.birthYear || profileData.ageGroup) {
-      const studentUpdateData: any = {};
-
-      if (profileData.educationLevel) {
-        studentUpdateData.educationLevel = profileData.educationLevel;
+      if (Object.keys(filteredProfileData).length > 0) {
+        console.log("API: Updating main profile with filtered data:", filteredProfileData);
+        await prisma.profile.update({
+          where: { id: user.id },
+          data: filteredProfileData,
+        });
+        console.log("API: Main profile updated successfully");
       }
-      if (profileData.birthMonth) {
-        studentUpdateData.birthMonth = profileData.birthMonth;
-      }
-      if (profileData.birthYear) {
-        studentUpdateData.birthYear = profileData.birthYear;
-      }
-      if (profileData.ageGroup) {
-        studentUpdateData.age_group = profileData.ageGroup;
-      }
-      if (typeof profileData.onboardingCompleted === 'boolean') {
-        studentUpdateData.onboardingCompleted = profileData.onboardingCompleted;
-      }
-
-      await prisma.studentProfile.update({
-        where: { id: user.id },
-        data: studentUpdateData
-      });
-      console.log("API: Student profile updated successfully");
     }
 
+    // Update student profile if provided
+    if (studentProfileData && user.role === 'student') {
+      // Filter out null and undefined values
+      const filteredStudentProfileData = Object.fromEntries(
+        Object.entries(studentProfileData).filter(([_, value]) => value !== null && value !== undefined)
+      );
 
+      if (Object.keys(filteredStudentProfileData).length > 0) {
+        console.log("API: Updating student profile with filtered data:", filteredStudentProfileData);
+        await prisma.studentProfile.update({
+          where: { id: user.id },
+          data: filteredStudentProfileData,
+        });
+        console.log("API: Student profile updated successfully");
+      }
+    }
 
     return NextResponse.json({
       success: true,
       message: "Profile updated successfully",
       user: {
-        id: updatedProfile.id,
-        firstName: updatedProfile.firstName,
-        lastName: updatedProfile.lastName,
-        bio: updatedProfile.bio,
-        location: updatedProfile.location,
+        id: user.id,
       }
     });
 

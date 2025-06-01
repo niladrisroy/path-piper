@@ -408,7 +408,7 @@ export default function Onboarding() {
 
                       console.log('Goals saved successfully');
 
-                      // Mark onboarding as completed in both profiles and student_profiles tables
+                      // Mark onboarding as completed in student profile only
                       const profileResponse = await fetch("/api/auth/user", {
                         method: "PUT",
                         headers: {
@@ -416,9 +416,6 @@ export default function Onboarding() {
                         },
                         credentials: 'include',
                         body: JSON.stringify({
-                          profile: {
-                            onboarding_completed: true,
-                          },
                           studentProfile: {
                             onboardingCompleted: true,
                           },
