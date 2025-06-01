@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { supabase } from '@/lib/supabase';
 import { prisma } from '@/lib/prisma';
+import { supabase } from '@/lib/supabase';
+import { cookies } from 'next/headers';
 
 // Database connection will be tested when actually needed
 
