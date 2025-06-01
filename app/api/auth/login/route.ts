@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     // If login successful, set session cookie
     if (result.success && result.user) {
       console.log('Login API - Setting up session cookies...');
-
+      
       // Log the complete session object
       if (result.session) {
         console.log('Login API - Session access_token preview:', result.session.access_token?.substring(0, 20) + '...');
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       // Set session cookies manually using Supabase session data
       if (result.session) {
         console.log('Login API - Setting Supabase session cookies...');
-
+        
         // Set access token cookie (this is what we'll use for API calls)
         response.cookies.set('sb-access-token', result.session.access_token, {
           httpOnly: true,
@@ -94,4 +94,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-```

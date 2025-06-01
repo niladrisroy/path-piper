@@ -1,7 +1,7 @@
-
 "use client"
 
 import type React from "react"
+
 import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
@@ -157,12 +157,12 @@ export default function Login() {
         // Redirect to the OAuth provider URL
         window.location.href = result.url;
       } else {
-        toast.error(result.error || `Login with ${provider} failed`);
+        alert(result.error || `Login with ${provider} failed`);
         setIsLoading(false);
       }
     } catch (error) {
       console.error(`${provider} login error:`, error);
-      toast.error(`An error occurred during ${provider} login`);
+      alert(`An error occurred during ${provider} login`);
       setIsLoading(false);
     }
   }
@@ -380,7 +380,6 @@ export default function Login() {
               <button
                 onClick={() => handleSocialLogin("Google")}
                 className="flex items-center justify-center h-12 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                disabled={isLoading}
               >
                 <span className="text-gray-700">Login with Google</span>
               </button>
@@ -388,7 +387,6 @@ export default function Login() {
               <button
                 onClick={() => handleSocialLogin("LinkedIn")}
                 className="flex items-center justify-center h-12 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                disabled={isLoading}
               >
                 <span className="text-gray-700">Login with LinkedIn</span>
               </button>
