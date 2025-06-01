@@ -413,7 +413,19 @@ export default function Onboarding() {
 
               {step === 5 && (
                 <CompletionStep 
-                  profileData={profileData}
+                  profileData={{
+                    personalInfo: {
+                      firstName: userData.firstName,
+                      lastName: userData.lastName,
+                      bio: userData.bio,
+                      location: userData.location,
+                      educationLevel: userData.educationLevel,
+                      profileImage: null
+                    },
+                    interests: userData.interests,
+                    skills: userData.skills,
+                    goals: userData.goals
+                  }}
                   completionPercentage={Math.round((step / 5) * 100)}
                 />
               )}
