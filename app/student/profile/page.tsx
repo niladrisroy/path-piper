@@ -22,50 +22,49 @@ export default function StudentProfilePage({
   const [studentId, setStudentId] = useState<string | undefined>(undefined)
 
   useEffect(() => {
-    const checkUserAndRedirect = async () => {
+    const resolveParams = async () => {
       try {
         // First resolve searchParams
         const params = await searchParams
         const resolvedStudentId = params?.id
         setStudentId(resolvedStudentId)
 
-        // Fetch user profile to determine role
-        const response = await fetch('/api/auth/user')
+        // Fetch user profile to determine role (authentication is already handled by ProtectedLayout)
+        const response = await fetch('/api/auth/user', {
+          credentials: 'include'
+        })
         const userData = await response.json()
         
-        if (!userData.success) {
-          router.push('/login')
-          return
-        }
+        if (userData.success) {
+          setCurrentUser(userData.user)
 
-        setCurrentUser(userData.user)
-
-        // If no studentId is provided, check user role and redirect accordingly
-        if (!resolvedStudentId) {
-          switch (userData.user.role) {
-            case 'mentor':
-              router.push('/mentor/profile')
-              return
-            case 'institution':
-              router.push('/institution/profile')
-              return
-            case 'student':
-              // Stay on this page, will show current user's profile
-              break
-            default:
-              router.push('/login')
-              return
+          // If no studentId is provided, check user role and redirect accordingly
+          if (!resolvedStudentId) {
+            switch (userData.user.role) {
+              case 'mentor':
+                router.push('/mentor/profile')
+                return
+              case 'institution':
+                router.push('/institution/profile')
+                return
+              case 'student':
+                // Stay on this page, will show current user's profile
+                break
+              default:
+                // This shouldn't happen since ProtectedLayout handles auth
+                break
+            }
           }
         }
         
         setLoading(false)
       } catch (error) {
-        console.error('Error checking user:', error)
-        router.push('/login')
+        console.error('Error resolving params:', error)
+        setLoading(false)
       }
     }
 
-    checkUserAndRedirect()
+    resolveParams()
   }, [searchParams, router])
 
   if (loading) {
