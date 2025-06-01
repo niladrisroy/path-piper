@@ -184,8 +184,6 @@ export interface LoginData {
 
 export async function loginUser(data: LoginData) {
   try {
-    console.log('Auth Service: Starting login process for:', data.email);
-
     // Use Supabase Auth for login
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email: data.email,
@@ -193,23 +191,15 @@ export async function loginUser(data: LoginData) {
     });
 
     if (authError) {
-      console.error('Auth Service: Supabase auth error:', authError);
       throw new Error(authError.message || 'Login failed');
     }
 
     if (!authData.user) {
-      console.error('Auth Service: No user returned from login');
       throw new Error('No user returned from login');
     }
 
-    if (!authData.session) {
-      console.error('Auth Service: No session returned from login');
-      throw new Error('No session created');
-    }
-
-    console.log('Auth Service: User authenticated successfully:', authData.user.id);
-
     // Get user's profile with a single optimized query
+    // Include the specific profile type based on role to get onboarding status in one query
     const profile = await prisma.profile.findUnique({
       where: { id: authData.user.id },
       include: {
@@ -220,17 +210,14 @@ export async function loginUser(data: LoginData) {
     });
 
     if (!profile) {
-      console.warn(`Auth Service: User ${authData.user.id} doesn't have a profile in the database`);
+      console.warn(`User ${authData.user.id} doesn't have a profile in the database`);
       return { 
         success: true, 
         user: authData.user,
-        session: authData.session,
         role: authData.user.user_metadata?.role || 'student',
         onboardingCompleted: false
       };
     }
-
-    console.log('Auth Service: Profile found for user:', profile.role);
 
     // Get onboarding status from the included profile data
     let onboardingCompleted = false;
@@ -242,8 +229,6 @@ export async function loginUser(data: LoginData) {
       onboardingCompleted = profile.institution.onboardingCompleted || false;
     }
 
-    console.log('Auth Service: Onboarding completed:', onboardingCompleted);
-
     return { 
       success: true, 
       user: authData.user,
@@ -253,10 +238,7 @@ export async function loginUser(data: LoginData) {
     };
 
   } catch (error) {
-    console.error('Auth Service: Login failed with error:', error);
-    return { 
-      success: false, 
-      error: (error as Error).message || 'Login failed' 
-    };
+    console.error('Login failed:', error);
+    return { success: false, error: (error as Error).message || 'Login failed' };
   }
 }

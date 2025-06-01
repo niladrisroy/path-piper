@@ -76,7 +76,7 @@ export default function Onboarding() {
                 credentials: 'include',
                 cache: 'no-store'
               });
-
+              
               if (goalsResponse.ok) {
                 const goalsData = await goalsResponse.json();
                 existingGoals = goalsData.goals || [];
@@ -157,9 +157,6 @@ export default function Onboarding() {
             education_level: userData.educationLevel,
             bio: userData.bio,
             onboarding_completed: true,
-          },
-          studentProfile: {
-            onboardingCompleted: true,
           },
         }),
       })
@@ -382,33 +379,30 @@ export default function Onboarding() {
                   initialData={userData.goals || []}
                   onComplete={async (goals) => {
                     setUserData({ ...userData, goals });
-
+                    
                     // Only save goals if there are actually changes (goals component handles dirty checking internally)
                     // The goals component will call this onComplete regardless of dirty state
                     // We save to database here to ensure completion step has the data
                     try {
-                      console.log('Saving goals:', goals);
-                      const goalsResponse = await fetch('/api/goals', {
+                      const response = await fetch('/api/goals', {
                         method: 'POST',
                         headers: {
                           'Content-Type': 'application/json',
                         },
                         credentials: 'include',
-                        body: JSON.stringify({
-                          goals: goals
-                        })
+                        body: JSON.stringify({ goals }),
                       });
 
-                      if (!goalsResponse.ok) {
-                        const error = await goalsResponse.json();
+                      if (!response.ok) {
+                        const error = await response.json();
                         console.error('Failed to save goals:', error);
                         toast.error('Failed to save goals: ' + (error.message || 'Unknown error'));
                         return;
                       }
 
                       console.log('Goals saved successfully');
-
-                      // Mark onboarding as completed in student profile only
+                      
+                      // Mark onboarding as completed
                       const profileResponse = await fetch("/api/auth/user", {
                         method: "PUT",
                         headers: {
@@ -416,14 +410,13 @@ export default function Onboarding() {
                         },
                         credentials: 'include',
                         body: JSON.stringify({
-                          studentProfile: {
-                            onboardingCompleted: true,
+                          profile: {
+                            onboarding_completed: true,
                           },
                         }),
                       });
 
                       if (profileResponse.ok) {
-                        console.log('Onboarding completion status updated successfully');
                         toast.success('Onboarding completed successfully!');
                         setStep(5); // Move to completion step
                       } else {
