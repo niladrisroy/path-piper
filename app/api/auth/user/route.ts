@@ -240,13 +240,7 @@ export async function PUT(request: NextRequest) {
       console.log("API: Student profile updated successfully");
     }
 
-    // Update student profile if provided
-    if (studentProfile && user.role === 'student') {
-      await prisma.studentProfile.update({
-        where: { id: user.id },
-        data: studentProfile,
-      });
-    }
+    
 
     return NextResponse.json({
       success: true,
