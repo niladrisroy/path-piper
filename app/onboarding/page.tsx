@@ -76,7 +76,7 @@ export default function Onboarding() {
                 credentials: 'include',
                 cache: 'no-store'
               });
-              
+
               if (goalsResponse.ok) {
                 const goalsData = await goalsResponse.json();
                 existingGoals = goalsData.goals || [];
@@ -382,30 +382,33 @@ export default function Onboarding() {
                   initialData={userData.goals || []}
                   onComplete={async (goals) => {
                     setUserData({ ...userData, goals });
-                    
+
                     // Only save goals if there are actually changes (goals component handles dirty checking internally)
                     // The goals component will call this onComplete regardless of dirty state
                     // We save to database here to ensure completion step has the data
                     try {
-                      const response = await fetch('/api/goals', {
+                      console.log('Saving goals:', goals);
+                      const goalsResponse = await fetch('/api/goals', {
                         method: 'POST',
                         headers: {
                           'Content-Type': 'application/json',
                         },
                         credentials: 'include',
-                        body: JSON.stringify({ goals }),
+                        body: JSON.stringify({
+                          goals: goals
+                        })
                       });
 
-                      if (!response.ok) {
-                        const error = await response.json();
+                      if (!goalsResponse.ok) {
+                        const error = await goalsResponse.json();
                         console.error('Failed to save goals:', error);
                         toast.error('Failed to save goals: ' + (error.message || 'Unknown error'));
                         return;
                       }
 
                       console.log('Goals saved successfully');
-                      
-                      // Mark onboarding as completed in student_profiles
+
+                      // Mark onboarding as completed in both profiles and student_profiles tables
                       const profileResponse = await fetch("/api/auth/user", {
                         method: "PUT",
                         headers: {
@@ -423,6 +426,7 @@ export default function Onboarding() {
                       });
 
                       if (profileResponse.ok) {
+                        console.log('Onboarding completion status updated successfully');
                         toast.success('Onboarding completed successfully!');
                         setStep(5); // Move to completion step
                       } else {

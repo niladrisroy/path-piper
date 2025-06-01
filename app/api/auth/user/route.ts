@@ -232,6 +232,9 @@ export async function PUT(request: NextRequest) {
       if (profileData.ageGroup) {
         studentUpdateData.age_group = profileData.ageGroup;
       }
+      if (typeof profileData.onboardingCompleted === 'boolean') {
+        studentUpdateData.onboardingCompleted = profileData.onboardingCompleted;
+      }
 
       await prisma.studentProfile.update({
         where: { id: user.id },
@@ -240,7 +243,7 @@ export async function PUT(request: NextRequest) {
       console.log("API: Student profile updated successfully");
     }
 
-    
+
 
     return NextResponse.json({
       success: true,
