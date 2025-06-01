@@ -1,13 +1,14 @@
+
+"use client"
+
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import type { Metadata } from "next"
 import StudentProfile from "@/components/profile/student-profile"
 import InternalNavbar from "@/components/internal-navbar"
 import Footer from "@/components/footer"
 import ProtectedLayout from "../../protected-layout"
-
-export const metadata: Metadata = {
-  title: "Student Profile | PathPiper",
-  description: "View and manage your educational journey, skills, and achievements",
-}
 
 export default function StudentProfilePage({
   searchParams,
@@ -16,14 +17,89 @@ export default function StudentProfilePage({
     id?: string
   }
 }) {
+  const router = useRouter()
+  const [loading, setLoading] = useState(true)
+  const [currentUser, setCurrentUser] = useState<any>(null)
+  const supabase = createClientComponentClient()
+  
   const studentId = searchParams?.id
+
+  useEffect(() => {
+    const checkUserAndRedirect = async () => {
+      try {
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (!user) {
+          router.push('/login')
+          return
+        }
+
+        // Fetch user profile to determine role
+        const response = await fetch('/api/auth/user')
+        const userData = await response.json()
+        
+        if (!userData.success) {
+          router.push('/login')
+          return
+        }
+
+        setCurrentUser(userData.user)
+
+        // If no studentId is provided, check user role and redirect accordingly
+        if (!studentId) {
+          switch (userData.user.role) {
+            case 'mentor':
+              router.push('/mentor/profile')
+              return
+            case 'institution':
+              router.push('/institution/profile')
+              return
+            case 'student':
+              // Stay on this page, will show current user's profile
+              break
+            default:
+              router.push('/login')
+              return
+          }
+        }
+        
+        setLoading(false)
+      } catch (error) {
+        console.error('Error checking user:', error)
+        router.push('/login')
+      }
+    }
+
+    checkUserAndRedirect()
+  }, [studentId, router, supabase.auth])
+
+  if (loading) {
+    return (
+      <ProtectedLayout>
+        <div className="min-h-screen flex flex-col">
+          <InternalNavbar />
+          <main className="flex-grow pt-16 sm:pt-24 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pathpiper-teal mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">Loading profile...</p>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      </ProtectedLayout>
+    )
+  }
 
   return (
     <ProtectedLayout>
       <div className="min-h-screen flex flex-col">
         <InternalNavbar />
         <main className="flex-grow pt-16 sm:pt-24">
-          <StudentProfile studentId={studentId} />
+          <StudentProfile 
+            studentId={studentId} 
+            currentUser={currentUser}
+          />
         </main>
         <Footer />
       </div>

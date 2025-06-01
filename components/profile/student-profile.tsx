@@ -11,7 +11,15 @@ import LearningPath from "./learning-path"
 import CircleView from "./circle-view"
 import ActionBar from "./action-bar"
 
-export default function StudentProfile({ studentId }: { studentId?: string }) {
+export default function StudentProfile({ 
+  studentId, 
+  currentUser,
+  studentData 
+}: { 
+  studentId?: string
+  currentUser?: any
+  studentData?: any
+}) {
   const [activeTab, setActiveTab] = useState("about")
 
   const tabs = [
