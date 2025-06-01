@@ -30,6 +30,8 @@ const nextConfig = {
       /^https:\/\/.*\.replit\.dev$/,
       /^https:\/\/.*\.repl\.co$/,
     ],
+    optimizeCss: false,
+    optimizePackageImports: ['@prisma/client'],
   },
 
   // External packages configuration (fixed from serverComponentsExternalPackages)
@@ -63,13 +65,6 @@ const nextConfig = {
 
   // Output configuration for better compatibility
   output: 'standalone',
-  
-  // Disable static optimization to prevent hydration issues
-  experimental: {
-    ...nextConfig.experimental,
-    optimizeCss: false,
-    optimizePackageImports: ['@prisma/client'],
-  },
 
   // Image configuration
   images: {
