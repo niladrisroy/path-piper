@@ -158,6 +158,9 @@ export default function Onboarding() {
             bio: userData.bio,
             onboarding_completed: true,
           },
+          studentProfile: {
+            onboardingCompleted: true,
+          },
         }),
       })
 
@@ -402,7 +405,7 @@ export default function Onboarding() {
 
                       console.log('Goals saved successfully');
                       
-                      // Mark onboarding as completed
+                      // Mark onboarding as completed in student_profiles
                       const profileResponse = await fetch("/api/auth/user", {
                         method: "PUT",
                         headers: {
@@ -412,6 +415,9 @@ export default function Onboarding() {
                         body: JSON.stringify({
                           profile: {
                             onboarding_completed: true,
+                          },
+                          studentProfile: {
+                            onboardingCompleted: true,
                           },
                         }),
                       });

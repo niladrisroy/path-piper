@@ -173,7 +173,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
   try {
     console.log("API: Profile update request received");
 
@@ -238,6 +238,14 @@ export async function PUT(request: Request) {
         data: studentUpdateData
       });
       console.log("API: Student profile updated successfully");
+    }
+
+    // Update student profile if provided
+    if (studentProfile && user.role === 'student') {
+      await prisma.studentProfile.update({
+        where: { id: user.id },
+        data: studentProfile,
+      });
     }
 
     return NextResponse.json({
