@@ -57,12 +57,14 @@ export default function SkillsStep({
           console.log('🔍 Using user age group for skills:', actualAgeGroup)
 
           // Fetch skill categories for the user's actual age group
-          const skillsResponse = await fetch(`/api/skills?ageGroup=${actualAgeGroup}`)
-          if (skillsResponse.ok) {
-            const skillsData = await skillsResponse.json()
-            setSkillCategories(skillsData.categories || [])
-          } else {
-            console.error('Failed to fetch skills:', skillsResponse.status)
+          if (actualAgeGroup) {
+            const skillsResponse = await fetch(`/api/skills?ageGroup=${actualAgeGroup}`)
+            if (skillsResponse.ok) {
+              const skillsData = await skillsResponse.json()
+              setSkillCategories(skillsData.categories || [])
+            } else {
+              console.error('Failed to fetch skills:', skillsResponse.status)
+            }
           }
         } else {
           console.error('Failed to fetch user data:', userResponse.status)

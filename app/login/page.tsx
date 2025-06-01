@@ -1,414 +1,168 @@
-
 "use client"
 
-import type React from "react"
-
-import { useState, useEffect, useRef } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { EyeIcon, EyeOffIcon } from "lucide-react"
-import { motion } from "framer-motion"
-import { toast } from "sonner"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Eye, EyeOff, Loader2 } from "lucide-react"
+import Link from "next/link"
+import Image from "next/image"
 
-export default function Login() {
-  const router = useRouter()
+export default function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
-  const searchParams = useSearchParams()
-  const [redirectPath, setRedirectPath] = useState<string>('/feed')
-
-  // Track mouse position for interactive elements
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!containerRef.current) return
-
-      const rect = containerRef.current.getBoundingClientRect()
-      // Calculate mouse position relative to container (0-100)
-      const x = ((e.clientX - rect.left) / rect.width) * 100
-      const y = ((e.clientY - rect.top) / rect.height) * 100
-
-      setMousePosition({ x, y })
-    }
-
-    const container = containerRef.current
-    if (container) {
-      container.addEventListener("mousemove", handleMouseMove)
-    }
-
-    return () => {
-      if (container) {
-        container.removeEventListener("mousemove", handleMouseMove)
-      }
-    }
-  }, [])
-
-  // Set the redirect path when component mounts or search params change
-  useEffect(() => {
-    // Check for both 'from' and 'redirectURL' parameters
-    const from = searchParams.get('from');
-    const redirectURL = searchParams.get('redirectURL');
-
-    // Priority: redirectURL, then from, otherwise default to '/feed'
-    if (redirectURL) {
-      setRedirectPath(redirectURL);
-    } else if (from) {
-      setRedirectPath(from);
-    } else {
-      setRedirectPath('/feed');
-    }
-  }, [searchParams])
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    // Show loading state
+    setError('')
     setIsLoading(true)
 
     try {
-      // Call login API
       const response = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
 
-      const result = await response.json();
+      const data = await response.json()
 
-      if (!result.success) {
-        // Show error toast instead of alert
-        toast.error(result.error || 'Login failed. Please check your credentials.');
-        setIsLoading(false);
-        return;
-      }
-
-      // Show success toast
-      toast.success(`Welcome back${result.name ? ', ' + result.name : ''}!`);
-
-      // Save user data to localStorage or sessionStorage if needed
-      // This can be useful to maintain user state across the app
-      try {
-        sessionStorage.setItem('user', JSON.stringify({
-          userId: result.userId,
-          email: result.email,
-          role: result.role,
-          name: result.name,
-          onboardingCompleted: result.onboardingCompleted
-        }));
-      } catch (err) {
-        console.warn("Could not save user data to session storage:", err);
-      }
-
-      // Navigation based on user role and onboarding status
-      setTimeout(async () => {
-        // Force refresh to ensure cookies are properly set
-        if (result.success) {
-          // Wait a brief moment for cookies to be saved in browser
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-
-        if (result.onboardingCompleted) {
-          // If onboarding is completed, try to redirect to the requested path
-          // Use window.location for a full page navigation instead of router.push
-          window.location.href = redirectPath || '/feed';
+      if (data.success) {
+        // Check if user needs onboarding
+        if (!data.onboardingCompleted) {
+          if (data.role === 'student') {
+            router.push('/onboarding')
+          } else if (data.role === 'mentor') {
+            router.push('/mentor-onboarding')
+          } else if (data.role === 'institution') {
+            router.push('/institution-onboarding')
+          }
         } else {
-          // If onboarding not completed, direct to appropriate onboarding page
-          if (result.role === 'mentor') {
-            window.location.href = '/mentor-onboarding';
-          } else if (result.role === 'institution') {
-            window.location.href = '/institution-onboarding';
-          } else {
-            // Default to student onboarding
-            window.location.href = '/onboarding';
+          // User has completed onboarding, redirect to appropriate dashboard
+          if (data.role === 'student') {
+            router.push('/feed')
+          } else if (data.role === 'mentor') {
+            router.push('/mentor')
+          } else if (data.role === 'institution') {
+            router.push('/institution/profile')
           }
         }
-      }, 800); // Small delay to allow the toast to be visible
-    } catch (error) {
-      console.error('Login error:', error);
-      toast.error('An unexpected error occurred. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  const handleSocialLogin = async (provider: string) => {
-    try {
-      setIsLoading(true);
-
-      const response = await fetch('/api/auth/social', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ provider }),
-      });
-
-      const result = await response.json();
-
-      if (result.success && result.url) {
-        // Redirect to the OAuth provider URL
-        window.location.href = result.url;
       } else {
-        alert(result.error || `Login with ${provider} failed`);
-        setIsLoading(false);
+        setError(data.error || 'Login failed')
       }
     } catch (error) {
-      console.error(`${provider} login error:`, error);
-      alert(`An error occurred during ${provider} login`);
-      setIsLoading(false);
+      console.error('Login error:', error)
+      setError('An unexpected error occurred. Please try again.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
-    <main className="min-h-screen flex flex-col bg-white">
-      {/* Header/Navbar from signup page */}
-      <header className="w-full py-4 px-6 flex justify-between items-center bg-white border-b border-slate-200">
-        <Link href="/" className="h-10">
-          <Image
-            src="/images/pathpiper-logo-full.png"
-            width={180}
-            height={40}
-            alt="PathPiper Logo"
-            className="h-full w-auto"
-          />
-        </Link>
-        <div>
-          <Link href="/signup">
-            <Button variant="ghost" className="text-teal-500 hover:text-teal-600 hover:bg-teal-50">
-              Sign Up
-            </Button>
-          </Link>
-        </div>
-      </header>
-
-      <div className="flex flex-1">
-        {/* Left side - Visual content */}
-        <div className="hidden md:block md:w-1/2 relative pt-[20px] pb-[20px]">
-          <div
-            ref={containerRef}
-            className="ml-[20px] rounded-2xl relative overflow-hidden flex flex-col p-8 h-full"
-            style={{ width: "calc(100% - 20px)" }}
-          >
-            {/* Interactive gradient background */}
-            <div
-              className="absolute inset-0 opacity-60 pointer-events-none"
-              style={{
-                background: `radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, 
-                  rgba(45, 212, 191, 0.5) 0%, 
-                  rgba(147, 51, 234, 0.3) 25%, 
-                  rgba(249, 115, 22, 0.2) 50%, 
-                  rgba(59, 130, 246, 0.1) 75%, 
-                  rgba(15, 23, 42, 0) 100%)`,
-              }}
-            />
-
-            {/* Hero text from home page - positioned at top left */}
-            <div className="z-10 mb-auto">
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
-                Welcome back! Ready to explore with{" "}
-                <span className="bg-gradient-to-r from-orange-500 via-purple-500 to-teal-500 bg-clip-text text-transparent">
-                  PathPiper
-                </span>
-              </h1>
-            </div>
-
-            {/* Floating Pip character with bounce effect - larger size */}
-            <motion.div
-              className="relative z-10 mx-auto my-auto flex-grow flex items-center justify-center py-8"
-              animate={{
-                y: [0, -20, 0],
-              }}
-              transition={{
-                repeat: Infinity,
-                duration: 4,
-                ease: "easeInOut",
-              }}
-              style={{
-                filter: "drop-shadow(0px 10px 15px rgba(45, 212, 191, 0.3))",
-              }}
-            >
-              <Image
-                src="/images/pip-character.png"
-                width={500}
-                height={500}
-                alt="Pip Character"
-                className="w-[600px] h-auto"
-                priority
-              />
-            </motion.div>
-
-            {/* Animated floating orbs */}
-            <motion.div
-              className="absolute w-32 h-32 rounded-full bg-teal-500/20 blur-xl"
-              animate={{
-                x: [0, 50, 0],
-                y: [0, 30, 0],
-              }}
-              transition={{
-                duration: 8,
-                repeat: Infinity,
-                repeatType: "reverse",
-              }}
-              style={{
-                left: `calc(${mousePosition.x / 10}% + 10%)`,
-                top: `calc(${mousePosition.y / 10}% + 20%)`,
-              }}
-            />
-
-            <motion.div
-              className="absolute w-40 h-40 rounded-full bg-purple-500/20 blur-xl"
-              animate={{
-                x: [0, -40, 0],
-                y: [0, 20, 0],
-              }}
-              transition={{
-                duration: 10,
-                repeat: Infinity,
-                repeatType: "reverse",
-              }}
-              style={{
-                right: `calc(${mousePosition.x / 15}% + 10%)`,
-                bottom: `calc(${mousePosition.y / 15}% + 20%)`,
-              }}
-            />
-
-            <motion.div
-              className="absolute w-24 h-24 rounded-full bg-yellow-500/20 blur-xl"
-              animate={{
-                x: [0, 30, 0],
-                y: [0, -20, 0],
-              }}
-              transition={{
-                duration: 7,
-                repeat: Infinity,
-                repeatType: "reverse",
-              }}
-              style={{
-                left: `calc(${mousePosition.x / 12}% + 30%)`,
-                bottom: `calc(${mousePosition.y / 12}% + 10%)`,
-              }}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <div className="flex justify-center mb-4">
+            <Image
+              src="/images/pathpiper-logo-full.png"
+              alt="PathPiper"
+              width={180}
+              height={60}
+              className="h-12 w-auto"
             />
           </div>
-        </div>
-
-        {/* Right side - Login form */}
-        <div className="w-full md:flex-1 flex items-center justify-center p-8 bg-white">
-          <div className="w-full max-w-md mx-auto">
-            <h1 className="text-4xl font-bold text-gray-900 mb-8">Login</h1>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-gray-700">
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  required
-                  className="h-12 rounded-lg"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-gray-700">
-                  Password
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                    className="h-12 rounded-lg pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-                  </button>
-                </div>
-                <div className="flex justify-end">
-                  <Link href="/forgot-password" className="text-sm text-teal-600 hover:text-teal-700">
-                    Forgot password?
-                  </Link>
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+          <CardTitle className="text-2xl font-bold text-center">Welcome back</CardTitle>
+          <CardDescription className="text-center">
+            Sign in to your PathPiper account
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
                 disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center justify-center">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Logging in...
-                  </div>
-                ) : (
-                  "Log In"
-                )}
-              </Button>
-            </form>
-
-            {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={isLoading}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
               </div>
             </div>
 
-            {/* Social login buttons - stacked vertically */}
-            <div className="flex flex-col space-y-4">
-              <button
-                onClick={() => handleSocialLogin("Google")}
-                className="flex items-center justify-center h-12 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <span className="text-gray-700">Login with Google</span>
-              </button>
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
-              <button
-                onClick={() => handleSocialLogin("LinkedIn")}
-                className="flex items-center justify-center h-12 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <span className="text-gray-700">Login with LinkedIn</span>
-              </button>
-            </div>
+            <Button 
+              type="submit" 
+              className="w-full bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                'Sign in'
+              )}
+            </Button>
+          </form>
 
-            <p className="mt-8 text-center text-gray-500 text-sm">
-              Don't have an account?{" "}
-              <Link href="/signup" className="text-teal-600 hover:text-teal-700 font-medium">
+          <div className="mt-6 text-center space-y-2">
+            <Link 
+              href="/forgot-password" 
+              className="text-sm text-muted-foreground hover:text-primary"
+            >
+              Forgot your password?
+            </Link>
+            <div className="text-sm">
+              Don't have an account?{' '}
+              <Link href="/register" className="font-medium text-primary hover:underline">
                 Sign up
               </Link>
-            </p>
+            </div>
           </div>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <footer className="w-full py-4 px-6 bg-white border-t border-slate-200">
-        <div className="container mx-auto flex justify-center">
-          <p className="text-slate-500 text-sm">© {new Date().getFullYear()} PathPiper. All rights reserved.</p>
-        </div>
-      </footer>
-    </main>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
