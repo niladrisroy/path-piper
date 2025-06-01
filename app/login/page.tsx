@@ -1,29 +1,72 @@
-typescript jsx
+
 "use client"
 
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { toast } from "sonner"
+import { motion } from "framer-motion"
+import { Eye, EyeOff, ArrowLeft, Loader2 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { Eye, EyeOff, Loader2 } from "lucide-react"
-import { toast } from "sonner"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function LoginPage() {
-  const [isLoading, setIsLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectPath = searchParams.get('redirect')
+  
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  })
+  const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [errors, setErrors] = useState<{[key: string]: string}>({})
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const validateForm = () => {
+    const newErrors: {[key: string]: string} = {}
+    
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required"
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Email is invalid"
+    }
+    
+    if (!formData.password) {
+      newErrors.password = "Password is required"
+    }
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ""
+      }))
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!validateForm()) {
+      return
+    }
+
     setIsLoading(true)
 
     try {
@@ -32,33 +75,32 @@ export default function LoginPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        credentials: 'include',
+        body: JSON.stringify(formData),
       })
 
       const result = await response.json()
 
-      if (result.success) {
+      if (response.ok) {
         toast.success('Login successful!')
-
-        // Wait for any pending state updates
-        if (result.requiresDelay) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-
+        
+        // Wait a moment for the cookie to be set
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
         // Check if onboarding is completed first
         if (result.onboardingCompleted) {
-          // If onboarding is completed, redirect to feed page (or other allowed pages if specified)
-          const allowedRedirectPaths = ['/feed', '/explore', '/profile', '/immersive-feed'];
-          const finalRedirectPath = allowedRedirectPaths.includes(redirectPath) ? redirectPath : '/feed';
-          window.location.href = finalRedirectPath;
+          // If onboarding is completed, redirect to feed page (or other allowed pages if it's not an onboarding page)
+          const allowedRedirectPaths = ['/feed', '/explore', '/profile', '/immersive-feed']
+          const finalRedirectPath = allowedRedirectPaths.includes(redirectPath) ? redirectPath : '/feed'
+          window.location.href = finalRedirectPath
         } else {
           // If onboarding not completed, direct to appropriate onboarding page
           if (result.role === 'mentor') {
-            router.push('/mentor-onboarding')
+            window.location.href = '/mentor-onboarding'
           } else if (result.role === 'institution') {
-            router.push('/institution-onboarding')
+            window.location.href = '/institution-onboarding'
           } else {
-            router.push('/onboarding')
+            window.location.href = '/onboarding'
           }
         }
       } else {
@@ -66,165 +108,207 @@ export default function LoginPage() {
       }
     } catch (error) {
       console.error('Login error:', error)
-      toast.error('An unexpected error occurred')
+      toast.error('An error occurred during login')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleSocialLogin = async (provider: string) => {
-    setIsLoading(true)
-
+  const handleSocialAuth = async (provider: 'google' | 'apple') => {
     try {
       const response = await fetch('/api/auth/social', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ provider }),
+        body: JSON.stringify({ 
+          provider,
+          redirectTo: redirectPath || '/feed'
+        }),
       })
 
       const result = await response.json()
 
-      if (result.success && result.url) {
+      if (response.ok && result.url) {
         window.location.href = result.url
       } else {
-        toast.error(result.error || `${provider} login failed`)
-        setIsLoading(false)
+        toast.error(result.error || `${provider} authentication failed`)
       }
     } catch (error) {
-      console.error(`${provider} login error:`, error)
-      toast.error('An unexpected error occurred')
-      setIsLoading(false)
+      console.error(`${provider} auth error:`, error)
+      toast.error(`An error occurred during ${provider} authentication`)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <div className="flex justify-center mb-4">
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-blue-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
+      >
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-block">
             <Image
               src="/images/pathpiper-logo-full.png"
               alt="PathPiper"
-              width={180}
+              width={200}
               height={60}
-              className="h-12 w-auto"
+              className="mx-auto mb-4"
             />
-          </div>
-          <CardTitle className="text-2xl font-bold text-center">Welcome back</CardTitle>
-          <CardDescription className="text-center">
-            Sign in to your PathPiper account
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <form onSubmit={handleEmailLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
+          </Link>
+          <h1 className="text-2xl font-bold text-slate-800 mb-2">Welcome Back</h1>
+          <p className="text-slate-600">Sign in to continue your learning journey</p>
+        </div>
+
+        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+          <CardHeader className="space-y-1 pb-4">
+            <CardTitle className="text-xl text-center text-slate-800">Sign In</CardTitle>
+            <CardDescription className="text-center text-slate-600">
+              Enter your credentials to access your account
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-slate-700">Email</Label>
                 <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={handleInputChange}
                   disabled={isLoading}
+                  className={`bg-white/50 border-slate-200 focus:border-teal-500 focus:ring-teal-500 ${
+                    errors.email ? 'border-red-500' : ''
+                  }`}
                 />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={isLoading}
+                {errors.email && (
+                  <p className="text-sm text-red-600">{errors.email}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-slate-700">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    disabled={isLoading}
+                    className={`bg-white/50 border-slate-200 focus:border-teal-500 focus:ring-teal-500 pr-10 ${
+                      errors.password ? 'border-red-500' : ''
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-sm text-red-600">{errors.password}</p>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Link
+                  href="/forgot-password"
+                  className="text-sm text-teal-600 hover:text-teal-700 hover:underline"
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
+                  Forgot password?
+                </Link>
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full bg-teal-600 hover:bg-teal-700 text-white"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Signing In...
+                  </>
+                ) : (
+                  'Sign In'
+                )}
+              </Button>
+            </form>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-slate-200" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-slate-500">Or continue with</span>
               </div>
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                'Sign In'
-              )}
-            </Button>
-          </form>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <Separator className="w-full" />
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="outline"
+                onClick={() => handleSocialAuth('google')}
+                disabled={isLoading}
+                className="bg-white/50 border-slate-200 hover:bg-white/80"
+              >
+                <Image
+                  src="/google-logo.png"
+                  alt="Google"
+                  width={18}
+                  height={18}
+                  className="mr-2"
+                />
+                Google
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleSocialAuth('apple')}
+                disabled={isLoading}
+                className="bg-white/50 border-slate-200 hover:bg-white/80"
+              >
+                <Image
+                  src="/apple-logo-minimalist.png"
+                  alt="Apple"
+                  width={18}
+                  height={18}
+                  className="mr-2"
+                />
+                Apple
+              </Button>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Button
-              variant="outline"
-              onClick={() => handleSocialLogin('google')}
-              disabled={isLoading}
-            >
-              <Image
-                src="/google-logo.png"
-                alt="Google"
-                width={16}
-                height={16}
-                className="mr-2"
-              />
-              Google
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => handleSocialLogin('apple')}
-              disabled={isLoading}
-            >
-              <Image
-                src="/apple-logo-minimalist.png"
-                alt="Apple"
-                width={16}
-                height={16}
-                className="mr-2"
-              />
-              Apple
-            </Button>
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-2">
-          <div className="text-sm text-center">
-            <Link href="/forgot-password" className="text-primary hover:underline">
-              Forgot your password?
-            </Link>
-          </div>
-          <div className="text-sm text-center">
-            Don't have an account?{" "}
-            <Link href="/register" className="text-primary hover:underline">
-              Sign up
-            </Link>
-          </div>
-        </CardFooter>
-      </Card>
+            <div className="text-center">
+              <p className="text-sm text-slate-600">
+                Don't have an account?{" "}
+                <Link
+                  href="/register"
+                  className="text-teal-600 hover:text-teal-700 hover:underline font-medium"
+                >
+                  Sign up
+                </Link>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="mt-6 text-center">
+          <Link
+            href="/"
+            className="inline-flex items-center text-sm text-slate-600 hover:text-slate-800"
+          >
+            <ArrowLeft className="w-4 h-4 mr-1" />
+            Back to Home
+          </Link>
+        </div>
+      </motion.div>
     </div>
   )
 }
