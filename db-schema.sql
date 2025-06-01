@@ -95,7 +95,7 @@ CREATE TABLE user_interests (
 
 -- Create goals table
 CREATE TABLE goals (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   description TEXT,

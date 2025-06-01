@@ -199,7 +199,7 @@ model FeedPost {
 }
 
 model Goal {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          Int      @id @default(autoincrement())
   userId      String   @map("user_id") @db.Uuid
   title       String
   description String?

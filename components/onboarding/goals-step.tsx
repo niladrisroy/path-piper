@@ -62,7 +62,7 @@ export default function GoalsStep({ initialData, onComplete, onNext, onSkip }: G
 
     const goalToAdd = {
       ...newGoal,
-      id: Date.now().toString(),
+      id: (-Date.now()).toString(),
     }
 
     setGoals((prev) => [...prev, goalToAdd])
