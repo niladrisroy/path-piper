@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  allowedDevOrigins: ['*.replit.dev'],
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -10,9 +9,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  experimental: {
-    serverComponentsExternalPackages: [],
-  },
+  serverExternalPackages: [],
   assetPrefix: process.env.NODE_ENV === 'production' ? undefined : '',
   trailingSlash: false,
   async rewrites() {
