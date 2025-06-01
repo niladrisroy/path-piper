@@ -36,7 +36,13 @@ const tabs = [
   { id: "circle", label: "My Circle" },
 ]
 
-export default function MentorProfile() {
+export default function MentorProfile({ 
+  mentorId, 
+  isOwnProfile = true 
+}: { 
+  mentorId?: string
+  isOwnProfile?: boolean 
+}) {
   const [activeTab, setActiveTab] = useState("about")
 
   // Render sidebar content based on active tab

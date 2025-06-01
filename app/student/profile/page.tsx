@@ -1,32 +1,6 @@
-import type { Metadata } from "next"
-import StudentProfile from "@/components/profile/student-profile"
-import InternalNavbar from "@/components/internal-navbar"
-import Footer from "@/components/footer"
-import ProtectedLayout from "../../protected-layout"
+// This file is replaced by [[...handle]]/page.tsx for dynamic routing
+import { redirect } from "next/navigation"
 
-export const metadata: Metadata = {
-  title: "Student Profile | PathPiper",
-  description: "View and manage your educational journey, skills, and achievements",
-}
-
-export default function StudentProfilePage({
-  searchParams,
-}: {
-  searchParams?: {
-    id?: string
-  }
-}) {
-  const studentId = searchParams?.id
-
-  return (
-    <ProtectedLayout>
-      <div className="min-h-screen flex flex-col">
-        <InternalNavbar />
-        <main className="flex-grow pt-16 sm:pt-24">
-          <StudentProfile studentId={studentId} />
-        </main>
-        <Footer />
-      </div>
-    </ProtectedLayout>
-  )
+export default function StudentProfilePage() {
+  redirect('/student/profile')
 }

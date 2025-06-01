@@ -72,9 +72,10 @@ model StudentProfile {
   educationLevel      EducationLevel @map("education_level")
   birthMonth          String?        @map("birth_month")
   birthYear           String?        @map("birth_year")
+  userHandle          String?   @unique
   createdAt           DateTime       @default(now()) @map("created_at")
   updatedAt           DateTime       @updatedAt @map("updated_at")
-  
+
   educationHistory    StudentEducationHistory[]
 
   @@map("student_profiles")
@@ -97,7 +98,7 @@ model StudentEducationHistory {
   description         String?
   createdAt           DateTime  @default(now()) @map("created_at")
   updatedAt           DateTime  @updatedAt @map("updated_at")
-  
+
   student             StudentProfile      @relation(fields: [studentId], references: [id], onDelete: Cascade)
   institution         InstitutionProfile? @relation(fields: [institutionId], references: [id])
   institutionType     InstitutionType?    @relation(fields: [institutionTypeId], references: [id])
@@ -111,6 +112,7 @@ model MentorProfile {
   profession          String
   organization        String?
   yearsExperience     Int?      @map("years_experience")
+  userHandle          String?   @unique
   verified            Boolean   @default(false)
   onboardingCompleted Boolean   @default(false) @map("onboarding_completed")
   hoursPerWeek        Int       @default(5) @map("hours_per_week")
@@ -128,7 +130,7 @@ model InstitutionCategory {
   description  String?
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
-  
+
   types        InstitutionType[]
 
   @@map("institution_categories")
@@ -142,7 +144,7 @@ model InstitutionType {
   description  String?
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
-  
+
   category                    InstitutionCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   institutions                InstitutionProfile[]
   studentEducationHistory     StudentEducationHistory[]
@@ -159,11 +161,12 @@ model InstitutionProfile {
   website            String?
   logoUrl            String?   @map("logo_url")
   coverImageUrl      String?   @map("cover_image_url")
+  userHandle          String?   @unique
   verified           Boolean   @default(false)
   onboardingCompleted Boolean  @default(false) @map("onboarding_completed")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
-  
+
   institutionType             InstitutionType? @relation(fields: [institutionTypeId], references: [id])
   studentEducationHistory     StudentEducationHistory[]
 
