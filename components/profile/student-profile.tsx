@@ -13,10 +13,10 @@ import ActionBar from "./action-bar"
 
 interface StudentProfileProps {
   studentId?: string
-  isOwnProfile?: boolean
+  currentUser?: any
 }
 
-export default function StudentProfile({ studentId, isOwnProfile = false }: StudentProfileProps) {
+export default function StudentProfile({ studentId, currentUser }: StudentProfileProps) {
   const [student, setStudent] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

@@ -12,19 +12,23 @@ import ProtectedLayout from "../../protected-layout"
 export default function StudentProfilePage({
   searchParams,
 }: {
-  searchParams?: {
+  searchParams?: Promise<{
     id?: string
-  }
+  }>
 }) {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState<any>(null)
-  
-  const studentId = searchParams?.id
+  const [studentId, setStudentId] = useState<string | undefined>(undefined)
 
   useEffect(() => {
     const checkUserAndRedirect = async () => {
       try {
+        // First resolve searchParams
+        const params = await searchParams
+        const resolvedStudentId = params?.id
+        setStudentId(resolvedStudentId)
+
         // Fetch user profile to determine role
         const response = await fetch('/api/auth/user')
         const userData = await response.json()
@@ -37,7 +41,7 @@ export default function StudentProfilePage({
         setCurrentUser(userData.user)
 
         // If no studentId is provided, check user role and redirect accordingly
-        if (!studentId) {
+        if (!resolvedStudentId) {
           switch (userData.user.role) {
             case 'mentor':
               router.push('/mentor/profile')
@@ -62,7 +66,7 @@ export default function StudentProfilePage({
     }
 
     checkUserAndRedirect()
-  }, [studentId, router])
+  }, [searchParams, router])
 
   if (loading) {
     return (
