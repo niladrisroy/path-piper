@@ -38,6 +38,13 @@ const nextConfig = {
     optimizeCss: false,
   },
 
+  // Fix for cross-origin warnings in development
+  allowedDevOrigins: [
+    '74f7eb31-b1cd-42e1-bc33-49105efe81c2-00-2sp4lhr2dgh9s.sisko.replit.dev',
+    '*.replit.dev',
+    '*.repl.co'
+  ],
+
   // External packages configuration
   serverExternalPackages: ['@prisma/client'],
 
@@ -46,9 +53,6 @@ const nextConfig = {
     unoptimized: true,
     domains: ['localhost'],
   },
-
-  // Disable problematic features for Replit
-  swcMinify: false,
 
   // Output configuration
   output: 'standalone',
@@ -78,9 +82,7 @@ const nextConfig = {
     ];
   },
   // Better dev server configuration
-  devIndicators: {
-    buildActivity: false,
-  },
+  poweredByHeader: false,
 };
 
 export default nextConfig;
