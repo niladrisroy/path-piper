@@ -24,17 +24,12 @@ const nextConfig = {
     ];
   },
   
-  // Allow dev origins for Replit
+  // Experimental features for Replit compatibility
   experimental: {
-    allowedDevOrigins: [
-      /^https:\/\/.*\.replit\.dev$/,
-      /^https:\/\/.*\.repl\.co$/,
-    ],
     optimizeCss: false,
-    optimizePackageImports: ['@prisma/client'],
   },
 
-  // External packages configuration (fixed from serverComponentsExternalPackages)
+  // External packages configuration
   serverExternalPackages: ['@prisma/client'],
 
   // Webpack configuration for better chunk handling
@@ -63,13 +58,18 @@ const nextConfig = {
     return config;
   },
 
-  // Output configuration for better compatibility
-  output: 'standalone',
-
   // Image configuration
   images: {
-    domains: ['*.replit.dev', '*.repl.co'],
     unoptimized: true,
+    domains: ['localhost'],
+  },
+
+  // Disable static optimization for better Replit compatibility
+  trailingSlash: false,
+  
+  // Better dev server configuration
+  devIndicators: {
+    buildActivity: false,
   },
 };
 
