@@ -380,7 +380,9 @@ export default function Onboarding() {
                   onComplete={async (goals) => {
                     setUserData({ ...userData, goals });
                     
-                    // Save goals to database and complete onboarding
+                    // Only save goals if there are actually changes (goals component handles dirty checking internally)
+                    // The goals component will call this onComplete regardless of dirty state
+                    // We save to database here to ensure completion step has the data
                     try {
                       const response = await fetch('/api/goals', {
                         method: 'POST',

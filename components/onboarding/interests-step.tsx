@@ -124,10 +124,17 @@ export default function InterestsStep({
     }
   }, [interestCategories])
 
-  // Track dirty state
+  // Track dirty state - compare current interests with initial data
   useEffect(() => {
-    const selectedNames = selectedInterests.map(interest => interest.name)
-    setIsDirty(selectedInterests.length > 0 && !selectedNames.every(name => initialData.includes(name)))
+    const selectedNames = selectedInterests.map(interest => interest.name).sort()
+    const initialNames = [...initialData].sort()
+    
+    // Check if arrays are different
+    const hasChanges = selectedNames.length !== initialNames.length || 
+                      !selectedNames.every((name, index) => name === initialNames[index])
+    
+    setIsDirty(hasChanges)
+    console.log("🔍 Interests dirty bit:", hasChanges)
   }, [selectedInterests, initialData])
 
   useEffect(() => {
@@ -191,21 +198,29 @@ export default function InterestsStep({
       // Convert interest objects to names for API
       const interestNames = selectedInterests.map(interest => interest.name)
       
-      // Save interests to database
-      const response = await fetch('/api/user/interests', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ interests: interestNames }),
-      })
+      console.log("🔍 Interests dirty bit:", isDirty)
+      
+      if (isDirty) {
+        console.log("💾 Interests have changes, saving to database...")
+        // Save interests to database
+        const response = await fetch('/api/user/interests', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ interests: interestNames }),
+        })
 
-      if (!response.ok) {
-        throw new Error('Failed to save interests')
+        if (!response.ok) {
+          throw new Error('Failed to save interests')
+        }
+
+        toast.success('Interests saved successfully!')
+        setIsDirty(false)
+      } else {
+        console.log("✅ Interests unchanged, skipping database save")
       }
-
-      toast.success('Interests saved successfully!')
-      setIsDirty(false)
+      
       onComplete(interestNames)
       onNext()
     } catch (error) {

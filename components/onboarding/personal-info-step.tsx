@@ -92,6 +92,10 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
     defaultValues: initialFormData
   });
 
+  // Dirty bit state
+  const [isDirty, setIsDirty] = useState(false)
+  const [originalData, setOriginalData] = useState<PersonalInfo>(initialFormData)
+
   // Apply initial data when it changes (useful for async data loading)
   useEffect(() => {
     console.log("🔄 PersonalInfoStep useEffect triggered");
@@ -129,8 +133,10 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
       // Also log the form data being set
       console.log("📝 Form data being set:", initialFormData);
 
-      // Reset the form with the initial data
+      // Reset the form with the initial data and update original data
       form.reset(initialFormData);
+      setOriginalData(initialFormData);
+      setIsDirty(false);
       console.log("✅ Form reset completed");
 
       // Log what value the age group field actually has after reset
@@ -141,6 +147,32 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
       console.log("❌ No initial data provided to PersonalInfoStep");
     }
   }, [initialData, form]);
+
+  // Watch for form changes to set dirty bit
+  const watchedValues = form.watch();
+  useEffect(() => {
+    const currentData = form.getValues();
+    const hasChanges = Object.keys(currentData).some(key => {
+      const currentValue = currentData[key as keyof PersonalInfo];
+      const originalValue = originalData[key as keyof PersonalInfo];
+      return currentValue !== originalValue;
+    });
+    
+    setIsDirty(hasChanges);
+  }, [watchedValues, originalData, form]);
+
+  // Warn user about unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
 
   // Watch for changes in birth month and year to auto-calculate age group
   const watchedBirthMonth = form.watch("birthMonth");
@@ -154,9 +186,21 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
   }, [watchedBirthMonth, watchedBirthYear, form]);
 
   // Handle form submission
-  const onSubmit = (data: PersonalInfo) => {
+  const onSubmit = async (data: PersonalInfo) => {
     console.log("Form submitted with data:", data);
-    onComplete(data);
+    console.log("🔍 Personal Info dirty bit:", isDirty);
+    
+    if (isDirty) {
+      console.log("💾 Personal info has changes, saving to database...");
+      // Save to database
+      onComplete(data);
+      setIsDirty(false);
+      setOriginalData(data);
+    } else {
+      console.log("✅ Personal info unchanged, skipping database save");
+      // Still call onComplete to ensure parent component gets the data
+      onComplete(data);
+    }
     // Navigation will be handled by the parent component after successful submission
   };
 

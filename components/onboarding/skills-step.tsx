@@ -33,6 +33,8 @@ export default function SkillsStep({
 }: SkillsStepProps) {
   const [userAgeGroup, setUserAgeGroup] = useState<AgeGroup>("middle_school")
   const [skills, setSkills] = useState<Skill[]>(initialData)
+  const [originalSkills, setOriginalSkills] = useState<Skill[]>(initialData)
+  const [isDirty, setIsDirty] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [newSkill, setNewSkill] = useState("")
   const [newSkillLevel, setNewSkillLevel] = useState(3)
@@ -91,6 +93,7 @@ export default function SkillsStep({
 
           console.log('✅ Loaded user skills:', userSkills)
           setSkills(userSkills)
+          setOriginalSkills(userSkills)
 
           // Update the initial data for parent component
           if (userSkills.length > 0) {
@@ -126,6 +129,32 @@ export default function SkillsStep({
   }, [searchTerm, skillCategories])
 
   const [filteredCategories, setFilteredCategories] = useState(skillCategories)
+
+  // Track dirty state
+  useEffect(() => {
+    // Compare current skills with original skills
+    const skillsChanged = skills.length !== originalSkills.length ||
+      skills.some(skill => {
+        const originalSkill = originalSkills.find(orig => orig.name === skill.name)
+        return !originalSkill || originalSkill.level !== skill.level
+      })
+    
+    setIsDirty(skillsChanged)
+    console.log("🔍 Skills dirty bit:", skillsChanged)
+  }, [skills, originalSkills])
+
+  // Warn user about unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault()
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?'
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [isDirty])
 
   const addSkill = (skillName: string, skillId?: number) => {
     if (skills.some((s) => s.name === skillName)) return
@@ -209,28 +238,38 @@ export default function SkillsStep({
     try {
       setSaving(true)
 
-      // Filter out skills without IDs (custom skills) and handle them separately
-      const skillsWithIds = skills.filter(skill => skill.id)
-      const customSkills = skills.filter(skill => !skill.id)
+      console.log("🔍 Skills dirty bit:", isDirty)
 
-      // For now, we'll only save skills that have IDs from the predefined categories
-      // TODO: Handle custom skills by creating them in the database first
-      const skillsToSave = skillsWithIds
+      if (isDirty) {
+        console.log("💾 Skills have changes, saving to database...")
+        // Filter out skills without IDs (custom skills) and handle them separately
+        const skillsWithIds = skills.filter(skill => skill.id)
+        const customSkills = skills.filter(skill => !skill.id)
 
-      if (skillsToSave.length > 0) {
-        const response = await fetch('/api/user/skills', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ skills: skillsToSave }),
-        })
+        // For now, we'll only save skills that have IDs from the predefined categories
+        // TODO: Handle custom skills by creating them in the database first
+        const skillsToSave = skillsWithIds
 
-        if (!response.ok) {
-          console.error('Failed to save skills')
-          // You might want to show an error message to the user here
-          return
+        if (skillsToSave.length > 0) {
+          const response = await fetch('/api/user/skills', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ skills: skillsToSave }),
+          })
+
+          if (!response.ok) {
+            console.error('Failed to save skills')
+            // You might want to show an error message to the user here
+            return
+          }
         }
+        
+        setIsDirty(false)
+        setOriginalSkills([...skills])
+      } else {
+        console.log("✅ Skills unchanged, skipping database save")
       }
 
       onComplete(skills)

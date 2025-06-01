@@ -33,6 +33,8 @@ const TIMEFRAMES = ["1 month", "3 months", "6 months", "1 year", "2+ years", "On
 
 export default function GoalsStep({ initialData, onComplete, onNext, onSkip }: GoalsStepProps) {
   const [goals, setGoals] = useState<Goal[]>(initialData)
+  const [originalGoals, setOriginalGoals] = useState<Goal[]>(initialData)
+  const [isDirty, setIsDirty] = useState(false)
   const [newGoal, setNewGoal] = useState<Goal>({
     id: "",
     title: "",
@@ -76,12 +78,62 @@ export default function GoalsStep({ initialData, onComplete, onNext, onSkip }: G
     setIsAddingGoal(false)
   }
 
+  // Track dirty state
+  useEffect(() => {
+    // Compare current goals with original goals
+    const goalsChanged = goals.length !== originalGoals.length ||
+      goals.some(goal => {
+        const originalGoal = originalGoals.find(orig => 
+          (typeof orig.id === 'number' && typeof goal.id === 'number' && orig.id === goal.id) ||
+          (orig.title === goal.title && orig.description === goal.description)
+        )
+        return !originalGoal || 
+               originalGoal.title !== goal.title ||
+               originalGoal.description !== goal.description ||
+               originalGoal.category !== goal.category ||
+               originalGoal.timeframe !== goal.timeframe
+      })
+    
+    setIsDirty(goalsChanged)
+    console.log("🔍 Goals dirty bit:", goalsChanged)
+  }, [goals, originalGoals])
+
+  // Warn user about unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault()
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?'
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [isDirty])
+
+  // Update original goals when initial data changes
+  useEffect(() => {
+    setOriginalGoals(initialData)
+    setGoals(initialData)
+  }, [initialData])
+
   const handleRemoveGoal = (id: number | string) => {
     setGoals((prev) => prev.filter((goal) => goal.id !== id))
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    
+    console.log("🔍 Goals dirty bit:", isDirty)
+    
+    if (isDirty) {
+      console.log("💾 Goals have changes, will be saved by parent component...")
+      setIsDirty(false)
+      setOriginalGoals([...goals])
+    } else {
+      console.log("✅ Goals unchanged, skipping database save")
+    }
+    
     onComplete(goals)
     onNext()
   }
