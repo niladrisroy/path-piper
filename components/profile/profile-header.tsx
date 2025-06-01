@@ -1,8 +1,27 @@
 "use client"
-import Image from "next/image"
-import { BadgeCheckIcon, Award, Users, FolderKanban, BrainIcon } from "lucide-react"
 
-export default function ProfileHeader() {
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { MapPin, Mail, Calendar, Edit3 } from "lucide-react"
+import Image from "next/image"
+import { Award, Users, FolderKanban, BrainIcon } from "lucide-react"
+
+interface UserData {
+  id: string
+  firstName: string
+  lastName: string
+  role: 'student' | 'mentor' | 'institution'
+  email: string
+  bio?: string
+  location?: string
+  profileImageUrl?: string
+  student?: any
+  mentor?: any
+  institution?: any
+}
+
+export default function ProfileHeader({ userData }: { userData: UserData }) {
   // Mock student data
   const student = {
     name: "Alex Johnson",
@@ -36,13 +55,13 @@ export default function ProfileHeader() {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  
+
   /* Custom tooltip styles */
   [data-tooltip] {
     position: relative;
     cursor: pointer;
   }
-  
+
   [data-tooltip]:hover::after {
     content: attr(data-tooltip);
     position: absolute;
@@ -79,24 +98,23 @@ export default function ProfileHeader() {
                     {/* Profile image */}
                     <div className="relative z-10 flex-shrink-0">
                       <div className="rounded-full border-4 border-white dark:border-gray-800 overflow-hidden h-20 w-20 sm:h-28 sm:w-28 shadow-md">
-                        <Image
-                          src={student.profileImage || "/placeholder.svg"}
-                          alt={student.name}
-                          width={112}
-                          height={112}
-                          className="object-cover"
-                        />
+                        <Avatar className="w-32 h-32 border-4 border-white shadow-lg">
+                          <AvatarImage src={userData.profileImageUrl || "/placeholder-user.jpg"} alt="Profile" />
+                          <AvatarFallback className="text-4xl font-bold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                            {userData.firstName[0]}{userData.lastName[0]}
+                          </AvatarFallback>
+                        </Avatar>
                       </div>
                     </div>
 
                     {/* Name and tagline */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h1 className="text-xl sm:text-3xl font-bold truncate">{student.name}</h1>
+                        <h1 className="text-xl sm:text-3xl font-bold truncate">{userData.firstName} {userData.lastName}</h1>
                         {student.verified && <BadgeCheckIcon className="h-6 w-6 text-pathpiper-teal" />}
                       </div>
                       <p className="text-gray-600 dark:text-gray-300 mt-1 text-sm sm:text-base truncate">
-                        {student.tagline}
+                        {userData.bio || "Welcome to my profile! I'm excited to be part of the PathPiper community."}
                       </p>
                       <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
                         {student.grade} • {student.school}
