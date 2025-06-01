@@ -115,10 +115,12 @@ export default function Login() {
           await new Promise(resolve => setTimeout(resolve, 100));
         }
 
+        // Check if onboarding is completed first
         if (result.onboardingCompleted) {
-          // If onboarding is completed, try to redirect to the requested path
-          // Use window.location for a full page navigation instead of router.push
-          window.location.href = redirectPath || '/feed';
+          // If onboarding is completed, redirect to feed page (or requested path if it's not an onboarding page)
+          const allowedRedirectPaths = ['/feed', '/explore', '/profile', '/immersive-feed'];
+          const finalRedirectPath = allowedRedirectPaths.includes(redirectPath) ? redirectPath : '/feed';
+          window.location.href = finalRedirectPath;
         } else {
           // If onboarding not completed, direct to appropriate onboarding page
           if (result.role === 'mentor') {
