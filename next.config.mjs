@@ -13,6 +13,8 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: [],
   },
+  assetPrefix: process.env.NODE_ENV === 'production' ? undefined : '',
+  trailingSlash: false,
   async rewrites() {
     return []
   },
