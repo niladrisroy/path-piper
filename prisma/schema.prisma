@@ -74,8 +74,35 @@ model StudentProfile {
   birthYear           String?        @map("birth_year")
   createdAt           DateTime       @default(now()) @map("created_at")
   updatedAt           DateTime       @updatedAt @map("updated_at")
+  
+  educationHistory    StudentEducationHistory[]
 
   @@map("student_profiles")
+}
+
+model StudentEducationHistory {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId           String    @map("student_id") @db.Uuid
+  institutionId       String?   @map("institution_id") @db.Uuid
+  institutionName     String    @map("institution_name")
+  institutionTypeId   String?   @map("institution_type_id") @db.Uuid
+  degreeProgram       String?   @map("degree_program")
+  fieldOfStudy        String?   @map("field_of_study")
+  startDate           DateTime? @map("start_date") @db.Date
+  endDate             DateTime? @map("end_date") @db.Date
+  isCurrent           Boolean   @default(false) @map("is_current")
+  gradeLevel          String?   @map("grade_level")
+  gpa                 String?
+  achievements        String?
+  description         String?
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  
+  student             StudentProfile      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  institution         InstitutionProfile? @relation(fields: [institutionId], references: [id])
+  institutionType     InstitutionType?    @relation(fields: [institutionTypeId], references: [id])
+
+  @@map("student_education_history")
 }
 
 model MentorProfile {
@@ -94,12 +121,41 @@ model MentorProfile {
   @@map("mentor_profiles")
 }
 
+model InstitutionCategory {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String    @unique
+  slug         String    @unique
+  description  String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  
+  types        InstitutionType[]
+
+  @@map("institution_categories")
+}
+
+model InstitutionType {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  categoryId   String    @map("category_id") @db.Uuid
+  name         String
+  slug         String
+  description  String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  
+  category                    InstitutionCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  institutions                InstitutionProfile[]
+  studentEducationHistory     StudentEducationHistory[]
+
+  @@unique([categoryId, slug])
+  @@map("institution_types")
+}
+
 model InstitutionProfile {
   id                  String    @id @db.Uuid
   profile             Profile   @relation(fields: [id], references: [id])
   institutionName     String    @map("institution_name")
-  institutionType     String    @map("institution_type")
-  category           String
+  institutionTypeId   String?   @map("institution_type_id") @db.Uuid
   website            String?
   logoUrl            String?   @map("logo_url")
   coverImageUrl      String?   @map("cover_image_url")
@@ -107,6 +163,9 @@ model InstitutionProfile {
   onboardingCompleted Boolean  @default(false) @map("onboarding_completed")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
+  
+  institutionType             InstitutionType? @relation(fields: [institutionTypeId], references: [id])
+  studentEducationHistory     StudentEducationHistory[]
 
   @@map("institution_profiles")
 }

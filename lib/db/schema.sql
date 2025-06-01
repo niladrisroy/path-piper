@@ -43,17 +43,59 @@ CREATE TABLE mentor_profiles (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
+-- Create institution categories table
+CREATE TABLE institution_categories (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  slug TEXT NOT NULL UNIQUE,
+  description TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+);
+
+-- Create institution types table  
+CREATE TABLE institution_types (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  category_id UUID REFERENCES institution_categories(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  slug TEXT NOT NULL,
+  description TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+  
+  UNIQUE(category_id, slug)
+);
+
 -- Create institution profiles table
 CREATE TABLE institution_profiles (
   id UUID REFERENCES profiles(id) ON DELETE CASCADE PRIMARY KEY,
   institution_name TEXT NOT NULL,
-  institution_type TEXT NOT NULL,
-  category TEXT NOT NULL,
+  institution_type_id UUID REFERENCES institution_types(id),
   website TEXT,
   logo_url TEXT,
   cover_image_url TEXT,
   verified BOOLEAN DEFAULT FALSE,
   onboarding_completed BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+);
+
+-- Create student education history table
+CREATE TABLE student_education_history (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES student_profiles(id) ON DELETE CASCADE,
+  institution_id UUID REFERENCES institution_profiles(id),
+  institution_name TEXT NOT NULL,
+  institution_type_id UUID REFERENCES institution_types(id),
+  degree_program TEXT,
+  field_of_study TEXT,
+  start_date DATE,
+  end_date DATE,
+  is_current BOOLEAN DEFAULT FALSE,
+  grade_level TEXT,
+  gpa TEXT,
+  achievements TEXT,
+  description TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
@@ -238,7 +280,10 @@ CREATE TABLE post_likes (
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE student_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mentor_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE institution_categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE institution_types ENABLE ROW LEVEL SECURITY;
 ALTER TABLE institution_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE student_education_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE skills ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_skills ENABLE ROW LEVEL SECURITY;
 ALTER TABLE interests ENABLE ROW LEVEL SECURITY;
@@ -282,8 +327,20 @@ CREATE TRIGGER update_mentor_profiles_modtime
 BEFORE UPDATE ON mentor_profiles
 FOR EACH ROW EXECUTE FUNCTION update_modified_column();
 
+CREATE TRIGGER update_institution_categories_modtime
+BEFORE UPDATE ON institution_categories
+FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+
+CREATE TRIGGER update_institution_types_modtime
+BEFORE UPDATE ON institution_types
+FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+
 CREATE TRIGGER update_institution_profiles_modtime
 BEFORE UPDATE ON institution_profiles
+FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+
+CREATE TRIGGER update_student_education_history_modtime
+BEFORE UPDATE ON student_education_history
 FOR EACH ROW EXECUTE FUNCTION update_modified_column();
 
 CREATE TRIGGER update_user_skills_modtime
