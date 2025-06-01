@@ -126,6 +126,12 @@ export default function InterestsStep({
 
   // Track dirty state - compare current interests with initial data
   useEffect(() => {
+    // Only compare after both selectedInterests and initialData are properly loaded
+    if (isLoading) {
+      setIsDirty(false)
+      return
+    }
+
     const selectedNames = selectedInterests.map(interest => interest.name).sort()
     const initialNames = [...initialData].sort()
     
@@ -134,8 +140,8 @@ export default function InterestsStep({
                       !selectedNames.every((name, index) => name === initialNames[index])
     
     setIsDirty(hasChanges)
-    console.log("🔍 Interests dirty bit:", hasChanges)
-  }, [selectedInterests, initialData])
+    console.log("🔍 Interests dirty bit:", hasChanges, "Selected:", selectedNames, "Initial:", initialNames)
+  }, [selectedInterests, initialData, isLoading])
 
   useEffect(() => {
     if (searchTerm.trim() === "") {
@@ -198,9 +204,16 @@ export default function InterestsStep({
       // Convert interest objects to names for API
       const interestNames = selectedInterests.map(interest => interest.name)
       
-      console.log("🔍 Interests dirty bit:", isDirty)
+      // Double-check if there are actually changes by comparing sorted arrays
+      const selectedNames = selectedInterests.map(interest => interest.name).sort()
+      const initialNames = [...initialData].sort()
+      const actuallyHasChanges = selectedNames.length !== initialNames.length || 
+                                !selectedNames.every((name, index) => name === initialNames[index])
       
-      if (isDirty) {
+      console.log("🔍 Interests dirty bit:", isDirty, "Actually has changes:", actuallyHasChanges)
+      console.log("🔍 Selected:", selectedNames, "Initial:", initialNames)
+      
+      if (isDirty && actuallyHasChanges) {
         console.log("💾 Interests have changes, saving to database...")
         // Save interests to database
         const response = await fetch('/api/user/interests', {
