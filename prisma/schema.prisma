@@ -66,15 +66,16 @@ model Profile {
 }
 
 model StudentProfile {
-  id                  String    @id @db.Uuid
-  profile             Profile   @relation(fields: [id], references: [id])
-  age_group           AgeGroup? @map("age_group")
-  educationLevel      EducationLevel @map("education_level")
-  birthMonth          String?        @map("birth_month")
-  birthYear           String?        @map("birth_year")
-  createdAt           DateTime       @default(now()) @map("created_at")
-  updatedAt           DateTime       @updatedAt @map("updated_at")
-  
+  id                   String    @id @db.Uuid
+  profile              Profile   @relation(fields: [id], references: [id])
+  age_group            AgeGroup? @map("age_group")
+  educationLevel       EducationLevel @map("education_level")
+  birthMonth           String?   @map("birth_month")
+  birthYear            String?   @map("birth_year")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+  onboardingCompleted  Boolean   @default(false) @map("onboarding_completed")
+
   educationHistory    StudentEducationHistory[]
 
   @@map("student_profiles")
@@ -97,7 +98,7 @@ model StudentEducationHistory {
   description         String?
   createdAt           DateTime  @default(now()) @map("created_at")
   updatedAt           DateTime  @updatedAt @map("updated_at")
-  
+
   student             StudentProfile      @relation(fields: [studentId], references: [id], onDelete: Cascade)
   institution         InstitutionProfile? @relation(fields: [institutionId], references: [id])
   institutionType     InstitutionType?    @relation(fields: [institutionTypeId], references: [id])
@@ -128,7 +129,7 @@ model InstitutionCategory {
   description  String?
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
-  
+
   types        InstitutionType[]
 
   @@map("institution_categories")
@@ -142,7 +143,7 @@ model InstitutionType {
   description  String?
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
-  
+
   category                    InstitutionCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   institutions                InstitutionProfile[]
   studentEducationHistory     StudentEducationHistory[]
@@ -163,7 +164,7 @@ model InstitutionProfile {
   onboardingCompleted Boolean  @default(false) @map("onboarding_completed")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
-  
+
   institutionType             InstitutionType? @relation(fields: [institutionTypeId], references: [id])
   studentEducationHistory     StudentEducationHistory[]
 
