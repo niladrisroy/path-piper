@@ -57,10 +57,11 @@ export async function registerStudent(data: UserRegistrationData) {
     await prisma.studentProfile.create({
       data: {
         id: profile.id,
-        age_group: 'young_adult', // You may want to determine this based on age
+        ageGroup: 'young_adult', // You may want to determine this based on age
         educationLevel: 'undergraduate', // Default value, can be updated later
         birthMonth: data.birthMonth || null,
         birthYear: data.birthYear || null,
+        onboardingCompleted: false,
       }
     });
 

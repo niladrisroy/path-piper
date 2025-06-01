@@ -1,68 +1,65 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import Link from "next/link"
+import Image from "next/image"
 import { toast } from "sonner"
 import { motion } from "framer-motion"
-import { Eye, EyeOff, ArrowLeft, Loader2 } from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
+import { Eye, EyeOff, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
 
 export default function LoginPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirectPath = searchParams.get('redirect')
-  
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   })
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [errors, setErrors] = useState<{[key: string]: string}>({})
+  const [errors, setErrors] = useState<{ [key: string]: string }>({})
+
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirectPath = searchParams.get('redirect')
+
+  useEffect(() => {
+    const error = searchParams.get('error')
+    if (error === 'auth') {
+      toast.error('Authentication failed. Please try again.')
+    } else if (error === 'no_user') {
+      toast.error('No user found. Please check your credentials.')
+    } else if (error === 'server') {
+      toast.error('Server error. Please try again later.')
+    } else if (error === 'no_code') {
+      toast.error('Authentication code missing. Please try again.')
+    }
+  }, [searchParams])
 
   const validateForm = () => {
-    const newErrors: {[key: string]: string} = {}
-    
-    if (!formData.email.trim()) {
+    const newErrors: { [key: string]: string } = {}
+
+    if (!formData.email) {
       newErrors.email = "Email is required"
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Email is invalid"
     }
-    
+
     if (!formData.password) {
       newErrors.password = "Password is required"
     }
-    
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-    
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ""
-      }))
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) {
       return
     }
@@ -81,15 +78,19 @@ export default function LoginPage() {
 
       const result = await response.json()
 
-      if (response.ok) {
+      if (!response.ok) {
+        throw new Error(result.error || 'Login failed')
+      }
+
+      if (result.success) {
         toast.success('Login successful!')
-        
-        // Wait a moment for the cookie to be set
+
+        // Wait a moment for the toast to show
         await new Promise(resolve => setTimeout(resolve, 100))
-        
+
         // Check if onboarding is completed first
         if (result.onboardingCompleted) {
-          // If onboarding is completed, redirect to feed page (or other allowed pages if it's not an onboarding page)
+          // If onboarding is completed, redirect to feed page (or requested path if it's not an onboarding page)
           const allowedRedirectPaths = ['/feed', '/explore', '/profile', '/immersive-feed']
           const finalRedirectPath = allowedRedirectPaths.includes(redirectPath) ? redirectPath : '/feed'
           window.location.href = finalRedirectPath
@@ -103,19 +104,18 @@ export default function LoginPage() {
             window.location.href = '/onboarding'
           }
         }
-      } else {
-        toast.error(result.error || 'Login failed')
       }
     } catch (error) {
       console.error('Login error:', error)
-      toast.error('An error occurred during login')
+      toast.error(error instanceof Error ? error.message : 'Login failed')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleSocialAuth = async (provider: 'google' | 'apple') => {
+  const handleSocialLogin = async (provider: 'google' | 'github') => {
     try {
+      setIsLoading(true)
       const response = await fetch('/api/auth/social', {
         method: 'POST',
         headers: {
@@ -129,61 +129,68 @@ export default function LoginPage() {
 
       const result = await response.json()
 
-      if (response.ok && result.url) {
+      if (result.success && result.url) {
         window.location.href = result.url
       } else {
-        toast.error(result.error || `${provider} authentication failed`)
+        throw new Error(result.error || 'Social login failed')
       }
     } catch (error) {
-      console.error(`${provider} auth error:`, error)
-      toast.error(`An error occurred during ${provider} authentication`)
+      console.error('Social login error:', error)
+      toast.error(error instanceof Error ? error.message : 'Social login failed')
+      setIsLoading(false)
+    }
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }))
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-blue-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block">
-            <Image
-              src="/images/pathpiper-logo-full.png"
-              alt="PathPiper"
-              width={200}
-              height={60}
-              className="mx-auto mb-4"
-            />
-          </Link>
-          <h1 className="text-2xl font-bold text-slate-800 mb-2">Welcome Back</h1>
-          <p className="text-slate-600">Sign in to continue your learning journey</p>
-        </div>
-
-        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
-          <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-xl text-center text-slate-800">Sign In</CardTitle>
-            <CardDescription className="text-center text-slate-600">
-              Enter your credentials to access your account
+        <Card className="shadow-xl border-0">
+          <CardHeader className="space-y-1 text-center">
+            <div className="flex justify-center mb-4">
+              <Image
+                src="/images/pathpiper-logo-full.png"
+                alt="PathPiper Logo"
+                width={160}
+                height={40}
+                className="h-10 w-auto"
+              />
+            </div>
+            <CardTitle className="text-2xl font-bold text-gray-900">
+              Welcome back
+            </CardTitle>
+            <CardDescription className="text-gray-600">
+              Sign in to your PathPiper account
             </CardDescription>
           </CardHeader>
+
           <CardContent className="space-y-4">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-700">Email</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   name="email"
                   type="email"
                   placeholder="Enter your email"
                   value={formData.email}
-                  onChange={handleInputChange}
+                  onChange={handleChange}
+                  className={errors.email ? "border-red-500" : ""}
                   disabled={isLoading}
-                  className={`bg-white/50 border-slate-200 focus:border-teal-500 focus:ring-teal-500 ${
-                    errors.email ? 'border-red-500' : ''
-                  }`}
                 />
                 {errors.email && (
                   <p className="text-sm text-red-600">{errors.email}</p>
@@ -191,7 +198,7 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-700">Password</Label>
+                <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -199,19 +206,24 @@ export default function LoginPage() {
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     value={formData.password}
-                    onChange={handleInputChange}
+                    onChange={handleChange}
+                    className={errors.password ? "border-red-500 pr-10" : "pr-10"}
                     disabled={isLoading}
-                    className={`bg-white/50 border-slate-200 focus:border-teal-500 focus:ring-teal-500 pr-10 ${
-                      errors.password ? 'border-red-500' : ''
-                    }`}
                   />
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    disabled={isLoading}
                   >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </Button>
                 </div>
                 {errors.password && (
                   <p className="text-sm text-red-600">{errors.password}</p>
@@ -221,93 +233,88 @@ export default function LoginPage() {
               <div className="flex items-center justify-between">
                 <Link
                   href="/forgot-password"
-                  className="text-sm text-teal-600 hover:text-teal-700 hover:underline"
+                  className="text-sm text-blue-600 hover:text-blue-500"
                 >
-                  Forgot password?
+                  Forgot your password?
                 </Link>
               </div>
 
               <Button 
                 type="submit" 
-                className="w-full bg-teal-600 hover:bg-teal-700 text-white"
+                className="w-full" 
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Signing In...
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
                   </>
                 ) : (
-                  'Sign In'
+                  'Sign in'
                 )}
               </Button>
             </form>
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-slate-200" />
+                <Separator className="w-full" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-slate-500">Or continue with</span>
+                <span className="bg-white px-2 text-gray-500">Or continue with</span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <Button
                 variant="outline"
-                onClick={() => handleSocialAuth('google')}
+                onClick={() => handleSocialLogin('google')}
                 disabled={isLoading}
-                className="bg-white/50 border-slate-200 hover:bg-white/80"
+                className="w-full"
               >
-                <Image
-                  src="/google-logo.png"
-                  alt="Google"
-                  width={18}
-                  height={18}
-                  className="mr-2"
-                />
+                <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                  <path
+                    fill="currentColor"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  />
+                </svg>
                 Google
               </Button>
+
               <Button
                 variant="outline"
-                onClick={() => handleSocialAuth('apple')}
+                onClick={() => handleSocialLogin('github')}
                 disabled={isLoading}
-                className="bg-white/50 border-slate-200 hover:bg-white/80"
+                className="w-full"
               >
-                <Image
-                  src="/apple-logo-minimalist.png"
-                  alt="Apple"
-                  width={18}
-                  height={18}
-                  className="mr-2"
-                />
-                Apple
+                <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+                GitHub
               </Button>
             </div>
-
-            <div className="text-center">
-              <p className="text-sm text-slate-600">
-                Don't have an account?{" "}
-                <Link
-                  href="/register"
-                  className="text-teal-600 hover:text-teal-700 hover:underline font-medium"
-                >
-                  Sign up
-                </Link>
-              </p>
-            </div>
           </CardContent>
-        </Card>
 
-        <div className="mt-6 text-center">
-          <Link
-            href="/"
-            className="inline-flex items-center text-sm text-slate-600 hover:text-slate-800"
-          >
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Back to Home
-          </Link>
-        </div>
+          <CardFooter>
+            <p className="text-center text-sm text-gray-600 w-full">
+              Don't have an account?{" "}
+              <Link href="/register" className="text-blue-600 hover:text-blue-500 font-medium">
+                Sign up
+              </Link>
+            </p>
+          </CardFooter>
+        </Card>
       </motion.div>
     </div>
   )

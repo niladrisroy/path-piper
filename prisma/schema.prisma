@@ -66,15 +66,15 @@ model Profile {
 }
 
 model StudentProfile {
-  id                  String    @id @db.Uuid
-  profile             Profile   @relation(fields: [id], references: [id])
-  age_group           AgeGroup? @map("age_group")
-  educationLevel      EducationLevel @map("education_level")
-  birthMonth          String?        @map("birth_month")
-  birthYear           String?        @map("birth_year")
-  userHandle          String?   @unique
-  createdAt           DateTime       @default(now()) @map("created_at")
-  updatedAt           DateTime       @updatedAt @map("updated_at")
+  id                   String    @id @db.Uuid
+  profile              Profile   @relation(fields: [id], references: [id])
+  age_group            AgeGroup? @map("age_group")
+  educationLevel       EducationLevel @map("education_level")
+  birthMonth           String?   @map("birth_month")
+  birthYear            String?   @map("birth_year")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+  onboardingCompleted  Boolean   @default(false) @map("onboarding_completed")
 
   educationHistory    StudentEducationHistory[]
 
@@ -112,7 +112,6 @@ model MentorProfile {
   profession          String
   organization        String?
   yearsExperience     Int?      @map("years_experience")
-  userHandle          String?   @unique
   verified            Boolean   @default(false)
   onboardingCompleted Boolean   @default(false) @map("onboarding_completed")
   hoursPerWeek        Int       @default(5) @map("hours_per_week")
@@ -161,7 +160,6 @@ model InstitutionProfile {
   website            String?
   logoUrl            String?   @map("logo_url")
   coverImageUrl      String?   @map("cover_image_url")
-  userHandle          String?   @unique
   verified           Boolean   @default(false)
   onboardingCompleted Boolean  @default(false) @map("onboarding_completed")
   createdAt          DateTime  @default(now()) @map("created_at")
