@@ -1,321 +1,415 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import Link from "next/link"
-import Image from "next/image"
-import { toast } from "sonner"
-import { motion } from "framer-motion"
-import { Eye, EyeOff, Loader2 } from "lucide-react"
+import type React from "react"
 
+import { useState, useEffect, useRef } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
+import { EyeIcon, EyeOffIcon } from "lucide-react"
+import { motion } from "framer-motion"
+import { toast } from "sonner"
 
-export default function LoginPage() {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  })
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [errors, setErrors] = useState<{ [key: string]: string }>({})
-
+export default function Login() {
   const router = useRouter()
+  const [showPassword, setShowPassword] = useState(false)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [isLoading, setIsLoading] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
   const searchParams = useSearchParams()
-  const redirectPath = searchParams.get('redirect')
+  const [redirectPath, setRedirectPath] = useState<string>('/feed')
 
+  // Track mouse position for interactive elements
   useEffect(() => {
-    const error = searchParams.get('error')
-    if (error === 'auth') {
-      toast.error('Authentication failed. Please try again.')
-    } else if (error === 'no_user') {
-      toast.error('No user found. Please check your credentials.')
-    } else if (error === 'server') {
-      toast.error('Server error. Please try again later.')
-    } else if (error === 'no_code') {
-      toast.error('Authentication code missing. Please try again.')
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!containerRef.current) return
+
+      const rect = containerRef.current.getBoundingClientRect()
+      // Calculate mouse position relative to container (0-100)
+      const x = ((e.clientX - rect.left) / rect.width) * 100
+      const y = ((e.clientY - rect.top) / rect.height) * 100
+
+      setMousePosition({ x, y })
+    }
+
+    const container = containerRef.current
+    if (container) {
+      container.addEventListener("mousemove", handleMouseMove)
+    }
+
+    return () => {
+      if (container) {
+        container.removeEventListener("mousemove", handleMouseMove)
+      }
+    }
+  }, [])
+
+  // Set the redirect path when component mounts or search params change
+  useEffect(() => {
+    // Check for both 'from' and 'redirectURL' parameters
+    const from = searchParams.get('from');
+    const redirectURL = searchParams.get('redirectURL');
+
+    // Priority: redirectURL, then from, otherwise default to '/feed'
+    if (redirectURL) {
+      setRedirectPath(redirectURL);
+    } else if (from) {
+      setRedirectPath(from);
+    } else {
+      setRedirectPath('/feed');
     }
   }, [searchParams])
-
-  const validateForm = () => {
-    const newErrors: { [key: string]: string } = {}
-
-    if (!formData.email) {
-      newErrors.email = "Email is required"
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid"
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required"
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!validateForm()) {
-      return
-    }
-
+    // Show loading state
     setIsLoading(true)
 
     try {
+      // Call login API
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
-        body: JSON.stringify(formData),
-      })
+        body: JSON.stringify({ email, password }),
+      });
 
-      const result = await response.json()
+      const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(result.error || 'Login failed')
+      if (!result.success) {
+        // Show error toast instead of alert
+        toast.error(result.error || 'Login failed. Please check your credentials.');
+        setIsLoading(false);
+        return;
       }
 
-      if (result.success) {
-        toast.success('Login successful!')
+      // Show success toast
+      toast.success(`Welcome back${result.name ? ', ' + result.name : ''}!`);
 
-        // Wait a moment for the toast to show
-        await new Promise(resolve => setTimeout(resolve, 100))
+      // Save user data to localStorage or sessionStorage if needed
+      // This can be useful to maintain user state across the app
+      try {
+        sessionStorage.setItem('user', JSON.stringify({
+          userId: result.userId,
+          email: result.email,
+          role: result.role,
+          name: result.name,
+          onboardingCompleted: result.onboardingCompleted
+        }));
+      } catch (err) {
+        console.warn("Could not save user data to session storage:", err);
+      }
+
+      // Navigation based on user role and onboarding status
+      setTimeout(async () => {
+        // Force refresh to ensure cookies are properly set
+        if (result.success) {
+          // Wait a brief moment for cookies to be saved in browser
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
 
         // Check if onboarding is completed first
         if (result.onboardingCompleted) {
           // If onboarding is completed, redirect to feed page (or requested path if it's not an onboarding page)
-          const allowedRedirectPaths = ['/feed', '/explore', '/profile', '/immersive-feed']
-          const finalRedirectPath = allowedRedirectPaths.includes(redirectPath) ? redirectPath : '/feed'
-          window.location.href = finalRedirectPath
+          const allowedRedirectPaths = ['/feed', '/explore', '/profile', '/immersive-feed'];
+          const finalRedirectPath = allowedRedirectPaths.includes(redirectPath) ? redirectPath : '/feed';
+          window.location.href = finalRedirectPath;
         } else {
           // If onboarding not completed, direct to appropriate onboarding page
           if (result.role === 'mentor') {
-            window.location.href = '/mentor-onboarding'
+            window.location.href = '/mentor-onboarding';
           } else if (result.role === 'institution') {
-            window.location.href = '/institution-onboarding'
+            window.location.href = '/institution-onboarding';
           } else {
-            window.location.href = '/onboarding'
+            // Default to student onboarding
+            window.location.href = '/onboarding';
           }
         }
-      }
+      }, 800); // Small delay to allow the toast to be visible
     } catch (error) {
-      console.error('Login error:', error)
-      toast.error(error instanceof Error ? error.message : 'Login failed')
+      console.error('Login error:', error);
+      toast.error('An unexpected error occurred. Please try again.');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
-  const handleSocialLogin = async (provider: 'google' | 'github') => {
+  const handleSocialLogin = async (provider: string) => {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
+
       const response = await fetch('/api/auth/social', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          provider,
-          redirectTo: redirectPath || '/feed'
-        }),
-      })
+        body: JSON.stringify({ provider }),
+      });
 
-      const result = await response.json()
+      const result = await response.json();
 
       if (result.success && result.url) {
-        window.location.href = result.url
+        // Redirect to the OAuth provider URL
+        window.location.href = result.url;
       } else {
-        throw new Error(result.error || 'Social login failed')
+        alert(result.error || `Login with ${provider} failed`);
+        setIsLoading(false);
       }
     } catch (error) {
-      console.error('Social login error:', error)
-      toast.error(error instanceof Error ? error.message : 'Social login failed')
-      setIsLoading(false)
-    }
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: "" }))
+      console.error(`${provider} login error:`, error);
+      alert(`An error occurred during ${provider} login`);
+      setIsLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
-      >
-        <Card className="shadow-xl border-0">
-          <CardHeader className="space-y-1 text-center">
-            <div className="flex justify-center mb-4">
-              <Image
-                src="/images/pathpiper-logo-full.png"
-                alt="PathPiper Logo"
-                width={160}
-                height={40}
-                className="h-10 w-auto"
-              />
-            </div>
-            <CardTitle className="text-2xl font-bold text-gray-900">
-              Welcome back
-            </CardTitle>
-            <CardDescription className="text-gray-600">
-              Sign in to your PathPiper account
-            </CardDescription>
-          </CardHeader>
+    <main className="min-h-screen flex flex-col bg-white">
+      {/* Header/Navbar from signup page */}
+      <header className="w-full py-4 px-6 flex justify-between items-center bg-white border-b border-slate-200">
+        <Link href="/" className="h-10">
+          <Image
+            src="/images/pathpiper-logo-full.png"
+            width={180}
+            height={40}
+            alt="PathPiper Logo"
+            className="h-full w-auto"
+          />
+        </Link>
+        <div>
+          <Link href="/signup">
+            <Button variant="ghost" className="text-teal-500 hover:text-teal-600 hover:bg-teal-50">
+              Sign Up
+            </Button>
+          </Link>
+        </div>
+      </header>
 
-          <CardContent className="space-y-4">
-            <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="flex flex-1">
+        {/* Left side - Visual content */}
+        <div className="hidden md:block md:w-1/2 relative pt-[20px] pb-[20px]">
+          <div
+            ref={containerRef}
+            className="ml-[20px] rounded-2xl relative overflow-hidden flex flex-col p-8 h-full"
+            style={{ width: "calc(100% - 20px)" }}
+          >
+            {/* Interactive gradient background */}
+            <div
+              className="absolute inset-0 opacity-60 pointer-events-none"
+              style={{
+                background: `radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, 
+                  rgba(45, 212, 191, 0.5) 0%, 
+                  rgba(147, 51, 234, 0.3) 25%, 
+                  rgba(249, 115, 22, 0.2) 50%, 
+                  rgba(59, 130, 246, 0.1) 75%, 
+                  rgba(15, 23, 42, 0) 100%)`,
+              }}
+            />
+
+            {/* Hero text from home page - positioned at top left */}
+            <div className="z-10 mb-auto">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
+                Welcome back! Ready to explore with{" "}
+                <span className="bg-gradient-to-r from-orange-500 via-purple-500 to-teal-500 bg-clip-text text-transparent">
+                  PathPiper
+                </span>
+              </h1>
+            </div>
+
+            {/* Floating Pip character with bounce effect - larger size */}
+            <motion.div
+              className="relative z-10 mx-auto my-auto flex-grow flex items-center justify-center py-8"
+              animate={{
+                y: [0, -20, 0],
+              }}
+              transition={{
+                repeat: Number.POSITIVE_INFINITY,
+                duration: 4,
+                ease: "easeInOut",
+              }}
+              style={{
+                filter: "drop-shadow(0px 10px 15px rgba(45, 212, 191, 0.3))",
+              }}
+            >
+              <Image
+                src="/images/pip-character.png"
+                width={500}
+                height={500}
+                alt="Pip Character"
+                className="w-[600px] h-auto"
+                priority
+              />
+            </motion.div>
+
+            {/* Animated floating orbs */}
+            <motion.div
+              className="absolute w-32 h-32 rounded-full bg-teal-500/20 blur-xl"
+              animate={{
+                x: [0, 50, 0],
+                y: [0, 30, 0],
+              }}
+              transition={{
+                duration: 8,
+                repeat: Number.POSITIVE_INFINITY,
+                repeatType: "reverse",
+              }}
+              style={{
+                left: `calc(${mousePosition.x / 10}% + 10%)`,
+                top: `calc(${mousePosition.y / 10}% + 20%)`,
+              }}
+            />
+
+            <motion.div
+              className="absolute w-40 h-40 rounded-full bg-purple-500/20 blur-xl"
+              animate={{
+                x: [0, -40, 0],
+                y: [0, 20, 0],
+              }}
+              transition={{
+                duration: 10,
+                repeat: Number.POSITIVE_INFINITY,
+                repeatType: "reverse",
+              }}
+              style={{
+                right: `calc(${mousePosition.x / 15}% + 10%)`,
+                bottom: `calc(${mousePosition.y / 15}% + 20%)`,
+              }}
+            />
+
+            <motion.div
+              className="absolute w-24 h-24 rounded-full bg-yellow-500/20 blur-xl"
+              animate={{
+                x: [0, 30, 0],
+                y: [0, -20, 0],
+              }}
+              transition={{
+                duration: 7,
+                repeat: Number.POSITIVE_INFINITY,
+                repeatType: "reverse",
+              }}
+              style={{
+                left: `calc(${mousePosition.x / 12}% + 30%)`,
+                bottom: `calc(${mousePosition.y / 12}% + 10%)`,
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Right side - Login form */}
+        <div className="w-full md:flex-1 flex items-center justify-center p-8 bg-white">
+          <div className="w-full max-w-md mx-auto">
+            <h1 className="text-4xl font-bold text-gray-900 mb-8">Login</h1>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-gray-700">
+                  Email
+                </Label>
                 <Input
                   id="email"
-                  name="email"
                   type="email"
-                  placeholder="Enter your email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className={errors.email ? "border-red-500" : ""}
-                  disabled={isLoading}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                  className="h-12 rounded-lg"
                 />
-                {errors.email && (
-                  <p className="text-sm text-red-600">{errors.email}</p>
-                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-gray-700">
+                  Password
+                </Label>
                 <div className="relative">
                   <Input
                     id="password"
-                    name="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className={errors.password ? "border-red-500 pr-10" : "pr-10"}
-                    disabled={isLoading}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    className="h-12 rounded-lg pr-10"
                   />
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
-                    disabled={isLoading}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
-                    )}
-                  </Button>
+                    {showPassword ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                  </button>
                 </div>
-                {errors.password && (
-                  <p className="text-sm text-red-600">{errors.password}</p>
-                )}
+                <div className="flex justify-end">
+                  <Link href="/forgot-password" className="text-sm text-teal-600 hover:text-teal-700">
+                    Forgot password?
+                  </Link>
+                </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <Link
-                  href="/forgot-password"
-                  className="text-sm text-blue-600 hover:text-blue-500"
-                >
-                  Forgot your password?
-                </Link>
-              </div>
-
-              <Button 
-                type="submit" 
-                className="w-full" 
+              <Button
+                type="submit"
+                className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
+                  <div className="flex items-center justify-center">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Logging in...
+                  </div>
                 ) : (
-                  'Sign in'
+                  "Log In"
                 )}
               </Button>
             </form>
 
-            <div className="relative">
+            {/* Divider */}
+            <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <Separator className="w-full" />
+                <div className="w-full border-t border-gray-300"></div>
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-gray-500">Or continue with</span>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Or continue with</span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                variant="outline"
-                onClick={() => handleSocialLogin('google')}
-                disabled={isLoading}
-                className="w-full"
+            {/* Social login buttons - stacked vertically */}
+            <div className="flex flex-col space-y-4">
+              <button
+                onClick={() => handleSocialLogin("Google")}
+                className="flex items-center justify-center h-12 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  />
-                </svg>
-                Google
-              </Button>
+                <span className="text-gray-700">Login with Google</span>
+              </button>
 
-              <Button
-                variant="outline"
-                onClick={() => handleSocialLogin('github')}
-                disabled={isLoading}
-                className="w-full"
+              <button
+                onClick={() => handleSocialLogin("LinkedIn")}
+                className="flex items-center justify-center h-12 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                </svg>
-                GitHub
-              </Button>
+                <span className="text-gray-700">Login with LinkedIn</span>
+              </button>
             </div>
-          </CardContent>
 
-          <CardFooter>
-            <p className="text-center text-sm text-gray-600 w-full">
+            <p className="mt-8 text-center text-gray-500 text-sm">
               Don't have an account?{" "}
-              <Link href="/register" className="text-blue-600 hover:text-blue-500 font-medium">
+              <Link href="/signup" className="text-teal-600 hover:text-teal-700 font-medium">
                 Sign up
               </Link>
             </p>
-          </CardFooter>
-        </Card>
-      </motion.div>
-    </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="w-full py-4 px-6 bg-white border-t border-slate-200">
+        <div className="container mx-auto flex justify-center">
+          <p className="text-slate-500 text-sm">© {new Date().getFullYear()} PathPiper. All rights reserved.</p>
+        </div>
+      </footer>
+    </main>
   )
 }
