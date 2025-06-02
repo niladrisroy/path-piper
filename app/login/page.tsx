@@ -1,140 +1,112 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { supabase } from "@/lib/supabase"
-import { toast } from "sonner"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Loader2 } from "lucide-react"
+import { loginUser } from "@/lib/services/auth-service"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
   const router = useRouter()
   const searchParams = useSearchParams()
-
-  const from = searchParams.get('from')
-  const redirectURL = searchParams.get('redirectURL')
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setError("")
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ email, password }),
-      })
+      const result = await loginUser({ email, password })
 
-      const data = await response.json()
+      if (result.success) {
+        // Get redirect URL from query params or default based on role
+        const redirectURL = searchParams?.get('redirectURL') || searchParams?.get('from')
 
-      if (data.success) {
-        toast.success('Login successful!')
-
-        // Determine redirect destination
         if (redirectURL) {
           router.push(redirectURL)
-        } else if (from) {
-          router.push(from)
-        } else if (data.onboardingCompleted) {
-          router.push('/feed')
         } else {
-          router.push('/onboarding')
+          // Redirect based on onboarding status and role
+          if (!result.onboardingCompleted) {
+            if (result.role === 'mentor') {
+              router.push('/mentor-onboarding')
+            } else if (result.role === 'institution') {
+              router.push('/institution-onboarding')
+            } else {
+              router.push('/onboarding')
+            }
+          } else {
+            // Redirect to appropriate dashboard based on role
+            switch (result.role) {
+              case 'mentor':
+                router.push('/mentor/profile')
+                break
+              case 'institution':
+                router.push('/institution/profile')
+                break
+              case 'student':
+              default:
+                router.push('/feed')
+                break
+            }
+          }
         }
       } else {
-        toast.error(data.error || 'Login failed')
+        setError(result.error || 'Login failed')
       }
     } catch (error) {
       console.error('Login error:', error)
-      toast.error('An error occurred during login')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleGoogleLogin = async () => {
-    try {
-      setLoading(true)
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/api/auth/callback?redirectURL=${
-            redirectURL || from || '/feed'
-          }`,
-        },
-      })
-
-      if (error) {
-        toast.error('Failed to sign in with Google')
-        console.error('Google login error:', error)
-      }
-    } catch (error) {
-      toast.error('An error occurred during Google login')
-      console.error('Google login error:', error)
+      setError('An unexpected error occurred')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Image
-            src="/images/pathpiper-logo-full.png"
-            alt="PathPiper"
-            width={200}
-            height={60}
-            className="mx-auto mb-4"
-          />
-          <h1 className="text-2xl font-bold text-gray-900">Welcome back!</h1>
-          <p className="text-gray-600 mt-2">Sign in to your account</p>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50 p-4">
+      <div className="w-full max-w-md space-y-8">
+        {/* Logo */}
+        <div className="text-center">
+          <Link href="/">
+            <Image
+              src="/images/pathpiper-logo-full.png"
+              alt="PathPiper"
+              width={200}
+              height={60}
+              className="mx-auto"
+              priority
+            />
+          </Link>
         </div>
 
-        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-          <CardHeader className="space-y-1 pb-4">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={handleGoogleLogin}
-              disabled={loading}
-            >
-              <Image
-                src="/google-logo.png"
-                alt="Google"
-                width={20}
-                height={20}
-                className="mr-2"
-              />
-              Continue with Google
-            </Button>
+        {/* Login Form */}
+        <Card className="w-full">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold text-center">Welcome back</CardTitle>
+            <CardDescription className="text-center">
+              Sign in to your PathPiper account
+            </CardDescription>
           </CardHeader>
-
-          <CardContent className="space-y-4">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <Separator className="w-full" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-gray-500">Or continue with email</span>
-              </div>
-            </div>
-
+          <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <label htmlFor="email" className="text-sm font-medium">
+                  Email
+                </label>
                 <Input
                   id="email"
                   type="email"
@@ -147,7 +119,9 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <label htmlFor="password" className="text-sm font-medium">
+                  Password
+                </label>
                 <Input
                   id="password"
                   type="password"
@@ -159,31 +133,29 @@ export default function LoginPage() {
                 />
               </div>
 
-              <div className="flex items-center justify-between">
-                <Link
-                  href="/forgot-password"
-                  className="text-sm text-teal-600 hover:text-teal-700"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full bg-teal-600 hover:bg-teal-700"
-                disabled={loading}
-              >
-                {loading ? 'Signing in...' : 'Sign in'}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {loading ? "Signing in..." : "Sign in"}
               </Button>
             </form>
 
-            <div className="text-center">
-              <p className="text-sm text-gray-600">
-                Don't have an account?{' '}
-                <Link href="/signup" className="text-teal-600 hover:text-teal-700 font-medium">
-                  Sign up
-                </Link>
-              </p>
+            <div className="mt-4 text-center text-sm">
+              <Link
+                href="/forgot-password"
+                className="text-pathpiper-teal hover:underline"
+              >
+                Forgot your password?
+              </Link>
+            </div>
+
+            <div className="mt-4 text-center text-sm">
+              Don't have an account?{" "}
+              <Link
+                href="/register"
+                className="text-pathpiper-teal hover:underline font-medium"
+              >
+                Sign up
+              </Link>
             </div>
           </CardContent>
         </Card>
