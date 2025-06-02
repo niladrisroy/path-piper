@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
                 // Add student-specific data if this is a student
                 ...(userProfile.student && {
                   educationLevel: userProfile.student.educationLevel,
-                  onboardingCompleted: userProfile.student.onboardingCompleted,
+                  onboardingCompleted: userProfile.student.onboardingCompleted ?? true, // Default to true if null
                   birthMonth: birthMonth,
                   birthYear: birthYear,
                   ageGroup: userProfile.student.age_group, // Return exactly as stored in DB

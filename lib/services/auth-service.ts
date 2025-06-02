@@ -61,6 +61,7 @@ export async function registerStudent(data: UserRegistrationData) {
         educationLevel: 'undergraduate', // Default value, can be updated later
         birthMonth: data.birthMonth || null,
         birthYear: data.birthYear || null,
+        onboardingCompleted: true, // Set as completed by default
       }
     });
 

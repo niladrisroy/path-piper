@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
@@ -95,7 +94,7 @@ export default function StudentProfilePage({
             return
           }
         }
-        
+
         } catch (error) {
         console.error("Error fetching user data:", error)
         router.push("/login")
@@ -106,6 +105,36 @@ export default function StudentProfilePage({
 
     checkAuthAndResolveParams()
   }, [searchParams, router])
+
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const response = await fetch("/api/auth/user", {
+        method: "GET",
+        credentials: 'include',
+        cache: 'no-store'
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData.user);
+      } else {
+        console.error("Failed to fetch user data:", response.status);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    // Only redirect if we have user data and onboarding is explicitly false
+    // Don't redirect if onboardingCompleted is null/undefined (treat as completed)
+    if (user && user.onboardingCompleted === false) {
+      console.log('User onboarding not completed, redirecting to onboarding...')
+      router.push('/onboarding')
+    }
+  }, [user, router])
 
   if (loading) {
     return (
