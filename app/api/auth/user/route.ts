@@ -81,19 +81,19 @@ export async function GET(request: NextRequest) {
     }
 
     // If no access token found, try to use refresh token to get a new session
+    let refreshData = null;
     if (!token && cookies['sb-refresh-token']) {
       console.log("API: No access token found, attempting to refresh session");
       try {
-        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({
+        const refreshResult = await supabase.auth.refreshSession({
           refresh_token: cookies['sb-refresh-token']
         });
+        refreshData = refreshResult.data;
+        const refreshError = refreshResult.error;
 
         if (refreshData?.session?.access_token) {
           token = refreshData.session.access_token;
           console.log("API: Successfully refreshed access token");
-          
-          // You might want to set the new access token as a cookie here
-          // but since this is a GET request, we'll just use it for this request
         } else {
           console.log("API: Failed to refresh session:", refreshError?.message);
         }
@@ -137,7 +137,7 @@ export async function GET(request: NextRequest) {
               birthMonth = userProfile.student.birthMonth ? userProfile.student.birthMonth.toString() : "";
               birthYear = userProfile.student.birthYear ? userProfile.student.birthYear.toString() : "";
             }
-            return NextResponse.json({
+            const responseData = {
               user: {
                 id: userProfile.id,
                 firstName: userProfile.firstName,
@@ -171,7 +171,22 @@ export async function GET(request: NextRequest) {
                   onboardingCompleted: userProfile.institution.onboardingCompleted
                 })
               }
-            });
+            };
+
+            // If we refreshed the token, set the cookie and return the response with the cookie
+            if (refreshData?.session?.access_token) {
+              const response = NextResponse.json(responseData);
+              response.cookies.set('sb-access-token', refreshData.session.access_token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 60 * 60 * 24 * 7, // 7 days
+                path: '/'
+              });
+              return response;
+            } else {
+              return NextResponse.json(responseData);
+            }
           } else {
             console.log("API: User authenticated but no profile found");
           }
