@@ -9,54 +9,35 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
   const router = useRouter()
 
   useEffect(() => {
-    // Check authentication status
-    const checkAuth = async () => {
+    // Simplified authentication check - trust middleware for initial protection
+    const verifyAuth = async () => {
       try {
-        // First check if we have session cookies (similar to middleware check)
-        const hasAuthCookie = document.cookie.includes('sb-access-token') || 
-                             document.cookie.includes('sb:token') || 
-                             document.cookie.includes('sb-auth-token') ||
-                             document.cookie.includes('supabase')
-
-        if (!hasAuthCookie) {
-          console.log("ProtectedLayout: No auth cookies found, redirecting to login")
-          setIsAuthenticated(false)
-          router.push("/login")
-          return
-        }
-
-        // If we have cookies, verify with the server
+        // Since middleware already checked cookies, just verify the session
         const response = await fetch("/api/auth/user", {
           method: 'GET',
-          credentials: 'include', // Include cookies
-          headers: {
-            'Cache-Control': 'no-cache'
-          }
+          credentials: 'include',
+          cache: 'no-store'
         })
         
         if (response.ok) {
           const data = await response.json()
-          if (data.success) {
-            console.log("ProtectedLayout: Authentication successful")
+          if (data.success && data.user) {
             setIsAuthenticated(true)
-          } else {
-            console.log("ProtectedLayout: Authentication failed - invalid response")
-            setIsAuthenticated(false)
-            router.push("/login")
+            return
           }
-        } else {
-          console.log("ProtectedLayout: Authentication failed - HTTP", response.status)
-          setIsAuthenticated(false)
-          router.push("/login")
         }
+        
+        // If verification fails, redirect to login
+        setIsAuthenticated(false)
+        router.push("/login")
       } catch (error) {
-        console.error("ProtectedLayout: Error checking authentication:", error)
+        console.error("ProtectedLayout: Auth verification failed:", error)
         setIsAuthenticated(false)
         router.push("/login")
       }
     }
 
-    checkAuth()
+    verifyAuth()
   }, [router])
 
   // Show loading state while checking authentication
