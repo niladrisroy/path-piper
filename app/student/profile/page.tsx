@@ -24,9 +24,12 @@ export default function StudentProfilePage({
   useEffect(() => {
     const checkAuthAndResolveParams = async () => {
       try {
+        console.log('🔍 [STUDENT PROFILE DEBUG] Starting authentication check...')
+        console.log('🔍 [STUDENT PROFILE DEBUG] Current URL:', window.location.href)
+        console.log('🔍 [STUDENT PROFILE DEBUG] Current pathname:', window.location.pathname)
+        
         // DEBUG: Check cookies and session accessibility
-        console.log('=== DEBUGGING STUDENT PROFILE PAGE ===')
-        console.log('Document cookies:', document.cookie)
+        console.log('🍪 [COOKIE DEBUG] Document cookies:', document.cookie)
         
         // Check for specific Supabase cookies
         const cookies = document.cookie.split(';').reduce((acc, cookie) => {
@@ -35,25 +38,40 @@ export default function StudentProfilePage({
           return acc
         }, {} as Record<string, string>)
         
-        console.log('Parsed cookies:', cookies)
-        console.log('Supabase auth cookies:', Object.keys(cookies).filter(key => 
+        console.log('🍪 [COOKIE DEBUG] Parsed cookies:', cookies)
+        const authCookieKeys = Object.keys(cookies).filter(key => 
           key.includes('sb-') || key.includes('supabase') || key.includes('auth')
-        ))
+        )
+        console.log('🍪 [COOKIE DEBUG] Supabase auth cookie keys:', authCookieKeys)
+        
+        authCookieKeys.forEach(key => {
+          console.log(`🍪 [COOKIE DEBUG] ${key}: ${cookies[key] ? 'EXISTS' : 'MISSING'}`)
+        })
 
         // Check localStorage for Supabase session
         if (typeof window !== 'undefined') {
-          console.log('LocalStorage keys:', Object.keys(localStorage))
+          console.log('💾 [LOCALSTORAGE DEBUG] LocalStorage keys:', Object.keys(localStorage))
           const supabaseKeys = Object.keys(localStorage).filter(key => 
             key.includes('supabase') || key.includes('sb-')
           )
-          console.log('Supabase localStorage keys:', supabaseKeys)
+          console.log('💾 [LOCALSTORAGE DEBUG] Supabase localStorage keys:', supabaseKeys)
           
           supabaseKeys.forEach(key => {
             try {
               const value = localStorage.getItem(key)
-              console.log(`${key}:`, value ? JSON.parse(value) : value)
+              const parsedValue = value ? JSON.parse(value) : value
+              console.log(`💾 [LOCALSTORAGE DEBUG] ${key}:`, parsedValue)
+              
+              // If it's the session, log more details
+              if (key.includes('session') && parsedValue) {
+                console.log(`💾 [SESSION DEBUG] Session expires at:`, parsedValue.expires_at)
+                console.log(`💾 [SESSION DEBUG] Session user ID:`, parsedValue.user?.id)
+                console.log(`💾 [SESSION DEBUG] Access token exists:`, !!parsedValue.access_token)
+                console.log(`💾 [SESSION DEBUG] Refresh token exists:`, !!parsedValue.refresh_token)
+              }
             } catch (e) {
-              console.log(`${key} (raw):`, localStorage.getItem(key))
+              const rawValue = localStorage.getItem(key)
+              console.log(`💾 [LOCALSTORAGE DEBUG] ${key} (raw):`, rawValue)
             }
           })
         }
@@ -64,29 +82,47 @@ export default function StudentProfilePage({
                              document.cookie.includes('sb-auth-token') ||
                              document.cookie.includes('supabase')
 
+        console.log('🔒 [AUTH DEBUG] Has auth cookie:', hasAuthCookie)
+
         if (!hasAuthCookie) {
-          console.log("Student Profile: No auth cookies found, redirecting to login")
+          console.error("❌ [REDIRECT] Student Profile: No auth cookies found, redirecting to login")
           router.push("/login")
           return
         }
 
         // Check current session with Supabase
+        console.log('🔍 [SUPABASE DEBUG] Checking Supabase session...')
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
-        if (sessionError || !session) {
-          console.log("Student Profile: No valid session found, redirecting to login")
+        console.log('🔍 [SUPABASE DEBUG] Session data:', session)
+        console.log('🔍 [SUPABASE DEBUG] Session error:', sessionError)
+        
+        if (sessionError) {
+          console.error("❌ [REDIRECT] Student Profile: Session error:", sessionError)
+          router.push("/login")
+          return
+        }
+        
+        if (!session) {
+          console.error("❌ [REDIRECT] Student Profile: No valid session found, redirecting to login")
           router.push("/login")
           return
         }
 
-        console.log("Student Profile: Valid session found:", session.user.id)
+        console.log("✅ [AUTH SUCCESS] Student Profile: Valid session found for user:", session.user.id)
+        console.log("✅ [AUTH SUCCESS] Session expires at:", session.expires_at)
+        console.log("✅ [AUTH SUCCESS] User email:", session.user.email)
 
         // First resolve searchParams
+        console.log('📄 [PARAMS DEBUG] Resolving search params...')
         const params = await searchParams
         const resolvedStudentId = params?.id
         setStudentId(resolvedStudentId)
+        console.log('📄 [PARAMS DEBUG] Resolved student ID:', resolvedStudentId)
 
-        console.log('Making request to /api/auth/user...')
+        console.log('🌐 [API DEBUG] Making request to /api/auth/user...')
+        console.log('🌐 [API DEBUG] Request URL:', `${window.location.origin}/api/auth/user`)
+        
         // Fetch user profile to determine role
         const response = await fetch('/api/auth/user', {
           credentials: 'include',
@@ -95,71 +131,107 @@ export default function StudentProfilePage({
           }
         })
         
-        console.log('Response status:', response.status)
-        console.log('Response headers:', Object.fromEntries(response.headers.entries()))
+        console.log('🌐 [API DEBUG] Response status:', response.status)
+        console.log('🌐 [API DEBUG] Response ok:', response.ok)
+        console.log('🌐 [API DEBUG] Response headers:', Object.fromEntries(response.headers.entries()))
         
         if (!response.ok) {
-          console.log('Student Profile: API request failed, redirecting to login')
+          console.error(`❌ [REDIRECT] Student Profile: API request failed with status ${response.status}, redirecting to login`)
+          
+          // Try to read the response body for more details
+          try {
+            const errorText = await response.text()
+            console.error('❌ [API ERROR] Response body:', errorText)
+          } catch (e) {
+            console.error('❌ [API ERROR] Could not read error response body')
+          }
+          
           router.push("/login")
           return
         }
         
-        const userData = await response.json()
-        console.log('User data response:', userData)
+        let userData
+        try {
+          userData = await response.json()
+          console.log('🌐 [API DEBUG] User data response:', userData)
+          console.log('🌐 [API DEBUG] User data success:', userData.success)
+          console.log('🌐 [API DEBUG] User role:', userData.user?.role)
+          console.log('🌐 [API DEBUG] Onboarding completed:', userData.onboardingCompleted)
+        } catch (parseError) {
+          console.error('❌ [API ERROR] Failed to parse JSON response:', parseError)
+          router.push("/login")
+          return
+        }
         
         if (userData.success) {
-          console.log('✅ User authentication successful')
-          console.log('User role:', userData.user.role)
-          console.log('User ID:', userData.user.id)
+          console.log('✅ [AUTH SUCCESS] User authentication successful')
+          console.log('✅ [AUTH SUCCESS] User role:', userData.user.role)
+          console.log('✅ [AUTH SUCCESS] User ID:', userData.user.id)
+          console.log('✅ [AUTH SUCCESS] Onboarding completed:', userData.onboardingCompleted)
           
           // Check if onboarding is completed
           if (!userData.onboardingCompleted) {
-            console.log('Student Profile: Onboarding not completed, redirecting...')
+            console.log('🔄 [REDIRECT] Student Profile: Onboarding not completed, redirecting based on role...')
             if (userData.user.role === 'mentor') {
+              console.log('🔄 [REDIRECT] Mentor user -> /mentor-onboarding')
               router.push('/mentor-onboarding')
             } else if (userData.user.role === 'institution') {
+              console.log('🔄 [REDIRECT] Institution user -> /institution-onboarding')
               router.push('/institution-onboarding')
             } else {
+              console.log('🔄 [REDIRECT] Student user -> /onboarding')
               router.push('/onboarding')
             }
             return
           }
           
+          console.log('✅ [AUTH SUCCESS] Onboarding completed, proceeding...')
           setCurrentUser(userData.user)
 
           // If no studentId is provided, check user role and redirect accordingly
           if (!resolvedStudentId) {
-            console.log('No studentId provided, checking user role for redirect...')
+            console.log('🔍 [ROLE CHECK] No studentId provided, checking user role for redirect...')
             switch (userData.user.role) {
               case 'mentor':
-                console.log('Redirecting to mentor profile')
+                console.log('🔄 [REDIRECT] Mentor accessing student profile page -> /mentor/profile')
                 router.push('/mentor/profile')
                 return
               case 'institution':
-                console.log('Redirecting to institution profile')
+                console.log('🔄 [REDIRECT] Institution accessing student profile page -> /institution/profile')
                 router.push('/institution/profile')
                 return
               case 'student':
-                console.log('User is student, staying on this page')
+                console.log('✅ [STAY] Student user on student profile page - staying')
                 // Stay on this page, will show current user's profile
                 break
               default:
-                console.log('Unknown role, this should not happen')
-                break
+                console.error('❌ [ERROR] Unknown role detected:', userData.user.role)
+                console.log('🔄 [REDIRECT] Unknown role -> /login')
+                router.push("/login")
+                return
             }
           } else {
-            console.log('StudentId provided:', resolvedStudentId)
+            console.log('🔍 [ROLE CHECK] StudentId provided:', resolvedStudentId)
+            console.log('🔍 [ROLE CHECK] Will show profile for student ID:', resolvedStudentId)
           }
         } else {
-          console.log('❌ User authentication failed:', userData.error)
+          console.error('❌ [REDIRECT] User authentication failed:', userData.error)
           router.push("/login")
           return
         }
         
-        console.log('=== END DEBUGGING ===')
+        console.log('🎉 [SUCCESS] Student profile page setup completed successfully')
+        console.log('🎉 [SUCCESS] Current user set:', userData.user.id)
+        console.log('🎉 [SUCCESS] Student ID for profile:', resolvedStudentId || 'current user')
+        console.log('=== END STUDENT PROFILE DEBUGGING ===')
+        
         setLoading(false)
       } catch (error) {
-        console.error('Error in auth check:', error)
+        console.error('💥 [FATAL ERROR] Error in auth check:', error)
+        console.error('💥 [FATAL ERROR] Error stack:', error.stack)
+        console.error('💥 [FATAL ERROR] Error name:', error.name)
+        console.error('💥 [FATAL ERROR] Error message:', error.message)
+        console.log('🔄 [REDIRECT] Fatal error -> /login')
         router.push("/login")
       }
     }
