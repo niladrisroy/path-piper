@@ -8,26 +8,35 @@ import Footer from "@/components/footer"
 import ProtectedLayout from "@/app/protected-layout"
 import { useAuth } from "@/hooks/use-auth"
 
+interface SearchParams {
+  id?: string
+}
+
 export default function StudentProfilePage({
   searchParams,
 }: {
-  searchParams: Promise<{
-    id?: string
-  }>
+  searchParams: Promise<SearchParams>
 }) {
   const [studentId, setStudentId] = useState<string | undefined>(undefined)
+  const [paramsLoaded, setParamsLoaded] = useState(false)
   const { user, loading } = useAuth()
 
   useEffect(() => {
     const resolveParams = async () => {
-      const params = await searchParams
-      setStudentId(params?.id)
+      try {
+        const params = await searchParams
+        setStudentId(params?.id)
+      } catch (error) {
+        console.error('Error resolving search params:', error)
+      } finally {
+        setParamsLoaded(true)
+      }
     }
 
     resolveParams()
   }, [searchParams])
 
-  if (loading) {
+  if (loading || !paramsLoaded) {
     return (
       <ProtectedLayout>
         <div className="min-h-screen flex flex-col">
