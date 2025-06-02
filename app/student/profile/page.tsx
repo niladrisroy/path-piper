@@ -1,19 +1,22 @@
+
 "use client"
 
 import { useEffect, useState } from "react"
 import StudentProfile from "@/components/profile/student-profile"
 import InternalNavbar from "@/components/internal-navbar"
 import Footer from "@/components/footer"
-import ProtectedLayout from "../../protected-layout"
+import ProtectedLayout from "@/app/protected-layout"
+import { useAuth } from "@/hooks/use-auth"
 
-export default function StudentProfilePage({
+export default async function StudentProfilePage({
   searchParams,
 }: {
-  searchParams?: Promise<{
+  searchParams: Promise<{
     id?: string
   }>
 }) {
   const [studentId, setStudentId] = useState<string | undefined>(undefined)
+  const { user, loading } = useAuth()
 
   useEffect(() => {
     const resolveParams = async () => {
@@ -24,6 +27,23 @@ export default function StudentProfilePage({
     resolveParams()
   }, [searchParams])
 
+  if (loading) {
+    return (
+      <ProtectedLayout>
+        <div className="min-h-screen flex flex-col">
+          <InternalNavbar />
+          <main className="flex-grow pt-16 sm:pt-24 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pathpiper-teal mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">Loading profile...</p>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      </ProtectedLayout>
+    )
+  }
+
   return (
     <ProtectedLayout>
       <div className="min-h-screen flex flex-col">
@@ -31,7 +51,7 @@ export default function StudentProfilePage({
         <main className="flex-grow pt-16 sm:pt-24">
           <StudentProfile 
             studentId={studentId} 
-            currentUser={null} // Let ProtectedLayout handle user data
+            currentUser={user}
           />
         </main>
         <Footer />

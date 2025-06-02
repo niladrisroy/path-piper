@@ -1,11 +1,14 @@
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-export function middleware(request: NextRequest) {
-  // Get the pathname of the request
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   
-  // Define paths that should be protected (require authentication)
+  // Define paths that should be protected
   const protectedPaths = [
     '/onboarding',
     '/feed',
@@ -17,7 +20,7 @@ export function middleware(request: NextRequest) {
     '/institution',
   ];
   
-  // Define public paths that don't require authentication
+  // Define public paths
   const publicPaths = ['/login', '/register', '/signup', '/forgot-password', '/api'];
   
   // Check if the current path is protected
@@ -30,56 +33,48 @@ export function middleware(request: NextRequest) {
     path === pp || path.startsWith(`${pp}/`)
   );
   
-  // If it's a protected path, check for authentication
+  // If it's a protected path, validate authentication properly
   if (isProtectedPath && !isPublicPath) {
-    // Get the auth cookie to check if the user is logged in
-    // Check all possible cookie names that Supabase might use
-    const hasAuthCookie = request.cookies.has('sb-auth-token') || 
-                         request.cookies.has('sb:token') || 
-                         request.cookies.has('sb-access-token') ||
-                         request.cookies.has('supabase-auth-token') ||
-                         request.cookies.has('sb-refresh-token') ||
-                         request.cookies.has('sb-provider-token') ||
-                         Array.from(request.cookies.getAll()).some(c => 
-                           c.name.startsWith('sb-') || 
-                           c.name.includes('supabase') || 
-                           c.name.includes('auth')
-                         );
+    const accessToken = request.cookies.get('sb-access-token')?.value;
     
-    // Skip detailed cookie logging for cleaner console output
-    
-    // If no auth cookie, redirect to login
-    if (!hasAuthCookie) {
-      // Create the redirect URL with the original destination as 'from' parameter
+    if (!accessToken) {
+      // No token, redirect to login
       const redirectUrl = new URL('/login', request.url);
       redirectUrl.searchParams.set('from', path);
+      return NextResponse.redirect(redirectUrl);
+    }
+    
+    // Verify token with Supabase
+    try {
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      const { data: { user }, error } = await supabase.auth.getUser(accessToken);
       
-      // Preserve any existing redirectURL parameter if it exists in the original request
-      const originalRedirectURL = request.nextUrl.searchParams.get('redirectURL');
-      if (originalRedirectURL) {
-        redirectUrl.searchParams.set('redirectURL', originalRedirectURL);
+      if (error || !user) {
+        // Invalid token, redirect to login
+        const redirectUrl = new URL('/login', request.url);
+        redirectUrl.searchParams.set('from', path);
+        return NextResponse.redirect(redirectUrl);
       }
       
-      // Redirect unauthenticated request
+      // Token is valid, inject user info into headers for the app to use
+      const response = NextResponse.next();
+      response.headers.set('x-user-id', user.id);
+      response.headers.set('x-user-email', user.email || '');
+      return response;
       
+    } catch (error) {
+      console.error('Middleware auth error:', error);
+      const redirectUrl = new URL('/login', request.url);
+      redirectUrl.searchParams.set('from', path);
       return NextResponse.redirect(redirectUrl);
     }
   }
   
-  // Continue to the route if authenticated or not a protected path
   return NextResponse.next();
 }
 
-// Configure the middleware to run on specific paths
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - images (public image files)
-     */
     '/((?!_next/static|_next/image|favicon.ico|images).*)',
   ],
 };
