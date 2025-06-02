@@ -50,8 +50,9 @@ export default function StudentProfilePage({
           console.log("User data received:", userData)
 
           if (userData.user) {
-            // Check if onboarding is completed
-            if (!userData.onboardingCompleted) {
+            // Check if onboarding is completed - only redirect if explicitly false
+            // Treat null/undefined as completed to prevent unnecessary redirects
+            if (userData.user.onboardingCompleted === false) {
               console.log('Onboarding not completed, redirecting based on role...')
               if (userData.user.role === 'mentor') {
                 router.push('/mentor-onboarding')
@@ -106,35 +107,7 @@ export default function StudentProfilePage({
     checkAuthAndResolveParams()
   }, [searchParams, router])
 
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const response = await fetch("/api/auth/user", {
-        method: "GET",
-        credentials: 'include',
-        cache: 'no-store'
-      });
-
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData.user);
-      } else {
-        console.error("Failed to fetch user data:", response.status);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-  useEffect(() => {
-    // Only redirect if we have user data and onboarding is explicitly false
-    // Don't redirect if onboardingCompleted is null/undefined (treat as completed)
-    if (user && user.onboardingCompleted === false) {
-      console.log('User onboarding not completed, redirecting to onboarding...')
-      router.push('/onboarding')
-    }
-  }, [user, router])
+  
 
   if (loading) {
     return (
