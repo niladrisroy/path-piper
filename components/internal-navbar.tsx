@@ -30,7 +30,7 @@ export function InternalNavbar() {
     { name: "Feed", href: "/feed", icon: <Home size={20} /> },
     { name: "Explore", href: "/explore", icon: <Search size={20} /> },
     { name: "Messages", href: "/messages", icon: <MessageCircle size={20} /> },
-    { name: "Profile", href: "/profile", icon: <User size={20} /> },
+    { name: "Profile", href: "/student/profile", icon: <User size={20} /> },
   ]
 
   return (
