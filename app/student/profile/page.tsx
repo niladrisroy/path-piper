@@ -22,7 +22,7 @@ export default function StudentProfilePage({
   const [studentId, setStudentId] = useState<string | undefined>(undefined)
 
   useEffect(() => {
-    const resolveParams = async () => {
+    const checkAuthAndResolveParams = async () => {
       try {
         // DEBUG: Check cookies and session accessibility
         console.log('=== DEBUGGING STUDENT PROFILE PAGE ===')
@@ -58,19 +58,51 @@ export default function StudentProfilePage({
           })
         }
 
+        // Check for auth cookies first (similar to ProtectedLayout)
+        const hasAuthCookie = document.cookie.includes('sb-access-token') || 
+                             document.cookie.includes('sb:token') || 
+                             document.cookie.includes('sb-auth-token') ||
+                             document.cookie.includes('supabase')
+
+        if (!hasAuthCookie) {
+          console.log("Student Profile: No auth cookies found, redirecting to login")
+          router.push("/login")
+          return
+        }
+
+        // Check current session with Supabase
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        
+        if (sessionError || !session) {
+          console.log("Student Profile: No valid session found, redirecting to login")
+          router.push("/login")
+          return
+        }
+
+        console.log("Student Profile: Valid session found:", session.user.id)
+
         // First resolve searchParams
         const params = await searchParams
         const resolvedStudentId = params?.id
         setStudentId(resolvedStudentId)
 
         console.log('Making request to /api/auth/user...')
-        // Fetch user profile to determine role (authentication is already handled by ProtectedLayout)
+        // Fetch user profile to determine role
         const response = await fetch('/api/auth/user', {
-          credentials: 'include'
+          credentials: 'include',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
         })
         
         console.log('Response status:', response.status)
         console.log('Response headers:', Object.fromEntries(response.headers.entries()))
+        
+        if (!response.ok) {
+          console.log('Student Profile: API request failed, redirecting to login')
+          router.push("/login")
+          return
+        }
         
         const userData = await response.json()
         console.log('User data response:', userData)
@@ -79,6 +111,20 @@ export default function StudentProfilePage({
           console.log('✅ User authentication successful')
           console.log('User role:', userData.user.role)
           console.log('User ID:', userData.user.id)
+          
+          // Check if onboarding is completed
+          if (!userData.onboardingCompleted) {
+            console.log('Student Profile: Onboarding not completed, redirecting...')
+            if (userData.user.role === 'mentor') {
+              router.push('/mentor-onboarding')
+            } else if (userData.user.role === 'institution') {
+              router.push('/institution-onboarding')
+            } else {
+              router.push('/onboarding')
+            }
+            return
+          }
+          
           setCurrentUser(userData.user)
 
           // If no studentId is provided, check user role and redirect accordingly
@@ -99,7 +145,6 @@ export default function StudentProfilePage({
                 break
               default:
                 console.log('Unknown role, this should not happen')
-                // This shouldn't happen since ProtectedLayout handles auth
                 break
             }
           } else {
@@ -107,17 +152,19 @@ export default function StudentProfilePage({
           }
         } else {
           console.log('❌ User authentication failed:', userData.error)
+          router.push("/login")
+          return
         }
         
         console.log('=== END DEBUGGING ===')
         setLoading(false)
       } catch (error) {
-        console.error('Error resolving params:', error)
-        setLoading(false)
+        console.error('Error in auth check:', error)
+        router.push("/login")
       }
     }
 
-    resolveParams()
+    checkAuthAndResolveParams()
   }, [searchParams, router])
 
   if (loading) {
