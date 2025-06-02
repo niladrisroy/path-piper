@@ -24,6 +24,15 @@ export default function StudentProfilePage({
   useEffect(() => {
     const checkAuthAndResolveParams = async () => {
       try {
+        // Debug cookies being sent
+        console.log("All cookies:", document.cookie);
+        const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+          const [name, value] = cookie.split('=').map(c => c.trim());
+          acc[name] = value;
+          return acc;
+        }, {} as Record<string, string>);
+        console.log("Parsed cookies:", Object.keys(cookies));
+
         console.log("Fetching user data from API...")
 
         // First resolve searchParams

@@ -80,6 +80,28 @@ export async function GET(request: NextRequest) {
       console.log("API: Token preview:", token.substring(0, 30) + "...");
     }
 
+    // If no access token found, try to use refresh token to get a new session
+    if (!token && cookies['sb-refresh-token']) {
+      console.log("API: No access token found, attempting to refresh session");
+      try {
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({
+          refresh_token: cookies['sb-refresh-token']
+        });
+
+        if (refreshData?.session?.access_token) {
+          token = refreshData.session.access_token;
+          console.log("API: Successfully refreshed access token");
+          
+          // You might want to set the new access token as a cookie here
+          // but since this is a GET request, we'll just use it for this request
+        } else {
+          console.log("API: Failed to refresh session:", refreshError?.message);
+        }
+      } catch (refreshErr) {
+        console.log("API: Error during token refresh:", refreshErr);
+      }
+    }
+
     if (token) {
       console.log("API: Token preview:", token.substring(0, 20) + "...");
 
