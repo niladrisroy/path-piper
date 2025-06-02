@@ -58,7 +58,16 @@ export default function LoginPage() {
                 router.push('/onboarding')
               }
             } else {
-              router.push('/feed')
+              // Redirect based on role when onboarding is completed
+              if (userData.role === 'student') {
+                router.push('/student/profile')
+              } else if (userData.role === 'mentor') {
+                router.push('/mentor/profile')
+              } else if (userData.role === 'institution') {
+                router.push('/institution/profile')
+              } else {
+                router.push('/feed')
+              }
             }
           } else {
             router.push('/feed')
