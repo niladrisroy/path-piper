@@ -8,7 +8,7 @@ import Footer from "@/components/footer"
 import ProtectedLayout from "@/app/protected-layout"
 import { useAuth } from "@/hooks/use-auth"
 
-export default async function StudentProfilePage({
+export default function StudentProfilePage({
   searchParams,
 }: {
   searchParams: Promise<{
