@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabase"
 import StudentProfile from "@/components/profile/student-profile"
 import InternalNavbar from "@/components/internal-navbar"
 import Footer from "@/components/footer"
@@ -21,24 +20,14 @@ export default function StudentProfilePage({
   const [studentId, setStudentId] = useState<string | undefined>(undefined)
 
   useEffect(() => {
-    const checkAuthAndResolveParams = async () => {
+    const resolveParamsAndFetchUser = async () => {
       try {
-        // Debug cookies being sent
-        console.log("All cookies:", document.cookie);
-        const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-          const [name, value] = cookie.split('=').map(c => c.trim());
-          acc[name] = value;
-          return acc;
-        }, {} as Record<string, string>);
-        console.log("Parsed cookies:", Object.keys(cookies));
-
-        console.log("Fetching user data from API...")
-
         // First resolve searchParams
         const params = await searchParams
         const resolvedStudentId = params?.id
         setStudentId(resolvedStudentId)
 
+        // Single authentication check
         const response = await fetch("/api/auth/user", {
           method: "GET",
           credentials: 'include',
@@ -50,23 +39,9 @@ export default function StudentProfilePage({
           console.log("User data received:", userData)
 
           if (userData.user) {
-            // Check if onboarding is completed - only redirect if explicitly false
-            // Treat null/undefined as completed to prevent unnecessary redirects
-            if (userData.user.onboardingCompleted === false) {
-              console.log('Onboarding not completed, redirecting based on role...')
-              if (userData.user.role === 'mentor') {
-                router.push('/mentor-onboarding')
-              } else if (userData.user.role === 'institution') {
-                router.push('/institution-onboarding')
-              } else {
-                router.push('/onboarding')
-              }
-              return
-            }
-
             setCurrentUser(userData.user)
 
-            // If no studentId is provided, check user role and redirect accordingly
+            // Role-based redirect logic (only if no studentId is provided)
             if (!resolvedStudentId) {
               switch (userData.user.role) {
                 case 'mentor':
@@ -76,7 +51,7 @@ export default function StudentProfilePage({
                   router.push('/institution/profile')
                   return
                 case 'student':
-                  // Stay on this page, will show current user's profile
+                  // Stay on this page for students
                   break
                 default:
                   console.error('Unknown role detected:', userData.user.role)
@@ -86,17 +61,17 @@ export default function StudentProfilePage({
             }
           } else {
             console.warn("No user data found in response")
+            router.push("/login")
+            return
           }
         } else {
           console.error("Failed to fetch user data:", response.status)
-          // Redirect to login if unauthorized
           if (response.status === 401) {
             router.push("/login")
             return
           }
         }
-
-        } catch (error) {
+      } catch (error) {
         console.error("Error fetching user data:", error)
         router.push("/login")
       } finally {
@@ -104,10 +79,8 @@ export default function StudentProfilePage({
       }
     }
 
-    checkAuthAndResolveParams()
+    resolveParamsAndFetchUser()
   }, [searchParams, router])
-
-  
 
   if (loading) {
     return (
