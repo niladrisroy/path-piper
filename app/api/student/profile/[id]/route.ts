@@ -36,7 +36,7 @@ export async function GET(
             }
           }
         },
-        studentEducationHistory: {
+        educationHistory: {
           include: {
             institution: {
               include: {
@@ -89,7 +89,7 @@ export async function GET(
         proficiencyLevel: us.proficiencyLevel,
         category: us.skill.category.name
       })),
-      educationHistory: studentProfile.studentEducationHistory.map(eh => ({
+      educationHistory: studentProfile.educationHistory.map(eh => ({
         id: eh.id,
         institutionName: eh.institutionName,
         institutionType: eh.institutionType ? {
