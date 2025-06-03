@@ -316,11 +316,18 @@ export default function AboutSection({ student: studentProp }: AboutSectionProps
             </div>
 
             <div className="grid grid-cols-3 gap-2">
-              {student.moodBoard.map((image, index) => (
+              {student.moodBoard?.map((image, index) => (
                 <div key={index} className="aspect-square rounded-lg overflow-hidden relative">
                   <Image src={image || "/placeholder.svg"} alt="Mood board image" fill className="object-cover" />
                 </div>
-              ))}
+              )) || (
+                // Show placeholder if no mood board data
+                Array.from({ length: 6 }, (_, index) => (
+                  <div key={index} className="aspect-square rounded-lg overflow-hidden relative bg-gray-100 dark:bg-gray-700">
+                    <Image src="/placeholder.svg" alt="Mood board placeholder" fill className="object-cover" />
+                  </div>
+                ))
+              )}
 
               {isEditing && (
                 <div className="aspect-square rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
