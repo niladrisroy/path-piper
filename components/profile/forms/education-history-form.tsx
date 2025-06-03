@@ -1,0 +1,408 @@
+
+"use client"
+
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
+import { Plus, X, GraduationCap, Edit, Calendar } from "lucide-react"
+
+interface EducationEntry {
+  id: number | string
+  institutionName: string
+  institutionType: string
+  degreeProgram?: string
+  fieldOfStudy: string
+  startDate: string
+  endDate?: string
+  isCurrent: boolean
+  gradeLevel?: string
+  gpa?: number
+  achievements?: string
+}
+
+interface EducationHistoryFormProps {
+  data: any
+  onChange: (sectionId: string, data: EducationEntry[]) => void
+}
+
+const INSTITUTION_TYPES = [
+  "Elementary School",
+  "Middle School", 
+  "High School",
+  "Community College",
+  "University",
+  "Online Institution",
+  "Technical School",
+  "Other"
+]
+
+const GRADE_LEVELS = [
+  "1st Grade", "2nd Grade", "3rd Grade", "4th Grade", "5th Grade",
+  "6th Grade", "7th Grade", "8th Grade",
+  "9th Grade", "10th Grade", "11th Grade", "12th Grade",
+  "Freshman", "Sophomore", "Junior", "Senior",
+  "Graduate Student", "PhD Student"
+]
+
+export default function EducationHistoryForm({ data, onChange }: EducationHistoryFormProps) {
+  const [educationHistory, setEducationHistory] = useState<EducationEntry[]>([])
+  const [isAddingEntry, setIsAddingEntry] = useState(false)
+  const [editingEntry, setEditingEntry] = useState<EducationEntry | null>(null)
+  const [newEntry, setNewEntry] = useState<EducationEntry>({
+    id: "",
+    institutionName: "",
+    institutionType: "",
+    degreeProgram: "",
+    fieldOfStudy: "",
+    startDate: "",
+    endDate: "",
+    isCurrent: true,
+    gradeLevel: "",
+    gpa: undefined,
+    achievements: ""
+  })
+
+  // Update education history when data changes
+  useEffect(() => {
+    if (data?.educationHistory) {
+      setEducationHistory(data.educationHistory)
+    }
+  }, [data])
+
+  // Notify parent of changes
+  useEffect(() => {
+    onChange("education", educationHistory)
+  }, [educationHistory, onChange])
+
+  const handleInputChange = (field: keyof EducationEntry, value: string | number | boolean) => {
+    if (editingEntry) {
+      setEditingEntry(prev => prev ? { ...prev, [field]: value } : null)
+    } else {
+      setNewEntry(prev => ({ ...prev, [field]: value }))
+    }
+  }
+
+  const handleAddEntry = () => {
+    if (!newEntry.institutionName.trim() || !newEntry.fieldOfStudy.trim()) return
+
+    const entryToAdd = {
+      ...newEntry,
+      id: Date.now(),
+    }
+
+    setEducationHistory(prev => [...prev, entryToAdd])
+    setNewEntry({
+      id: "",
+      institutionName: "",
+      institutionType: "",
+      degreeProgram: "",
+      fieldOfStudy: "",
+      startDate: "",
+      endDate: "",
+      isCurrent: true,
+      gradeLevel: "",
+      gpa: undefined,
+      achievements: ""
+    })
+    setIsAddingEntry(false)
+  }
+
+  const handleEditEntry = (entry: EducationEntry) => {
+    setEditingEntry(entry)
+    setIsAddingEntry(true)
+  }
+
+  const handleSaveEdit = () => {
+    if (!editingEntry?.institutionName.trim() || !editingEntry?.fieldOfStudy.trim()) return
+
+    setEducationHistory(prev => prev.map(entry => 
+      entry.id === editingEntry.id ? editingEntry : entry
+    ))
+    setEditingEntry(null)
+    setIsAddingEntry(false)
+  }
+
+  const handleRemoveEntry = (id: number | string) => {
+    setEducationHistory(prev => prev.filter(entry => entry.id !== id))
+  }
+
+  const handleCancel = () => {
+    setIsAddingEntry(false)
+    setEditingEntry(null)
+    setNewEntry({
+      id: "",
+      institutionName: "",
+      institutionType: "",
+      degreeProgram: "",
+      fieldOfStudy: "",
+      startDate: "",
+      endDate: "",
+      isCurrent: true,
+      gradeLevel: "",
+      gpa: undefined,
+      achievements: ""
+    })
+  }
+
+  const currentEntry = editingEntry || newEntry
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Education History</h3>
+        <p className="text-gray-600 dark:text-gray-400">
+          Add your educational background to help mentors understand your academic journey
+        </p>
+      </div>
+
+      <div className="space-y-6">
+        {/* Education Entries List */}
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <Label className="text-lg font-medium">Education History ({educationHistory.length})</Label>
+            {!isAddingEntry && (
+              <Button
+                type="button"
+                onClick={() => setIsAddingEntry(true)}
+                className="bg-pathpiper-teal hover:bg-pathpiper-teal/90"
+              >
+                <Plus size={16} className="mr-2" />
+                Add Education
+              </Button>
+            )}
+          </div>
+
+          {educationHistory.length === 0 && !isAddingEntry ? (
+            <div className="border border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center bg-gray-50 dark:bg-gray-800">
+              <GraduationCap className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">No education history added</h3>
+              <p className="text-gray-500 mb-4">
+                Add your current and past educational experiences
+              </p>
+              <Button
+                type="button"
+                onClick={() => setIsAddingEntry(true)}
+                className="bg-pathpiper-teal hover:bg-pathpiper-teal/90"
+              >
+                Add Your First Entry
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {educationHistory.map((entry) => (
+                <div key={entry.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-grow">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <h4 className="font-medium text-gray-800 dark:text-gray-200">{entry.institutionName}</h4>
+                        {entry.isCurrent && (
+                          <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                            Current
+                          </span>
+                        )}
+                      </div>
+                      <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                        <div className="flex items-center space-x-4">
+                          <span>{entry.institutionType}</span>
+                          {entry.gradeLevel && <span>• {entry.gradeLevel}</span>}
+                          {entry.gpa && <span>• GPA: {entry.gpa}</span>}
+                        </div>
+                        <div>{entry.fieldOfStudy}</div>
+                        <div className="flex items-center space-x-2">
+                          <Calendar size={14} />
+                          <span>
+                            {entry.startDate} - {entry.isCurrent ? 'Present' : entry.endDate}
+                          </span>
+                        </div>
+                        {entry.achievements && (
+                          <div className="text-green-600 dark:text-green-400 text-sm">
+                            {entry.achievements}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex space-x-2 ml-4">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditEntry(entry)}
+                        className="text-gray-400 hover:text-pathpiper-teal"
+                      >
+                        <Edit size={16} />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveEntry(entry.id)}
+                        className="text-gray-400 hover:text-red-500"
+                      >
+                        <X size={16} />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Add/Edit Entry Form */}
+          {isAddingEntry && (
+            <div className="border border-pathpiper-teal/20 rounded-lg p-6 bg-pathpiper-teal/5 mt-4">
+              <h4 className="font-medium text-pathpiper-teal mb-4">
+                {editingEntry ? 'Edit Education Entry' : 'Add Education Entry'}
+              </h4>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-gray-700 dark:text-gray-300">
+                      Institution Name <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      value={currentEntry.institutionName}
+                      onChange={(e) => handleInputChange('institutionName', e.target.value)}
+                      placeholder="e.g., Westlake High School"
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-gray-700 dark:text-gray-300">Institution Type</Label>
+                    <Select
+                      value={currentEntry.institutionType}
+                      onValueChange={(value) => handleInputChange('institutionType', value)}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {INSTITUTION_TYPES.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-gray-700 dark:text-gray-300">
+                      Field of Study <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      value={currentEntry.fieldOfStudy}
+                      onChange={(e) => handleInputChange('fieldOfStudy', e.target.value)}
+                      placeholder="e.g., General Studies, Computer Science"
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-gray-700 dark:text-gray-300">Grade Level</Label>
+                    <Select
+                      value={currentEntry.gradeLevel}
+                      onValueChange={(value) => handleInputChange('gradeLevel', value)}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select grade level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {GRADE_LEVELS.map((grade) => (
+                          <SelectItem key={grade} value={grade}>
+                            {grade}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-gray-700 dark:text-gray-300">Start Date</Label>
+                    <Input
+                      type="date"
+                      value={currentEntry.startDate}
+                      onChange={(e) => handleInputChange('startDate', e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-gray-700 dark:text-gray-300">End Date</Label>
+                    <Input
+                      type="date"
+                      value={currentEntry.endDate}
+                      onChange={(e) => handleInputChange('endDate', e.target.value)}
+                      disabled={currentEntry.isCurrent}
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-gray-700 dark:text-gray-300">GPA (optional)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="4"
+                      value={currentEntry.gpa || ""}
+                      onChange={(e) => handleInputChange('gpa', parseFloat(e.target.value))}
+                      placeholder="e.g., 3.85"
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={currentEntry.isCurrent}
+                    onCheckedChange={(checked) => handleInputChange('isCurrent', checked)}
+                  />
+                  <Label className="text-gray-700 dark:text-gray-300">
+                    I currently attend this institution
+                  </Label>
+                </div>
+
+                <div>
+                  <Label className="text-gray-700 dark:text-gray-300">Achievements (optional)</Label>
+                  <Textarea
+                    value={currentEntry.achievements}
+                    onChange={(e) => handleInputChange('achievements', e.target.value)}
+                    placeholder="Awards, honors, notable achievements..."
+                    className="mt-1 h-20"
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancel}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={editingEntry ? handleSaveEdit : handleAddEntry}
+                    disabled={!currentEntry.institutionName.trim() || !currentEntry.fieldOfStudy.trim()}
+                    className="bg-pathpiper-teal hover:bg-pathpiper-teal/90"
+                  >
+                    {editingEntry ? 'Save Changes' : 'Add Entry'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
