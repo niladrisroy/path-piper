@@ -50,9 +50,15 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
   const [completionData, setCompletionData] = useState<Record<string, boolean>>({})
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 
-  // Handle form changes
+  // Handle form changes - prevent infinite loops
   const handleFormChange = useCallback((sectionId: string, data: any) => {
     setProfileData((prev: any) => {
+      // Check if data actually changed to prevent unnecessary re-renders
+      const currentData = prev?.[sectionId]
+      if (JSON.stringify(currentData) === JSON.stringify(data)) {
+        return prev
+      }
+      
       return {
         ...prev,
         [sectionId]: data

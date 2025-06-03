@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -68,13 +68,13 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
     }
   }, [data, form])
 
-  // Watch for form changes and call onChange when form data changes
-  useEffect(() => {
-    const subscription = form.watch((value) => {
+  // Handle form changes - debounced to prevent infinite loops
+  const handleFormChange = useCallback((value: any) => {
+    // Only call onChange if the form is dirty and has actual changes
+    if (form.formState.isDirty) {
       onChange("personal", value)
-    })
-    return () => subscription.unsubscribe()
-  }, [form, onChange])
+    }
+  }, [onChange, form.formState.isDirty])
 
   const handleImageUpload = (type: 'profile' | 'cover', file: File) => {
     // In a real app, you'd upload to a service like Supabase storage
@@ -194,7 +194,14 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
                 <FormItem>
                   <FormLabel>First Name <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter your first name" {...field} />
+                    <Input 
+                      placeholder="Enter your first name" 
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e)
+                        handleFormChange(form.getValues())
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -208,7 +215,14 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
                 <FormItem>
                   <FormLabel>Last Name <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter your last name" {...field} />
+                    <Input 
+                      placeholder="Enter your last name" 
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e)
+                        handleFormChange(form.getValues())
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -244,6 +258,10 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
                     placeholder="Tell us about yourself, your interests, and what you're passionate about..."
                     className="resize-none h-32"
                     {...field}
+                    onChange={(e) => {
+                      field.onChange(e)
+                      handleFormChange(form.getValues())
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
