@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -82,41 +82,52 @@ export default function SkillsAbilitiesForm({ data, onChange }: SkillsAbilitiesF
     setFilteredCategories(filtered)
   }, [searchTerm, skillCategories])
 
-  // Notify parent of changes
-  useEffect(() => {
-    onChange("skills", skills)
-  }, [skills])
+  // Handle skills change - debounced to prevent infinite loops
+  const handleSkillsChange = useCallback((newSkills: Skill[]) => {
+    // Only call onChange if skills actually changed
+    if (JSON.stringify(skills) !== JSON.stringify(newSkills)) {
+      onChange("skills", newSkills)
+    }
+  }, [skills, onChange])
 
   const addSkill = (skillName: string, skillId?: number) => {
     if (skills.some((s) => s.name === skillName)) return
 
-    setSkills(prev => [...prev, {
+    const newSkills = [...skills, {
       id: skillId,
       name: skillName,
       level: newSkillLevel,
       category: findSkillCategory(skillName)
-    }])
+    }]
+    setSkills(newSkills)
+    handleSkillsChange(newSkills)
   }
 
   const addCustomSkill = () => {
     if (!newSkill.trim() || skills.some((s) => s.name === newSkill)) return
 
-    setSkills(prev => [...prev, {
+    const newSkills = [...skills, {
       name: newSkill,
       level: newSkillLevel,
       category: "Custom"
-    }])
+    }]
+    setSkills(newSkills)
+    handleSkillsChange(newSkills)
     setNewSkill("")
   }
 
   const removeSkill = (skillName: string) => {
-    setSkills(prev => prev.filter((s) => s.name !== skillName))
+    const newSkills = skills.filter((s) => s.name !== skillName)
+    setSkills(newSkills)
+    handleSkillsChange(newSkills)
   }
 
   const updateSkillLevel = (skillName: string, level: number) => {
-    setSkills(prev => prev.map((s) =>
+    const newSkills = skills.map((s) =>
       s.name === skillName ? { ...s, level } : s
-    ))
+    )
+    setSkills(newSkills)
+    handleSkillsChange(newSkills)
   }
 
   const findSkillCategory = (skillName: string): string => {
