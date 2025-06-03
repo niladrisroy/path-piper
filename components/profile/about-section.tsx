@@ -7,7 +7,11 @@ import { GlobeIcon, BrainIcon, EditIcon, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import EducationCards from "./education-cards"
 
-export default function AboutSection({ student: studentProp }) {
+interface AboutSectionProps {
+  student?: any
+}
+
+export default function AboutSection({ student: studentProp }: AboutSectionProps) {
   const [isEditing, setIsEditing] = useState(false)
 
   // Use passed student data or fallback to mock data

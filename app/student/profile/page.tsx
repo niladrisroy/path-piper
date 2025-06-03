@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
@@ -85,10 +84,7 @@ export default function StudentProfilePage() {
       <div className="min-h-screen flex flex-col">
         <InternalNavbar />
         <main className="flex-grow pt-16 sm:pt-24">
-          <StudentProfile 
-            studentId={user?.id}
-            currentUser={user}
-          />
+          <StudentProfile studentId={user?.id} currentUser={user} />
         </main>
         <Footer />
       </div>
