@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
@@ -162,19 +162,23 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
   }
 
   // Handle form changes
-  function handleFormChange(sectionId: string, data: any) {
-    setProfileData((prev: any) => ({
-      ...prev,
-      [sectionId]: data
-    }))
+  const handleFormChange = useCallback((sectionId: string, data: any) => {
+    setProfileData((prev: any) => {
+      const newData = {
+        ...prev,
+        [sectionId]: data
+      }
+      
+      // Update completion status based on new data
+      setCompletionData(prevCompletion => ({
+        ...prevCompletion,
+        [sectionId]: calculateSectionCompletion(sectionId, newData)
+      }))
+      
+      return newData
+    })
     setHasUnsavedChanges(true)
-    
-    // Update completion status
-    setCompletionData(prev => ({
-      ...prev,
-      [sectionId]: calculateSectionCompletion(sectionId, { ...profileData, [sectionId]: data })
-    }))
-  }
+  }, [])
 
   // Calculate overall completion percentage
   const completionPercentage = Math.round(
