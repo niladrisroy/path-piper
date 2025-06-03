@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -207,7 +206,7 @@ export default function MoodBoardMediaForm({ data, onChange }: MoodBoardMediaFor
                     alt={item.caption || 'Mood board item'}
                     className="w-full h-full object-cover"
                   />
-                  
+
                   {/* Remove button */}
                   <button
                     onClick={() => removeItem(item.id)}

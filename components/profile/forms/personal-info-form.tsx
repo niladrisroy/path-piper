@@ -68,12 +68,13 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
     }
   }, [data, form])
 
-  // Watch for form changes
-  const watchedValues = form.watch()
+  // Watch for form changes and call onChange when form data changes
   useEffect(() => {
-    const currentData = form.getValues()
-    onChange("personal", currentData)
-  }, [watchedValues, onChange])
+    const subscription = form.watch((value) => {
+      onChange("personal", value)
+    })
+    return () => subscription.unsubscribe()
+  }, [form, onChange])
 
   const handleImageUpload = (type: 'profile' | 'cover', file: File) => {
     // In a real app, you'd upload to a service like Supabase storage

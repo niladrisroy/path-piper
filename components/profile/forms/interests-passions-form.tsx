@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -97,13 +96,13 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
   const addCustomInterest = () => {
     const trimmedInterest = customInterest.trim()
     if (trimmedInterest === "" || selectedInterests.some(i => i.name === trimmedInterest)) return
-    
+
     const newInterest: Interest = {
       id: -Date.now(), // Temporary negative ID for custom interests
       name: trimmedInterest,
       category: "Custom"
     }
-    
+
     setSelectedInterests(prev => [...prev, newInterest])
     setCustomInterest("")
   }
@@ -255,3 +254,4 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
     </div>
   )
 }
+```

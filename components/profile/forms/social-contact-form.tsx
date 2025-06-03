@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -53,12 +52,13 @@ export default function SocialContactForm({ data, onChange }: SocialContactFormP
     }
   }, [data, form])
 
-  // Watch for form changes
-  const watchedValues = form.watch()
+  // Watch for form changes and call onChange when form data changes
   useEffect(() => {
-    const currentData = form.getValues()
-    onChange("social", currentData)
-  }, [watchedValues])
+    const subscription = form.watch((value) => {
+      onChange("social", value)
+    })
+    return () => subscription.unsubscribe()
+  }, [form, onChange])
 
   const socialLinks = [
     {
