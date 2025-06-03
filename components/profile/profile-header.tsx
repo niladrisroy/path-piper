@@ -1,22 +1,36 @@
+typescript
 "use client"
 import Image from "next/image"
 import { BadgeCheckIcon, Award, Users, FolderKanban, BrainIcon } from "lucide-react"
 
-export default function ProfileHeader() {
-  // Mock student data
-  const student = {
-    name: "Alex Johnson",
-    tagline: "Aspiring Software Engineer | Math & Computer Science Enthusiast",
-    grade: "11th Grade",
-    school: "Westlake High School",
-    profileImage: "/images/student-profile.png",
-    bannerColor: "from-pathpiper-teal to-pathpiper-blue",
-    verified: true,
-    circleCount: 48,
-    projectsCount: 12,
-    badgesCount: 15,
-    skillsCount: 24,
+interface ProfileHeaderProps {
+  student?: any
+}
+
+export default function ProfileHeader({ student: studentProp }: ProfileHeaderProps) {
+  const [isEditing, setIsEditing] = useState(false)
+
+  // Use passed student data or fallback to mock data
+  const student = studentProp || {
+    profile: {
+      firstName: "Alex",
+      lastName: "Johnson", 
+      profileImageUrl: "/images/student-profile.png",
+    },
+    educationHistory: [
+      {
+        gradeLevel: "11th Grade",
+        institutionName: "Westlake High School",
+        isCurrent: true
+      }
+    ]
   }
+
+  const displayName = student.profile ? `${student.profile.firstName} ${student.profile.lastName}` : "Student"
+  const currentEducation = student.educationHistory?.find((edu: any) => edu.isCurrent)
+  const gradeLevel = currentEducation?.gradeLevel || "Student"
+  const schoolName = currentEducation?.institutionName || "School"
+  const profileImage = student.profile?.profileImageUrl || "/images/student-profile.png"
 
   // Mock circle members (would come from API in real app)
   const circleMembers = [
@@ -36,13 +50,13 @@ export default function ProfileHeader() {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  
+
   /* Custom tooltip styles */
   [data-tooltip] {
     position: relative;
     cursor: pointer;
   }
-  
+
   [data-tooltip]:hover::after {
     content: attr(data-tooltip);
     position: absolute;
@@ -66,7 +80,7 @@ export default function ProfileHeader() {
       <style jsx>{scrollbarHideStyle}</style>
       <div className="relative">
         {/* Customizable banner */}
-        <div className={`h-48 w-full bg-gradient-to-r ${student.bannerColor}`}></div>
+        <div className={`h-48 w-full bg-gradient-to-r from-pathpiper-teal to-pathpiper-blue`}></div>
 
         <div className="container mx-auto px-4 max-w-7xl">
           <div className="relative -mt-24 sm:-mt-16 mb-6">
@@ -80,8 +94,8 @@ export default function ProfileHeader() {
                     <div className="relative z-10 flex-shrink-0">
                       <div className="rounded-full border-4 border-white dark:border-gray-800 overflow-hidden h-20 w-20 sm:h-28 sm:w-28 shadow-md">
                         <Image
-                          src={student.profileImage || "/placeholder.svg"}
-                          alt={student.name}
+                          src={profileImage || "/placeholder.svg"}
+                          alt={displayName}
                           width={112}
                           height={112}
                           className="object-cover"
@@ -92,14 +106,14 @@ export default function ProfileHeader() {
                     {/* Name and tagline */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h1 className="text-xl sm:text-3xl font-bold truncate">{student.name}</h1>
-                        {student.verified && <BadgeCheckIcon className="h-6 w-6 text-pathpiper-teal" />}
+                        <h1 className="text-xl sm:text-3xl font-bold truncate">{displayName}</h1>
+                        {true && <BadgeCheckIcon className="h-6 w-6 text-pathpiper-teal" />}
                       </div>
                       <p className="text-gray-600 dark:text-gray-300 mt-1 text-sm sm:text-base truncate">
-                        {student.tagline}
+                        Aspiring Software Engineer | Math & Computer Science Enthusiast
                       </p>
                       <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
-                        {student.grade} • {student.school}
+                        {gradeLevel} • {schoolName}
                       </p>
                     </div>
                   </div>
@@ -185,16 +199,16 @@ export default function ProfileHeader() {
                         data-tooltip="Projects you've created or contributed to"
                       />
                       <span data-tooltip="Projects you've created or contributed to">
-                        Projects: {student.projectsCount}
+                        Projects: 12
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 text-amber-600 dark:text-amber-300 px-3 py-1.5 rounded-full">
                       <Award className="h-3.5 w-3.5 text-amber-500" data-tooltip="Badges you've earned" />
-                      <span data-tooltip="Badges you've earned">Badges: {student.badgesCount}</span>
+                      <span data-tooltip="Badges you've earned">Badges: 15</span>
                     </div>
                     <div className="flex items-center gap-1.5 bg-gradient-to-r from-teal-50 to-green-50 dark:from-teal-900/20 dark:to-green-900/20 text-teal-600 dark:text-teal-300 px-3 py-1.5 rounded-full">
                       <BrainIcon className="h-3.5 w-3.5 text-teal-500" data-tooltip="Skills you've developed" />
-                      <span data-tooltip="Skills you've developed">Skills: {student.skillsCount}</span>
+                      <span data-tooltip="Skills you've developed">Skills: 24</span>
                     </div>
                   </div>
 
@@ -515,13 +529,13 @@ export default function ProfileHeader() {
                     <div className="mt-2 text-center">
                       <a
                         href="#"
-                        className="text-[10px] text-pink-500 hover:text-pink-600 dark:text-pink-400 dark:hover:text-pink-300 font-medium"
+                        className="text-[10px] text-pink-500 hover:text-pink-600 dark:text-pink-400 dark:hover:text-pink-300 fontmedium"
                       >
                         View All Badges
                       </a>
                     </div>
                   </div>
-                </div>
+                                </div>
               </div>
             </div>
           </div>

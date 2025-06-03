@@ -20,39 +20,67 @@ export default function StudentProfile({ studentId, currentUser }: StudentProfil
   const [student, setStudent] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState("about")
 
   useEffect(() => {
-    const fetchStudentProfile = async () => {
-      try {
-        setLoading(true)
-        setError(null)
+    const loadMockStudentProfile = () => {
+      setLoading(true)
+      setError(null)
 
-        if (!studentId) {
-          // If no studentId provided, this should be handled by the parent component
-          throw new Error('No student ID provided')
-        }
-
-        const response = await fetch(`/api/student/profile/${studentId}`)
-
-        if (!response.ok) {
-          if (response.status === 404) {
-            throw new Error('Student profile not found')
+      // Mock student data for testing
+      const mockStudent = {
+        id: studentId,
+        ageGroup: "high_school",
+        educationLevel: "grade_11",
+        birthMonth: 6,
+        birthYear: 2007,
+        profile: {
+          firstName: "Alex",
+          lastName: "Johnson",
+          bio: "Passionate about computer science and robotics. I love solving complex problems and building innovative projects. Currently working on a machine learning project for my science fair. In my free time, I enjoy coding, reading about AI, and playing chess.",
+          location: "San Francisco, CA",
+          profileImageUrl: "/images/student-profile.png",
+          role: "student"
+        },
+        interests: [
+          { id: 1, name: "Computer Science", category: "Technology" },
+          { id: 2, name: "Robotics", category: "Engineering" },
+          { id: 3, name: "Machine Learning", category: "Technology" },
+          { id: 4, name: "Chess", category: "Games" },
+          { id: 5, name: "Mathematics", category: "Academic" }
+        ],
+        skills: [
+          { id: 1, name: "Python Programming", proficiencyLevel: 85, category: "Programming" },
+          { id: 2, name: "JavaScript", proficiencyLevel: 75, category: "Programming" },
+          { id: 3, name: "Problem Solving", proficiencyLevel: 90, category: "Soft Skills" },
+          { id: 4, name: "Project Management", proficiencyLevel: 70, category: "Soft Skills" },
+          { id: 5, name: "Arduino", proficiencyLevel: 65, category: "Hardware" }
+        ],
+        educationHistory: [
+          {
+            id: 1,
+            institutionName: "Westlake High School",
+            institutionType: { name: "High School", category: "Secondary Education" },
+            degreeProgram: null,
+            fieldOfStudy: "General Studies",
+            startDate: "2021-09-01",
+            endDate: null,
+            isCurrent: true,
+            gradeLevel: "11th Grade",
+            gpa: 3.85
           }
-          throw new Error('Failed to fetch student profile')
-        }
-
-        const studentData = await response.json()
-        setStudent(studentData)
-      } catch (error) {
-        console.error('Error fetching student profile:', error)
-        setError(error instanceof Error ? error.message : 'An error occurred')
-      } finally {
-        setLoading(false)
+        ]
       }
+
+      // Simulate API delay
+      setTimeout(() => {
+        setStudent(mockStudent)
+        setLoading(false)
+      }, 500)
     }
 
     if (studentId) {
-      fetchStudentProfile()
+      loadMockStudentProfile()
     }
   }, [studentId])
 
@@ -89,18 +117,18 @@ export default function StudentProfile({ studentId, currentUser }: StudentProfil
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
-      <ProfileHeader />
+      <ProfileHeader student={student} />
 
       <HorizontalNavigation tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-          {activeTab === "about" && <AboutSection />}
-          {activeTab === "skills" && <SkillsCanvas />}
-          {activeTab === "projects" && <ProjectsShowcase />}
-          {activeTab === "achievements" && <AchievementTimeline />}
-          {activeTab === "circle" && <CircleView />}
-          {activeTab === "learning" && <LearningPath />}
+          {activeTab === "about" && <AboutSection student={student} />}
+          {activeTab === "skills" && <SkillsCanvas student={student} />}
+          {activeTab === "projects" && <ProjectsShowcase student={student} />}
+          {activeTab === "achievements" && <AchievementTimeline student={student} />}
+          {activeTab === "circle" && <CircleView student={student} />}
+          {activeTab === "learning" && <LearningPath student={student} />}
         </div>
       </div>
 

@@ -7,11 +7,11 @@ import { GlobeIcon, BrainIcon, EditIcon, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import EducationCards from "./education-cards"
 
-export default function AboutSection() {
+export default function AboutSection({ student: studentProp }) {
   const [isEditing, setIsEditing] = useState(false)
 
-  // Mock student data
-  const student = {
+  // Use passed student data or fallback to mock data
+  const student = studentProp || {
     bio: "I'm a high school student passionate about technology, mathematics, and science. I love solving complex problems and building projects that make a positive impact. Currently exploring machine learning and web development.",
     location: "San Francisco, CA",
     interests: ["Artificial Intelligence", "Web Development", "Mathematics", "Physics", "Chess", "Photography"],
@@ -271,7 +271,7 @@ export default function AboutSection() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   >
-                    <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+                    <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2 2h3M3 16h3a2 2 0 0 1 2 2v3" />
                   </svg>
                 </div>
                 <span className="text-xs font-medium text-center">Science Whiz</span>
