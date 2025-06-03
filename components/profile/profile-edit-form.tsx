@@ -50,6 +50,17 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
   const [completionData, setCompletionData] = useState<Record<string, boolean>>({})
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 
+  // Handle form changes
+  const handleFormChange = useCallback((sectionId: string, data: any) => {
+    setProfileData((prev: any) => {
+      return {
+        ...prev,
+        [sectionId]: data
+      }
+    })
+    setHasUnsavedChanges(true)
+  }, [])
+
   // Tab configuration
   const tabs: TabConfig[] = [
     {
@@ -159,17 +170,6 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
         return false
     }
   }
-
-  // Handle form changes
-  const handleFormChange = useCallback((sectionId: string, data: any) => {
-    setProfileData((prev: any) => {
-      return {
-        ...prev,
-        [sectionId]: data
-      }
-    })
-    setHasUnsavedChanges(true)
-  }, [])
 
   // Calculate overall completion percentage
   const completionPercentage = Math.round(
