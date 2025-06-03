@@ -73,7 +73,7 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
   useEffect(() => {
     const currentData = form.getValues()
     onChange("personal", currentData)
-  }, [watchedValues])
+  }, [watchedValues, onChange])
 
   const handleImageUpload = (type: 'profile' | 'cover', file: File) => {
     // In a real app, you'd upload to a service like Supabase storage

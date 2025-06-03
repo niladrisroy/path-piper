@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
@@ -113,17 +112,17 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
         setLoading(true)
         const response = await fetch('/api/auth/user')
         if (!response.ok) throw new Error('Failed to load profile')
-        
+
         const { user } = await response.json()
         setProfileData(user)
-        
+
         // Calculate completion status for each section
         const completion: Record<string, boolean> = {}
         tabs.forEach(tab => {
           completion[tab.id] = calculateSectionCompletion(tab.id, user)
         })
         setCompletionData(completion)
-        
+
       } catch (error) {
         console.error('Error loading profile:', error)
         toast.error('Failed to load profile data')
@@ -138,7 +137,7 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
   // Calculate section completion
   const calculateSectionCompletion = (sectionId: string, data: any): boolean => {
     if (!data) return false
-    
+
     switch (sectionId) {
       case "personal":
         return !!(data.firstName && data.lastName && data.bio && data.location)
@@ -164,18 +163,10 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
   // Handle form changes
   const handleFormChange = useCallback((sectionId: string, data: any) => {
     setProfileData((prev: any) => {
-      const newData = {
+      return {
         ...prev,
         [sectionId]: data
       }
-      
-      // Update completion status based on new data
-      setCompletionData(prevCompletion => ({
-        ...prevCompletion,
-        [sectionId]: calculateSectionCompletion(sectionId, newData)
-      }))
-      
-      return newData
     })
     setHasUnsavedChanges(true)
   }, [])
@@ -189,16 +180,16 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
   const handleSave = async () => {
     try {
       setSaving(true)
-      
+
       // Here you would implement the actual save logic
       // This would involve multiple API calls to save different sections
-      
+
       // Simulate save delay
       await new Promise(resolve => setTimeout(resolve, 1500))
-      
+
       setHasUnsavedChanges(false)
       toast.success('Profile updated successfully!')
-      
+
     } catch (error) {
       console.error('Error saving profile:', error)
       toast.error('Failed to save profile changes')
@@ -264,7 +255,7 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
             <div className="text-sm text-white/80">Complete</div>
           </div>
         </div>
-        
+
         {/* Progress Bar */}
         <div className="mt-4">
           <Progress value={completionPercentage} className="h-2 bg-white/20" />
@@ -280,7 +271,7 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
                 const isActive = activeTab === tab.id
                 const isComplete = completionData[tab.id]
                 const isRequired = tab.required
-                
+
                 return (
                   <button
                     key={tab.id}
@@ -359,7 +350,7 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
                   <span>All changes saved</span>
                 )}
               </div>
-              
+
               <div className="flex space-x-3">
                 <Button
                   variant="outline"
