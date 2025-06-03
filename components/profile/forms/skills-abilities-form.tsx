@@ -213,11 +213,11 @@ export default function SkillsAbilitiesForm({ data, onChange }: SkillsAbilitiesF
                   {category.name}
                 </h4>
                 <div className="flex flex-wrap gap-2">
-                  {category.skills.map((skill) => {
+                  {category.skills.map((skill, skillIndex) => {
                     const isSelected = skills.some((s) => s.name === skill)
                     return (
                       <Button
-                        key={skill}
+                        key={`${category.name}-${skill}-${skillIndex}`}
                         type="button"
                         variant={isSelected ? "default" : "outline"}
                         size="sm"
@@ -260,8 +260,8 @@ export default function SkillsAbilitiesForm({ data, onChange }: SkillsAbilitiesF
               </div>
             ) : (
               <div className="space-y-4 max-h-[450px] overflow-y-auto">
-                {skills.map((skill) => (
-                  <div key={skill.name} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800">
+                {skills.map((skill, index) => (
+                  <div key={skill.id || `${skill.name}-${index}`} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800">
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <h4 className="font-medium text-gray-800 dark:text-gray-200">{skill.name}</h4>
