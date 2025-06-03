@@ -6,62 +6,34 @@ import StudentProfile from "@/components/profile/student-profile"
 import InternalNavbar from "@/components/internal-navbar"
 import Footer from "@/components/footer"
 import ProtectedLayout from "@/app/protected-layout"
+import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
 
-interface Student {
-  id: string
-  role: string
-  [key: string]: any
-}
-
 export default function StudentProfilePage() {
-  const [user, setUser] = useState<Student | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { user, loading } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        // Get current user data
-        const userResponse = await fetch('/api/auth/user', {
-          credentials: 'include'
-        })
-        
-        if (!userResponse.ok) {
-          throw new Error('Failed to fetch user data')
-        }
+    if (loading) return
 
-        const userData = await userResponse.json()
-        
-        if (!userData.success) {
-          router.push('/login')
-          return
-        }
-
-        // Redirect non-students to their appropriate profile pages
-        if (userData.user.role !== 'student') {
-          if (userData.user.role === 'mentor') {
-            router.push('/mentor/profile')
-          } else if (userData.user.role === 'institution') {
-            router.push('/institution/profile')
-          } else {
-            router.push('/feed')
-          }
-          return
-        }
-
-        setUser(userData.user)
-        setLoading(false)
-      } catch (error) {
-        console.error('Error fetching user data:', error)
-        setError('Failed to load profile')
-        setLoading(false)
-      }
+    if (!user) {
+      router.push('/login')
+      return
     }
 
-    fetchUserData()
-  }, [router])
+    // Redirect non-students to their appropriate profile pages
+    if (user.role !== 'student') {
+      if (user.role === 'mentor') {
+        router.push('/mentor/profile')
+      } else if (user.role === 'institution') {
+        router.push('/institution/profile')
+      } else {
+        router.push('/feed')
+      }
+      return
+    }
+  }, [user, loading, router])
 
   if (loading) {
     return (

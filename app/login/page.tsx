@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from "react"
@@ -10,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner"
 import Link from "next/link"
 import Image from "next/image"
+import { invalidateUserCache } from '@/hooks/use-auth'
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -35,7 +35,8 @@ export default function LoginPage() {
 
       if (response.ok && data.success) {
         toast.success('Login successful!')
-        
+        invalidateUserCache();
+
         // Redirect based on user role and onboarding status
         if (data.onboardingCompleted) {
           if (data.role === 'student') {
