@@ -1,23 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  allowedDevOrigins: ['*.replit.dev'],
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  images: {
-    unoptimized: true,
-  },
-  experimental: {
-    serverComponentsExternalPackages: [],
-  },
+  serverExternalPackages: ['@prisma/client', 'bcryptjs'],
+  allowedDevOrigins: [
+    '74f7eb31-b1cd-42e1-bc33-49105efe81c2-00-2sp4lhr2dgh9s.sisko.replit.dev',
+    'localhost:3000'
+  ],
   assetPrefix: process.env.NODE_ENV === 'production' ? undefined : '',
-  trailingSlash: false,
-  async rewrites() {
-    return []
+  images: {
+    domains: ['localhost', '74f7eb31-b1cd-42e1-bc33-49105efe81c2-00-2sp4lhr2dgh9s.sisko.replit.dev'],
   },
+  output: 'standalone'
 }
 
 export default nextConfig
