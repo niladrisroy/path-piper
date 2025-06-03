@@ -295,4 +295,3 @@ export default function PrivacySettingsForm({ data, onChange }: PrivacySettingsF
     </div>
   )
 }
-```
