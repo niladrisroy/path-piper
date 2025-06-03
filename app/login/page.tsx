@@ -37,23 +37,23 @@ export default function LoginPage() {
         toast.success('Login successful!')
         
         // Redirect based on user role and onboarding status
-        if (data.user.onboardingCompleted) {
-          if (data.user.role === 'student') {
+        if (data.onboardingCompleted) {
+          if (data.role === 'student') {
             router.push('/feed')
-          } else if (data.user.role === 'mentor') {
+          } else if (data.role === 'mentor') {
             router.push('/mentor/profile')
-          } else if (data.user.role === 'institution') {
+          } else if (data.role === 'institution') {
             router.push('/institution/profile')
           } else {
             router.push('/feed')
           }
         } else {
           // User needs to complete onboarding
-          if (data.user.role === 'student') {
+          if (data.role === 'student') {
             router.push('/onboarding')
-          } else if (data.user.role === 'mentor') {
+          } else if (data.role === 'mentor') {
             router.push('/mentor-onboarding')
-          } else if (data.user.role === 'institution') {
+          } else if (data.role === 'institution') {
             router.push('/institution-onboarding')
           } else {
             router.push('/onboarding')
