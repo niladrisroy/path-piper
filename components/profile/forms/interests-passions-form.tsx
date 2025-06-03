@@ -86,11 +86,14 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
 
   const toggleInterest = (interest: Interest) => {
     const isSelected = selectedInterests.some(i => i.id === interest.id)
+    let newInterests
     if (isSelected) {
-      setSelectedInterests(prev => prev.filter(i => i.id !== interest.id))
+      newInterests = selectedInterests.filter(i => i.id !== interest.id)
     } else {
-      setSelectedInterests(prev => [...prev, interest])
+      newInterests = [...selectedInterests, interest]
     }
+    setSelectedInterests(newInterests)
+    onChange("interests", newInterests)
   }
 
   const addCustomInterest = () => {
@@ -103,12 +106,16 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
       category: "Custom"
     }
 
-    setSelectedInterests(prev => [...prev, newInterest])
+    const newInterests = [...selectedInterests, newInterest]
+    setSelectedInterests(newInterests)
+    onChange("interests", newInterests)
     setCustomInterest("")
   }
 
   const removeInterest = (interestId: number) => {
-    setSelectedInterests(prev => prev.filter(i => i.id !== interestId))
+    const newInterests = selectedInterests.filter(i => i.id !== interestId)
+    setSelectedInterests(newInterests)
+    onChange("interests", newInterests)
   }
 
   if (loading) {
@@ -254,4 +261,3 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
     </div>
   )
 }
-```

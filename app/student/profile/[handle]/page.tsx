@@ -3,7 +3,6 @@
 
 import { useEffect, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import StudentProfile from "@/components/profile/student-profile"
 import InternalNavbar from "@/components/internal-navbar"
 import Footer from "@/components/footer"
@@ -16,61 +15,67 @@ export default function StudentProfileHandlePage() {
   const [studentData, setStudentData] = useState<any>(null)
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
-  const supabase = createClientComponentClient()
   
   const handle = params?.handle as string
 
   useEffect(() => {
-    const fetchStudentByHandle = async () => {
+    const loadMockData = async () => {
       try {
-        // Get current user for context
-        const { data: { user } } = await supabase.auth.getUser()
+        // Simulate loading delay
+        await new Promise(resolve => setTimeout(resolve, 1000))
         
-        if (!user) {
-          router.push('/login')
-          return
+        // Mock current user
+        const mockCurrentUser = {
+          id: 'current-user-123',
+          firstName: 'Current',
+          lastName: 'User',
+          email: 'current@example.com'
         }
-
-        // Fetch current user profile
-        const userResponse = await fetch('/api/auth/user')
-        const userData = await userResponse.json()
         
-        if (!userData.success) {
-          router.push('/login')
-          return
+        // Mock student data
+        const mockStudentData = {
+          id: handle,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+          bio: 'Passionate about technology and learning new skills.',
+          location: 'San Francisco, CA',
+          interests: [
+            { id: 1, name: 'Web Development' },
+            { id: 2, name: 'Machine Learning' },
+            { id: 3, name: 'Photography' }
+          ],
+          skills: [
+            { id: 1, name: 'JavaScript', level: 4 },
+            { id: 2, name: 'Python', level: 3 },
+            { id: 3, name: 'React', level: 4 }
+          ],
+          educationHistory: [
+            {
+              id: 1,
+              institutionName: 'Stanford University',
+              degree: 'Computer Science',
+              startDate: '2020-09-01',
+              endDate: '2024-06-01',
+              isCurrent: false
+            }
+          ]
         }
-
-        setCurrentUser(userData.user)
-
-        // Fetch student profile by handle
-        // Note: You'll need to add a unique handle field to your student profiles
-        // For now, we'll treat the handle as a user ID
-        const studentResponse = await fetch(`/api/student/profile/${handle}`)
         
-        if (!studentResponse.ok) {
-          if (studentResponse.status === 404) {
-            setError('Student profile not found')
-          } else {
-            setError('Error loading profile')
-          }
-          setLoading(false)
-          return
-        }
-
-        const studentData = await studentResponse.json()
-        setStudentData(studentData)
+        setCurrentUser(mockCurrentUser)
+        setStudentData(mockStudentData)
         setLoading(false)
       } catch (error) {
-        console.error('Error fetching student profile:', error)
+        console.error('Error loading mock data:', error)
         setError('Error loading profile')
         setLoading(false)
       }
     }
 
     if (handle) {
-      fetchStudentByHandle()
+      loadMockData()
     }
-  }, [handle, router, supabase.auth])
+  }, [handle])
 
   if (loading) {
     return (
