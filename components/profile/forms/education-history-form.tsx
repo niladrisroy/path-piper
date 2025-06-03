@@ -76,7 +76,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
   // Notify parent of changes
   useEffect(() => {
     onChange("education", educationHistory)
-  }, [educationHistory, onChange])
+  }, [educationHistory])
 
   const handleInputChange = (field: keyof EducationEntry, value: string | number | boolean) => {
     if (editingEntry) {

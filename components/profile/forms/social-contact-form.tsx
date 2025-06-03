@@ -58,7 +58,7 @@ export default function SocialContactForm({ data, onChange }: SocialContactFormP
   useEffect(() => {
     const currentData = form.getValues()
     onChange("social", currentData)
-  }, [watchedValues, onChange, form])
+  }, [watchedValues])
 
   const socialLinks = [
     {

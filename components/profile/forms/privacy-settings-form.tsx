@@ -52,7 +52,7 @@ export default function PrivacySettingsForm({ data, onChange }: PrivacySettingsF
   // Notify parent of changes
   useEffect(() => {
     onChange("privacy", settings)
-  }, [settings, onChange])
+  }, [settings])
 
   const updateSetting = (key: keyof PrivacySettings, value: boolean | string) => {
     setSettings(prev => ({ ...prev, [key]: value }))

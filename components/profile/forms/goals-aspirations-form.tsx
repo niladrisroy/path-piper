@@ -47,7 +47,7 @@ export default function GoalsAspirationsForm({ data, onChange }: GoalsAspiration
   // Notify parent of changes
   useEffect(() => {
     onChange("goals", goals)
-  }, [goals, onChange])
+  }, [goals])
 
   const handleInputChange = (field: keyof Goal, value: string) => {
     if (editingGoal) {

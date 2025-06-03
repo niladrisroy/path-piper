@@ -86,7 +86,7 @@ export default function SkillsAbilitiesForm({ data, onChange }: SkillsAbilitiesF
   // Notify parent of changes
   useEffect(() => {
     onChange("skills", skills)
-  }, [skills, onChange])
+  }, [skills])
 
   const addSkill = (skillName: string, skillId?: number) => {
     if (skills.some((s) => s.name === skillName)) return

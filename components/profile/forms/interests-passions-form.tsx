@@ -83,7 +83,7 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
   // Notify parent of changes
   useEffect(() => {
     onChange("interests", selectedInterests)
-  }, [selectedInterests, onChange])
+  }, [selectedInterests])
 
   const toggleInterest = (interest: Interest) => {
     const isSelected = selectedInterests.some(i => i.id === interest.id)

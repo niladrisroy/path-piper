@@ -32,7 +32,7 @@ export default function MoodBoardMediaForm({ data, onChange }: MoodBoardMediaFor
   // Notify parent of changes
   useEffect(() => {
     onChange("media", { moodBoard })
-  }, [moodBoard, onChange])
+  }, [moodBoard])
 
   const handleImageUpload = (files: FileList) => {
     Array.from(files).forEach(file => {
