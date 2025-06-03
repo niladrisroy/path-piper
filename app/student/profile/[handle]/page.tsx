@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
@@ -15,7 +14,7 @@ export default function StudentProfileHandlePage() {
   const [studentData, setStudentData] = useState<any>(null)
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
-  
+
   const handle = params?.handle as string
 
   useEffect(() => {
@@ -23,7 +22,7 @@ export default function StudentProfileHandlePage() {
       try {
         // Simulate loading delay
         await new Promise(resolve => setTimeout(resolve, 1000))
-        
+
         // Mock current user
         const mockCurrentUser = {
           id: 'current-user-123',
@@ -31,7 +30,7 @@ export default function StudentProfileHandlePage() {
           lastName: 'User',
           email: 'current@example.com'
         }
-        
+
         // Mock student data
         const mockStudentData = {
           id: handle,
@@ -61,7 +60,7 @@ export default function StudentProfileHandlePage() {
             }
           ]
         }
-        
+
         setCurrentUser(mockCurrentUser)
         setStudentData(mockStudentData)
         setLoading(false)
