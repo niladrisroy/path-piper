@@ -4,10 +4,11 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const studentId = params.id
+    const resolvedParams = await params
+    const studentId = resolvedParams.id
 
     // Fetch student profile with all related data
     const studentProfile = await prisma.studentProfile.findUnique({
@@ -35,7 +36,7 @@ export async function GET(
             }
           }
         },
-        educationHistory: {
+        studentEducationHistory: {
           include: {
             institution: {
               include: {
@@ -88,7 +89,7 @@ export async function GET(
         proficiencyLevel: us.proficiencyLevel,
         category: us.skill.category.name
       })),
-      educationHistory: studentProfile.educationHistory.map(eh => ({
+      educationHistory: studentProfile.studentEducationHistory.map(eh => ({
         id: eh.id,
         institutionName: eh.institutionName,
         institutionType: eh.institutionType ? {
