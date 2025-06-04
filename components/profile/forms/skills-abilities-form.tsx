@@ -138,7 +138,7 @@ export default function SkillsAbilitiesForm({
     console.log("🔍 Skills dirty bit:", skillsChanged)
     setIsDirty(skillsChanged)
     onChange("skills", skills, skillsChanged)
-  }, [skills, originalSkills, onChange])
+  }, [skills, originalSkills])
 
   const addSkill = (skillName: string, skillId?: number) => {
     if (skills.some((s) => s.name === skillName)) return
