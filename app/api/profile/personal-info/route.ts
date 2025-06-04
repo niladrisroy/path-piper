@@ -6,7 +6,7 @@ import { cookies } from 'next/headers'
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     
     // Get the access token from cookies
     const accessToken = cookieStore.get('sb-access-token')?.value
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     
     // Get the access token from cookies
     const accessToken = cookieStore.get('sb-access-token')?.value

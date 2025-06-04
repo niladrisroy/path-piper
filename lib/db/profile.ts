@@ -10,39 +10,7 @@ export async function getUserProfile(userId: string) {
       include: {
         student: true,
         mentor: true,
-        institution: true,
-        userInterests: {
-          include: {
-            interest: {
-              include: {
-                category: true
-              }
-            }
-          }
-        },
-        userSkills: {
-          include: {
-            skill: {
-              include: {
-                category: true
-              }
-            }
-          }
-        },
-        userLanguages: {
-          include: {
-            language: true
-          }
-        },
-        userHobbies: {
-          include: {
-            hobby: true
-          }
-        },
-        careerGoals: true,
-        socialLinks: true,
-        moodBoard: true,
-        customBadges: true
+        institution: true
       }
     })
 
@@ -88,7 +56,7 @@ export async function updateUserProfile(userId: string, profileData: {
 
 export async function updateStudentProfile(userId: string, studentData: {
   educationLevel?: string
-  ageGroup?: string
+  age_group?: string
   birthMonth?: string
   birthYear?: string
   personalityType?: string
@@ -100,7 +68,7 @@ export async function updateStudentProfile(userId: string, studentData: {
       where: { id: userId },
       data: {
         educationLevel: studentData.educationLevel as any,
-        age_group: studentData.ageGroup as any,
+        age_group: studentData.age_group as any,
         birthMonth: studentData.birthMonth,
         birthYear: studentData.birthYear,
         personalityType: studentData.personalityType,
