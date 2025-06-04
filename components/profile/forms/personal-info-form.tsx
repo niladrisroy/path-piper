@@ -139,35 +139,38 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
   }, [data, form])
 
   // Handle form changes - only update parent state when saving
-  const handleFormChange = useCallback((value: any) => {
-    // Only update parent state when explicitly needed (during save)
-    onChange("personal", value)
-  }, [onChange])
+  const handleFormChange = useCallback((value: any, isDirtyState?: boolean) => {
+    // Update parent state and pass dirty state
+    onChange("personal", value, isDirtyState !== undefined ? isDirtyState : isDirty)
+  }, [onChange, isDirty])
 
   // Watch for form changes to set dirty bit with better comparison
   const watchedValues = form.watch()
   useEffect(() => {
     if (!originalData) return
 
-    const currentData = form.getValues()
-    const hasChanges = Object.keys(currentData).some(key => {
-      const currentValue = currentData[key as keyof PersonalInfoData]
-      const originalValue = originalData[key as keyof PersonalInfoData]
-      
-      // Handle null/undefined/empty string comparison more carefully
-      const normalizedCurrent = currentValue || ""
-      const normalizedOriginal = originalValue || ""
-      
-      return normalizedCurrent !== normalizedOriginal
-    })
+    // Add a small delay to ensure form has been properly reset
+    const timeoutId = setTimeout(() => {
+      const currentData = form.getValues()
+      const hasChanges = Object.keys(currentData).some(key => {
+        const currentValue = currentData[key as keyof PersonalInfoData]
+        const originalValue = originalData[key as keyof PersonalInfoData]
+        
+        // Handle null/undefined/empty string comparison more carefully
+        const normalizedCurrent = currentValue || ""
+        const normalizedOriginal = originalValue || ""
+        
+        return normalizedCurrent !== normalizedOriginal
+      })
 
-    if (isDirty !== hasChanges) {
-      setIsDirty(hasChanges)
-      // Notify parent component about dirty state changes
-      if (hasChanges) {
-        handleFormChange(currentData)
+      if (isDirty !== hasChanges) {
+        setIsDirty(hasChanges)
+        // Always notify parent component about dirty state changes
+        handleFormChange(currentData, hasChanges)
       }
-    }
+    }, 100) // Small delay to ensure form reset is complete
+
+    return () => clearTimeout(timeoutId)
   }, [watchedValues, originalData, form, isDirty, handleFormChange])
 
   // Watch for changes in birth month and year to auto-calculate age group (reused from onboarding)

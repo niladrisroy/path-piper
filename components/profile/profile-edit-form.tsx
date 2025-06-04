@@ -56,7 +56,10 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [completionData, setCompletionData] = useState<Record<string, boolean>>({})
+  // Track unsaved changes across all forms
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [formData, setFormData] = useState<any>({})
+  const [formDirtyStates, setFormDirtyStates] = useState<{[key: string]: boolean}>({})
 
   // Security check: Ensure user can only edit their own profile
   useEffect(() => {
@@ -67,22 +70,19 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
     }
   }, [currentUser, userId, router])
 
-  // Handle form changes - prevent infinite loops
-  const handleFormChange = useCallback((sectionId: string, data: any) => {
-    setProfileData((prev: any) => {
-      // Check if data actually changed to prevent unnecessary re-renders
-      const currentData = prev?.[sectionId]
-      if (JSON.stringify(currentData) === JSON.stringify(data)) {
-        return prev
-      }
+  // Update form data and track changes
+  const handleFormChange = useCallback((sectionId: string, data: any, isDirty?: boolean) => {
+    console.log(`📝 Form change detected in ${sectionId}:`, data, 'isDirty:', isDirty)
+    setFormData((prev: any) => ({ ...prev, [sectionId]: data }))
 
-      return {
-        ...prev,
-        [sectionId]: data
-      }
-    })
-    setHasUnsavedChanges(true)
-  }, [])
+    // Track dirty state per form
+    if (isDirty !== undefined) {
+      setFormDirtyStates(prev => ({ ...prev, [sectionId]: isDirty }))
+      // Update overall dirty state based on any form being dirty
+      const hasAnyDirtyForm = Object.values({ ...formDirtyStates, [sectionId]: isDirty }).some(dirty => dirty)
+      setHasUnsavedChanges(hasAnyDirtyForm)
+    }
+  }, [formDirtyStates])
 
   // Tab configuration
   const tabs: TabConfig[] = [
@@ -172,7 +172,7 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
     }
 
     loadProfileData()
-  }, [userId])
+  }, [userId, tabs])
 
   // Calculate section completion
   const calculateSectionCompletion = (sectionId: string, data: any): boolean => {
@@ -270,7 +270,10 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
 
   // Handle navigation with unsaved changes warning
   const handleNavigation = (tabId: string) => {
-    if (hasUnsavedChanges) {
+    // Check if there are actually any dirty forms
+    const actuallyHasDirtyForms = Object.values(formDirtyStates).some(dirty => dirty)
+
+    if (actuallyHasDirtyForms) {
       const confirmed = window.confirm('You have unsaved changes. Do you want to save before switching sections?')
       if (confirmed) {
         handleSave().then(() => setActiveTab(tabId))
@@ -410,7 +413,7 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
             </AnimatePresence>
           </div>
 
-          
+
         </div>
       </div>
     </div>

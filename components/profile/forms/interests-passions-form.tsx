@@ -21,7 +21,7 @@ interface InterestCategory {
 
 interface InterestsPassionsFormProps {
   data: any
-  onChange: (sectionId: string, data: Interest[]) => void
+  onChange: (sectionId: string, data: Interest[], isDirty?: boolean) => void
 }
 
 export default function InterestsPassionsForm({ data, onChange }: InterestsPassionsFormProps) {
@@ -118,9 +118,13 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
     const hasChanges = selectedNames.length !== initialNames.length || 
                       !selectedNames.every((name, index) => name === initialNames[index])
     
-    setIsDirty(hasChanges)
-    console.log("🔍 Interests dirty bit:", hasChanges)
-  }, [selectedInterests, initialInterests])
+    if (isDirty !== hasChanges) {
+      setIsDirty(hasChanges)
+      // Notify parent about dirty state change
+      onChange("interests", selectedInterests, hasChanges)
+      console.log("🔍 Interests dirty bit:", hasChanges)
+    }
+  }, [selectedInterests, initialInterests, isDirty, onChange])
 
   useEffect(() => {
     if (searchTerm.trim() === "") {
