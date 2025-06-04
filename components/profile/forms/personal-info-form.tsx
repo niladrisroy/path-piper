@@ -164,20 +164,11 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
     }
   }, [watchedBirthMonth, watchedBirthYear, form])
 
-  // Handle form changes - only update parent state without auto-save
+  // Handle form changes - only update parent state when saving
   const handleFormChange = useCallback((value: any) => {
-    if (form.formState.isDirty) {
-      onChange("personal", value)
-    }
-  }, [onChange, form.formState.isDirty])
-
-  // Watch for form changes but only update parent state (no auto-save)
-  useEffect(() => {
-    const subscription = form.watch((value) => {
-      handleFormChange(value)
-    })
-    return () => subscription.unsubscribe()
-  }, [form, handleFormChange])
+    // Only update parent state when explicitly needed (during save)
+    onChange("personal", value)
+  }, [onChange])
 
   const handleImageUpload = (type: 'profile' | 'cover', file: File) => {
     const reader = new FileReader()
