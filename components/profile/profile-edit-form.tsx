@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { motion, AnimatePresence } from "framer-motion"
@@ -57,14 +57,6 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
   const [saving, setSaving] = useState(false)
   const [completionData, setCompletionData] = useState<Record<string, boolean>>({})
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
-  const [changes, setChanges] = useState<Record<string, any>>({})
-  const [isSaving, setIsSaving] = useState(false)
-  const interestsSaveRef = useRef<(() => Promise<void>) | null>(null)
-  const [interestsState, setInterestsState] = useState<{
-    isDirty: boolean
-    saveFunction: (() => Promise<void>) | null
-  }>({ isDirty: false, saveFunction: null })
-
 
   // Security check: Ensure user can only edit their own profile
   useEffect(() => {
@@ -258,44 +250,21 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
     }
   }
 
+  // Handle save - general save for all sections
   const handleSave = async () => {
-    setIsSaving(true)
     try {
-      // Only save sections that have changes
-      const sectionsToSave = Object.keys(changes)
+      setSaving(true)
 
-      for (const sectionId of sectionsToSave) {
-        console.log(`Saving section: ${sectionId}`)
+      // For now, just show a message that individual sections should be saved
+      toast.info('Please save each section individually using the forms')
 
-        if (sectionId === 'personalInfo') {
-          // Save personal info using existing API
-          const response = await fetch('/api/profile/personal-info', {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(changes[sectionId]),
-          })
+      setHasUnsavedChanges(false)
 
-          if (!response.ok) {
-            throw new Error(`Failed to save ${sectionId}`)
-          }
-        } else if (sectionId === 'interests') {
-          // Handle interests save through the component's save function
-          if (interestsState.saveFunction) {
-            await interestsState.saveFunction()
-          }
-        }
-        // Add other section save handlers here as needed
-      }
-
-      toast.success('Profile updated successfully!')
-      setChanges({}) // Clear changes after successful save
     } catch (error) {
       console.error('Error saving profile:', error)
-      toast.error('Failed to save profile. Please try again.')
+      toast.error('Failed to save profile changes')
     } finally {
-      setIsSaving(false)
+      setSaving(false)
     }
   }
 
@@ -436,24 +405,7 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.2 }}
               >
-              {activeTab === 'interests' && (
-            <InterestsPassionsForm
-              data={profileData.interests || []}
-              onChange={handleFormChange}
-              onFormStateChange={(isDirty, saveFunction) => {
-                setInterestsState({ isDirty, saveFunction })
-                // Update the changes state to reflect interests dirty state
-                if (isDirty && !changes.interests) {
-                  setChanges(prev => ({ ...prev, interests: true }))
-                } else if (!isDirty && changes.interests) {
-                  setChanges(prev => {
-                    const { interests, ...rest } = prev
-                    return rest
-                  })
-                }
-              }}
-            />
-          )}
+                {tabs.find(tab => tab.id === activeTab)?.component}
               </motion.div>
             </AnimatePresence>
           </div>

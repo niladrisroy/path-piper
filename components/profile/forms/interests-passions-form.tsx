@@ -22,10 +22,9 @@ interface InterestCategory {
 interface InterestsPassionsFormProps {
   data: any
   onChange: (sectionId: string, data: Interest[]) => void
-  onFormStateChange?: (isDirty: boolean, saveFunction: () => Promise<void>) => void
 }
 
-export default function InterestsPassionsForm({ data, onChange, onFormStateChange }: InterestsPassionsFormProps) {
+export default function InterestsPassionsForm({ data, onChange }: InterestsPassionsFormProps) {
   const [selectedInterests, setSelectedInterests] = useState<Interest[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [customInterest, setCustomInterest] = useState("")
@@ -203,7 +202,7 @@ export default function InterestsPassionsForm({ data, onChange, onFormStateChang
           throw new Error('Failed to save interests')
         }
 
-        console.log('✅ Interests saved successfully!')
+        toast.success('Interests saved successfully!')
         setIsDirty(false)
         
         // Update initial interests to new saved state
@@ -213,19 +212,13 @@ export default function InterestsPassionsForm({ data, onChange, onFormStateChang
         onChange("interests", selectedInterests)
       } else {
         console.log("✅ Interests unchanged, skipping database save")
+        toast.success('No changes to save!')
       }
     } catch (error) {
       console.error('Error saving interests:', error)
-      throw error // Re-throw to let parent handle the error
+      toast.error('Failed to save interests. Please try again.')
     }
   }
-
-  // Notify parent of form state changes
-  useEffect(() => {
-    if (onFormStateChange) {
-      onFormStateChange(isDirty, handleSave)
-    }
-  }, [isDirty, selectedInterests, onFormStateChange])
 
   if (isLoading) {
     return (
@@ -365,7 +358,20 @@ export default function InterestsPassionsForm({ data, onChange, onFormStateChang
               </div>
             )}
 
-            
+            {/* Save Button */}
+            <div className="mt-auto">
+              <Button
+                onClick={handleSave}
+                disabled={!isDirty}
+                className={`w-full ${
+                  isDirty 
+                    ? 'bg-pathpiper-teal hover:bg-pathpiper-teal/90' 
+                    : 'bg-gray-300 cursor-not-allowed'
+                }`}
+              >
+                {isDirty ? 'Save Changes' : 'No Changes'}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
