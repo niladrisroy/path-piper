@@ -23,16 +23,12 @@ interface SkillCategory {
 
 interface SkillsAbilitiesFormProps {
   data: any
-  onChange: (sectionId: string, data: Skill[]) => void
-  isDirty: boolean
-  onDirtyChange: (dirty: boolean) => void
+  onChange: (sectionId: string, data: Skill[], isDirty?: boolean) => void
 }
 
 export default function SkillsAbilitiesForm({ 
   data, 
-  onChange, 
-  isDirty, 
-  onDirtyChange 
+  onChange
 }: SkillsAbilitiesFormProps) {
   const [skills, setSkills] = useState<Skill[]>([])
   const [originalSkills, setOriginalSkills] = useState<Skill[]>([])
@@ -44,6 +40,7 @@ export default function SkillsAbilitiesForm({
   const [userAgeGroup, setUserAgeGroup] = useState<string>("high_school")
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [isDirty, setIsDirty] = useState(false)
 
   // Fetch user age group and skills data
   useEffect(() => {
@@ -98,7 +95,7 @@ export default function SkillsAbilitiesForm({
           setOriginalSkills(userSkills)
 
           // Update parent component with loaded data
-          onChange("skills", userSkills)
+          onChange("skills", userSkills, false)
         }
       } catch (error) {
         console.error('Error fetching data:', error)
@@ -139,8 +136,9 @@ export default function SkillsAbilitiesForm({
       })
     
     console.log("🔍 Skills dirty bit:", skillsChanged)
-    onDirtyChange(skillsChanged)
-  }, [skills, originalSkills, onDirtyChange])
+    setIsDirty(skillsChanged)
+    onChange("skills", skills, skillsChanged)
+  }, [skills, originalSkills, onChange])
 
   const addSkill = (skillName: string, skillId?: number) => {
     if (skills.some((s) => s.name === skillName)) return
@@ -152,7 +150,6 @@ export default function SkillsAbilitiesForm({
       category: findSkillCategory(skillName)
     }]
     setSkills(newSkills)
-    onChange("skills", newSkills)
   }
 
   const addCustomSkill = () => {
@@ -164,14 +161,12 @@ export default function SkillsAbilitiesForm({
       category: "Custom"
     }]
     setSkills(newSkills)
-    onChange("skills", newSkills)
     setNewSkill("")
   }
 
   const removeSkill = (skillName: string) => {
     const newSkills = skills.filter((s) => s.name !== skillName)
     setSkills(newSkills)
-    onChange("skills", newSkills)
   }
 
   const updateSkillLevel = (skillName: string, level: number) => {
@@ -179,7 +174,6 @@ export default function SkillsAbilitiesForm({
       s.name === skillName ? { ...s, level } : s
     )
     setSkills(newSkills)
-    onChange("skills", newSkills)
   }
 
   const findSkillCategory = (skillName: string): string => {
@@ -240,7 +234,7 @@ export default function SkillsAbilitiesForm({
           }
         }
         
-        onDirtyChange(false)
+        setIsDirty(false)
         setOriginalSkills([...skills])
         console.log("✅ Skills saved successfully")
       } else {
