@@ -143,7 +143,7 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
     }
   ]
 
-  // Load profile data
+  // Load profile data only once
   useEffect(() => {
     const loadProfileData = async () => {
       try {
@@ -171,8 +171,11 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
       }
     }
 
-    loadProfileData()
-  }, [userId, tabs])
+    // Only load if we don't have profile data yet
+    if (!profileData) {
+      loadProfileData()
+    }
+  }, [userId]) // Remove tabs dependency to prevent unnecessary reloads
 
   // Calculate section completion
   const calculateSectionCompletion = (sectionId: string, data: any): boolean => {

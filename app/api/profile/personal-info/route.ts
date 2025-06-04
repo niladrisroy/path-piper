@@ -1,6 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserProfile, updateUserProfile, updateStudentProfile } from '@/lib/db/profile'
+import { prisma } from '@/lib/prisma'
 import { supabase } from '@/lib/supabase'
 import { cookies } from 'next/headers'
 
@@ -22,8 +23,33 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized - invalid token' }, { status: 401 })
     }
 
-    // Use Prisma to get profile data
-    const profile = await getUserProfile(user.id)
+    // Use optimized single query to get all profile data
+    const profile = await prisma.profile.findUnique({
+      where: { id: user.id },
+      include: {
+        student: true,
+        mentor: true,
+        institution: true,
+        userInterests: {
+          include: {
+            interest: {
+              include: {
+                category: true
+              }
+            }
+          }
+        },
+        userSkills: {
+          include: {
+            skill: {
+              include: {
+                category: true
+              }
+            }
+          }
+        }
+      }
+    })
     
     if (!profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
@@ -55,10 +81,27 @@ export async function GET(request: NextRequest) {
         personalityType: profile.student.personalityType,
         learningStyle: profile.student.learningStyle,
         favoriteQuote: profile.student.favoriteQuote
-      })
+      }),
+      // Include interests and skills
+      interests: profile.userInterests?.map(ui => ({
+        id: ui.interest.id,
+        name: ui.interest.name,
+        category: ui.interest.category.name
+      })) || [],
+      skills: profile.userSkills?.map(us => ({
+        id: us.skill.id,
+        name: us.skill.name,
+        category: us.skill.category.name,
+        level: us.level
+      })) || []
     }
 
-    return NextResponse.json(formattedProfile)
+    const response = NextResponse.json(formattedProfile)
+    
+    // Add cache headers to reduce unnecessary requests
+    response.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=300')
+    
+    return response
   } catch (error) {
     console.error('Error fetching profile:', error)
     return NextResponse.json(

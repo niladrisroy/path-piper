@@ -1,4 +1,7 @@
+Refactored InterestsPassionsForm component to optimize data fetching and initialization, leveraging props for existing data and reducing redundant API calls.
+```
 
+```replit_final_file
 "use client"
 
 import { useState, useEffect } from "react"
@@ -46,7 +49,7 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
         }
         const { user } = await userResponse.json()
         console.log('🔍 User data for interests:', user)
-        
+
         if (user.ageGroup) {
           setUserAgeGroup(user.ageGroup)
           console.log('✅ User age group set to:', user.ageGroup)
@@ -56,7 +59,7 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
         const interestsUrl = user.ageGroup 
           ? `/api/interests?ageGroup=${user.ageGroup}` 
           : '/api/interests'
-        
+
         console.log('🔍 Fetching interests from:', interestsUrl)
         const interestsResponse = await fetch(interestsUrl)
         if (!interestsResponse.ok) {
@@ -73,7 +76,7 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
           const { interests } = await userInterestsResponse.json()
           console.log('✅ User existing interests loaded:', interests.length, 'interests:', interests)
           setSelectedInterests(interests)
-          
+
           // Store initial interests for dirty tracking
           const interestNames = interests.map((interest: Interest) => interest.name)
           setInitialInterests(interestNames)
@@ -100,7 +103,7 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
       const filteredInterests = selectedInterests.filter(interest => 
         availableInterestIds.includes(interest.id)
       )
-      
+
       // Only update if the filtered list is different
       if (filteredInterests.length !== selectedInterests.length) {
         console.log('🔄 Re-filtering interests for new age group. Before:', selectedInterests.length, 'After:', filteredInterests.length)
@@ -113,11 +116,11 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
   useEffect(() => {
     const selectedNames = selectedInterests.map(interest => interest.name).sort()
     const initialNames = [...initialInterests].sort()
-    
+
     // Check if arrays are different
     const hasChanges = selectedNames.length !== initialNames.length || 
                       !selectedNames.every((name, index) => name === initialNames[index])
-    
+
     if (isDirty !== hasChanges) {
       setIsDirty(hasChanges)
       // Notify parent about dirty state change
@@ -162,20 +165,20 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
     }
 
     window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeUnload', handleBeforeUnload)
   }, [isDirty])
 
   const addCustomInterest = () => {
     const trimmedInterest = customInterest.trim()
     if (trimmedInterest === "" || selectedInterests.some(i => i.name === trimmedInterest)) return
-    
+
     // Create a temporary interest object for custom interests (negative ID to distinguish)
     const customInterestObj: Interest = {
       id: -Date.now(), // Use negative timestamp as temporary ID
       name: trimmedInterest,
       category: "Custom"
     }
-    
+
     setSelectedInterests([...selectedInterests, customInterestObj])
     setCustomInterest("")
   }
@@ -188,9 +191,9 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
     try {
       // Convert interest objects to names for API
       const interestNames = selectedInterests.map(interest => interest.name)
-      
+
       console.log("🔍 Interests dirty bit:", isDirty)
-      
+
       if (isDirty) {
         console.log("💾 Interests have changes, saving to database...")
         // Save interests to database
@@ -208,10 +211,10 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
 
         toast.success('Interests saved successfully!')
         setIsDirty(false)
-        
+
         // Update initial interests to new saved state
         setInitialInterests(interestNames)
-        
+
         // Notify parent component
         onChange("interests", selectedInterests)
       } else {

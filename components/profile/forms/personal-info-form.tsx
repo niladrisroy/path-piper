@@ -155,11 +155,11 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
       const hasChanges = Object.keys(currentData).some(key => {
         const currentValue = currentData[key as keyof PersonalInfoData]
         const originalValue = originalData[key as keyof PersonalInfoData]
-        
+
         // Handle null/undefined/empty string comparison more carefully
         const normalizedCurrent = currentValue || ""
         const normalizedOriginal = originalValue || ""
-        
+
         return normalizedCurrent !== normalizedOriginal
       })
 
@@ -242,7 +242,7 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
 
     try {
       console.log("💾 Personal info has changes, saving to database...")
-      
+
       // Map form data to match API expectations (same as onboarding)
       const apiData = {
         firstName: formData.firstName,
@@ -274,16 +274,16 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
         const result = await response.json()
         console.log("✅ Profile updated successfully:", result)
         toast.success("Personal information updated successfully!")
-        
+
         // Reset dirty state after successful save (same as onboarding)
         setOriginalData(formData)
         setIsDirty(false)
-        
+
         // Call parent onSave callback if provided
         if (onSave) {
           await onSave(formData)
         }
-        
+
         console.log("✅ Personal info saved successfully")
       } else {
         const error = await response.json()
