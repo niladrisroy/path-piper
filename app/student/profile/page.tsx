@@ -32,6 +32,9 @@ export default function StudentProfilePage() {
       }
       return
     }
+
+    // Redirect to the user's specific profile page using their ID as the handle
+    router.push(`/student/profile/${user.id}`)
   }, [user, loading, router])
 
   if (loading) {
@@ -41,8 +44,8 @@ export default function StudentProfilePage() {
           <InternalNavbar />
           <main className="flex-grow pt-16 sm:pt-24 flex items-center justify-center">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pathpiper-teal mx-auto mb-4"></div>
-              <p className="text-gray-600 dark:text-gray-400">Loading profile...</p>
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-pathpiper-teal"></div>
+              <p className="mt-4 text-gray-600">Loading...</p>
             </div>
           </main>
           <Footer />
@@ -51,43 +54,5 @@ export default function StudentProfilePage() {
     )
   }
 
-  if (error) {
-    return (
-      <ProtectedLayout>
-        <div className="min-h-screen flex flex-col">
-          <InternalNavbar />
-          <main className="flex-grow pt-16 sm:pt-24 flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-red-500 text-6xl mb-4">😞</div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Error Loading Profile</h1>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-pathpiper-teal text-white rounded-lg hover:bg-pathpiper-teal/90 transition-colors"
-              >
-                Try Again
-              </button>
-            </div>
-          </main>
-          <Footer />
-        </div>
-      </ProtectedLayout>
-    )
-  }
-
-  if (!user || user.role !== 'student') {
-    return null // This will be handled by the useEffect redirect
-  }
-
-  return (
-    <ProtectedLayout>
-      <div className="min-h-screen flex flex-col">
-        <InternalNavbar />
-        <main className="flex-grow pt-16 sm:pt-24">
-          <StudentProfile studentId={user?.id} currentUser={user} />
-        </main>
-        <Footer />
-      </div>
-    </ProtectedLayout>
-  )
-}
+  // This component will redirect, so we don't need to render anything else
+  return null

@@ -43,12 +43,22 @@ interface TabConfig {
 
 export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
   const router = useRouter()
+  const { user: currentUser } = useAuth()
   const [activeTab, setActiveTab] = useState("personal")
   const [profileData, setProfileData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [completionData, setCompletionData] = useState<Record<string, boolean>>({})
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+
+  // Security check: Ensure user can only edit their own profile
+  useEffect(() => {
+    if (currentUser && currentUser.id !== userId) {
+      console.warn('User attempted to edit another user\'s profile')
+      router.push(`/student/profile/edit`)
+      return
+    }
+  }, [currentUser, userId, router])
 
   // Handle form changes - prevent infinite loops
   const handleFormChange = useCallback((sectionId: string, data: any) => {

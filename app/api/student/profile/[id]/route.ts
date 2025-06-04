@@ -10,6 +10,36 @@ export async function GET(
     const resolvedParams = await params
     const studentId = resolvedParams.id
 
+    // Get user from session cookie to verify authentication
+    const cookieStore = request.headers.get('cookie') || ''
+    const cookies = Object.fromEntries(
+      cookieStore.split(';').map(cookie => {
+        const [name, ...rest] = cookie.trim().split('=')
+        return [name, decodeURIComponent(rest.join('='))]
+      })
+    )
+
+    const accessToken = cookies['sb-access-token']
+    if (!accessToken) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Verify token with Supabase
+    const { supabase } = await import('@/lib/supabase')
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Security check: Users can only access their own profile
+    if (user.id !== studentId) {
+      return NextResponse.json(
+        { error: 'You can only access your own profile' },
+        { status: 403 }
+      )
+    }
+
     // Fetch student profile with all related data
     const studentProfile = await prisma.studentProfile.findUnique({
       where: { id: studentId },

@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
@@ -38,12 +37,12 @@ export default function ProfileEditPage() {
   if (loading) {
     return (
       <ProtectedLayout>
-        <div className="min-h-screen flex flex-col">
+        <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
           <InternalNavbar />
           <main className="flex-grow pt-16 sm:pt-24 flex items-center justify-center">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pathpiper-teal mx-auto mb-4"></div>
-              <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-pathpiper-teal"></div>
+              <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
             </div>
           </main>
           <Footer />
@@ -55,19 +54,12 @@ export default function ProfileEditPage() {
   if (error) {
     return (
       <ProtectedLayout>
-        <div className="min-h-screen flex flex-col">
+        <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
           <InternalNavbar />
           <main className="flex-grow pt-16 sm:pt-24 flex items-center justify-center">
             <div className="text-center">
-              <div className="text-red-500 text-6xl mb-4">😞</div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Error Loading Profile</h1>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-pathpiper-teal text-white rounded-lg hover:bg-pathpiper-teal/90 transition-colors"
-              >
-                Try Again
-              </button>
+              <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
+              <p className="text-gray-600 dark:text-gray-400">{error}</p>
             </div>
           </main>
           <Footer />
@@ -77,7 +69,7 @@ export default function ProfileEditPage() {
   }
 
   if (!user || user.role !== 'student') {
-    return null
+    return null // This will be handled by the useEffect redirect
   }
 
   return (

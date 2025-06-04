@@ -1,90 +1,123 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter, useParams } from "next/navigation"
-import StudentProfile from "@/components/profile/student-profile"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/hooks/use-auth"
 import InternalNavbar from "@/components/internal-navbar"
 import Footer from "@/components/footer"
-import ProtectedLayout from "../../../protected-layout"
+import ProtectedLayout from "@/app/protected-layout"
+import StudentProfile from "@/components/profile/student-profile"
 
-export default function StudentProfileHandlePage() {
-  const router = useRouter()
-  const params = useParams()
+interface StudentData {
+  id: string
+  profile: {
+    firstName: string
+    lastName: string
+    bio?: string
+    location?: string
+    profileImageUrl?: string
+    userInterests: Array<{
+      interest: {
+        name: string
+        category: { name: string }
+      }
+    }>
+    userSkills: Array<{
+      skill: {
+        name: string
+        category: { name: string }
+      }
+    }>
+  }
+  educationHistory: Array<{
+    id: string
+    institutionName: string
+    degree?: string
+    fieldOfStudy?: string
+    startDate: string
+    endDate?: string
+    current: boolean
+  }>
+}
+
+export default function StudentProfilePage({ params }: { params: { handle: string } }) {
+  const { user: currentUser, loading: authLoading } = useAuth()
+  const [studentData, setStudentData] = useState<StudentData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [studentData, setStudentData] = useState<any>(null)
-  const [currentUser, setCurrentUser] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
-
-  const handle = params?.handle as string
+  const router = useRouter()
+  const handle = params.handle
 
   useEffect(() => {
-    const loadMockData = async () => {
+    if (authLoading) return
+
+    if (!currentUser) {
+      router.push('/login')
+      return
+    }
+
+    // Redirect non-students to their appropriate profile pages
+    if (currentUser.role !== 'student') {
+      if (currentUser.role === 'mentor') {
+        router.push('/mentor/profile')
+      } else if (currentUser.role === 'institution') {
+        router.push('/institution/profile')
+      } else {
+        router.push('/feed')
+      }
+      return
+    }
+
+    // Security check: Users can only view their own profile via handle
+    // If the handle doesn't match their user ID, redirect to their own profile
+    if (handle !== currentUser.id) {
+      router.push(`/student/profile/${currentUser.id}`)
+      return
+    }
+
+    // Fetch student data - now we know it's the current user's profile
+    const fetchStudentData = async () => {
       try {
-        // Simulate loading delay
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        setLoading(true)
+        setError(null)
 
-        // Mock current user
-        const mockCurrentUser = {
-          id: 'current-user-123',
-          firstName: 'Current',
-          lastName: 'User',
-          email: 'current@example.com'
+        const response = await fetch(`/api/student/profile/${currentUser.id}`, {
+          credentials: 'include'
+        })
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            setError('Profile not found')
+          } else if (response.status === 403) {
+            setError('Access denied')
+          } else {
+            setError('Failed to load profile')
+          }
+          return
         }
 
-        // Mock student data
-        const mockStudentData = {
-          id: handle,
-          firstName: 'John',
-          lastName: 'Doe',
-          email: 'john.doe@example.com',
-          bio: 'Passionate about technology and learning new skills.',
-          location: 'San Francisco, CA',
-          interests: [
-            { id: 1, name: 'Web Development' },
-            { id: 2, name: 'Machine Learning' },
-            { id: 3, name: 'Photography' }
-          ],
-          skills: [
-            { id: 1, name: 'JavaScript', level: 4 },
-            { id: 2, name: 'Python', level: 3 },
-            { id: 3, name: 'React', level: 4 }
-          ],
-          educationHistory: [
-            {
-              id: 1,
-              institutionName: 'Stanford University',
-              degree: 'Computer Science',
-              startDate: '2020-09-01',
-              endDate: '2024-06-01',
-              isCurrent: false
-            }
-          ]
-        }
-
-        setCurrentUser(mockCurrentUser)
-        setStudentData(mockStudentData)
-        setLoading(false)
-      } catch (error) {
-        console.error('Error loading mock data:', error)
-        setError('Error loading profile')
+        const data = await response.json()
+        setStudentData(data)
+      } catch (err) {
+        console.error('Error fetching student data:', err)
+        setError('Failed to load profile')
+      } finally {
         setLoading(false)
       }
     }
 
-    if (handle) {
-      loadMockData()
-    }
-  }, [handle])
+    fetchStudentData()
+  }, [handle, currentUser, authLoading, router])
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <ProtectedLayout>
         <div className="min-h-screen flex flex-col">
           <InternalNavbar />
           <main className="flex-grow pt-16 sm:pt-24 flex items-center justify-center">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pathpiper-teal mx-auto mb-4"></div>
-              <p className="text-gray-600 dark:text-gray-400">Loading profile...</p>
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-pathpiper-teal"></div>
+              <p className="mt-4 text-gray-600">Loading profile...</p>
             </div>
           </main>
           <Footer />
@@ -100,14 +133,13 @@ export default function StudentProfileHandlePage() {
           <InternalNavbar />
           <main className="flex-grow pt-16 sm:pt-24 flex items-center justify-center">
             <div className="text-center">
-              <div className="text-red-500 text-6xl mb-4">😞</div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Profile Not Found</h1>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
-              <button
-                onClick={() => router.back()}
-                className="px-4 py-2 bg-pathpiper-teal text-white rounded-lg hover:bg-pathpiper-teal/90 transition-colors"
+              <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
+              <p className="text-gray-600 mb-4">{error}</p>
+              <button 
+                onClick={() => router.push('/student/profile')}
+                className="bg-pathpiper-teal text-white px-4 py-2 rounded hover:bg-pathpiper-teal/90"
               >
-                Go Back
+                Go to My Profile
               </button>
             </div>
           </main>
@@ -122,11 +154,13 @@ export default function StudentProfileHandlePage() {
       <div className="min-h-screen flex flex-col">
         <InternalNavbar />
         <main className="flex-grow pt-16 sm:pt-24">
-          <StudentProfile 
-            studentId={handle}
-            currentUser={currentUser}
-            studentData={studentData}
-          />
+          {studentData && (
+            <StudentProfile
+              studentId={currentUser.id}
+              currentUser={currentUser}
+              studentData={studentData}
+            />
+          )}
         </main>
         <Footer />
       </div>
