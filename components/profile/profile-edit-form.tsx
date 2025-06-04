@@ -410,45 +410,7 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
             </AnimatePresence>
           </div>
 
-          {/* Save Actions */}
-          <div className="border-t border-gray-200 dark:border-gray-700 p-6 bg-gray-50 dark:bg-gray-900">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                {hasUnsavedChanges ? (
-                  <span className="text-orange-600">You have unsaved changes. Click the Save button at the bottom to save your changes.</span>
-                ) : (
-                  <span>All changes saved</span>
-                )}
-              </div>
-
-              <div className="flex space-x-3">
-                <Button
-                  variant="outline"
-                  onClick={handleBack}
-                  disabled={saving}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSave}
-                  disabled={!hasUnsavedChanges || saving}
-                  className="bg-pathpiper-teal hover:bg-pathpiper-teal/90"
-                >
-                  {saving ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Changes
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
+          
         </div>
       </div>
     </div>
