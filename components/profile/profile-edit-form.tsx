@@ -138,16 +138,18 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
     const loadProfileData = async () => {
       try {
         setLoading(true)
-        const response = await fetch('/api/auth/user')
+        
+        // Fetch from the new personal info endpoint for more complete data
+        const response = await fetch('/api/profile/personal-info')
         if (!response.ok) throw new Error('Failed to load profile')
 
-        const { user } = await response.json()
-        setProfileData(user)
+        const userData = await response.json()
+        setProfileData(userData)
 
         // Calculate completion status for each section
         const completion: Record<string, boolean> = {}
         tabs.forEach(tab => {
-          completion[tab.id] = calculateSectionCompletion(tab.id, user)
+          completion[tab.id] = calculateSectionCompletion(tab.id, userData)
         })
         setCompletionData(completion)
 

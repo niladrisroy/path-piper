@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
@@ -22,6 +21,7 @@ const personalInfoSchema = z.object({
   tagline: z.string().max(100, "Tagline must be less than 100 characters").optional(),
   profileImageUrl: z.string().optional(),
   coverImageUrl: z.string().optional(),
+  ageGroup: z.string().optional(), // Added ageGroup field
 })
 
 type PersonalInfoData = z.infer<typeof personalInfoSchema>
@@ -46,6 +46,7 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
       tagline: "",
       profileImageUrl: "",
       coverImageUrl: "",
+      ageGroup: "", // Initialize ageGroup
     }
   })
 
@@ -61,8 +62,9 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
         tagline: data.tagline || "",
         profileImageUrl: data.profileImageUrl || "",
         coverImageUrl: data.coverImageUrl || "",
+        ageGroup: data.ageGroup || "", // Set ageGroup
       })
-      
+
       setProfileImagePreview(data.profileImageUrl || "")
       setCoverImagePreview(data.coverImageUrl || "")
     }
@@ -91,6 +93,31 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
     }
     reader.readAsDataURL(file)
   }
+
+  // Function to handle saving the form data
+  const handleSave = async (data: PersonalInfoData) => {
+    // Implement your save logic here, e.g., API call to update data
+    console.log("Saving personal info:", data)
+    // You might want to call an API endpoint here to save the data
+  }
+
+  // Watch for form changes and trigger onChange with auto-save
+  const watchedFields = form.watch()
+  useEffect(() => {
+    const subscription = form.watch(async (value) => {
+      handleFormChange(value)
+
+      // Auto-save when form has changes and is valid
+      if (form.formState.isDirty && form.formState.isValid) {
+        try {
+          await handleSave(value as PersonalInfoData)
+        } catch (error) {
+          console.error('Auto-save failed:', error)
+        }
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [form, handleFormChange])
 
   return (
     <div className="space-y-8">
@@ -229,6 +256,31 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
               )}
             />
           </div>
+
+          <FormField
+            control={form.control}
+            name="ageGroup"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Age Group</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your age group" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="early_childhood">Early Childhood (Under 5)</SelectItem>
+                    <SelectItem value="elementary">Elementary (5-10 years)</SelectItem>
+                    <SelectItem value="middle_school">Middle School (11-12 years)</SelectItem>
+                    <SelectItem value="high_school">High School (13-17 years)</SelectItem>
+                    <SelectItem value="young_adult">Young Adult (18+ years)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <FormField
             control={form.control}
