@@ -65,23 +65,6 @@ export async function GET(
               }
             }
           }
-        },
-        educationHistory: {
-          include: {
-            institution: {
-              include: {
-                profile: true
-              }
-            },
-            institutionType: {
-              include: {
-                category: true
-              }
-            }
-          },
-          orderBy: {
-            startDate: 'desc'
-          }
         }
       }
     })
@@ -106,36 +89,11 @@ export async function GET(
         bio: studentProfile.profile.bio,
         location: studentProfile.profile.location,
         profileImageUrl: studentProfile.profile.profileImageUrl,
-        role: studentProfile.profile.role
+        role: studentProfile.profile.role,
+        userInterests: studentProfile.profile.userInterests,
+        userSkills: studentProfile.profile.userSkills
       },
-      interests: studentProfile.profile.userInterests.map(ui => ({
-        id: ui.interest.id,
-        name: ui.interest.name,
-        category: ui.interest.category.name
-      })),
-      skills: studentProfile.profile.userSkills.map(us => ({
-        id: us.skill.id,
-        name: us.skill.name,
-        proficiencyLevel: us.proficiencyLevel,
-        category: us.skill.category.name
-      })),
-      educationHistory: studentProfile.educationHistory.map(eh => ({
-        id: eh.id,
-        institutionName: eh.institutionName,
-        institutionType: eh.institutionType ? {
-          name: eh.institutionType.name,
-          category: eh.institutionType.category.name
-        } : null,
-        degreeProgram: eh.degreeProgram,
-        fieldOfStudy: eh.fieldOfStudy,
-        startDate: eh.startDate,
-        endDate: eh.endDate,
-        isCurrent: eh.isCurrent,
-        gradeLevel: eh.gradeLevel,
-        gpa: eh.gpa,
-        achievements: eh.achievements,
-        description: eh.description
-      }))
+      educationHistory: [] // Empty array for now since education history table isn't set up yet
     }
 
     return NextResponse.json(formattedProfile)
