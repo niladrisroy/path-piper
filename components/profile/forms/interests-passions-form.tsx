@@ -1,11 +1,12 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
 import { Plus, X, Search, Heart } from "lucide-react"
+import { toast } from "sonner"
 
 interface Interest {
   id: number
@@ -25,41 +26,102 @@ interface InterestsPassionsFormProps {
 
 export default function InterestsPassionsForm({ data, onChange }: InterestsPassionsFormProps) {
   const [selectedInterests, setSelectedInterests] = useState<Interest[]>([])
-  const [interestCategories, setInterestCategories] = useState<InterestCategory[]>([])
-  const [filteredCategories, setFilteredCategories] = useState<InterestCategory[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [customInterest, setCustomInterest] = useState("")
-  const [loading, setLoading] = useState(true)
+  const [interestCategories, setInterestCategories] = useState<InterestCategory[]>([])
+  const [filteredCategories, setFilteredCategories] = useState<InterestCategory[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isDirty, setIsDirty] = useState(false)
+  const [initialInterests, setInitialInterests] = useState<string[]>([])
+  const [userAgeGroup, setUserAgeGroup] = useState<string>("young_adult")
 
-  // Load interests from API
+  // Fetch user data and interests from database
   useEffect(() => {
-    const loadInterests = async () => {
+    const fetchUserDataAndInterests = async () => {
       try {
-        setLoading(true)
-        const response = await fetch('/api/interests?ageGroup=high_school')
-        if (response.ok) {
-          const categories = await response.json()
-          setInterestCategories(categories)
-          setFilteredCategories(categories)
+        // First, get user data to determine age group
+        const userResponse = await fetch('/api/auth/user')
+        if (!userResponse.ok) {
+          throw new Error('Failed to fetch user data')
+        }
+        const { user } = await userResponse.json()
+        console.log('🔍 User data for interests:', user)
+        
+        if (user.ageGroup) {
+          setUserAgeGroup(user.ageGroup)
+          console.log('✅ User age group set to:', user.ageGroup)
+        }
+
+        // Fetch interests based on user's age group
+        const interestsUrl = user.ageGroup 
+          ? `/api/interests?ageGroup=${user.ageGroup}` 
+          : '/api/interests'
+        
+        console.log('🔍 Fetching interests from:', interestsUrl)
+        const interestsResponse = await fetch(interestsUrl)
+        if (!interestsResponse.ok) {
+          throw new Error('Failed to fetch interests')
+        }
+        const categories = await interestsResponse.json()
+        console.log('✅ Interest categories loaded:', categories.length, 'categories')
+        setInterestCategories(categories)
+        setFilteredCategories(categories)
+
+        // Load user's existing interests
+        const userInterestsResponse = await fetch('/api/user/interests')
+        if (userInterestsResponse.ok) {
+          const { interests } = await userInterestsResponse.json()
+          console.log('✅ User existing interests loaded:', interests.length, 'interests:', interests)
+          setSelectedInterests(interests)
+          
+          // Store initial interests for dirty tracking
+          const interestNames = interests.map((interest: Interest) => interest.name)
+          setInitialInterests(interestNames)
+        } else {
+          console.log('❌ Failed to load user interests:', userInterestsResponse.status)
         }
       } catch (error) {
-        console.error('Error loading interests:', error)
+        console.error('Error fetching user data and interests:', error)
+        toast.error('Failed to load interests. Please try again.')
       } finally {
-        setLoading(false)
+        setIsLoading(false)
       }
     }
 
-    loadInterests()
+    fetchUserDataAndInterests()
   }, [])
 
-  // Update selected interests when data changes
+  // Re-filter selected interests when interest categories change (age group change)
   useEffect(() => {
-    if (data?.interests) {
-      setSelectedInterests(data.interests)
+    if (interestCategories.length > 0 && selectedInterests.length > 0) {
+      const availableInterestIds = interestCategories.flatMap(category => 
+        category.interests.map(interest => interest.id)
+      )
+      const filteredInterests = selectedInterests.filter(interest => 
+        availableInterestIds.includes(interest.id)
+      )
+      
+      // Only update if the filtered list is different
+      if (filteredInterests.length !== selectedInterests.length) {
+        console.log('🔄 Re-filtering interests for new age group. Before:', selectedInterests.length, 'After:', filteredInterests.length)
+        setSelectedInterests(filteredInterests)
+      }
     }
-  }, [data])
+  }, [interestCategories])
 
-  // Filter categories based on search
+  // Track dirty state - compare current interests with initial data
+  useEffect(() => {
+    const selectedNames = selectedInterests.map(interest => interest.name).sort()
+    const initialNames = [...initialInterests].sort()
+    
+    // Check if arrays are different
+    const hasChanges = selectedNames.length !== initialNames.length || 
+                      !selectedNames.every((name, index) => name === initialNames[index])
+    
+    setIsDirty(hasChanges)
+    console.log("🔍 Interests dirty bit:", hasChanges)
+  }, [selectedInterests, initialInterests])
+
   useEffect(() => {
     if (searchTerm.trim() === "") {
       setFilteredCategories(interestCategories)
@@ -70,55 +132,95 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
     const filtered = interestCategories
       .map((category) => ({
         name: category.name,
-        interests: category.interests.filter((interest) =>
-          interest.name.toLowerCase().includes(term)
-        ),
+        interests: category.interests.filter((interest) => interest.name.toLowerCase().includes(term)),
       }))
       .filter((category) => category.interests.length > 0)
 
     setFilteredCategories(filtered)
   }, [searchTerm, interestCategories])
 
-  // Notify parent of changes
-  useEffect(() => {
-    onChange("interests", selectedInterests)
-  }, [selectedInterests])
-
   const toggleInterest = (interest: Interest) => {
     const isSelected = selectedInterests.some(i => i.id === interest.id)
-    let newInterests
     if (isSelected) {
-      newInterests = selectedInterests.filter(i => i.id !== interest.id)
+      setSelectedInterests(selectedInterests.filter((i) => i.id !== interest.id))
     } else {
-      newInterests = [...selectedInterests, interest]
+      setSelectedInterests([...selectedInterests, interest])
     }
-    setSelectedInterests(newInterests)
-    onChange("interests", newInterests)
   }
+
+  // Warn user about unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault()
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?'
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [isDirty])
 
   const addCustomInterest = () => {
     const trimmedInterest = customInterest.trim()
     if (trimmedInterest === "" || selectedInterests.some(i => i.name === trimmedInterest)) return
-
-    const newInterest: Interest = {
-      id: -Date.now(), // Temporary negative ID for custom interests
+    
+    // Create a temporary interest object for custom interests (negative ID to distinguish)
+    const customInterestObj: Interest = {
+      id: -Date.now(), // Use negative timestamp as temporary ID
       name: trimmedInterest,
       category: "Custom"
     }
-
-    const newInterests = [...selectedInterests, newInterest]
-    setSelectedInterests(newInterests)
-    onChange("interests", newInterests)
+    
+    setSelectedInterests([...selectedInterests, customInterestObj])
     setCustomInterest("")
   }
 
   const removeInterest = (interestId: number) => {
-    const newInterests = selectedInterests.filter(i => i.id !== interestId)
-    setSelectedInterests(newInterests)
-    onChange("interests", newInterests)
+    setSelectedInterests(selectedInterests.filter(i => i.id !== interestId))
   }
 
-  if (loading) {
+  const handleSave = async () => {
+    try {
+      // Convert interest objects to names for API
+      const interestNames = selectedInterests.map(interest => interest.name)
+      
+      console.log("🔍 Interests dirty bit:", isDirty)
+      
+      if (isDirty) {
+        console.log("💾 Interests have changes, saving to database...")
+        // Save interests to database
+        const response = await fetch('/api/user/interests', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ interests: interestNames }),
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to save interests')
+        }
+
+        toast.success('Interests saved successfully!')
+        setIsDirty(false)
+        
+        // Update initial interests to new saved state
+        setInitialInterests(interestNames)
+        
+        // Notify parent component
+        onChange("interests", selectedInterests)
+      } else {
+        console.log("✅ Interests unchanged, skipping database save")
+        toast.success('No changes to save!')
+      }
+    } catch (error) {
+      console.error('Error saving interests:', error)
+      toast.error('Failed to save interests. Please try again.')
+    }
+  }
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -228,7 +330,7 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
                 </p>
               </div>
             ) : (
-              <div className="space-y-2 max-h-[350px] overflow-y-auto">
+              <div className="space-y-2 max-h-[300px] overflow-y-auto mb-4">
                 {selectedInterests.map((interest) => (
                   <div
                     key={interest.id}
@@ -237,9 +339,9 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
                     <div>
                       <span className="font-medium">{interest.name}</span>
                       {interest.category && (
-                        <Badge variant="secondary" className="ml-2 text-xs">
+                        <span className="ml-2 text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
                           {interest.category}
-                        </Badge>
+                        </span>
                       )}
                     </div>
                     <Button
@@ -255,6 +357,21 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
                 ))}
               </div>
             )}
+
+            {/* Save Button */}
+            <div className="mt-auto">
+              <Button
+                onClick={handleSave}
+                disabled={!isDirty}
+                className={`w-full ${
+                  isDirty 
+                    ? 'bg-pathpiper-teal hover:bg-pathpiper-teal/90' 
+                    : 'bg-gray-300 cursor-not-allowed'
+                }`}
+              >
+                {isDirty ? 'Save Changes' : 'No Changes'}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
