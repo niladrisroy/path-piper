@@ -37,19 +37,16 @@ export async function updateUserProfile(userId: string, profileData: {
   availabilityStatus?: string
 }) {
   try {
-    // Filter out undefined values and problematic fields for now
+    // Filter out undefined values
     const cleanData = Object.fromEntries(
       Object.entries(profileData).filter(([_, value]) => value !== undefined)
     )
     
-    // Temporarily remove tagline if it's causing issues
-    const { tagline, professionalSummary, githubUrl, linkedinUrl, portfolioUrl, timezone, availabilityStatus, ...safeData } = cleanData
-    
-    console.log('Updating profile with safe data:', safeData)
+    console.log('Updating profile with data:', cleanData)
     
     const updatedProfile = await prisma.profile.update({
       where: { id: userId },
-      data: safeData,
+      data: cleanData,
       include: {
         student: true,
         mentor: true,
