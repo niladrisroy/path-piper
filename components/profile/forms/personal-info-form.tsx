@@ -202,7 +202,7 @@ export default function PersonalInfoForm({ data, onChange, onSave, onFormStateCh
     if (onFormStateChange) {
       onFormStateChange(isDirty, isDirty ? handleSave : null)
     }
-  }, [isDirty, onFormStateChange, handleSave])
+  }, [isDirty, onFormStateChange])
 
   // Watch for changes in birth month and year to auto-calculate age group (reused from onboarding)
   const watchedBirthMonth = form.watch("birthMonth")
