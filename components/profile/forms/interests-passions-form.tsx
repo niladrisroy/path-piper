@@ -316,13 +316,13 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
 
         {/* Selected Interests */}
         <div className="space-y-4">
-          <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 h-full min-h-[400px]">
+          <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 h-[500px] flex flex-col">
             <Label className="text-lg font-medium mb-4 block">
               Your Interests ({selectedInterests.length})
             </Label>
 
             {selectedInterests.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-64 text-center">
+              <div className="flex-1 flex flex-col items-center justify-center text-center">
                 <Heart className="h-12 w-12 text-gray-300 mb-4" />
                 <p className="text-gray-500 mb-2">No interests selected yet</p>
                 <p className="text-sm text-gray-400">
@@ -330,50 +330,45 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
                 </p>
               </div>
             ) : (
-              <div className="space-y-2 max-h-[300px] overflow-y-auto mb-4">
-                {selectedInterests.map((interest) => (
-                  <div
-                    key={interest.id}
-                    className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
-                  >
-                    <div>
-                      <span className="font-medium">{interest.name}</span>
-                      {interest.category && (
-                        <span className="ml-2 text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
-                          {interest.category}
-                        </span>
-                      )}
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeInterest(interest.id)}
-                      className="text-gray-400 hover:text-red-500"
+              <div className="flex-1 overflow-y-auto">
+                <div className="flex flex-wrap gap-2">
+                  {selectedInterests.map((interest) => (
+                    <div
+                      key={interest.id}
+                      className="flex items-center bg-pathpiper-teal text-white px-3 py-1 rounded-full text-sm"
                     >
-                      <X size={16} />
-                    </Button>
-                  </div>
-                ))}
+                      <span className="font-medium">{interest.name}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeInterest(interest.id)}
+                        className="ml-2 p-0 h-auto text-white hover:text-red-200 hover:bg-transparent"
+                      >
+                        <X size={14} />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
-
-            {/* Save Button */}
-            <div className="mt-auto">
-              <Button
-                onClick={handleSave}
-                disabled={!isDirty}
-                className={`w-full ${
-                  isDirty 
-                    ? 'bg-pathpiper-teal hover:bg-pathpiper-teal/90' 
-                    : 'bg-gray-300 cursor-not-allowed'
-                }`}
-              >
-                {isDirty ? 'Save Changes' : 'No Changes'}
-              </Button>
-            </div>
           </div>
         </div>
+      </div>
+
+      {/* Save Button */}
+      <div className="mt-6">
+        <Button
+          onClick={handleSave}
+          disabled={!isDirty}
+          className={`w-full max-w-md mx-auto block ${
+            isDirty 
+              ? 'bg-pathpiper-teal hover:bg-pathpiper-teal/90' 
+              : 'bg-gray-300 cursor-not-allowed'
+          }`}
+        >
+          {isDirty ? 'Save Changes' : 'No Changes'}
+        </Button>
       </div>
     </div>
   )
