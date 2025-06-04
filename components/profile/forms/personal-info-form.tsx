@@ -138,7 +138,7 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
     }
   }, [data, form])
 
-  // Watch for form changes to set dirty bit (reused from onboarding)
+  // Watch for form changes to set dirty bit with better comparison
   const watchedValues = form.watch()
   useEffect(() => {
     if (!originalData) return
@@ -147,11 +147,22 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
     const hasChanges = Object.keys(currentData).some(key => {
       const currentValue = currentData[key as keyof PersonalInfoData]
       const originalValue = originalData[key as keyof PersonalInfoData]
-      return currentValue !== originalValue
+      
+      // Handle null/undefined/empty string comparison more carefully
+      const normalizedCurrent = currentValue || ""
+      const normalizedOriginal = originalValue || ""
+      
+      return normalizedCurrent !== normalizedOriginal
     })
 
-    setIsDirty(hasChanges)
-  }, [watchedValues, originalData, form])
+    if (isDirty !== hasChanges) {
+      setIsDirty(hasChanges)
+      // Notify parent component about dirty state changes
+      if (hasChanges) {
+        handleFormChange(currentData)
+      }
+    }
+  }, [watchedValues, originalData, form, isDirty, handleFormChange])
 
   // Watch for changes in birth month and year to auto-calculate age group (reused from onboarding)
   const watchedBirthMonth = form.watch("birthMonth")
@@ -202,8 +213,11 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
 
       if (onSave) {
         await onSave(formData)
-        setIsDirty(false)
+        // Reset dirty state and update original data after successful save
         setOriginalData(formData)
+        setIsDirty(false)
+        // Notify parent that changes have been saved
+        handleFormChange(formData)
         console.log("✅ Personal info saved successfully")
       }
     } catch (error) {
@@ -246,6 +260,11 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
         const result = await response.json()
         console.log("✅ Profile updated successfully:", result)
         toast.success("Personal information updated successfully!")
+        
+        // Reset dirty state after successful save
+        setOriginalData(apiData)
+        setIsDirty(false)
+        
         if (onSave) {
           onSave(formData)
         }

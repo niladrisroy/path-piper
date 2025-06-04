@@ -212,7 +212,7 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
 
       if (sectionId === 'personal') {
         console.log('💾 Saving personal info section:', data)
-        
+
         const response = await fetch('/api/profile/personal-info', {
           method: 'PUT',
           headers: {
@@ -415,7 +415,7 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 {hasUnsavedChanges ? (
-                  <span className="text-orange-600">You have unsaved changes</span>
+                  <span className="text-orange-600">You have unsaved changes. Click the Save button at the bottom to save your changes.</span>
                 ) : (
                   <span>All changes saved</span>
                 )}
