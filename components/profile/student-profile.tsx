@@ -14,75 +14,50 @@ import ActionBar from "./action-bar"
 interface StudentProfileProps {
   studentId?: string
   currentUser?: any
+  studentData?: any
 }
 
-export default function StudentProfile({ studentId, currentUser }: StudentProfileProps) {
+export default function StudentProfile({ studentId, currentUser, studentData }: StudentProfileProps) {
   const [student, setStudent] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("about")
 
   useEffect(() => {
-    const loadMockStudentProfile = () => {
-      setLoading(true)
-      setError(null)
-
-      // Mock student data for testing
-      const mockStudent = {
-        id: studentId,
-        ageGroup: "high_school",
-        educationLevel: "grade_11",
-        birthMonth: 6,
-        birthYear: 2007,
+    if (studentData) {
+      // Transform the real data to match our component's expected structure
+      const transformedStudent = {
+        id: studentData.id,
+        ageGroup: studentData.ageGroup || "young_adult",
+        educationLevel: studentData.educationLevel || "undergraduate",
+        birthMonth: studentData.birthMonth,
+        birthYear: studentData.birthYear,
         profile: {
-          firstName: "Alex",
-          lastName: "Johnson",
-          bio: "Passionate about computer science and robotics. I love solving complex problems and building innovative projects. Currently working on a machine learning project for my science fair. In my free time, I enjoy coding, reading about AI, and playing chess.",
-          location: "San Francisco, CA",
-          profileImageUrl: "/images/student-profile.png",
+          firstName: studentData.profile?.firstName || "Student",
+          lastName: studentData.profile?.lastName || "",
+          bio: studentData.profile?.bio || "No bio available",
+          location: studentData.profile?.location || "Location not specified",
+          profileImageUrl: studentData.profile?.profileImageUrl || "/images/student-profile.png",
           role: "student"
         },
-        interests: [
-          { id: 1, name: "Computer Science", category: "Technology" },
-          { id: 2, name: "Robotics", category: "Engineering" },
-          { id: 3, name: "Machine Learning", category: "Technology" },
-          { id: 4, name: "Chess", category: "Games" },
-          { id: 5, name: "Mathematics", category: "Academic" }
-        ],
-        skills: [
-          { id: 1, name: "Python Programming", proficiencyLevel: 85, category: "Programming" },
-          { id: 2, name: "JavaScript", proficiencyLevel: 75, category: "Programming" },
-          { id: 3, name: "Problem Solving", proficiencyLevel: 90, category: "Soft Skills" },
-          { id: 4, name: "Project Management", proficiencyLevel: 70, category: "Soft Skills" },
-          { id: 5, name: "Arduino", proficiencyLevel: 65, category: "Hardware" }
-        ],
-        educationHistory: [
-          {
-            id: 1,
-            institutionName: "Westlake High School",
-            institutionType: { name: "High School", category: "Secondary Education" },
-            degreeProgram: null,
-            fieldOfStudy: "General Studies",
-            startDate: "2021-09-01",
-            endDate: null,
-            isCurrent: true,
-            gradeLevel: "11th Grade",
-            gpa: 3.85
-          }
-        ]
+        interests: studentData.profile?.userInterests?.map((ui: any) => ({
+          id: ui.interest.id,
+          name: ui.interest.name,
+          category: ui.interest.category?.name || "General"
+        })) || [],
+        skills: studentData.profile?.userSkills?.map((us: any) => ({
+          id: us.skill.id,
+          name: us.skill.name,
+          proficiencyLevel: us.proficiencyLevel || 50,
+          category: us.skill.category?.name || "General"
+        })) || [],
+        educationHistory: studentData.educationHistory || []
       }
 
-      // Simulate API delay
-      setTimeout(() => {
-        setStudent(mockStudent)
-        setLoading(false)
-      }, 500)
+      setStudent(transformedStudent)
+      setLoading(false)
     }
-
-    if (studentId) {
-      loadMockStudentProfile()
-    }
-  }, [studentId])
+  }, [studentData])
 
   if (loading) {
     return (
@@ -117,7 +92,7 @@ export default function StudentProfile({ studentId, currentUser }: StudentProfil
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
-      <ProfileHeader student={student} />
+      <ProfileHeader student={student} currentUser={currentUser} />
 
       <HorizontalNavigation tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
 

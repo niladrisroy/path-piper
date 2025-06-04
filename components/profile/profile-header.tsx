@@ -1,18 +1,24 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { BadgeCheckIcon, Award, Users, FolderKanban, BrainIcon } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { MapPin, Calendar, GraduationCap, Mail, MessageCircle, UserPlus, Edit } from "lucide-react"
 
 interface ProfileHeaderProps {
-  student?: any
+  student: any
+  currentUser?: any
 }
 
-export default function ProfileHeader({ student: studentProp }: ProfileHeaderProps) {
+export default function ProfileHeader({ student, currentUser }: ProfileHeaderProps) {
+  const router = useRouter()
+
   const [isEditing, setIsEditing] = useState(false)
 
   // Use passed student data or fallback to mock data
-  const student = studentProp || {
+  const studentProp = student || {
     profile: {
       firstName: "Alex",
       lastName: "Johnson", 
@@ -27,11 +33,11 @@ export default function ProfileHeader({ student: studentProp }: ProfileHeaderPro
     ]
   }
 
-  const displayName = student.profile ? `${student.profile.firstName} ${student.profile.lastName}` : "Student"
-  const currentEducation = student.educationHistory?.find((edu: any) => edu.isCurrent)
+  const displayName = studentProp.profile ? `${studentProp.profile.firstName} ${studentProp.profile.lastName}` : "Student"
+  const currentEducation = studentProp.educationHistory?.find((edu: any) => edu.isCurrent)
   const gradeLevel = currentEducation?.gradeLevel || "Student"
   const schoolName = currentEducation?.institutionName || "School"
-  const profileImage = student.profile?.profileImageUrl || "/images/student-profile.png"
+  const profileImage = studentProp.profile?.profileImageUrl || "/images/student-profile.png"
 
   // Mock circle members (would come from API in real app)
   const circleMembers = [
@@ -536,6 +542,33 @@ export default function ProfileHeader({ student: studentProp }: ProfileHeaderPro
                       </a>
                     </div>
                   </div>
+
+                  <div className="mt-6">
+                  {/* Add/Edit Profile button */}
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    {currentUser && currentUser.id === studentProp.profile.id ? (
+                      <Button 
+                        size="lg" 
+                        className="bg-pathpiper-teal hover:bg-pathpiper-teal/90"
+                        onClick={() => router.push('/student/profile/edit')}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit Profile
+                      </Button>
+                    ) : (
+                      <>
+                        <Button size="lg" className="bg-pathpiper-teal hover:bg-pathpiper-teal/90">
+                          <MessageCircle className="h-4 w-4 mr-2" />
+                          Message
+                        </Button>
+                        <Button variant="outline" size="lg">
+                          <UserPlus className="h-4 w-4 mr-2" />
+                          Connect
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
                                 </div>
               </div>
             </div>
