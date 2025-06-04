@@ -229,9 +229,18 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
   const onSubmit = async (formData: any) => {
     console.log("🚀 PersonalInfoForm onSubmit called")
     console.log("📝 Form data:", formData)
+    console.log("🔍 Personal Info dirty bit:", isDirty)
+
+    if (!isDirty) {
+      console.log("✅ Personal info unchanged, skipping save")
+      toast.success("No changes to save")
+      return
+    }
 
     try {
-      // Map form data to match API expectations
+      console.log("💾 Personal info has changes, saving to database...")
+      
+      // Map form data to match API expectations (same as onboarding)
       const apiData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -247,6 +256,8 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
         birthYear: formData.birthYear,
       }
 
+      console.log("📤 Saving personal info data:", apiData)
+
       const response = await fetch('/api/profile/personal-info', {
         method: 'PUT',
         headers: {
@@ -261,13 +272,16 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
         console.log("✅ Profile updated successfully:", result)
         toast.success("Personal information updated successfully!")
         
-        // Reset dirty state after successful save
-        setOriginalData(apiData)
+        // Reset dirty state after successful save (same as onboarding)
+        setOriginalData(formData)
         setIsDirty(false)
         
+        // Call parent onSave callback if provided
         if (onSave) {
-          onSave(formData)
+          await onSave(formData)
         }
+        
+        console.log("✅ Personal info saved successfully")
       } else {
         const error = await response.json()
         console.error("❌ Failed to update profile:", error)
@@ -619,10 +633,22 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
           {isDirty && (
             <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
               <p className="text-sm text-orange-700">
-                You have unsaved changes. Click the Save button at the bottom to save your changes.
+                You have unsaved changes. Click the Save button below to save your changes.
               </p>
             </div>
           )}
+
+          {/* Save button */}
+          <div className="flex justify-end pt-6">
+            <Button 
+              type="submit" 
+              onClick={form.handleSubmit(onSubmit)}
+              disabled={!isDirty}
+              className="min-w-[120px]"
+            >
+              {isDirty ? "Save Changes" : "All Saved"}
+            </Button>
+          </div>
         </div>
       </Form>
     </div>
