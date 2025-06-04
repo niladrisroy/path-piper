@@ -42,6 +42,12 @@ interface TabConfig {
   required?: boolean
 }
 
+interface PersonalInfoFormProps {
+  data: any
+  onChange: (sectionId: string, data: any) => void
+  onSave?: (data: any) => Promise<void>
+}
+
 export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
   const router = useRouter()
   const { user: currentUser } = useAuth()
@@ -69,7 +75,7 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
       if (JSON.stringify(currentData) === JSON.stringify(data)) {
         return prev
       }
-      
+
       return {
         ...prev,
         [sectionId]: data
@@ -138,7 +144,7 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
     const loadProfileData = async () => {
       try {
         setLoading(true)
-        
+
         // Fetch from the new personal info endpoint for more complete data
         const response = await fetch('/api/profile/personal-info')
         if (!response.ok) throw new Error('Failed to load profile')

@@ -29,9 +29,10 @@ type PersonalInfoData = z.infer<typeof personalInfoSchema>
 interface PersonalInfoFormProps {
   data: any
   onChange: (sectionId: string, data: PersonalInfoData) => void
+  onSave?: (data: PersonalInfoData) => Promise<void>
 }
 
-export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormProps) {
+export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInfoFormProps) {
   const [profileImagePreview, setProfileImagePreview] = useState<string>("")
   const [coverImagePreview, setCoverImagePreview] = useState<string>("")
 
@@ -70,7 +71,7 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
     }
   }, [data, form])
 
-  // Handle form changes - debounced to prevent infinite loops
+  // Handle form changes - only update parent state without auto-save
   const handleFormChange = useCallback((value: any) => {
     // Only call onChange if the form is dirty and has actual changes
     if (form.formState.isDirty) {
@@ -94,27 +95,24 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
     reader.readAsDataURL(file)
   }
 
-  // Function to handle saving the form data
-  const handleSave = async (data: PersonalInfoData) => {
-    // Implement your save logic here, e.g., API call to update data
-    console.log("Saving personal info:", data)
-    // You might want to call an API endpoint here to save the data
+  // Function to handle manual saving when save button is clicked
+  const handleSave = async () => {
+    try {
+      const formData = form.getValues()
+      if (onSave) {
+        await onSave(formData)
+      }
+    } catch (error) {
+      console.error('Save failed:', error)
+      throw error // Re-throw to let parent component handle it
+    }
   }
 
-  // Watch for form changes and trigger onChange with auto-save
+  // Watch for form changes but only update parent state (no auto-save)
   const watchedFields = form.watch()
   useEffect(() => {
-    const subscription = form.watch(async (value) => {
+    const subscription = form.watch((value) => {
       handleFormChange(value)
-
-      // Auto-save when form has changes and is valid
-      if (form.formState.isDirty && form.formState.isValid) {
-        try {
-          await handleSave(value as PersonalInfoData)
-        } catch (error) {
-          console.error('Auto-save failed:', error)
-        }
-      }
     })
     return () => subscription.unsubscribe()
   }, [form, handleFormChange])
@@ -224,10 +222,6 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
                     <Input 
                       placeholder="Enter your first name" 
                       {...field}
-                      onChange={(e) => {
-                        field.onChange(e)
-                        handleFormChange(form.getValues())
-                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -245,10 +239,6 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
                     <Input 
                       placeholder="Enter your last name" 
                       {...field}
-                      onChange={(e) => {
-                        field.onChange(e)
-                        handleFormChange(form.getValues())
-                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -310,10 +300,6 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
                     placeholder="Tell us about yourself, your interests, and what you're passionate about..."
                     className="resize-none h-32"
                     {...field}
-                    onChange={(e) => {
-                      field.onChange(e)
-                      handleFormChange(form.getValues())
-                    }}
                   />
                 </FormControl>
                 <FormMessage />
