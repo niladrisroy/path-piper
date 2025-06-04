@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { MapPin, Calendar, GraduationCap, Mail, MessageCircle, UserPlus, Edit } from "lucide-react"
+import { MapPin, Calendar, Users, Award, Star, MessageCircle, Heart, Share2, MoreHorizontal, Edit, BadgeCheck } from "lucide-react"
 
 interface ProfileHeaderProps {
   student: any
@@ -114,7 +114,7 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <h1 className="text-xl sm:text-3xl font-bold truncate">{displayName}</h1>
-                        {true && <BadgeCheckIcon className="h-6 w-6 text-pathpiper-teal" />}
+                        {true && <BadgeCheck className="h-6 w-6 text-pathpiper-teal" />}
                       </div>
                       <p className="text-gray-600 dark:text-gray-300 mt-1 text-sm sm:text-base truncate">
                         Aspiring Software Engineer | Math & Computer Science Enthusiast
@@ -531,7 +531,7 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
                         <span className="text-[10px] text-center mt-1 text-gray-600 dark:text-gray-400">
                           Top Achiever
                         </span>
-                      </div>
+                                            </div>
                     </div>
                     <div className="mt-2 text-center">
                       <a
