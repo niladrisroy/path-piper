@@ -74,6 +74,14 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
     return formStates[activeTab]?.saveFunction
   }
 
+  // Helper to update form state for any tab
+  const updateFormState = (tabId: string, isDirty: boolean, saveFunction: (() => Promise<void>) | null) => {
+    setFormStates(prev => ({
+      ...prev,
+      [tabId]: { isDirty, saveFunction }
+    }))
+  }
+
 
   // Security check: Ensure user can only edit their own profile
   useEffect(() => {
@@ -84,20 +92,12 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
     }
   }, [currentUser, userId, router])
 
-  // Handle form changes - prevent infinite loops
+  // Handle form changes - simplified to prevent infinite loops
   const handleFormChange = useCallback((sectionId: string, data: any) => {
-    setProfileData((prev: any) => {
-      // Check if data actually changed to prevent unnecessary re-renders
-      const currentData = prev?.[sectionId]
-      if (JSON.stringify(currentData) === JSON.stringify(data)) {
-        return prev
-      }
-
-      return {
-        ...prev,
-        [sectionId]: data
-      }
-    })
+    setProfileData((prev: any) => ({
+      ...prev,
+      [sectionId]: data
+    }))
   }, [])
 
   // Tab configuration
@@ -270,28 +270,26 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
     setIsSaving(true)
     try {
       console.log(`💾 Saving current tab: ${activeTab}`)
-
-      // Save only the current active tab
-      if (activeTab === 'personal') {
-        // Handle personal info save through the form's save function
-        const personalForm = tabs.find(tab => tab.id === 'personal')?.component
-        if (personalForm && React.isValidElement(personalForm) && personalForm.props.onSave) {
-          const currentData = profileData || {}
-          await personalForm.props.onSave(currentData)
-        }
-      } else if (activeTab === 'interests') {
-        // Handle interests save through the component's save function
-        if (interestsState.saveFunction) {
-          await interestsState.saveFunction()
-        }
+      
+      const currentTabSaveFunction = getCurrentTabSaveFunction()
+      if (!currentTabSaveFunction) {
+        toast.error('No save function available for this tab')
+        return
       }
-      // Add other section save handlers here as they are implemented
 
-      toast.success(`${tabs.find(tab => tab.id === activeTab)?.label} updated successfully!`)
-      setHasUnsavedChanges(false)
+      // Use the current tab's save function
+      await currentTabSaveFunction()
+      
+      const currentTabLabel = tabs.find(tab => tab.id === activeTab)?.label
+      toast.success(`${currentTabLabel} updated successfully!`)
+      
+      // Update form state to mark as clean
+      updateFormState(activeTab, false, currentTabSaveFunction)
+      
     } catch (error) {
       console.error('Error saving current tab:', error)
-      toast.error(`Failed to save ${tabs.find(tab => tab.id === activeTab)?.label}. Please try again.`)
+      const currentTabLabel = tabs.find(tab => tab.id === activeTab)?.label
+      toast.error(`Failed to save ${currentTabLabel}. Please try again.`)
     } finally {
       setIsSaving(false)
     }
@@ -449,20 +447,31 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
                         data={profileData?.interests || []}
                         onChange={handleFormChange}
                         onFormStateChange={(isDirty, saveFunction) => {
-                          setFormStates(prev => ({
-                            ...prev,
-                            interests: { isDirty, saveFunction }
-                          }))
+                          updateFormState('interests', isDirty, saveFunction)
                         }}
                       />
                     )
                   }
                   
-                  // For other tabs, render the component normally
+                  if (tab.id === 'personal') {
+                    return React.cloneElement(tab.component as React.ReactElement, {
+                      key: tab.id,
+                      data: profileData,
+                      onChange: handleFormChange,
+                      onFormStateChange: (isDirty: boolean, saveFunction: (() => Promise<void>) | null) => {
+                        updateFormState('personal', isDirty, saveFunction)
+                      }
+                    })
+                  }
+                  
+                  // For other tabs, render with state management support
                   return React.cloneElement(tab.component as React.ReactElement, {
                     key: tab.id,
                     data: profileData,
                     onChange: handleFormChange,
+                    onFormStateChange: (isDirty: boolean, saveFunction: (() => Promise<void>) | null) => {
+                      updateFormState(tab.id, isDirty, saveFunction)
+                    }
                   })
                 })}
               </motion.div>
@@ -474,15 +483,26 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 {getCurrentTabDirtyState() ? (
-                  <span className="text-orange-600">
-                    You have unsaved changes in {tabs.find(tab => tab.id === activeTab)?.label}.
+                  <span className="text-orange-600 flex items-center">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mr-2 animate-pulse"></div>
+                    Unsaved changes in {tabs.find(tab => tab.id === activeTab)?.label}
                   </span>
                 ) : (
-                  <span>{tabs.find(tab => tab.id === activeTab)?.label} - All changes saved</span>
+                  <span className="flex items-center text-green-600">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    {tabs.find(tab => tab.id === activeTab)?.label} - All changes saved
+                  </span>
                 )}
               </div>
 
-              <div className="flex space-x-3">
+              <div className="flex items-center space-x-3">
+                {/* Show count of tabs with unsaved changes */}
+                {Object.values(formStates).some(state => state.isDirty) && (
+                  <span className="text-xs text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                    {Object.values(formStates).filter(state => state.isDirty).length} tab(s) with changes
+                  </span>
+                )}
+                
                 <Button
                   variant="outline"
                   onClick={handleBack}

@@ -37,6 +37,7 @@ interface PersonalInfoFormProps {
   data: any
   onChange: (sectionId: string, data: PersonalInfoData) => void
   onSave?: (data: PersonalInfoData) => Promise<void>
+  onFormStateChange?: (isDirty: boolean, saveFunction: (() => Promise<void>) | null) => void
 }
 
 // Function to calculate age group based on birth month and year (reused from onboarding)
@@ -65,7 +66,7 @@ const calculateAgeGroup = (birthMonth: string, birthYear: string): string => {
   }
 }
 
-export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInfoFormProps) {
+export default function PersonalInfoForm({ data, onChange, onSave, onFormStateChange }: PersonalInfoFormProps) {
   const [profileImagePreview, setProfileImagePreview] = useState<string>("")
   const [coverImagePreview, setCoverImagePreview] = useState<string>("")
   const [isDirty, setIsDirty] = useState(false)
@@ -169,6 +170,13 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
       }
     }
   }, [watchedValues, originalData, form, isDirty, handleFormChange])
+
+  // Notify parent component of form state changes
+  useEffect(() => {
+    if (onFormStateChange) {
+      onFormStateChange(isDirty, isDirty ? handleSave : null)
+    }
+  }, [isDirty, onFormStateChange])
 
   // Watch for changes in birth month and year to auto-calculate age group (reused from onboarding)
   const watchedBirthMonth = form.watch("birthMonth")
