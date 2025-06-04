@@ -90,7 +90,11 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
       id: "personal",
       label: "Personal Info",
       icon: <User className="h-4 w-4" />,
-      component: <PersonalInfoForm data={profileData} onChange={handleFormChange} />,
+      component: <PersonalInfoForm 
+        data={profileData} 
+        onChange={handleFormChange} 
+        onSave={(data) => handleSectionSave('personal', data)}
+      />,
       required: true
     },
     {
@@ -201,19 +205,60 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
     (Object.values(completionData).filter(Boolean).length / tabs.length) * 100
   )
 
-  // Handle save
+  // Handle save for specific sections
+  const handleSectionSave = async (sectionId: string, data: any) => {
+    try {
+      setSaving(true)
+
+      if (sectionId === 'personal') {
+        console.log('💾 Saving personal info section:', data)
+        
+        const response = await fetch('/api/profile/personal-info', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to save personal info')
+        }
+
+        const result = await response.json()
+        console.log('✅ Personal info saved successfully:', result)
+
+        // Update the profile data with the saved data
+        setProfileData((prev: any) => ({
+          ...prev,
+          ...data
+        }))
+
+        toast.success('Personal information updated successfully!')
+      }
+      // Add other section save logic here as needed
+
+      setHasUnsavedChanges(false)
+
+    } catch (error) {
+      console.error('Error saving section:', error)
+      toast.error(`Failed to save ${sectionId}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      throw error // Re-throw to let the form component handle it
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Handle save - general save for all sections
   const handleSave = async () => {
     try {
       setSaving(true)
 
-      // Here you would implement the actual save logic
-      // This would involve multiple API calls to save different sections
-
-      // Simulate save delay
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      // For now, just show a message that individual sections should be saved
+      toast.info('Please save each section individually using the forms')
 
       setHasUnsavedChanges(false)
-      toast.success('Profile updated successfully!')
 
     } catch (error) {
       console.error('Error saving profile:', error)

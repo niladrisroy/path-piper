@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
@@ -8,23 +9,30 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from "@/components/ui/select"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form"
 import { Upload, User } from "lucide-react"
+import { toast } from "sonner"
 
+// Reuse the same schema from onboarding for consistency
 const personalInfoSchema = z.object({
-  firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  bio: z.string().max(500, "Bio must be less than 500 characters").optional(),
+  firstName: z.string().min(2, { message: "First name must be at least 2 characters" }),
+  lastName: z.string().min(2, { message: "Last name must be at least 2 characters" }),
+  bio: z.string().max(300, { message: "Bio must be less than 300 characters" }).optional(),
   location: z.string().optional(),
   educationLevel: z.string().optional(),
+  birthMonth: z.string(),
+  birthYear: z.string(),
+  ageGroup: z.string(),
   tagline: z.string().max(100, "Tagline must be less than 100 characters").optional(),
   profileImageUrl: z.string().optional(),
   coverImageUrl: z.string().optional(),
-  ageGroup: z.string().optional(), // Added ageGroup field
 })
 
 type PersonalInfoData = z.infer<typeof personalInfoSchema>
+
+// Age group type definition - matches database enum with snake_case
+export type AgeGroup = "early_childhood" | "elementary" | "middle_school" | "high_school" | "young_adult"
 
 interface PersonalInfoFormProps {
   data: any
@@ -32,55 +40,147 @@ interface PersonalInfoFormProps {
   onSave?: (data: PersonalInfoData) => Promise<void>
 }
 
+// Function to calculate age group based on birth month and year (reused from onboarding)
+const calculateAgeGroup = (birthMonth: string, birthYear: string): string => {
+  if (!birthMonth || !birthYear) return ""
+
+  const currentDate = new Date()
+  const currentYear = currentDate.getFullYear()
+  const currentMonth = currentDate.getMonth() + 1
+
+  const birthYearNum = parseInt(birthYear)
+  const birthMonthNum = parseInt(birthMonth)
+
+  let ageInMonths = (currentYear - birthYearNum) * 12 + (currentMonth - birthMonthNum)
+
+  if (ageInMonths < 60) {
+    return "early_childhood"
+  } else if (ageInMonths < 132) {
+    return "elementary"
+  } else if (ageInMonths < 156) {
+    return "middle_school"
+  } else if (ageInMonths < 216) {
+    return "high_school"
+  } else {
+    return "young_adult"
+  }
+}
+
 export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInfoFormProps) {
   const [profileImagePreview, setProfileImagePreview] = useState<string>("")
   const [coverImagePreview, setCoverImagePreview] = useState<string>("")
+  const [isDirty, setIsDirty] = useState(false)
+  const [originalData, setOriginalData] = useState<PersonalInfoData | null>(null)
+
+  // Default data structure
+  const defaultData: PersonalInfoData = {
+    firstName: "",
+    lastName: "",
+    bio: "",
+    location: "",
+    educationLevel: "",
+    birthMonth: "",
+    birthYear: "",
+    ageGroup: "",
+    tagline: "",
+    profileImageUrl: "",
+    coverImageUrl: "",
+  }
 
   const form = useForm<PersonalInfoData>({
     resolver: zodResolver(personalInfoSchema),
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      bio: "",
-      location: "",
-      educationLevel: "",
-      tagline: "",
-      profileImageUrl: "",
-      coverImageUrl: "",
-      ageGroup: "", // Initialize ageGroup
-    }
+    defaultValues: defaultData
   })
 
-  // Update form when data changes
+  // Update form when data changes (similar to onboarding logic)
   useEffect(() => {
+    console.log("🔄 PersonalInfoForm useEffect triggered")
+    console.log("📊 Data received:", data)
+
     if (data) {
-      form.reset({
+      const formData = {
         firstName: data.firstName || "",
         lastName: data.lastName || "",
         bio: data.bio || "",
         location: data.location || "",
         educationLevel: data.educationLevel || "",
+        birthMonth: data.birthMonth || "",
+        birthYear: data.birthYear || "",
+        ageGroup: data.ageGroup || "",
         tagline: data.tagline || "",
         profileImageUrl: data.profileImageUrl || "",
         coverImageUrl: data.coverImageUrl || "",
-        ageGroup: data.ageGroup || "", // Set ageGroup
-      })
+      }
+
+      console.log("🎯 =================================")
+      console.log("🎯 PROFILE EDIT - FIELD VALUES FROM DB:")
+      console.log("🎯 =================================")
+      console.log("🎯 First Name:", data.firstName)
+      console.log("🎯 Last Name:", data.lastName)
+      console.log("🎯 Bio:", data.bio)
+      console.log("🎯 Location:", data.location)
+      console.log("🎯 Education Level:", data.educationLevel)
+      console.log("🎯 Birth Month:", data.birthMonth)
+      console.log("🎯 Birth Year:", data.birthYear)
+      console.log("🎯 Age Group:", data.ageGroup)
+      console.log("🎯 Tagline:", data.tagline)
+      console.log("🎯 Profile Image URL:", data.profileImageUrl)
+      console.log("🎯 Cover Image URL:", data.coverImageUrl)
+      console.log("🎯 =================================")
+
+      form.reset(formData)
+      setOriginalData(formData)
+      setIsDirty(false)
 
       setProfileImagePreview(data.profileImageUrl || "")
       setCoverImagePreview(data.coverImageUrl || "")
+
+      console.log("✅ Form reset completed")
     }
   }, [data, form])
 
+  // Watch for form changes to set dirty bit (reused from onboarding)
+  const watchedValues = form.watch()
+  useEffect(() => {
+    if (!originalData) return
+
+    const currentData = form.getValues()
+    const hasChanges = Object.keys(currentData).some(key => {
+      const currentValue = currentData[key as keyof PersonalInfoData]
+      const originalValue = originalData[key as keyof PersonalInfoData]
+      return currentValue !== originalValue
+    })
+    
+    setIsDirty(hasChanges)
+  }, [watchedValues, originalData, form])
+
+  // Watch for changes in birth month and year to auto-calculate age group (reused from onboarding)
+  const watchedBirthMonth = form.watch("birthMonth")
+  const watchedBirthYear = form.watch("birthYear")
+
+  useEffect(() => {
+    if (watchedBirthMonth && watchedBirthYear) {
+      const calculatedAgeGroup = calculateAgeGroup(watchedBirthMonth, watchedBirthYear)
+      form.setValue("ageGroup", calculatedAgeGroup)
+    }
+  }, [watchedBirthMonth, watchedBirthYear, form])
+
   // Handle form changes - only update parent state without auto-save
   const handleFormChange = useCallback((value: any) => {
-    // Only call onChange if the form is dirty and has actual changes
     if (form.formState.isDirty) {
       onChange("personal", value)
     }
   }, [onChange, form.formState.isDirty])
 
+  // Watch for form changes but only update parent state (no auto-save)
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      handleFormChange(value)
+    })
+    return () => subscription.unsubscribe()
+  }, [form, handleFormChange])
+
   const handleImageUpload = (type: 'profile' | 'cover', file: File) => {
-    // In a real app, you'd upload to a service like Supabase storage
     const reader = new FileReader()
     reader.onload = (e) => {
       const result = e.target?.result as string
@@ -98,24 +198,29 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
   // Function to handle manual saving when save button is clicked
   const handleSave = async () => {
     try {
+      console.log("💾 Personal info save triggered")
+      console.log("🔍 Personal Info dirty bit:", isDirty)
+      
+      if (!isDirty) {
+        console.log("✅ Personal info unchanged, skipping save")
+        toast.success("No changes to save")
+        return
+      }
+
       const formData = form.getValues()
+      console.log("📤 Saving personal info data:", formData)
+
       if (onSave) {
         await onSave(formData)
+        setIsDirty(false)
+        setOriginalData(formData)
+        console.log("✅ Personal info saved successfully")
       }
     } catch (error) {
-      console.error('Save failed:', error)
-      throw error // Re-throw to let parent component handle it
+      console.error("❌ Save failed:", error)
+      throw error
     }
   }
-
-  // Watch for form changes but only update parent state (no auto-save)
-  const watchedFields = form.watch()
-  useEffect(() => {
-    const subscription = form.watch((value) => {
-      handleFormChange(value)
-    })
-    return () => subscription.unsubscribe()
-  }, [form, handleFormChange])
 
   return (
     <div className="space-y-8">
@@ -210,19 +315,16 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
             </div>
           </div>
 
-          {/* Basic Information */}
+          {/* Basic Information - reusing onboarding structure */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
               control={form.control}
               name="firstName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>First Name <span className="text-red-500">*</span></FormLabel>
+                  <FormLabel>First Name</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="Enter your first name" 
-                      {...field}
-                    />
+                    <Input placeholder="John" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -234,12 +336,9 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
               name="lastName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Last Name <span className="text-red-500">*</span></FormLabel>
+                  <FormLabel>Last Name</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="Enter your last name" 
-                      {...field}
-                    />
+                    <Input placeholder="Doe" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -249,24 +348,194 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
 
           <FormField
             control={form.control}
-            name="ageGroup"
+            name="bio"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Age Group</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || ""}>
+                <FormLabel>About Me</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Tell us a little about yourself"
+                    className="resize-none h-32"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Share your interests, goals, or anything else you'd like others to know.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="birthMonth"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Birth Month</FormLabel>
+                  <div className="relative">
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      disabled
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-slate-50 border-slate-200 cursor-not-allowed">
+                          <SelectValue placeholder="Month from registration">
+                            {field.value && field.value !== "" ? 
+                              ["", "January", "February", "March", "April", "May", "June", 
+                               "July", "August", "September", "October", "November", "December"][parseInt(field.value)] || "Month from registration"
+                              : "Month from registration"
+                            }
+                          </SelectValue>
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-lg">
+                        <SelectGroup>
+                          <SelectItem value="1">January</SelectItem>
+                          <SelectItem value="2">February</SelectItem>
+                          <SelectItem value="3">March</SelectItem>
+                          <SelectItem value="4">April</SelectItem>
+                          <SelectItem value="5">May</SelectItem>
+                          <SelectItem value="6">June</SelectItem>
+                          <SelectItem value="7">July</SelectItem>
+                          <SelectItem value="8">August</SelectItem>
+                          <SelectItem value="9">September</SelectItem>
+                          <SelectItem value="10">October</SelectItem>
+                          <SelectItem value="11">November</SelectItem>
+                          <SelectItem value="12">December</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="birthYear"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Birth Year</FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your age group" />
-                    </SelectTrigger>
+                    <Input 
+                      placeholder="Year from registration"
+                      value={field.value || ""}
+                      onChange={field.onChange}
+                      disabled
+                      className="bg-slate-50 border-slate-200 cursor-not-allowed"
+                    />
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value="early_childhood">Early Childhood (Under 5)</SelectItem>
-                    <SelectItem value="elementary">Elementary (5-10 years)</SelectItem>
-                    <SelectItem value="middle_school">Middle School (11-12 years)</SelectItem>
-                    <SelectItem value="high_school">High School (13-17 years)</SelectItem>
-                    <SelectItem value="young_adult">Young Adult (18+ years)</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="ageGroup"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Age Group</FormLabel>
+                  <div className="relative">
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || ""}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-white border-slate-200 hover:border-slate-300 focus:border-teal-500 focus:ring-teal-500">
+                          <SelectValue placeholder="Choose your age group" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-lg">
+                        <SelectGroup>
+                          <SelectItem value="early_childhood" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Early Childhood (Under 5)
+                          </SelectItem>
+                          <SelectItem value="elementary" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Elementary (5-10 years)
+                          </SelectItem>
+                          <SelectItem value="middle_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Middle School (11-12 years)
+                          </SelectItem>
+                          <SelectItem value="high_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            High School (13-17 years)
+                          </SelectItem>
+                          <SelectItem value="young_adult" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Young Adult (18+ years)
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="educationLevel"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Education Level</FormLabel>
+                  <div className="relative">
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-white border-slate-200 hover:border-slate-300 focus:border-teal-500 focus:ring-teal-500">
+                          <SelectValue placeholder="Choose your education level" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-lg">
+                        <SelectGroup>
+                          <SelectItem value="pre_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Pre-School
+                          </SelectItem>
+                          <SelectItem value="school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            School
+                          </SelectItem>
+                          <SelectItem value="high_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            High School
+                          </SelectItem>
+                          <SelectItem value="undergraduate" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Undergraduate
+                          </SelectItem>
+                          <SelectItem value="graduate" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Graduate
+                          </SelectItem>
+                          <SelectItem value="post_graduate" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Post Graduate
+                          </SelectItem>
+                          <SelectItem value="phd" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            PhD
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="location"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Location</FormLabel>
+                <FormControl>
+                  <Input placeholder="City, Country" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -289,66 +558,14 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="bio"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>About Me <span className="text-red-500">*</span></FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Tell us about yourself, your interests, and what you're passionate about..."
-                    className="resize-none h-32"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Location <span className="text-red-500">*</span></FormLabel>
-                  <FormControl>
-                    <Input placeholder="City, State/Country" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="educationLevel"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Education Level</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your education level" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="pre_school">Pre-School</SelectItem>
-                      <SelectItem value="school">School</SelectItem>
-                      <SelectItem value="high_school">High School</SelectItem>
-                      <SelectItem value="undergraduate">Undergraduate</SelectItem>
-                      <SelectItem value="graduate">Graduate</SelectItem>
-                      <SelectItem value="post_graduate">Post Graduate</SelectItem>
-                      <SelectItem value="phd">PhD</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          {/* Dirty state indicator */}
+          {isDirty && (
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <p className="text-sm text-orange-700">
+                You have unsaved changes. Click the Save button at the bottom to save your changes.
+              </p>
+            </div>
+          )}
         </div>
       </Form>
     </div>
