@@ -214,21 +214,23 @@ export default function SkillsAbilitiesForm({ data, onChange }: SkillsAbilitiesF
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {category.skills.map((skill, skillIndex) => {
-                    const isSelected = skills.some((s) => s.name === skill)
+                    const skillName = typeof skill === 'object' ? skill.name : skill
+                    const skillId = typeof skill === 'object' ? skill.id : undefined
+                    const isSelected = skills.some((s) => s.name === skillName)
                     return (
                       <Button
-                        key={`${category.name}-${skill}-${skillIndex}`}
+                        key={`${category.name}-${skillName}-${skillIndex}`}
                         type="button"
                         variant={isSelected ? "default" : "outline"}
                         size="sm"
-                        onClick={() => isSelected ? removeSkill(skill) : addSkill(skill)}
+                        onClick={() => isSelected ? removeSkill(skillName) : addSkill(skillName, skillId)}
                         className={`transition-all ${
                           isSelected
                             ? 'bg-pathpiper-teal hover:bg-pathpiper-teal/90 text-white'
                             : 'hover:bg-gray-100 dark:hover:bg-gray-800'
                         }`}
                       >
-                        {skill}
+                        {skillName}
                         {isSelected ? (
                           <X size={14} className="ml-1" />
                         ) : (
