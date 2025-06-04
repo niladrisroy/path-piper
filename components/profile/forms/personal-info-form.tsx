@@ -154,11 +154,11 @@ export default function PersonalInfoForm({ data, onChange, onSave, onFormStateCh
     const hasChanges = Object.keys(currentData).some(key => {
       const currentValue = currentData[key as keyof PersonalInfoData]
       const originalValue = originalData[key as keyof PersonalInfoData]
-      
+
       // Handle null/undefined/empty string comparison more carefully
       const normalizedCurrent = currentValue || ""
       const normalizedOriginal = originalValue || ""
-      
+
       return normalizedCurrent !== normalizedOriginal
     })
 
@@ -168,6 +168,36 @@ export default function PersonalInfoForm({ data, onChange, onSave, onFormStateCh
       // Only update parent state during explicit save operations
     }
   }, [watchedValues, originalData, form, isDirty])
+
+  // Function to handle manual saving when save button is clicked
+  const handleSave = useCallback(async () => {
+    try {
+      console.log("💾 Personal info save triggered")
+      console.log("🔍 Personal Info dirty bit:", isDirty)
+
+      if (!isDirty) {
+        console.log("✅ Personal info unchanged, skipping save")
+        toast.success("No changes to save")
+        return
+      }
+
+      const formData = form.getValues()
+      console.log("📤 Saving personal info data:", formData)
+
+      if (onSave) {
+        await onSave(formData)
+        // Reset dirty state and update original data after successful save
+        setOriginalData(formData)
+        setIsDirty(false)
+        // Notify parent that changes have been saved
+        handleFormChange(formData)
+        console.log("✅ Personal info saved successfully")
+      }
+    } catch (error) {
+      console.error("❌ Save failed:", error)
+      throw error
+    }
+  }, [isDirty, form, onSave, handleFormChange])
 
   // Notify parent component of form state changes
   useEffect(() => {
@@ -202,36 +232,6 @@ export default function PersonalInfoForm({ data, onChange, onSave, onFormStateCh
     reader.readAsDataURL(file)
   }
 
-  // Function to handle manual saving when save button is clicked
-  const handleSave = useCallback(async () => {
-    try {
-      console.log("💾 Personal info save triggered")
-      console.log("🔍 Personal Info dirty bit:", isDirty)
-
-      if (!isDirty) {
-        console.log("✅ Personal info unchanged, skipping save")
-        toast.success("No changes to save")
-        return
-      }
-
-      const formData = form.getValues()
-      console.log("📤 Saving personal info data:", formData)
-
-      if (onSave) {
-        await onSave(formData)
-        // Reset dirty state and update original data after successful save
-        setOriginalData(formData)
-        setIsDirty(false)
-        // Notify parent that changes have been saved
-        handleFormChange(formData)
-        console.log("✅ Personal info saved successfully")
-      }
-    } catch (error) {
-      console.error("❌ Save failed:", error)
-      throw error
-    }
-  }, [isDirty, form, onSave, handleFormChange])
-
   const onSubmit = async (formData: any) => {
     console.log("🚀 PersonalInfoForm onSubmit called")
     console.log("📝 Form data:", formData)
@@ -245,7 +245,7 @@ export default function PersonalInfoForm({ data, onChange, onSave, onFormStateCh
 
     try {
       console.log("💾 Personal info has changes, saving to database...")
-      
+
       // Map form data to match API expectations (same as onboarding)
       const apiData = {
         firstName: formData.firstName,
@@ -277,16 +277,16 @@ export default function PersonalInfoForm({ data, onChange, onSave, onFormStateCh
         const result = await response.json()
         console.log("✅ Profile updated successfully:", result)
         toast.success("Personal information updated successfully!")
-        
+
         // Reset dirty state after successful save (same as onboarding)
         setOriginalData(formData)
         setIsDirty(false)
-        
+
         // Call parent onSave callback if provided
         if (onSave) {
           await onSave(formData)
         }
-        
+
         console.log("✅ Personal info saved successfully")
       } else {
         const error = await response.json()
