@@ -1,20 +1,28 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserProfile, updateUserProfile, updateStudentProfile } from '@/lib/db/profile'
-import { createClient } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { cookies } from 'next/headers'
 
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = cookies()
-    const supabase = createClient(cookieStore)
     
-    const { data: { user }, error } = await supabase.auth.getUser()
+    // Get the access token from cookies
+    const accessToken = cookieStore.get('sb-access-token')?.value
     
-    if (error || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!accessToken) {
+      return NextResponse.json({ error: 'Unauthorized - no access token' }, { status: 401 })
     }
 
+    // Verify the token with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken)
+    
+    if (error || !user) {
+      return NextResponse.json({ error: 'Unauthorized - invalid token' }, { status: 401 })
+    }
+
+    // Use Prisma to get profile data
     const profile = await getUserProfile(user.id)
     
     if (!profile) {
@@ -63,12 +71,19 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const cookieStore = cookies()
-    const supabase = createClient(cookieStore)
     
-    const { data: { user }, error } = await supabase.auth.getUser()
+    // Get the access token from cookies
+    const accessToken = cookieStore.get('sb-access-token')?.value
+    
+    if (!accessToken) {
+      return NextResponse.json({ error: 'Unauthorized - no access token' }, { status: 401 })
+    }
+
+    // Verify the token with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken)
     
     if (error || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized - invalid token' }, { status: 401 })
     }
 
     const body = await request.json()
@@ -85,7 +100,7 @@ export async function PUT(request: NextRequest) {
       ...profileData
     } = body
 
-    // Update main profile
+    // Update main profile using Prisma
     const updatedProfile = await updateUserProfile(user.id, profileData)
 
     // Update student profile if student-specific data is provided
@@ -93,7 +108,7 @@ export async function PUT(request: NextRequest) {
         (educationLevel || ageGroup || birthMonth || birthYear || personalityType || learningStyle || favoriteQuote)) {
       await updateStudentProfile(user.id, {
         educationLevel,
-        ageGroup,
+        age_group: ageGroup, // Note: using age_group as per database schema
         birthMonth,
         birthYear,
         personalityType,
