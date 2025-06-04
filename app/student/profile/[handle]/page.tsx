@@ -40,16 +40,25 @@ interface StudentData {
   }>
 }
 
-export default function StudentProfilePage({ params }: { params: { handle: string } }) {
+export default function StudentProfilePage({ params }: { params: Promise<{ handle: string }> }) {
   const { user: currentUser, loading: authLoading } = useAuth()
   const [studentData, setStudentData] = useState<StudentData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [handle, setHandle] = useState<string | null>(null)
   const router = useRouter()
-  const handle = params.handle
+
+  // Resolve params first
+  useEffect(() => {
+    const resolveParams = async () => {
+      const resolvedParams = await params
+      setHandle(resolvedParams.handle)
+    }
+    resolveParams()
+  }, [params])
 
   useEffect(() => {
-    if (authLoading) return
+    if (authLoading || !handle) return
 
     if (!currentUser) {
       router.push('/login')
