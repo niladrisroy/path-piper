@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
@@ -17,50 +18,97 @@ interface Skill {
 
 interface SkillCategory {
   name: string
-  skills: string[]
+  skills: Array<{ id: number; name: string }>
 }
 
 interface SkillsAbilitiesFormProps {
   data: any
   onChange: (sectionId: string, data: Skill[]) => void
+  isDirty: boolean
+  onDirtyChange: (dirty: boolean) => void
 }
 
-export default function SkillsAbilitiesForm({ data, onChange }: SkillsAbilitiesFormProps) {
+export default function SkillsAbilitiesForm({ 
+  data, 
+  onChange, 
+  isDirty, 
+  onDirtyChange 
+}: SkillsAbilitiesFormProps) {
   const [skills, setSkills] = useState<Skill[]>([])
+  const [originalSkills, setOriginalSkills] = useState<Skill[]>([])
   const [skillCategories, setSkillCategories] = useState<SkillCategory[]>([])
   const [filteredCategories, setFilteredCategories] = useState<SkillCategory[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [newSkill, setNewSkill] = useState("")
   const [newSkillLevel, setNewSkillLevel] = useState(3)
+  const [userAgeGroup, setUserAgeGroup] = useState<string>("high_school")
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
 
-  // Load skills from API
+  // Fetch user age group and skills data
   useEffect(() => {
-    const loadSkills = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true)
-        const response = await fetch('/api/skills?ageGroup=high_school')
-        if (response.ok) {
-          const { categories } = await response.json()
-          setSkillCategories(categories)
-          setFilteredCategories(categories)
+
+        // Fetch user data to get age group
+        const userResponse = await fetch('/api/auth/user')
+        if (userResponse.ok) {
+          const userData = await userResponse.json()
+          const actualAgeGroup = userData.user?.studentProfile?.age_group || "high_school"
+          setUserAgeGroup(actualAgeGroup)
+          console.log('🔍 Using user age group for skills:', actualAgeGroup)
+
+          // Fetch skill categories for the user's age group
+          const skillsResponse = await fetch(`/api/skills?ageGroup=${actualAgeGroup}`)
+          if (skillsResponse.ok) {
+            const skillsData = await skillsResponse.json()
+            setSkillCategories(skillsData.categories || [])
+            setFilteredCategories(skillsData.categories || [])
+          } else {
+            console.error('Failed to fetch skills:', skillsResponse.status)
+          }
+        } else {
+          console.error('Failed to fetch user data:', userResponse.status)
+          // Fallback to high_school age group
+          setUserAgeGroup("high_school")
+          
+          const skillsResponse = await fetch(`/api/skills?ageGroup=high_school`)
+          if (skillsResponse.ok) {
+            const skillsData = await skillsResponse.json()
+            setSkillCategories(skillsData.categories || [])
+            setFilteredCategories(skillsData.categories || [])
+          }
+        }
+
+        // Fetch user's current skills
+        const userSkillsResponse = await fetch('/api/user/skills')
+        if (userSkillsResponse.ok) {
+          const userSkillsData = await userSkillsResponse.json()
+          // Transform user skills to match component format
+          const userSkills = userSkillsData.skills?.map((userSkill: any) => ({
+            name: userSkill.skills.name,
+            level: userSkill.proficiency_level,
+            id: userSkill.skill_id,
+            category: userSkill.skills.skill_categories?.name || "Other"
+          })) || []
+
+          console.log('✅ Loaded user skills:', userSkills)
+          setSkills(userSkills)
+          setOriginalSkills(userSkills)
+
+          // Update parent component with loaded data
+          onChange("skills", userSkills)
         }
       } catch (error) {
-        console.error('Error loading skills:', error)
+        console.error('Error fetching data:', error)
       } finally {
         setLoading(false)
       }
     }
 
-    loadSkills()
+    fetchData()
   }, [])
-
-  // Update skills when data changes
-  useEffect(() => {
-    if (data?.skills) {
-      setSkills(data.skills)
-    }
-  }, [data])
 
   // Filter categories based on search
   useEffect(() => {
@@ -74,7 +122,7 @@ export default function SkillsAbilitiesForm({ data, onChange }: SkillsAbilitiesF
       .map((category) => ({
         name: category.name,
         skills: category.skills.filter((skill) =>
-          skill.toLowerCase().includes(term)
+          skill.name.toLowerCase().includes(term)
         ),
       }))
       .filter((category) => category.skills.length > 0)
@@ -82,13 +130,17 @@ export default function SkillsAbilitiesForm({ data, onChange }: SkillsAbilitiesF
     setFilteredCategories(filtered)
   }, [searchTerm, skillCategories])
 
-  // Handle skills change - debounced to prevent infinite loops
-  const handleSkillsChange = useCallback((newSkills: Skill[]) => {
-    // Only call onChange if skills actually changed
-    if (JSON.stringify(skills) !== JSON.stringify(newSkills)) {
-      onChange("skills", newSkills)
-    }
-  }, [skills, onChange])
+  // Track dirty state
+  useEffect(() => {
+    const skillsChanged = skills.length !== originalSkills.length ||
+      skills.some(skill => {
+        const originalSkill = originalSkills.find(orig => orig.name === skill.name)
+        return !originalSkill || originalSkill.level !== skill.level
+      })
+    
+    console.log("🔍 Skills dirty bit:", skillsChanged)
+    onDirtyChange(skillsChanged)
+  }, [skills, originalSkills, onDirtyChange])
 
   const addSkill = (skillName: string, skillId?: number) => {
     if (skills.some((s) => s.name === skillName)) return
@@ -100,7 +152,7 @@ export default function SkillsAbilitiesForm({ data, onChange }: SkillsAbilitiesF
       category: findSkillCategory(skillName)
     }]
     setSkills(newSkills)
-    handleSkillsChange(newSkills)
+    onChange("skills", newSkills)
   }
 
   const addCustomSkill = () => {
@@ -112,14 +164,14 @@ export default function SkillsAbilitiesForm({ data, onChange }: SkillsAbilitiesF
       category: "Custom"
     }]
     setSkills(newSkills)
-    handleSkillsChange(newSkills)
+    onChange("skills", newSkills)
     setNewSkill("")
   }
 
   const removeSkill = (skillName: string) => {
     const newSkills = skills.filter((s) => s.name !== skillName)
     setSkills(newSkills)
-    handleSkillsChange(newSkills)
+    onChange("skills", newSkills)
   }
 
   const updateSkillLevel = (skillName: string, level: number) => {
@@ -127,12 +179,12 @@ export default function SkillsAbilitiesForm({ data, onChange }: SkillsAbilitiesF
       s.name === skillName ? { ...s, level } : s
     )
     setSkills(newSkills)
-    handleSkillsChange(newSkills)
+    onChange("skills", newSkills)
   }
 
   const findSkillCategory = (skillName: string): string => {
     for (const category of skillCategories) {
-      if (category.skills.includes(skillName)) {
+      if (category.skills.some(skill => skill.name === skillName)) {
         return category.name
       }
     }
@@ -140,13 +192,64 @@ export default function SkillsAbilitiesForm({ data, onChange }: SkillsAbilitiesF
   }
 
   const getLevelLabel = (level: number) => {
-    switch (level) {
-      case 1: return "Beginner"
-      case 2: return "Elementary"
-      case 3: return "Intermediate"
-      case 4: return "Advanced"
-      case 5: return "Expert"
-      default: return "Intermediate"
+    const isYoungChild = userAgeGroup === "early_childhood" || userAgeGroup === "elementary"
+    
+    if (isYoungChild) {
+      switch (level) {
+        case 1: return "Just Started"
+        case 2: return "Learning"
+        case 3: return "Getting Better"
+        case 4: return "Pretty Good"
+        case 5: return "Really Good"
+        default: return "Getting Better"
+      }
+    } else {
+      switch (level) {
+        case 1: return "Beginner"
+        case 2: return "Elementary"
+        case 3: return "Intermediate"
+        case 4: return "Advanced"
+        case 5: return "Expert"
+        default: return "Intermediate"
+      }
+    }
+  }
+
+  const handleSave = async () => {
+    try {
+      setSaving(true)
+
+      if (isDirty) {
+        console.log("💾 Skills have changes, saving to database...")
+        
+        // Filter out skills without IDs (custom skills) and handle them separately
+        const skillsWithIds = skills.filter(skill => skill.id)
+        
+        if (skillsWithIds.length > 0) {
+          const response = await fetch('/api/user/skills', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ skills: skillsWithIds }),
+          })
+
+          if (!response.ok) {
+            console.error('Failed to save skills')
+            return
+          }
+        }
+        
+        onDirtyChange(false)
+        setOriginalSkills([...skills])
+        console.log("✅ Skills saved successfully")
+      } else {
+        console.log("✅ Skills unchanged, skipping database save")
+      }
+    } catch (error) {
+      console.error('Error saving skills:', error)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -181,6 +284,12 @@ export default function SkillsAbilitiesForm({ data, onChange }: SkillsAbilitiesF
                 placeholder="Add a custom skill..."
                 value={newSkill}
                 onChange={(e) => setNewSkill(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault()
+                    addCustomSkill()
+                  }
+                }}
               />
               <Button
                 type="button"
@@ -213,24 +322,22 @@ export default function SkillsAbilitiesForm({ data, onChange }: SkillsAbilitiesF
                   {category.name}
                 </h4>
                 <div className="flex flex-wrap gap-2">
-                  {category.skills.map((skill, skillIndex) => {
-                    const skillName = typeof skill === 'object' ? skill.name : skill
-                    const skillId = typeof skill === 'object' ? skill.id : undefined
-                    const isSelected = skills.some((s) => s.name === skillName)
+                  {category.skills.map((skill) => {
+                    const isSelected = skills.some((s) => s.name === skill.name)
                     return (
                       <Button
-                        key={`${category.name}-${skillName}-${skillIndex}`}
+                        key={skill.id}
                         type="button"
                         variant={isSelected ? "default" : "outline"}
                         size="sm"
-                        onClick={() => isSelected ? removeSkill(skillName) : addSkill(skillName, skillId)}
+                        onClick={() => isSelected ? removeSkill(skill.name) : addSkill(skill.name, skill.id)}
                         className={`transition-all ${
                           isSelected
                             ? 'bg-pathpiper-teal hover:bg-pathpiper-teal/90 text-white'
                             : 'hover:bg-gray-100 dark:hover:bg-gray-800'
                         }`}
                       >
-                        {skillName}
+                        {skill.name}
                         {isSelected ? (
                           <X size={14} className="ml-1" />
                         ) : (
@@ -247,13 +354,13 @@ export default function SkillsAbilitiesForm({ data, onChange }: SkillsAbilitiesF
 
         {/* Selected Skills */}
         <div className="space-y-4">
-          <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 h-full min-h-[500px]">
+          <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 h-[500px] flex flex-col">
             <Label className="text-lg font-medium mb-4 block">
               Your Skills ({skills.length})
             </Label>
 
             {skills.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-64 text-center">
+              <div className="flex-1 flex flex-col items-center justify-center text-center">
                 <Award className="h-12 w-12 text-gray-300 mb-4" />
                 <p className="text-gray-500 mb-2">No skills added yet</p>
                 <p className="text-sm text-gray-400">
@@ -261,7 +368,7 @@ export default function SkillsAbilitiesForm({ data, onChange }: SkillsAbilitiesF
                 </p>
               </div>
             ) : (
-              <div className="space-y-4 max-h-[450px] overflow-y-auto">
+              <div className="flex-1 overflow-y-auto space-y-4">
                 {skills.map((skill, index) => (
                   <div key={skill.id || `${skill.name}-${index}`} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800">
                     <div className="flex justify-between items-start mb-2">
@@ -299,8 +406,8 @@ export default function SkillsAbilitiesForm({ data, onChange }: SkillsAbilitiesF
                         className="py-2"
                       />
                       <div className="flex justify-between text-xs text-gray-400">
-                        <span>Beginner</span>
-                        <span>Expert</span>
+                        <span>{userAgeGroup === "early_childhood" || userAgeGroup === "elementary" ? "Just Started" : "Beginner"}</span>
+                        <span>{userAgeGroup === "early_childhood" || userAgeGroup === "elementary" ? "Really Good" : "Expert"}</span>
                       </div>
                     </div>
                   </div>
@@ -309,6 +416,21 @@ export default function SkillsAbilitiesForm({ data, onChange }: SkillsAbilitiesF
             )}
           </div>
         </div>
+      </div>
+
+      {/* Save Button */}
+      <div className="mt-6">
+        <Button
+          onClick={handleSave}
+          disabled={!isDirty || saving}
+          className={`w-full max-w-md mx-auto block ${
+            isDirty 
+              ? 'bg-pathpiper-teal hover:bg-pathpiper-teal/90' 
+              : 'bg-gray-300 cursor-not-allowed'
+          }`}
+        >
+          {saving ? 'Saving...' : (isDirty ? 'Save Changes' : 'No Changes')}
+        </Button>
       </div>
     </div>
   )
