@@ -164,19 +164,17 @@ export default function PersonalInfoForm({ data, onChange, onSave, onFormStateCh
 
     if (isDirty !== hasChanges) {
       setIsDirty(hasChanges)
-      // Notify parent component about dirty state changes
-      if (hasChanges) {
-        handleFormChange(currentData)
-      }
+      // Don't call handleFormChange here to avoid infinite loops
+      // Only update parent state during explicit save operations
     }
-  }, [watchedValues, originalData, form, isDirty, handleFormChange])
+  }, [watchedValues, originalData, form, isDirty])
 
   // Notify parent component of form state changes
   useEffect(() => {
     if (onFormStateChange) {
       onFormStateChange(isDirty, isDirty ? handleSave : null)
     }
-  }, [isDirty, onFormStateChange])
+  }, [isDirty, onFormStateChange, handleSave])
 
   // Watch for changes in birth month and year to auto-calculate age group (reused from onboarding)
   const watchedBirthMonth = form.watch("birthMonth")
@@ -205,7 +203,7 @@ export default function PersonalInfoForm({ data, onChange, onSave, onFormStateCh
   }
 
   // Function to handle manual saving when save button is clicked
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     try {
       console.log("💾 Personal info save triggered")
       console.log("🔍 Personal Info dirty bit:", isDirty)
@@ -232,7 +230,7 @@ export default function PersonalInfoForm({ data, onChange, onSave, onFormStateCh
       console.error("❌ Save failed:", error)
       throw error
     }
-  }
+  }, [isDirty, form, onSave, handleFormChange])
 
   const onSubmit = async (formData: any) => {
     console.log("🚀 PersonalInfoForm onSubmit called")
