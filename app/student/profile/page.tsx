@@ -17,21 +17,22 @@ export default function StudentProfilePage() {
       return
     }
 
-    // Redirect non-students to their appropriate profile pages
     if (user.role !== 'student') {
-      if (user.role === 'mentor') {
-        router.push('/mentor/profile')
-      } else if (user.role === 'institution') {
-        router.push('/institution/profile')
-      } else {
-        router.push('/feed')
-      }
+      router.push('/login')
       return
     }
 
-    // Redirect students to their own profile with handle
+    // Redirect to the user's profile using their ID as handle
     router.push(`/student/profile/${user.id}`)
   }, [user, loading, router])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-pathpiper-teal"></div>
+      </div>
+    )
+  }
 
   // This component will redirect, so we don't need to render anything else
   return null
