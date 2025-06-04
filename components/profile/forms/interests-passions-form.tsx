@@ -1,7 +1,4 @@
-Refactored InterestsPassionsForm component to optimize data fetching and initialization, leveraging props for existing data and reducing redundant API calls.
-```
 
-```replit_final_file
 "use client"
 
 import { useState, useEffect } from "react"
