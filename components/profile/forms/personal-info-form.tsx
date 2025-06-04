@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
@@ -150,7 +149,7 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
       const originalValue = originalData[key as keyof PersonalInfoData]
       return currentValue !== originalValue
     })
-    
+
     setIsDirty(hasChanges)
   }, [watchedValues, originalData, form])
 
@@ -200,7 +199,7 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
     try {
       console.log("💾 Personal info save triggered")
       console.log("🔍 Personal Info dirty bit:", isDirty)
-      
+
       if (!isDirty) {
         console.log("✅ Personal info unchanged, skipping save")
         toast.success("No changes to save")
@@ -219,6 +218,54 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
     } catch (error) {
       console.error("❌ Save failed:", error)
       throw error
+    }
+  }
+
+  const onSubmit = async (formData: any) => {
+    console.log("🚀 PersonalInfoForm onSubmit called")
+    console.log("📝 Form data:", formData)
+
+    try {
+      // Map form data to match API expectations
+      const apiData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        bio: formData.bio,
+        location: formData.location,
+        tagline: formData.tagline,
+        profileImageUrl: formData.profileImageUrl,
+        coverImageUrl: formData.coverImageUrl,
+        // Student-specific fields
+        educationLevel: formData.educationLevel,
+        ageGroup: formData.ageGroup, // This will be mapped to age_group in the API
+        birthMonth: formData.birthMonth,
+        birthYear: formData.birthYear,
+      }
+
+      const response = await fetch('/api/profile/personal-info', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(apiData),
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        console.log("✅ Profile updated successfully:", result)
+        toast.success("Personal information updated successfully!")
+        if (onSave) {
+          onSave(formData)
+        }
+      } else {
+        const error = await response.json()
+        console.error("❌ Failed to update profile:", error)
+        toast.error("Failed to update profile: " + (error.message || "Unknown error"))
+      }
+    } catch (error) {
+      console.error("💥 Error updating profile:", error)
+      toast.error("An error occurred while updating your profile")
     }
   }
 

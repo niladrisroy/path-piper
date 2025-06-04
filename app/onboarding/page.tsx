@@ -76,7 +76,7 @@ export default function Onboarding() {
                 credentials: 'include',
                 cache: 'no-store'
               });
-              
+
               if (goalsResponse.ok) {
                 const goalsData = await goalsResponse.json();
                 existingGoals = goalsData.goals || [];
@@ -379,7 +379,7 @@ export default function Onboarding() {
                   initialData={userData.goals || []}
                   onComplete={async (goals) => {
                     setUserData({ ...userData, goals });
-                    
+
                     // Only save goals if there are actually changes (goals component handles dirty checking internally)
                     // The goals component will call this onComplete regardless of dirty state
                     // We save to database here to ensure completion step has the data
@@ -401,8 +401,8 @@ export default function Onboarding() {
                       }
 
                       console.log('Goals saved successfully');
-                      
-                      // Mark onboarding as completed
+
+                      // Mark onboarding as completed (keep using auth API for this)
                       const profileResponse = await fetch("/api/auth/user", {
                         method: "PUT",
                         headers: {
@@ -414,7 +414,7 @@ export default function Onboarding() {
                             onboarding_completed: true,
                           },
                         }),
-                      });
+                      })
 
                       if (profileResponse.ok) {
                         toast.success('Onboarding completed successfully!');
