@@ -162,12 +162,10 @@ export default function PersonalInfoForm({ data, onChange, onSave, onFormStateCh
       return normalizedCurrent !== normalizedOriginal
     })
 
-    if (isDirty !== hasChanges) {
-      setIsDirty(hasChanges)
-      // Don't call handleFormChange here to avoid infinite loops
-      // Only update parent state during explicit save operations
-    }
-  }, [watchedValues, originalData, form, isDirty])
+    setIsDirty(hasChanges)
+    // Don't call handleFormChange here to avoid infinite loops
+    // Only update parent state during explicit save operations
+  }, [watchedValues, originalData, form])
 
   // Function to handle manual saving when save button is clicked
   const handleSave = useCallback(async () => {
