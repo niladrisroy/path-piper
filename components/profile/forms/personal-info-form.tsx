@@ -138,6 +138,12 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
     }
   }, [data, form])
 
+  // Handle form changes - only update parent state when saving
+  const handleFormChange = useCallback((value: any) => {
+    // Only update parent state when explicitly needed (during save)
+    onChange("personal", value)
+  }, [onChange])
+
   // Watch for form changes to set dirty bit with better comparison
   const watchedValues = form.watch()
   useEffect(() => {
@@ -174,12 +180,6 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
       form.setValue("ageGroup", calculatedAgeGroup)
     }
   }, [watchedBirthMonth, watchedBirthYear, form])
-
-  // Handle form changes - only update parent state when saving
-  const handleFormChange = useCallback((value: any) => {
-    // Only update parent state when explicitly needed (during save)
-    onChange("personal", value)
-  }, [onChange])
 
   const handleImageUpload = (type: 'profile' | 'cover', file: File) => {
     const reader = new FileReader()
