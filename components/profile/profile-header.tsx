@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { MapPin, Calendar, Users, Award, Star, MessageCircle, Heart, Share2, MoreHorizontal, Edit, BadgeCheck } from "lucide-react"
+import { MapPin, Calendar, Users, Award, Star, MessageCircle, Heart, Share2, MoreHorizontal, Edit, BadgeCheck, FolderKanban, BrainIcon, UserPlus } from "lucide-react"
 
 interface ProfileHeaderProps {
   student: any
