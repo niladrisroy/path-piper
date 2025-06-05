@@ -30,9 +30,8 @@ export async function updateUserProfile(userId: string, profileData: {
   professionalSummary?: string
   profileImageUrl?: string
   coverImageUrl?: string
-  githubUrl?: string
-  linkedinUrl?: string
-  portfolioUrl?: string
+  email?: string
+  phone?: string
   timezone?: string
   availabilityStatus?: string
 }) {
@@ -87,6 +86,87 @@ export async function updateStudentProfile(userId: string, studentData: {
     return updatedStudent
   } catch (error) {
     console.error('Error updating student profile:', error)
+    throw error
+  }
+}
+
+export async function getUserSocialLinks(userId: string) {
+  try {
+    const socialLinks = await prisma.socialLink.findMany({
+      where: { userId: userId }
+    })
+    return socialLinks
+  } catch (error) {
+    console.error('Error fetching user social links:', error)
+    return []
+  }
+}
+
+export async function updateUserSocialLinks(userId: string, socialLinksData: Array<{
+  platform: string
+  url: string
+  displayName?: string
+}>) {
+  try {
+    // Delete existing social links for the user
+    await prisma.socialLink.deleteMany({
+      where: { userId: userId }
+    })
+
+    // Create new social links
+    if (socialLinksData.length > 0) {
+      await prisma.socialLink.createMany({
+        data: socialLinksData.map(link => ({
+          userId: userId,
+          platform: link.platform,
+          url: link.url,
+          displayName: link.displayName
+        }))
+      })
+    }
+
+    return await getUserSocialLinks(userId)
+  } catch (error) {
+    console.error('Error updating user social links:', error)
+    throw error
+  }
+}
+
+export async function upsertSocialLink(userId: string, platform: string, url: string, displayName?: string) {
+  try {
+    if (!url || url.trim() === '') {
+      // Remove the social link if URL is empty
+      await prisma.socialLink.deleteMany({
+        where: { 
+          userId: userId,
+          platform: platform
+        }
+      })
+      return null
+    }
+
+    const socialLink = await prisma.socialLink.upsert({
+      where: {
+        userId_platform: {
+          userId: userId,
+          platform: platform
+        }
+      },
+      update: {
+        url: url,
+        displayName: displayName
+      },
+      create: {
+        userId: userId,
+        platform: platform,
+        url: url,
+        displayName: displayName
+      }
+    })
+
+    return socialLink
+  } catch (error) {
+    console.error('Error upserting social link:', error)
     throw error
   }
 }
