@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Github, Linkedin, Globe, Mail, Phone, MessageSquare, Shield, Instagram, Facebook, Twitter } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
-import { updateUserProfile, getUserSocialLinks, updateUserSocialLinks } from "@/lib/db/profile"
 
 const socialContactSchema = z.object({
   instagramUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
@@ -67,8 +66,13 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
         setLoading(true)
         console.log('🔄 Fetching social contact data for user:', userId)
         
-        // Fetch social links
-        const links = await getUserSocialLinks(userId)
+        // Fetch social links from API
+        const response = await fetch('/api/profile/social-contact')
+        if (!response.ok) {
+          throw new Error('Failed to fetch social contact data')
+        }
+        
+        const { socialLinks: links } = await response.json()
         setSocialLinks(links)
         console.log('📊 Fetched social links:', links)
 
@@ -79,37 +83,39 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
         }
 
         // Map social links to form fields
-        links.forEach((link: SocialLink) => {
-          switch (link.platform.toLowerCase()) {
-            case 'instagram':
-              formData.instagramUrl = link.url
-              break
-            case 'facebook':
-              formData.facebookUrl = link.url
-              break
-            case 'linkedin':
-              formData.linkedinUrl = link.url
-              break
-            case 'twitter':
-              formData.twitterUrl = link.url
-              break
-            case 'behance':
-              formData.behanceUrl = link.url
-              break
-            case 'dribbble':
-              formData.dribbbleUrl = link.url
-              break
-            case 'portfolio':
-              formData.portfolioUrl = link.url
-              break
-            case 'website':
-              formData.website = link.url
-              break
-          }
-        })
+        if (links && Array.isArray(links)) {
+          links.forEach((link: SocialLink) => {
+            switch (link.platform.toLowerCase()) {
+              case 'instagram':
+                formData.instagramUrl = link.url
+                break
+              case 'facebook':
+                formData.facebookUrl = link.url
+                break
+              case 'linkedin':
+                formData.linkedinUrl = link.url
+                break
+              case 'twitter':
+                formData.twitterUrl = link.url
+                break
+              case 'behance':
+                formData.behanceUrl = link.url
+                break
+              case 'dribbble':
+                formData.dribbbleUrl = link.url
+                break
+              case 'portfolio':
+                formData.portfolioUrl = link.url
+                break
+              case 'website':
+                formData.website = link.url
+                break
+            }
+          })
+        }
 
         form.reset(formData as SocialContactData)
-        console.log('✅ Form populated with existing data')
+        console.log('✅ Form populated with existing data:', formData)
         
       } catch (error) {
         console.error('❌ Error fetching social contact data:', error)
@@ -159,17 +165,6 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
       setLoading(true)
       console.log('💾 Saving social contact data:', formData)
 
-      // Save contact info (email and phone) to profile
-      const profileData = {
-        email: formData.email || null,
-        phone: formData.phone || null,
-      }
-
-      if (profileData.email || profileData.phone) {
-        await updateUserProfile(userId, profileData)
-        console.log('✅ Updated profile contact info')
-      }
-
       // Prepare social links data
       const socialLinksData = []
       
@@ -198,10 +193,30 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
         socialLinksData.push({ platform: 'website', url: formData.website.trim() })
       }
 
-      // Update social links
-      const updatedLinks = await updateUserSocialLinks(userId, socialLinksData)
-      setSocialLinks(updatedLinks)
-      console.log('✅ Updated social links:', updatedLinks)
+      // Save data via API
+      const response = await fetch('/api/profile/social-contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email || null,
+          phone: formData.phone || null,
+          socialLinks: socialLinksData,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save social contact data')
+      }
+
+      const result = await response.json()
+      console.log('✅ Save response:', result)
+
+      // Update local state with returned data
+      if (result.socialLinks) {
+        setSocialLinks(result.socialLinks)
+      }
 
       toast({
         title: "Success",
