@@ -8,15 +8,19 @@ import { z } from "zod"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Github, Linkedin, Globe, Mail, Phone, MessageSquare, Shield } from "lucide-react"
+import { Github, Linkedin, Globe, Mail, Phone, MessageSquare, Shield, Instagram, Facebook, Twitter } from "lucide-react"
 
 const socialContactSchema = z.object({
-  githubUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  instagramUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  facebookUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
   linkedinUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  twitterUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  behanceUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  dribbbleUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
   portfolioUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  website: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
   email: z.string().email("Please enter a valid email").optional().or(z.literal("")),
   phone: z.string().optional(),
-  website: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
 })
 
 type SocialContactData = z.infer<typeof socialContactSchema>
@@ -30,12 +34,16 @@ export default function SocialContactForm({ data, onChange }: SocialContactFormP
   const form = useForm<SocialContactData>({
     resolver: zodResolver(socialContactSchema),
     defaultValues: {
-      githubUrl: "",
+      instagramUrl: "",
+      facebookUrl: "",
       linkedinUrl: "",
+      twitterUrl: "",
+      behanceUrl: "",
+      dribbbleUrl: "",
       portfolioUrl: "",
+      website: "",
       email: "",
       phone: "",
-      website: "",
     }
   })
 
@@ -43,12 +51,16 @@ export default function SocialContactForm({ data, onChange }: SocialContactFormP
   useEffect(() => {
     if (data) {
       form.reset({
-        githubUrl: data.githubUrl || "",
+        instagramUrl: data.instagramUrl || "",
+        facebookUrl: data.facebookUrl || "",
         linkedinUrl: data.linkedinUrl || "",
+        twitterUrl: data.twitterUrl || "",
+        behanceUrl: data.behanceUrl || "",
+        dribbbleUrl: data.dribbbleUrl || "",
         portfolioUrl: data.portfolioUrl || "",
+        website: data.website || "",
         email: data.email || "",
         phone: data.phone || "",
-        website: data.website || "",
       })
     }
   }, [data, form])
@@ -82,18 +94,46 @@ export default function SocialContactForm({ data, onChange }: SocialContactFormP
 
   const socialLinks = [
     {
-      id: "githubUrl",
-      label: "GitHub Profile",
-      placeholder: "https://github.com/yourusername",
-      icon: <Github className="h-5 w-5" />,
-      description: "Share your code repositories and projects"
+      id: "instagramUrl",
+      label: "Instagram",
+      placeholder: "https://instagram.com/yourusername",
+      icon: <Instagram className="h-5 w-5" />,
+      description: "Share your visual content and daily updates"
+    },
+    {
+      id: "facebookUrl",
+      label: "Facebook",
+      placeholder: "https://facebook.com/yourprofile",
+      icon: <Facebook className="h-5 w-5" />,
+      description: "Connect with friends and communities"
     },
     {
       id: "linkedinUrl",
-      label: "LinkedIn Profile",
+      label: "LinkedIn",
       placeholder: "https://linkedin.com/in/yourprofile",
       icon: <Linkedin className="h-5 w-5" />,
       description: "Connect professionally with mentors and peers"
+    },
+    {
+      id: "twitterUrl",
+      label: "Twitter",
+      placeholder: "https://twitter.com/yourusername",
+      icon: <Twitter className="h-5 w-5" />,
+      description: "Share thoughts and engage in conversations"
+    },
+    {
+      id: "behanceUrl",
+      label: "Behance",
+      placeholder: "https://behance.net/yourprofile",
+      icon: <Globe className="h-5 w-5" />,
+      description: "Showcase your creative projects and designs"
+    },
+    {
+      id: "dribbbleUrl",
+      label: "Dribbble",
+      placeholder: "https://dribbble.com/yourusername",
+      icon: <Globe className="h-5 w-5" />,
+      description: "Display your design work and get inspiration"
     },
     {
       id: "portfolioUrl",
