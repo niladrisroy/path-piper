@@ -290,12 +290,12 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
 
                   <div>
                     <Label className="text-gray-700 dark:text-gray-300">
-                      Learning Focus <span className="text-red-500">*</span>
+                      Subject/Course <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       value={currentEntry.fieldOfStudy}
                       onChange={(e) => handleInputChange('fieldOfStudy', e.target.value)}
-                      placeholder="e.g., General Studies, Computer Science, Web Development, Digital Marketing"
+                      placeholder="e.g., General Studies, Computer Science, Web Development, Math, English"
                       className="mt-1"
                     />
                   </div>
@@ -355,21 +355,21 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-gray-700 dark:text-gray-300">Achievement/Credential</Label>
+                    <Label className="text-gray-700 dark:text-gray-300">Degree/Certificate</Label>
                     <Input
                       value={currentEntry.degree}
                       onChange={(e) => handleInputChange('degree', e.target.value)}
-                      placeholder="e.g., High School Diploma, Bachelor's Degree, Professional Certificate, Course Completion"
+                      placeholder="e.g., High School Diploma, Bachelor's Degree, Certificate, Course Completion"
                       className="mt-1"
                     />
                   </div>
 
                   <div>
-                    <Label className="text-gray-700 dark:text-gray-300">Learning Stage</Label>
+                    <Label className="text-gray-700 dark:text-gray-300">Grade/Level</Label>
                     <Input
                       value={currentEntry.grade}
                       onChange={(e) => handleInputChange('grade', e.target.value)}
-                      placeholder="e.g., 12th Grade, Freshman Year, Beginner Level, Advanced Stage"
+                      placeholder="e.g., 12th Grade, Freshman Year, Beginner Level, Advanced"
                       className="mt-1"
                     />
                   </div>
