@@ -443,23 +443,6 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
             </div>
           </div>
 
-          {/* Quick Tips */}
-            <div className="mt-8 bg-gray-50 dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-              <div className="flex items-start space-x-3">
-                <div className="flex-shrink-0 w-6 h-6 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mt-0.5">
-                  <MessageSquare className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <h5 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Quick Tips</h5>
-                  <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1.5">
-                    <li>• Enter just your username/handle (we'll add the full URL automatically)</li>
-                    <li>• Your profiles help mentors understand your interests and personality</li>
-                    <li>• You can always update or remove these links later in privacy settings</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
           {/* Privacy Notice */}
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <div className="flex items-start space-x-3">
