@@ -70,12 +70,11 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
       try {
         setLoading(true)
         console.log('🔄 SocialContactForm: Fetching data for user:', userId)
-        console.log('🔄 SocialContactForm: Component mounted and starting fetch...')
         
         // Fetch social links from API
         const response = await fetch('/api/profile/social-contact', {
           method: 'GET',
-          credentials: 'include', // Include cookies for authentication
+          credentials: 'include',
         })
         
         console.log('📡 SocialContactForm: API response status:', response.status)
@@ -91,17 +90,19 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
         
         const { profile, socialLinks: links } = responseData
         setSocialLinks(links || [])
-        console.log('📊 SocialContactForm: Processed data:', { 
-          profile, 
-          socialLinksCount: links?.length || 0,
-          email: profile?.email,
-          phone: profile?.phone 
-        })
-
+        
         // Convert social links to form format
         const formData: Partial<SocialContactData> = {
-          email: profile?.email || data?.email || "",
-          phone: profile?.phone || data?.phone || "",
+          email: profile?.email || "",
+          phone: profile?.phone || "",
+          instagramUrl: "",
+          facebookUrl: "",
+          linkedinUrl: "",
+          twitterUrl: "",
+          behanceUrl: "",
+          dribbbleUrl: "",
+          portfolioUrl: "",
+          website: "",
         }
 
         // Map social links to form fields
@@ -138,7 +139,7 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
 
         console.log('🔄 SocialContactForm: Resetting form with data:', formData)
         form.reset(formData as SocialContactData)
-        console.log('✅ SocialContactForm: Form reset completed with data:', formData)
+        console.log('✅ SocialContactForm: Form reset completed')
         
       } catch (error) {
         console.error('❌ SocialContactForm: Error fetching data:', error)
@@ -153,61 +154,10 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
     }
 
     console.log('🎯 SocialContactForm: useEffect triggered with userId:', userId)
-    fetchData()
-  }, [userId])
-
-  // Update form when data changes
-  useEffect(() => {
-    if (data) {
-      const formData = {
-        instagramUrl: "",
-        facebookUrl: "",
-        linkedinUrl: "",
-        twitterUrl: "",
-        behanceUrl: "",
-        dribbbleUrl: "",
-        portfolioUrl: "",
-        website: "",
-        email: data.email || "",
-        phone: data.phone || "",
-      }
-      
-      // Map social links from database if available
-      if (socialLinks && Array.isArray(socialLinks)) {
-        socialLinks.forEach((link: SocialLink) => {
-          switch (link.platform.toLowerCase()) {
-            case 'instagram':
-              formData.instagramUrl = link.url
-              break
-            case 'facebook':
-              formData.facebookUrl = link.url
-              break
-            case 'linkedin':
-              formData.linkedinUrl = link.url
-              break
-            case 'twitter':
-              formData.twitterUrl = link.url
-              break
-            case 'behance':
-              formData.behanceUrl = link.url
-              break
-            case 'dribbble':
-              formData.dribbbleUrl = link.url
-              break
-            case 'portfolio':
-              formData.portfolioUrl = link.url
-              break
-            case 'website':
-              formData.website = link.url
-              break
-          }
-        })
-      }
-      
-      form.reset(formData)
-      console.log('📝 Form updated with data and social links:', formData)
+    if (userId) {
+      fetchData()
     }
-  }, [data, socialLinks, form])
+  }, [userId]) // Only depend on userId
 
   // Watch for form changes and call onChange when form data changes
   useEffect(() => {
@@ -215,7 +165,7 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
       onChange("social", value)
     })
     return () => subscription.unsubscribe()
-  }, [form, onChange])
+  }, [onChange]) // Remove form from dependencies as it's stable
 
   const handleSave = async (formData: SocialContactData) => {
     try {
