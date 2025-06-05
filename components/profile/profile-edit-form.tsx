@@ -87,6 +87,20 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
     console.log(`📝 Form change detected in ${sectionId}:`, data, 'isDirty:', isDirty)
     setFormData((prev: any) => ({ ...prev, [sectionId]: data }))
 
+    // For goals, also update the profileData to ensure completion calculation works
+    if (sectionId === 'goals') {
+      setProfileData((prev: any) => ({
+        ...prev,
+        goals: data
+      }))
+      
+      // Recalculate completion for goals tab
+      setCompletionData(prev => ({
+        ...prev,
+        goals: !!(data && data.length > 0)
+      }))
+    }
+
     // Track dirty state per form
     if (isDirty !== undefined) {
       setFormDirtyStates(prev => ({ ...prev, [sectionId]: isDirty }))
