@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -70,27 +69,27 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
       try {
         setLoading(true)
         console.log('🔄 SocialContactForm: Fetching data for user:', userId)
-        
+
         // Fetch social links from API
         const response = await fetch('/api/profile/social-contact', {
           method: 'GET',
           credentials: 'include',
         })
-        
+
         console.log('📡 SocialContactForm: API response status:', response.status)
-        
+
         if (!response.ok) {
           const errorText = await response.text()
           console.log('❌ SocialContactForm: API error response:', errorText)
           throw new Error(`Failed to fetch social contact data: ${response.status} - ${errorText}`)
         }
-        
+
         const responseData = await response.json()
         console.log('📊 SocialContactForm: Raw API response:', responseData)
-        
+
         const { profile, socialLinks: links } = responseData
         setSocialLinks(links || [])
-        
+
         // Convert social links to form format
         const formData: Partial<SocialContactData> = {
           email: profile?.email || "",
@@ -119,8 +118,9 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
                 formData.linkedinUrl = link.url
                 break
               case 'twitter':
-                formData.twitterUrl = link.url
-                break
+            case 'x':
+              formData.twitterUrl = link.url
+              break
               case 'behance':
                 formData.behanceUrl = link.url
                 break
@@ -140,7 +140,7 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
         console.log('🔄 SocialContactForm: Resetting form with data:', formData)
         form.reset(formData as SocialContactData)
         console.log('✅ SocialContactForm: Form reset completed')
-        
+
       } catch (error) {
         console.error('❌ SocialContactForm: Error fetching data:', error)
         toast({
@@ -174,7 +174,7 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
 
       // Prepare social links data
       const socialLinksData = []
-      
+
       if (formData.instagramUrl?.trim()) {
         socialLinksData.push({ platform: 'instagram', url: formData.instagramUrl.trim() })
       }
