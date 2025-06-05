@@ -8,8 +8,10 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Plus, X, GraduationCap, Edit, Calendar } from "lucide-react"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { Plus, X, GraduationCap, Edit, Calendar, Loader2 } from "lucide-react"
 import { INSTITUTION_CATEGORIES } from "@/data/institution-types"
+import { toast } from "sonner"
 
 interface EducationEntry {
   id: number | string
@@ -32,8 +34,10 @@ interface EducationHistoryFormProps {
 
 export default function EducationHistoryForm({ data, onChange }: EducationHistoryFormProps) {
   const [educationHistory, setEducationHistory] = useState<EducationEntry[]>([])
+  const [loading, setLoading] = useState(true)
   const [isAddingEntry, setIsAddingEntry] = useState(false)
   const [editingEntry, setEditingEntry] = useState<EducationEntry | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
   const [newEntry, setNewEntry] = useState<EducationEntry>({
     id: "",
     institutionName: "",
@@ -48,17 +52,40 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
     description: ""
   })
 
-  // Update education history when data changes
+  // Fetch existing education history from database
   useEffect(() => {
-    if (data?.educationHistory) {
-      setEducationHistory(data.educationHistory)
-    }
-  }, [data])
+    const fetchEducationHistory = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch('/api/education', {
+          method: 'GET',
+          credentials: 'include',
+          cache: 'no-store'
+        })
 
-  // Notify parent of changes
+        if (response.ok) {
+          const data = await response.json()
+          const existingEducation = data.education || []
+          console.log('📚 Loaded existing education history:', existingEducation)
+          setEducationHistory(existingEducation)
+        } else {
+          console.error('Failed to fetch education history:', await response.text())
+        }
+      } catch (error) {
+        console.error('Error fetching education history:', error)
+        toast.error('Failed to load education history')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchEducationHistory()
+  }, [])
+
+  // Pass education history data back to parent component whenever it changes
   useEffect(() => {
-    onChange("education", educationHistory)
-  }, [educationHistory])
+    onChange('education', educationHistory)
+  }, [educationHistory, onChange])
 
   const handleInputChange = (field: keyof EducationEntry, value: string | number | boolean) => {
     if (editingEntry) {
@@ -83,15 +110,20 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
     }
   }
 
-  const handleAddEntry = () => {
+  const handleAddEntry = async () => {
     if (!newEntry.institutionName.trim() || !newEntry.fieldOfStudy.trim()) return
 
     const entryToAdd = {
       ...newEntry,
-      id: Date.now(),
+      id: -Date.now(), // Use negative number for temporary client-side IDs
     }
 
-    setEducationHistory(prev => [...prev, entryToAdd])
+    const updatedEducation = [...educationHistory, entryToAdd]
+    setEducationHistory(updatedEducation)
+
+    // Auto-save to database
+    await saveEducationToDatabase(updatedEducation)
+
     setNewEntry({
       id: "",
       institutionName: "",
@@ -109,22 +141,31 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
   }
 
   const handleEditEntry = (entry: EducationEntry) => {
-    setEditingEntry(entry)
+    setEditingEntry({ ...entry })
     setIsAddingEntry(true)
   }
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editingEntry?.institutionName.trim() || !editingEntry?.fieldOfStudy.trim()) return
 
-    setEducationHistory(prev => prev.map(entry => 
+    const updatedEducation = educationHistory.map(entry => 
       entry.id === editingEntry.id ? editingEntry : entry
-    ))
+    )
+    setEducationHistory(updatedEducation)
+
+    // Auto-save to database
+    await saveEducationToDatabase(updatedEducation)
+
     setEditingEntry(null)
     setIsAddingEntry(false)
   }
 
-  const handleRemoveEntry = (id: number | string) => {
-    setEducationHistory(prev => prev.filter(entry => entry.id !== id))
+  const handleRemoveEntry = async (id: number | string) => {
+    const updatedEducation = educationHistory.filter(entry => entry.id !== id)
+    setEducationHistory(updatedEducation)
+
+    // Auto-save to database
+    await saveEducationToDatabase(updatedEducation)
   }
 
   const handleCancel = () => {
@@ -143,6 +184,59 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
       grade: "",
       description: ""
     })
+  }
+
+  const saveEducationToDatabase = async (educationToSave: EducationEntry[]) => {
+    try {
+      setIsSaving(true)
+      console.log('💾 Auto-saving education history:', educationToSave)
+
+      const response = await fetch('/api/education', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ education: educationToSave }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Failed to save education history:', errorData)
+        throw new Error(errorData.error || 'Failed to save education history')
+      }
+
+      const result = await response.json()
+      console.log('✅ Education history auto-saved successfully:', result)
+
+      toast.success('Education entry saved successfully!')
+    } catch (error) {
+      console.error('Error saving education history:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to save education entry')
+
+      // Revert the education history state on error
+      await fetchEducationFromDatabase()
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const fetchEducationFromDatabase = async () => {
+    try {
+      const response = await fetch('/api/education', {
+        method: 'GET',
+        credentials: 'include',
+        cache: 'no-store'
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const existingEducation = data.education || []
+        setEducationHistory(existingEducation)
+      }
+    } catch (error) {
+      console.error('Error fetching education history:', error)
+    }
   }
 
   const currentEntry = editingEntry || newEntry
@@ -167,6 +261,20 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
     return type ? type.label : typeId
   }
 
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Education History</h3>
+          <p className="text-gray-600 dark:text-gray-400">Loading your education history...</p>
+        </div>
+        <div className="flex justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-pathpiper-teal" />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-8">
       <div>
@@ -174,10 +282,187 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
         <p className="text-gray-600 dark:text-gray-400">
           Add your educational background from any type of institution - traditional schools, online platforms, bootcamps, vocational training, and more
         </p>
+        {isSaving && (
+          <div className="flex items-center gap-2 text-sm text-pathpiper-teal mt-2">
+            <Loader2 size={14} className="animate-spin" />
+            Saving...
+          </div>
+        )}
       </div>
 
       <div className="space-y-6">
-        {/* Education Entries List */}
+        {/* Add/Edit Entry Form */}
+        {isAddingEntry && (
+          <div className="border border-pathpiper-teal/20 rounded-lg p-6 bg-pathpiper-teal/5">
+            <h4 className="font-medium text-pathpiper-teal mb-4">
+              {editingEntry ? 'Edit Education Entry' : 'Add Education Entry'}
+            </h4>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-gray-700 dark:text-gray-300">
+                    Institution Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    value={currentEntry.institutionName}
+                    onChange={(e) => handleInputChange('institutionName', e.target.value)}
+                    placeholder="e.g., Westlake High School, Harvard University, Coursera"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-gray-700 dark:text-gray-300">
+                    Subject/Course <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    value={currentEntry.fieldOfStudy}
+                    onChange={(e) => handleInputChange('fieldOfStudy', e.target.value)}
+                    placeholder="e.g., General Studies, Computer Science, Web Development, Math, English"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-gray-700 dark:text-gray-300">Institution Category</Label>
+                  <Select
+                    value={currentEntry.institutionCategory}
+                    onValueChange={(value) => handleInputChange('institutionCategory', value)}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {INSTITUTION_CATEGORIES.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Select the broad category that best describes your institution
+                  </p>
+                </div>
+
+                <div>
+                  <Label className="text-gray-700 dark:text-gray-300">Institution Type</Label>
+                  <Select
+                    value={currentEntry.institutionType}
+                    onValueChange={(value) => handleInputChange('institutionType', value)}
+                    disabled={!currentEntry.institutionCategory}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue 
+                        placeholder={currentEntry.institutionCategory ? "Select specific type" : "Select category first"}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getAvailableTypes(currentEntry.institutionCategory).map((type) => (
+                        <SelectItem key={type.id} value={type.id}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {currentEntry.institutionCategory 
+                      ? `Select the specific type within ${getCategoryLabel(currentEntry.institutionCategory)}`
+                      : "Select a category first to see available types"
+                    }
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-gray-700 dark:text-gray-300">Degree/Certificate</Label>
+                  <Input
+                    value={currentEntry.degree}
+                    onChange={(e) => handleInputChange('degree', e.target.value)}
+                    placeholder="e.g., High School Diploma, Bachelor's Degree, Certificate, Course Completion"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-gray-700 dark:text-gray-300">Grade/Level</Label>
+                  <Input
+                    value={currentEntry.grade}
+                    onChange={(e) => handleInputChange('grade', e.target.value)}
+                    placeholder="e.g., 12th Grade, Freshman Year, Beginner Level, Advanced"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-gray-700 dark:text-gray-300">Start Date</Label>
+                  <Input
+                    type="date"
+                    value={currentEntry.startDate}
+                    onChange={(e) => handleInputChange('startDate', e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-gray-700 dark:text-gray-300">End Date</Label>
+                  <Input
+                    type="date"
+                    value={currentEntry.endDate}
+                    onChange={(e) => handleInputChange('endDate', e.target.value)}
+                    disabled={currentEntry.isCurrent}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={currentEntry.isCurrent}
+                  onCheckedChange={(checked) => handleInputChange('isCurrent', checked)}
+                />
+                <Label className="text-gray-700 dark:text-gray-300">
+                  I currently attend this institution
+                </Label>
+              </div>
+
+              <div>
+                <Label className="text-gray-700 dark:text-gray-300">Description (optional)</Label>
+                <Textarea
+                  value={currentEntry.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  placeholder="Awards, honors, notable achievements, projects completed..."
+                  className="mt-1 h-20"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCancel}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={editingEntry ? handleSaveEdit : handleAddEntry}
+                  disabled={!currentEntry.institutionName.trim() || !currentEntry.fieldOfStudy.trim()}
+                  className="bg-pathpiper-teal hover:bg-pathpiper-teal/90"
+                >
+                  {editingEntry ? 'Save Changes' : 'Add Entry'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Education History List */}
         <div>
           <div className="flex justify-between items-center mb-4">
             <Label className="text-lg font-medium">Education History ({educationHistory.length})</Label>
@@ -252,190 +537,39 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                       >
                         <Edit size={16} />
                       </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveEntry(entry.id)}
-                        className="text-gray-400 hover:text-red-500"
-                      >
-                        <X size={16} />
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-gray-400 hover:text-red-500"
+                          >
+                            <X size={16} />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Education Entry</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{entry.institutionName}"? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleRemoveEntry(entry.id)}
+                              className="bg-red-500 hover:bg-red-600"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
                 </div>
               ))}
-            </div>
-          )}
-
-          {/* Add/Edit Entry Form */}
-          {isAddingEntry && (
-            <div className="border border-pathpiper-teal/20 rounded-lg p-6 bg-pathpiper-teal/5 mt-4">
-              <h4 className="font-medium text-pathpiper-teal mb-4">
-                {editingEntry ? 'Edit Education Entry' : 'Add Education Entry'}
-              </h4>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-gray-700 dark:text-gray-300">
-                      Institution Name <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      value={currentEntry.institutionName}
-                      onChange={(e) => handleInputChange('institutionName', e.target.value)}
-                      placeholder="e.g., Westlake High School, Harvard University, Coursera"
-                      className="mt-1"
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="text-gray-700 dark:text-gray-300">
-                      Subject/Course <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      value={currentEntry.fieldOfStudy}
-                      onChange={(e) => handleInputChange('fieldOfStudy', e.target.value)}
-                      placeholder="e.g., General Studies, Computer Science, Web Development, Math, English"
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-gray-700 dark:text-gray-300">Institution Category</Label>
-                    <Select
-                      value={currentEntry.institutionCategory}
-                      onValueChange={(value) => handleInputChange('institutionCategory', value)}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {INSTITUTION_CATEGORIES.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Select the broad category that best describes your institution
-                    </p>
-                  </div>
-
-                  <div>
-                    <Label className="text-gray-700 dark:text-gray-300">Institution Type</Label>
-                    <Select
-                      value={currentEntry.institutionType}
-                      onValueChange={(value) => handleInputChange('institutionType', value)}
-                      disabled={!currentEntry.institutionCategory}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue 
-                          placeholder={currentEntry.institutionCategory ? "Select specific type" : "Select category first"}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getAvailableTypes(currentEntry.institutionCategory).map((type) => (
-                          <SelectItem key={type.id} value={type.id}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {currentEntry.institutionCategory 
-                        ? `Select the specific type within ${getCategoryLabel(currentEntry.institutionCategory)}`
-                        : "Select a category first to see available types"
-                      }
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-gray-700 dark:text-gray-300">Degree/Certificate</Label>
-                    <Input
-                      value={currentEntry.degree}
-                      onChange={(e) => handleInputChange('degree', e.target.value)}
-                      placeholder="e.g., High School Diploma, Bachelor's Degree, Certificate, Course Completion"
-                      className="mt-1"
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="text-gray-700 dark:text-gray-300">Grade/Level</Label>
-                    <Input
-                      value={currentEntry.grade}
-                      onChange={(e) => handleInputChange('grade', e.target.value)}
-                      placeholder="e.g., 12th Grade, Freshman Year, Beginner Level, Advanced"
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-gray-700 dark:text-gray-300">Start Date</Label>
-                    <Input
-                      type="date"
-                      value={currentEntry.startDate}
-                      onChange={(e) => handleInputChange('startDate', e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="text-gray-700 dark:text-gray-300">End Date</Label>
-                    <Input
-                      type="date"
-                      value={currentEntry.endDate}
-                      onChange={(e) => handleInputChange('endDate', e.target.value)}
-                      disabled={currentEntry.isCurrent}
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={currentEntry.isCurrent}
-                    onCheckedChange={(checked) => handleInputChange('isCurrent', checked)}
-                  />
-                  <Label className="text-gray-700 dark:text-gray-300">
-                    I currently attend this institution
-                  </Label>
-                </div>
-
-                <div>
-                  <Label className="text-gray-700 dark:text-gray-300">Description (optional)</Label>
-                  <Textarea
-                    value={currentEntry.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
-                    placeholder="Awards, honors, notable achievements, projects completed..."
-                    className="mt-1 h-20"
-                  />
-                </div>
-
-                <div className="flex justify-end space-x-3 pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleCancel}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={editingEntry ? handleSaveEdit : handleAddEntry}
-                    disabled={!currentEntry.institutionName.trim() || !currentEntry.fieldOfStudy.trim()}
-                    className="bg-pathpiper-teal hover:bg-pathpiper-teal/90"
-                  >
-                    {editingEntry ? 'Save Changes' : 'Add Entry'}
-                  </Button>
-                </div>
-              </div>
             </div>
           )}
         </div>
