@@ -272,27 +272,48 @@ export default function SkillsAbilitiesForm({
         <div className="lg:col-span-2 space-y-4">
           <div className="space-y-4">
             {/* Add Custom Skill */}
-            <div className="flex space-x-2">
-              <Input
-                type="text"
-                placeholder="Add a custom skill..."
-                value={newSkill}
-                onChange={(e) => setNewSkill(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault()
-                    addCustomSkill()
-                  }
-                }}
-              />
-              <Button
-                type="button"
-                onClick={addCustomSkill}
-                disabled={!newSkill.trim()}
-                className="bg-pathpiper-teal hover:bg-pathpiper-teal/90"
-              >
-                <Plus size={16} />
-              </Button>
+            <div className="space-y-3">
+              <div className="flex space-x-2">
+                <Input
+                  type="text"
+                  placeholder="Add a custom skill..."
+                  value={newSkill}
+                  onChange={(e) => setNewSkill(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault()
+                      addCustomSkill()
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  onClick={addCustomSkill}
+                  disabled={!newSkill.trim()}
+                  className="bg-pathpiper-teal hover:bg-pathpiper-teal/90"
+                >
+                  <Plus size={16} />
+                </Button>
+              </div>
+              
+              {/* Default Level for New Skills */}
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                <Label className="text-sm font-medium mb-2 block">
+                  Default Level for New Skills: {getLevelLabel(newSkillLevel)}
+                </Label>
+                <Slider
+                  value={[newSkillLevel]}
+                  min={1}
+                  max={5}
+                  step={1}
+                  onValueChange={(value) => setNewSkillLevel(value[0])}
+                  className="py-2"
+                />
+                <div className="flex justify-between text-xs text-gray-400 mt-1">
+                  <span>{userAgeGroup === "early_childhood" || userAgeGroup === "elementary" ? "Just Started" : "Beginner"}</span>
+                  <span>{userAgeGroup === "early_childhood" || userAgeGroup === "elementary" ? "Really Good" : "Expert"}</span>
+                </div>
+              </div>
             </div>
 
             {/* Search Skills */}
