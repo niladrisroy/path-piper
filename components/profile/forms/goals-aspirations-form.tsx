@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -71,9 +70,9 @@ export default function GoalsAspirationsForm({ data, onChange }: GoalsAspiration
     fetchGoals()
   }, [])
 
-  // Notify parent of changes
+  // Pass goals data back to parent component whenever goals change
   useEffect(() => {
-    onChange("goals", goals)
+    onChange('goals', goals)
   }, [goals, onChange])
 
   const handleInputChange = (field: keyof Goal, value: string) => {
@@ -94,10 +93,10 @@ export default function GoalsAspirationsForm({ data, onChange }: GoalsAspiration
 
     const updatedGoals = [...goals, goalToAdd]
     setGoals(updatedGoals)
-    
+
     // Auto-save to database
     await saveGoalsToDatabase(updatedGoals)
-    
+
     setNewGoal({
       id: "",
       title: "",
@@ -120,10 +119,10 @@ export default function GoalsAspirationsForm({ data, onChange }: GoalsAspiration
       goal.id === editingGoal.id ? editingGoal : goal
     )
     setGoals(updatedGoals)
-    
+
     // Auto-save to database
     await saveGoalsToDatabase(updatedGoals)
-    
+
     setEditingGoal(null)
     setIsAddingGoal(false)
   }
@@ -131,7 +130,7 @@ export default function GoalsAspirationsForm({ data, onChange }: GoalsAspiration
   const handleRemoveGoal = async (id: number | string) => {
     const updatedGoals = goals.filter(goal => goal.id !== id)
     setGoals(updatedGoals)
-    
+
     // Auto-save to database
     await saveGoalsToDatabase(updatedGoals)
   }
@@ -167,15 +166,15 @@ export default function GoalsAspirationsForm({ data, onChange }: GoalsAspiration
         console.error('Failed to save goals:', errorData)
         throw new Error(errorData.error || 'Failed to save goals')
       }
-      
+
       const result = await response.json()
       console.log('✅ Goals auto-saved successfully:', result)
-      
+
       toast.success('Goal saved successfully!')
     } catch (error) {
       console.error('Error saving goals:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to save goal')
-      
+
       // Revert the goals state on error
       await fetchGoalsFromDatabase()
     } finally {
