@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -6,7 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, X, Calendar, Target, Edit } from "lucide-react"
+import { Plus, X, Calendar, Target, Edit, Save, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 interface Goal {
   id: number | string
@@ -26,6 +28,10 @@ const TIMEFRAMES = ["1 month", "3 months", "6 months", "1 year", "2+ years", "On
 
 export default function GoalsAspirationsForm({ data, onChange }: GoalsAspirationsFormProps) {
   const [goals, setGoals] = useState<Goal[]>([])
+  const [originalGoals, setOriginalGoals] = useState<Goal[]>([])
+  const [isDirty, setIsDirty] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [isAddingGoal, setIsAddingGoal] = useState(false)
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
   const [newGoal, setNewGoal] = useState<Goal>({
@@ -36,17 +42,57 @@ export default function GoalsAspirationsForm({ data, onChange }: GoalsAspiration
     timeframe: "",
   })
 
-  // Update goals when data changes
+  // Fetch existing goals from database
   useEffect(() => {
-    if (data?.goals) {
-      setGoals(data.goals)
+    const fetchGoals = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch('/api/goals', {
+          method: 'GET',
+          credentials: 'include',
+          cache: 'no-store'
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          const existingGoals = data.goals || []
+          console.log('📊 Loaded existing goals:', existingGoals)
+          setGoals(existingGoals)
+          setOriginalGoals([...existingGoals])
+        } else {
+          console.error('Failed to fetch goals:', await response.text())
+        }
+      } catch (error) {
+        console.error('Error fetching goals:', error)
+        toast.error('Failed to load goals')
+      } finally {
+        setLoading(false)
+      }
     }
-  }, [data])
+
+    fetchGoals()
+  }, [])
+
+  // Track dirty state
+  useEffect(() => {
+    const goalsChanged = goals.length !== originalGoals.length ||
+      goals.some(goal => {
+        const originalGoal = originalGoals.find(orig => orig.id === goal.id)
+        return !originalGoal || 
+               originalGoal.title !== goal.title ||
+               originalGoal.description !== goal.description ||
+               originalGoal.category !== goal.category ||
+               originalGoal.timeframe !== goal.timeframe
+      }) ||
+      originalGoals.some(orig => !goals.find(goal => goal.id === orig.id))
+    
+    setIsDirty(goalsChanged)
+  }, [goals, originalGoals])
 
   // Notify parent of changes
   useEffect(() => {
     onChange("goals", goals)
-  }, [goals])
+  }, [goals, onChange])
 
   const handleInputChange = (field: keyof Goal, value: string) => {
     if (editingGoal) {
@@ -61,7 +107,7 @@ export default function GoalsAspirationsForm({ data, onChange }: GoalsAspiration
 
     const goalToAdd = {
       ...newGoal,
-      id: Date.now(),
+      id: -Date.now(), // Use negative number for temporary client-side IDs
     }
 
     setGoals(prev => [...prev, goalToAdd])
@@ -76,7 +122,7 @@ export default function GoalsAspirationsForm({ data, onChange }: GoalsAspiration
   }
 
   const handleEditGoal = (goal: Goal) => {
-    setEditingGoal(goal)
+    setEditingGoal({ ...goal })
     setIsAddingGoal(true)
   }
 
@@ -106,15 +152,86 @@ export default function GoalsAspirationsForm({ data, onChange }: GoalsAspiration
     })
   }
 
+  const handleSave = async () => {
+    if (!isDirty) {
+      toast.info('No changes to save')
+      return
+    }
+
+    try {
+      setIsSaving(true)
+      console.log('💾 Saving goals:', goals)
+
+      const response = await fetch('/api/goals', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ goals }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Failed to save goals:', errorData)
+        throw new Error(errorData.error || 'Failed to save goals')
+      }
+      
+      const result = await response.json()
+      console.log('✅ Goals saved successfully:', result)
+      
+      // Update original goals to match current state
+      setOriginalGoals([...goals])
+      setIsDirty(false)
+      
+      toast.success('Goals saved successfully!')
+    } catch (error) {
+      console.error('Error saving goals:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to save goals')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const currentGoal = editingGoal || newGoal
+
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Goals & Aspirations</h3>
+          <p className="text-gray-600 dark:text-gray-400">Loading your goals...</p>
+        </div>
+        <div className="flex justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-pathpiper-teal" />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8">
-      <div>
-        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Goals & Aspirations</h3>
-        <p className="text-gray-600 dark:text-gray-400">
-          Share your goals to help mentors understand what you're working towards and how they can support you
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Goals & Aspirations</h3>
+          <p className="text-gray-600 dark:text-gray-400">
+            Share your goals to help mentors understand what you're working towards and how they can support you
+          </p>
+        </div>
+        {isDirty && (
+          <Button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="bg-pathpiper-teal hover:bg-pathpiper-teal/90 flex items-center gap-2"
+          >
+            {isSaving ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Save size={16} />
+            )}
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        )}
       </div>
 
       <div className="space-y-6">
