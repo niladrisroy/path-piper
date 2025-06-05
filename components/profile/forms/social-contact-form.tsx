@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -7,7 +8,7 @@ import { z } from "zod"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Github, Linkedin, Globe, Mail, Phone, MessageSquare } from "lucide-react"
+import { Github, Linkedin, Globe, Mail, Phone, MessageSquare, Shield } from "lucide-react"
 
 const socialContactSchema = z.object({
   githubUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
@@ -60,6 +61,25 @@ export default function SocialContactForm({ data, onChange }: SocialContactFormP
     return () => subscription.unsubscribe()
   }, [form, onChange])
 
+  const contactMethods = [
+    {
+      id: "email",
+      label: "Email Address",
+      placeholder: "your.email@example.com",
+      icon: <Mail className="h-5 w-5" />,
+      description: "For direct communication with mentors",
+      type: "email"
+    },
+    {
+      id: "phone",
+      label: "Phone Number",
+      placeholder: "+1 (555) 123-4567",
+      icon: <Phone className="h-5 w-5" />,
+      description: "Optional phone contact (will be kept private)",
+      type: "tel"
+    }
+  ]
+
   const socialLinks = [
     {
       id: "githubUrl",
@@ -91,25 +111,6 @@ export default function SocialContactForm({ data, onChange }: SocialContactFormP
     }
   ]
 
-  const contactMethods = [
-    {
-      id: "email",
-      label: "Email Address",
-      placeholder: "your.email@example.com",
-      icon: <Mail className="h-5 w-5" />,
-      description: "For direct communication with mentors",
-      type: "email"
-    },
-    {
-      id: "phone",
-      label: "Phone Number",
-      placeholder: "+1 (555) 123-4567",
-      icon: <Phone className="h-5 w-5" />,
-      description: "Optional phone contact (will be kept private)",
-      type: "tel"
-    }
-  ]
-
   return (
     <div className="space-y-8">
       <div>
@@ -121,45 +122,12 @@ export default function SocialContactForm({ data, onChange }: SocialContactFormP
 
       <Form {...form}>
         <div className="space-y-8">
-          {/* Social Media Links */}
-          <div>
-            <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-              <MessageSquare className="h-5 w-5 mr-2" />
-              Social Media Profiles
-            </h4>
-            <div className="space-y-6">
-              {socialLinks.map((link) => (
-                <FormField
-                  key={link.id}
-                  control={form.control}
-                  name={link.id as keyof SocialContactData}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center space-x-2">
-                        <span className="text-gray-600 dark:text-gray-400">{link.icon}</span>
-                        <span>{link.label}</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={link.placeholder}
-                          {...field}
-                        />
-                      </FormControl>
-                      <p className="text-sm text-gray-500">{link.description}</p>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ))}
-            </div>
-          </div>
-
           {/* Contact Information */}
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               Contact Information
             </h4>
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {contactMethods.map((contact) => (
                 <FormField
                   key={contact.id}
@@ -189,13 +157,51 @@ export default function SocialContactForm({ data, onChange }: SocialContactFormP
 
           {/* Privacy Notice */}
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-            <h5 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Privacy & Safety</h5>
-            <ul className="text-sm text-blue-700 dark:text-blue-200 space-y-1">
-              <li>• Your contact information will only be shared with verified mentors when you connect with them</li>
-              <li>• You can control who sees your social media profiles in Privacy Settings</li>
-              <li>• Phone numbers are kept private and only used for important notifications</li>
-              <li>• You can update or remove this information at any time</li>
-            </ul>
+            <div className="flex items-start space-x-3">
+              <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+              <div>
+                <h5 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Privacy & Safety</h5>
+                <ul className="text-sm text-blue-700 dark:text-blue-200 space-y-1">
+                  <li>• Your contact information will only be shared with verified mentors when you connect with them</li>
+                  <li>• You can control who sees your social media profiles in Privacy Settings</li>
+                  <li>• Phone numbers are kept private and only used for important notifications</li>
+                  <li>• You can update or remove this information at any time</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Social Media Links */}
+          <div>
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+              <MessageSquare className="h-5 w-5 mr-2" />
+              Social Media Profiles
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {socialLinks.map((link) => (
+                <FormField
+                  key={link.id}
+                  control={form.control}
+                  name={link.id as keyof SocialContactData}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center space-x-2">
+                        <span className="text-gray-600 dark:text-gray-400">{link.icon}</span>
+                        <span>{link.label}</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder={link.placeholder}
+                          {...field}
+                        />
+                      </FormControl>
+                      <p className="text-sm text-gray-500">{link.description}</p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </Form>
