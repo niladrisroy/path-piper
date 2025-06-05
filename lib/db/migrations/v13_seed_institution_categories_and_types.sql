@@ -16,7 +16,7 @@ ON CONFLICT (slug) DO NOTHING;
 -- Insert institution types for Traditional Educational Institutions
 INSERT INTO institution_types (category_id, name, slug, description)
 SELECT 
-  ic.id,
+  ic.id::integer,
   type_data.name,
   type_data.slug,
   type_data.description

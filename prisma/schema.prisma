@@ -113,7 +113,7 @@ model StudentEducationHistory {
   studentId           String    @map("student_id") @db.Uuid
   institutionId       String?   @map("institution_id") @db.Uuid
   institutionName     String    @map("institution_name")
-  institutionTypeId   String?   @map("institution_type_id") @db.Uuid
+  institutionTypeId   Int?      @map("institution_type_id")
   degreeProgram       String?   @map("degree_program")
   fieldOfStudy        String?   @map("field_of_study")
   startDate           DateTime? @map("start_date") @db.Date
@@ -150,7 +150,7 @@ model MentorProfile {
 }
 
 model InstitutionCategory {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id           Int       @id @default(autoincrement())
   name         String    @unique
   slug         String    @unique
   description  String?
@@ -163,8 +163,8 @@ model InstitutionCategory {
 }
 
 model InstitutionType {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  categoryId   String    @map("category_id") @db.Uuid
+  id           Int       @id @default(autoincrement())
+  categoryId   Int       @map("category_id")
   name         String
   slug         String
   description  String?
@@ -183,7 +183,7 @@ model InstitutionProfile {
   id                  String    @id @db.Uuid
   profile             Profile   @relation(fields: [id], references: [id])
   institutionName     String    @map("institution_name")
-  institutionTypeId   String?   @map("institution_type_id") @db.Uuid
+  institutionTypeId   Int?      @map("institution_type_id")
   website            String?
   logoUrl            String?   @map("logo_url")
   coverImageUrl      String?   @map("cover_image_url")
