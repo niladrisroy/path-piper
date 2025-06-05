@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, X, Calendar, Target, Edit, Save, Loader2 } from "lucide-react"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { Plus, X, Calendar, Target, Edit, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
 interface Goal {
@@ -28,12 +29,10 @@ const TIMEFRAMES = ["1 month", "3 months", "6 months", "1 year", "2+ years", "On
 
 export default function GoalsAspirationsForm({ data, onChange }: GoalsAspirationsFormProps) {
   const [goals, setGoals] = useState<Goal[]>([])
-  const [originalGoals, setOriginalGoals] = useState<Goal[]>([])
-  const [isDirty, setIsDirty] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [isAddingGoal, setIsAddingGoal] = useState(false)
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
   const [newGoal, setNewGoal] = useState<Goal>({
     id: "",
     title: "",
@@ -58,7 +57,6 @@ export default function GoalsAspirationsForm({ data, onChange }: GoalsAspiration
           const existingGoals = data.goals || []
           console.log('📊 Loaded existing goals:', existingGoals)
           setGoals(existingGoals)
-          setOriginalGoals([...existingGoals])
         } else {
           console.error('Failed to fetch goals:', await response.text())
         }
@@ -73,22 +71,6 @@ export default function GoalsAspirationsForm({ data, onChange }: GoalsAspiration
     fetchGoals()
   }, [])
 
-  // Track dirty state
-  useEffect(() => {
-    const goalsChanged = goals.length !== originalGoals.length ||
-      goals.some(goal => {
-        const originalGoal = originalGoals.find(orig => orig.id === goal.id)
-        return !originalGoal || 
-               originalGoal.title !== goal.title ||
-               originalGoal.description !== goal.description ||
-               originalGoal.category !== goal.category ||
-               originalGoal.timeframe !== goal.timeframe
-      }) ||
-      originalGoals.some(orig => !goals.find(goal => goal.id === orig.id))
-    
-    setIsDirty(goalsChanged)
-  }, [goals, originalGoals])
-
   // Notify parent of changes
   useEffect(() => {
     onChange("goals", goals)
@@ -102,7 +84,7 @@ export default function GoalsAspirationsForm({ data, onChange }: GoalsAspiration
     }
   }
 
-  const handleAddGoal = () => {
+  const handleAddGoal = async () => {
     if (!newGoal.title.trim()) return
 
     const goalToAdd = {
@@ -110,7 +92,12 @@ export default function GoalsAspirationsForm({ data, onChange }: GoalsAspiration
       id: -Date.now(), // Use negative number for temporary client-side IDs
     }
 
-    setGoals(prev => [...prev, goalToAdd])
+    const updatedGoals = [...goals, goalToAdd]
+    setGoals(updatedGoals)
+    
+    // Auto-save to database
+    await saveGoalsToDatabase(updatedGoals)
+    
     setNewGoal({
       id: "",
       title: "",
@@ -126,18 +113,27 @@ export default function GoalsAspirationsForm({ data, onChange }: GoalsAspiration
     setIsAddingGoal(true)
   }
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editingGoal?.title.trim()) return
 
-    setGoals(prev => prev.map(goal => 
+    const updatedGoals = goals.map(goal => 
       goal.id === editingGoal.id ? editingGoal : goal
-    ))
+    )
+    setGoals(updatedGoals)
+    
+    // Auto-save to database
+    await saveGoalsToDatabase(updatedGoals)
+    
     setEditingGoal(null)
     setIsAddingGoal(false)
   }
 
-  const handleRemoveGoal = (id: number | string) => {
-    setGoals(prev => prev.filter(goal => goal.id !== id))
+  const handleRemoveGoal = async (id: number | string) => {
+    const updatedGoals = goals.filter(goal => goal.id !== id)
+    setGoals(updatedGoals)
+    
+    // Auto-save to database
+    await saveGoalsToDatabase(updatedGoals)
   }
 
   const handleCancel = () => {
@@ -152,15 +148,10 @@ export default function GoalsAspirationsForm({ data, onChange }: GoalsAspiration
     })
   }
 
-  const handleSave = async () => {
-    if (!isDirty) {
-      toast.info('No changes to save')
-      return
-    }
-
+  const saveGoalsToDatabase = async (goalsToSave: Goal[]) => {
     try {
       setIsSaving(true)
-      console.log('💾 Saving goals:', goals)
+      console.log('💾 Auto-saving goals:', goalsToSave)
 
       const response = await fetch('/api/goals', {
         method: 'POST',
@@ -168,7 +159,7 @@ export default function GoalsAspirationsForm({ data, onChange }: GoalsAspiration
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ goals }),
+        body: JSON.stringify({ goals: goalsToSave }),
       })
 
       if (!response.ok) {
@@ -178,18 +169,35 @@ export default function GoalsAspirationsForm({ data, onChange }: GoalsAspiration
       }
       
       const result = await response.json()
-      console.log('✅ Goals saved successfully:', result)
+      console.log('✅ Goals auto-saved successfully:', result)
       
-      // Update original goals to match current state
-      setOriginalGoals([...goals])
-      setIsDirty(false)
-      
-      toast.success('Goals saved successfully!')
+      toast.success('Goal saved successfully!')
     } catch (error) {
       console.error('Error saving goals:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to save goals')
+      toast.error(error instanceof Error ? error.message : 'Failed to save goal')
+      
+      // Revert the goals state on error
+      await fetchGoalsFromDatabase()
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const fetchGoalsFromDatabase = async () => {
+    try {
+      const response = await fetch('/api/goals', {
+        method: 'GET',
+        credentials: 'include',
+        cache: 'no-store'
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const existingGoals = data.goals || []
+        setGoals(existingGoals)
+      }
+    } catch (error) {
+      console.error('Error fetching goals:', error)
     }
   }
 
@@ -211,26 +219,16 @@ export default function GoalsAspirationsForm({ data, onChange }: GoalsAspiration
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-start">
-        <div>
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Goals & Aspirations</h3>
-          <p className="text-gray-600 dark:text-gray-400">
-            Share your goals to help mentors understand what you're working towards and how they can support you
-          </p>
-        </div>
-        {isDirty && (
-          <Button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="bg-pathpiper-teal hover:bg-pathpiper-teal/90 flex items-center gap-2"
-          >
-            {isSaving ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Save size={16} />
-            )}
-            {isSaving ? 'Saving...' : 'Save Changes'}
-          </Button>
+      <div>
+        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Goals & Aspirations</h3>
+        <p className="text-gray-600 dark:text-gray-400">
+          Share your goals to help mentors understand what you're working towards and how they can support you
+        </p>
+        {isSaving && (
+          <div className="flex items-center gap-2 text-sm text-pathpiper-teal mt-2">
+            <Loader2 size={14} className="animate-spin" />
+            Saving...
+          </div>
         )}
       </div>
 
@@ -395,15 +393,35 @@ export default function GoalsAspirationsForm({ data, onChange }: GoalsAspiration
                       >
                         <Edit size={16} />
                       </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveGoal(goal.id)}
-                        className="text-gray-400 hover:text-red-500"
-                      >
-                        <X size={16} />
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-gray-400 hover:text-red-500"
+                          >
+                            <X size={16} />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Goal</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{goal.title}"? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleRemoveGoal(goal.id)}
+                              className="bg-red-500 hover:bg-red-600"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
                 </div>
