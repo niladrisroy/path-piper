@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Github, Linkedin, Globe, Mail, Phone, MessageSquare, Shield, Instagram, Facebook, Twitter } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
+import { updateUserProfile, getUserSocialLinks, updateUserSocialLinks } from "@/lib/db/profile"
 
 const socialContactSchema = z.object({
   instagramUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
@@ -28,9 +30,20 @@ type SocialContactData = z.infer<typeof socialContactSchema>
 interface SocialContactFormProps {
   data: any
   onChange: (sectionId: string, data: SocialContactData) => void
+  userId: string
 }
 
-export default function SocialContactForm({ data, onChange }: SocialContactFormProps) {
+interface SocialLink {
+  id: string
+  platform: string
+  url: string
+  displayName?: string
+}
+
+export default function SocialContactForm({ data, onChange, userId }: SocialContactFormProps) {
+  const [loading, setLoading] = useState(false)
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([])
+
   const form = useForm<SocialContactData>({
     resolver: zodResolver(socialContactSchema),
     defaultValues: {
@@ -46,6 +59,74 @@ export default function SocialContactForm({ data, onChange }: SocialContactFormP
       phone: "",
     }
   })
+
+  // Fetch existing data when component mounts
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        console.log('🔄 Fetching social contact data for user:', userId)
+        
+        // Fetch social links
+        const links = await getUserSocialLinks(userId)
+        setSocialLinks(links)
+        console.log('📊 Fetched social links:', links)
+
+        // Convert social links to form format
+        const formData: Partial<SocialContactData> = {
+          email: data?.email || "",
+          phone: data?.phone || "",
+        }
+
+        // Map social links to form fields
+        links.forEach((link: SocialLink) => {
+          switch (link.platform.toLowerCase()) {
+            case 'instagram':
+              formData.instagramUrl = link.url
+              break
+            case 'facebook':
+              formData.facebookUrl = link.url
+              break
+            case 'linkedin':
+              formData.linkedinUrl = link.url
+              break
+            case 'twitter':
+              formData.twitterUrl = link.url
+              break
+            case 'behance':
+              formData.behanceUrl = link.url
+              break
+            case 'dribbble':
+              formData.dribbbleUrl = link.url
+              break
+            case 'portfolio':
+              formData.portfolioUrl = link.url
+              break
+            case 'website':
+              formData.website = link.url
+              break
+          }
+        })
+
+        form.reset(formData as SocialContactData)
+        console.log('✅ Form populated with existing data')
+        
+      } catch (error) {
+        console.error('❌ Error fetching social contact data:', error)
+        toast({
+          title: "Error",
+          description: "Failed to load existing data",
+          variant: "destructive",
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (userId) {
+      fetchData()
+    }
+  }, [userId, data, form])
 
   // Update form when data changes
   useEffect(() => {
@@ -72,6 +153,72 @@ export default function SocialContactForm({ data, onChange }: SocialContactFormP
     })
     return () => subscription.unsubscribe()
   }, [form, onChange])
+
+  const handleSave = async (formData: SocialContactData) => {
+    try {
+      setLoading(true)
+      console.log('💾 Saving social contact data:', formData)
+
+      // Save contact info (email and phone) to profile
+      const profileData = {
+        email: formData.email || null,
+        phone: formData.phone || null,
+      }
+
+      if (profileData.email || profileData.phone) {
+        await updateUserProfile(userId, profileData)
+        console.log('✅ Updated profile contact info')
+      }
+
+      // Prepare social links data
+      const socialLinksData = []
+      
+      if (formData.instagramUrl?.trim()) {
+        socialLinksData.push({ platform: 'instagram', url: formData.instagramUrl.trim() })
+      }
+      if (formData.facebookUrl?.trim()) {
+        socialLinksData.push({ platform: 'facebook', url: formData.facebookUrl.trim() })
+      }
+      if (formData.linkedinUrl?.trim()) {
+        socialLinksData.push({ platform: 'linkedin', url: formData.linkedinUrl.trim() })
+      }
+      if (formData.twitterUrl?.trim()) {
+        socialLinksData.push({ platform: 'twitter', url: formData.twitterUrl.trim() })
+      }
+      if (formData.behanceUrl?.trim()) {
+        socialLinksData.push({ platform: 'behance', url: formData.behanceUrl.trim() })
+      }
+      if (formData.dribbbleUrl?.trim()) {
+        socialLinksData.push({ platform: 'dribbble', url: formData.dribbbleUrl.trim() })
+      }
+      if (formData.portfolioUrl?.trim()) {
+        socialLinksData.push({ platform: 'portfolio', url: formData.portfolioUrl.trim() })
+      }
+      if (formData.website?.trim()) {
+        socialLinksData.push({ platform: 'website', url: formData.website.trim() })
+      }
+
+      // Update social links
+      const updatedLinks = await updateUserSocialLinks(userId, socialLinksData)
+      setSocialLinks(updatedLinks)
+      console.log('✅ Updated social links:', updatedLinks)
+
+      toast({
+        title: "Success",
+        description: "Social & contact information saved successfully",
+      })
+
+    } catch (error) {
+      console.error('❌ Error saving social contact data:', error)
+      toast({
+        title: "Error",
+        description: "Failed to save social & contact information",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const contactMethods = [
     {
@@ -161,7 +308,7 @@ export default function SocialContactForm({ data, onChange }: SocialContactFormP
       </div>
 
       <Form {...form}>
-        <div className="space-y-8">
+        <form onSubmit={form.handleSubmit(handleSave)} className="space-y-8">
           {/* Contact Information */}
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -243,7 +390,25 @@ export default function SocialContactForm({ data, onChange }: SocialContactFormP
               </div>
             </div>
           </div>
-        </div>
+
+          {/* Save Button */}
+          <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+            >
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <span>Save Social & Contact Info</span>
+              )}
+            </button>
+          </div>
+        </form>
       </Form>
     </div>
   )

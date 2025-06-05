@@ -93,7 +93,7 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
         ...prev,
         goals: data
       }))
-      
+
       // Recalculate completion for goals tab
       setCompletionData(prev => ({
         ...prev,
@@ -441,8 +441,6 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
               </motion.div>
             </AnimatePresence>
           </div>
-
-
         </div>
       </div>
     </div>
