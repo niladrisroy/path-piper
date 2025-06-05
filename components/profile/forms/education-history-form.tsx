@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -8,10 +9,12 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Plus, X, GraduationCap, Edit, Calendar } from "lucide-react"
+import { INSTITUTION_CATEGORIES } from "@/data/institution-types"
 
 interface EducationEntry {
   id: number | string
   institutionName: string
+  institutionCategory: string
   institutionType: string
   degree?: string
   fieldOfStudy: string
@@ -27,25 +30,6 @@ interface EducationHistoryFormProps {
   onChange: (sectionId: string, data: EducationEntry[]) => void
 }
 
-const INSTITUTION_TYPES = [
-  "Elementary School",
-  "Middle School", 
-  "High School",
-  "Community College",
-  "University",
-  "Online Institution",
-  "Technical School",
-  "Other"
-]
-
-const GRADE_LEVELS = [
-  "1st Grade", "2nd Grade", "3rd Grade", "4th Grade", "5th Grade",
-  "6th Grade", "7th Grade", "8th Grade",
-  "9th Grade", "10th Grade", "11th Grade", "12th Grade",
-  "Freshman", "Sophomore", "Junior", "Senior",
-  "Graduate Student", "PhD Student"
-]
-
 export default function EducationHistoryForm({ data, onChange }: EducationHistoryFormProps) {
   const [educationHistory, setEducationHistory] = useState<EducationEntry[]>([])
   const [isAddingEntry, setIsAddingEntry] = useState(false)
@@ -53,6 +37,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
   const [newEntry, setNewEntry] = useState<EducationEntry>({
     id: "",
     institutionName: "",
+    institutionCategory: "",
     institutionType: "",
     degree: "",
     fieldOfStudy: "",
@@ -77,9 +62,24 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
 
   const handleInputChange = (field: keyof EducationEntry, value: string | number | boolean) => {
     if (editingEntry) {
-      setEditingEntry(prev => prev ? { ...prev, [field]: value } : null)
+      setEditingEntry(prev => {
+        if (!prev) return null
+        const updated = { ...prev, [field]: value }
+        // Reset institution type if category changes
+        if (field === 'institutionCategory') {
+          updated.institutionType = ""
+        }
+        return updated
+      })
     } else {
-      setNewEntry(prev => ({ ...prev, [field]: value }))
+      setNewEntry(prev => {
+        const updated = { ...prev, [field]: value }
+        // Reset institution type if category changes
+        if (field === 'institutionCategory') {
+          updated.institutionType = ""
+        }
+        return updated
+      })
     }
   }
 
@@ -95,6 +95,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
     setNewEntry({
       id: "",
       institutionName: "",
+      institutionCategory: "",
       institutionType: "",
       degree: "",
       fieldOfStudy: "",
@@ -132,6 +133,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
     setNewEntry({
       id: "",
       institutionName: "",
+      institutionCategory: "",
       institutionType: "",
       degree: "",
       fieldOfStudy: "",
@@ -145,12 +147,32 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
 
   const currentEntry = editingEntry || newEntry
 
+  // Get available institution types based on selected category
+  const getAvailableTypes = (categoryId: string) => {
+    const category = INSTITUTION_CATEGORIES.find(cat => cat.id === categoryId)
+    return category ? category.types : []
+  }
+
+  // Get category label for display
+  const getCategoryLabel = (categoryId: string) => {
+    const category = INSTITUTION_CATEGORIES.find(cat => cat.id === categoryId)
+    return category ? category.label : categoryId
+  }
+
+  // Get type label for display
+  const getTypeLabel = (categoryId: string, typeId: string) => {
+    const category = INSTITUTION_CATEGORIES.find(cat => cat.id === categoryId)
+    if (!category) return typeId
+    const type = category.types.find(t => t.id === typeId)
+    return type ? type.label : typeId
+  }
+
   return (
     <div className="space-y-8">
       <div>
         <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Education History</h3>
         <p className="text-gray-600 dark:text-gray-400">
-          Add your educational background to help mentors understand your academic journey
+          Add your educational background from any type of institution - traditional schools, online platforms, bootcamps, vocational training, and more
         </p>
       </div>
 
@@ -176,7 +198,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
               <GraduationCap className="h-12 w-12 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">No education history added</h3>
               <p className="text-gray-500 mb-4">
-                Add your current and past educational experiences
+                Add your current and past educational experiences from any type of institution
               </p>
               <Button
                 type="button"
@@ -202,7 +224,8 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                       </div>
                       <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
                         <div className="flex items-center space-x-4">
-                          <span>{entry.institutionType}</span>
+                          <span>{getTypeLabel(entry.institutionCategory, entry.institutionType)}</span>
+                          {entry.degree && <span>• {entry.degree}</span>}
                           {entry.grade && <span>• {entry.grade}</span>}
                         </div>
                         <div>{entry.fieldOfStudy}</div>
@@ -260,32 +283,11 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                     <Input
                       value={currentEntry.institutionName}
                       onChange={(e) => handleInputChange('institutionName', e.target.value)}
-                      placeholder="e.g., Westlake High School"
+                      placeholder="e.g., Westlake High School, Harvard University, Coursera"
                       className="mt-1"
                     />
                   </div>
 
-                  <div>
-                    <Label className="text-gray-700 dark:text-gray-300">Institution Type</Label>
-                    <Select
-                      value={currentEntry.institutionType}
-                      onValueChange={(value) => handleInputChange('institutionType', value)}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {INSTITUTION_TYPES.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-gray-700 dark:text-gray-300">
                       Field of Study <span className="text-red-500">*</span>
@@ -293,17 +295,81 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                     <Input
                       value={currentEntry.fieldOfStudy}
                       onChange={(e) => handleInputChange('fieldOfStudy', e.target.value)}
-                      placeholder="e.g., General Studies, Computer Science"
+                      placeholder="e.g., General Studies, Computer Science, Web Development"
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-gray-700 dark:text-gray-300">Institution Category</Label>
+                    <Select
+                      value={currentEntry.institutionCategory}
+                      onValueChange={(value) => handleInputChange('institutionCategory', value)}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {INSTITUTION_CATEGORIES.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Select the broad category that best describes your institution
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label className="text-gray-700 dark:text-gray-300">Institution Type</Label>
+                    <Select
+                      value={currentEntry.institutionType}
+                      onValueChange={(value) => handleInputChange('institutionType', value)}
+                      disabled={!currentEntry.institutionCategory}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue 
+                          placeholder={currentEntry.institutionCategory ? "Select specific type" : "Select category first"}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getAvailableTypes(currentEntry.institutionCategory).map((type) => (
+                          <SelectItem key={type.id} value={type.id}>
+                            {type.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {currentEntry.institutionCategory 
+                        ? `Select the specific type within ${getCategoryLabel(currentEntry.institutionCategory)}`
+                        : "Select a category first to see available types"
+                      }
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-gray-700 dark:text-gray-300">Degree/Certification</Label>
+                    <Input
+                      value={currentEntry.degree}
+                      onChange={(e) => handleInputChange('degree', e.target.value)}
+                      placeholder="e.g., High School Diploma, Bachelor of Science, Certificate"
                       className="mt-1"
                     />
                   </div>
 
                   <div>
-                    <Label className="text-gray-700 dark:text-gray-300">Degree</Label>
+                    <Label className="text-gray-700 dark:text-gray-300">Grade/Level</Label>
                     <Input
-                      value={currentEntry.degree}
-                      onChange={(e) => handleInputChange('degree', e.target.value)}
-                      placeholder="e.g., Bachelor of Science"
+                      value={currentEntry.grade}
+                      onChange={(e) => handleInputChange('grade', e.target.value)}
+                      placeholder="e.g., 12th Grade, Freshman, Beginner Level"
                       className="mt-1"
                     />
                   </div>
@@ -347,7 +413,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                   <Textarea
                     value={currentEntry.description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
-                    placeholder="Awards, honors, notable achievements..."
+                    placeholder="Awards, honors, notable achievements, projects completed..."
                     className="mt-1 h-20"
                   />
                 </div>
