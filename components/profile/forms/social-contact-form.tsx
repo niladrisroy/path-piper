@@ -419,11 +419,6 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
                       <FormLabel className="flex items-center space-x-2">
                         <span className="text-gray-600 dark:text-gray-400">{link.icon}</span>
                         <span>{link.label}</span>
-                        {link.baseUrl && (
-                          <span className="text-sm text-gray-500 font-normal">
-                            {link.baseUrl}
-                          </span>
-                        )}
                       </FormLabel>
                       <FormControl>
                         <div className="relative">
