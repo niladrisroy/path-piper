@@ -123,10 +123,16 @@ export async function POST(request: NextRequest) {
     const availableSkillIds = availableSkills.map(skill => skill.id)
     const availableSkillNamesMap = new Map(availableSkills.map(skill => [skill.name, skill.id]))
 
-    // Filter skills to only include those available for current age group
-    const validSkills = skills.filter(skill => 
-      skill.id ? availableSkillIds.includes(skill.id) : availableSkillNamesMap.has(skill.name)
-    )
+    // Filter skills to include those available for current age group
+    // Also include custom skills (those without IDs) for now
+    const validSkills = skills.filter(skill => {
+      if (!skill.id && !availableSkillNamesMap.has(skill.name)) {
+        // This is a custom skill, allow it for now but log it
+        console.log('🔍 Custom skill detected:', skill.name)
+        return true
+      }
+      return skill.id ? availableSkillIds.includes(skill.id) : availableSkillNamesMap.has(skill.name)
+    })
     console.log('🔍 Filtering skills for age group', ageGroup, '. Valid:', validSkills.length, 'out of', skills.length)
 
     // Get currently saved user skills
@@ -224,12 +230,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Log custom skills that don't exist in database
-    const customSkills = validSkills.filter(skill => 
-      skill.id ? !availableSkillIds.includes(skill.id) : !availableSkillNamesMap.has(skill.name)
+    const customSkills = skills.filter(skill => 
+      !skill.id && !availableSkillNamesMap.has(skill.name)
     )
 
     if (customSkills.length > 0) {
-      console.log('⚠️ Custom skills not saved (not in database for age group', ageGroup, '):', customSkills.map(s => s.name))
+      console.log('⚠️ Custom skills detected but not saved (not in database for age group', ageGroup, '):', customSkills.map(s => s.name))
+      console.log('💡 Consider creating these skills in the database or allowing custom skill creation')
     }
 
     // Log filtered out skills (those not valid for current age group)

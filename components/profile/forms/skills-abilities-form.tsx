@@ -60,17 +60,29 @@ export default function SkillsAbilitiesForm({
           const skillsResponse = await fetch(`/api/skills?ageGroup=${actualAgeGroup}`)
           if (skillsResponse.ok) {
             const skillsData = await skillsResponse.json()
+            console.log('✅ Loaded skill categories for age group:', actualAgeGroup, skillsData.categories?.length || 0, 'categories')
             setSkillCategories(skillsData.categories || [])
             setFilteredCategories(skillsData.categories || [])
           } else {
             console.error('Failed to fetch skills:', skillsResponse.status)
+            // Try fallback to high_school if middle_school fails
+            if (actualAgeGroup !== 'high_school') {
+              console.log('🔄 Trying fallback to high_school age group')
+              const fallbackResponse = await fetch(`/api/skills?ageGroup=high_school`)
+              if (fallbackResponse.ok) {
+                const fallbackData = await fallbackResponse.json()
+                setSkillCategories(fallbackData.categories || [])
+                setFilteredCategories(fallbackData.categories || [])
+                setUserAgeGroup('high_school')
+              }
+            }
           }
         } else {
           console.error('Failed to fetch user data:', userResponse.status)
-          // Fallback to high_school age group
-          setUserAgeGroup("high_school")
+          // Fallback to middle_school age group as default
+          setUserAgeGroup("middle_school")
           
-          const skillsResponse = await fetch(`/api/skills?ageGroup=high_school`)
+          const skillsResponse = await fetch(`/api/skills?ageGroup=middle_school`)
           if (skillsResponse.ok) {
             const skillsData = await skillsResponse.json()
             setSkillCategories(skillsData.categories || [])
@@ -215,33 +227,36 @@ export default function SkillsAbilitiesForm({
 
       if (isDirty) {
         console.log("💾 Skills have changes, saving to database...")
+        console.log("🔍 User age group for save:", userAgeGroup)
+        console.log("🔍 Skills to save:", skills)
         
-        // Filter out skills without IDs (custom skills) and handle them separately
-        const skillsWithIds = skills.filter(skill => skill.id)
-        
-        if (skillsWithIds.length > 0) {
-          const response = await fetch('/api/user/skills', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ skills: skillsWithIds }),
-          })
+        // Send all skills (with and without IDs) to the API
+        // The API will handle filtering based on user's actual age group
+        const response = await fetch('/api/user/skills', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ skills }),
+        })
 
-          if (!response.ok) {
-            console.error('Failed to save skills')
-            return
-          }
+        if (!response.ok) {
+          const errorData = await response.json()
+          console.error('Failed to save skills:', errorData)
+          throw new Error(errorData.error || 'Failed to save skills')
         }
         
         setIsDirty(false)
         setOriginalSkills([...skills])
+        // Notify parent component that changes have been saved
+        onChange("skills", skills, false)
         console.log("✅ Skills saved successfully")
       } else {
         console.log("✅ Skills unchanged, skipping database save")
       }
     } catch (error) {
       console.error('Error saving skills:', error)
+      throw error // Re-throw to let parent component handle error display
     } finally {
       setSaving(false)
     }
