@@ -52,7 +52,13 @@ export default function SkillsAbilitiesForm({
         const userResponse = await fetch('/api/auth/user')
         if (userResponse.ok) {
           const userData = await userResponse.json()
-          const actualAgeGroup = userData.user?.studentProfile?.age_group
+          // Try both possible field names for age group
+          const actualAgeGroup = userData.user?.ageGroup || userData.user?.studentProfile?.age_group
+          
+          console.log('🔍 Full user data:', userData.user)
+          console.log('🔍 Age group from ageGroup field:', userData.user?.ageGroup)
+          console.log('🔍 Age group from studentProfile.age_group:', userData.user?.studentProfile?.age_group)
+          console.log('🔍 Final actualAgeGroup:', actualAgeGroup)
           
           if (!actualAgeGroup) {
             console.error('❌ No age_group found in student profile. Please set age_group first.')
