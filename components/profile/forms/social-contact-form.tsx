@@ -239,7 +239,7 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
     }
   ]
 
-  const socialLinks = [
+  const socialLinksConfig = [
     {
       id: "instagramUrl",
       label: "Instagram",
@@ -349,7 +349,7 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
               Social Media Profiles
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {socialLinks.map((link) => (
+              {socialLinksConfig.map((link) => (
                 <FormField
                   key={link.id}
                   control={form.control}
