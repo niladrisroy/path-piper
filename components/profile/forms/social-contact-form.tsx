@@ -185,7 +185,7 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
         socialLinksData.push({ platform: 'linkedin', url: formData.linkedinUrl.trim() })
       }
       if (formData.twitterUrl?.trim()) {
-        socialLinksData.push({ platform: 'twitter', url: formData.twitterUrl.trim() })
+        socialLinksData.push({ platform: 'x', url: formData.twitterUrl.trim() })
       }
       if (formData.behanceUrl?.trim()) {
         socialLinksData.push({ platform: 'behance', url: formData.behanceUrl.trim() })
@@ -285,8 +285,8 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
     },
     {
       id: "twitterUrl",
-      label: "Twitter",
-      placeholder: "https://twitter.com/yourusername",
+      label: "X",
+      placeholder: "https://x.com/yourusername",
       icon: <Twitter className="h-5 w-5" />,
       description: "Share thoughts and engage in conversations"
     },
