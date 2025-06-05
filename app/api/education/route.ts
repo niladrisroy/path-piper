@@ -1,35 +1,25 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { supabase } from '@/lib/supabase'
-
-async function getAuthenticatedUser(request: NextRequest) {
-  try {
-    // Get the token from cookies
-    const authCookie = request.cookies.get('sb-access-token')?.value
-    
-    if (!authCookie) {
-      return null
-    }
-
-    // Verify the token with Supabase
-    const { data: { user }, error } = await supabase.auth.getUser(authCookie)
-    
-    if (error || !user) {
-      return null
-    }
-
-    return user
-  } catch (error) {
-    console.error('Auth error:', error)
-    return null
-  }
-}
+import { cookies } from 'next/headers'
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getAuthenticatedUser(request)
-    if (!user) {
+    console.log('🔄 Fetching education history')
+
+    // Get user from session
+    const cookieStore = await cookies()
+    const accessToken = cookieStore.get('sb-access-token')?.value
+
+    if (!accessToken) {
+      console.log('❌ No access token found')
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
+
+    if (authError || !user) {
+      console.log('❌ Authentication failed')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -74,8 +64,21 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getAuthenticatedUser(request)
-    if (!user) {
+    console.log('💾 Saving education history')
+
+    // Get user from session
+    const cookieStore = await cookies()
+    const accessToken = cookieStore.get('sb-access-token')?.value
+
+    if (!accessToken) {
+      console.log('❌ No access token found')
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
+
+    if (authError || !user) {
+      console.log('❌ Authentication failed')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -121,7 +124,10 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error in POST /api/education:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('❌ Error saving education history:', error)
+    return NextResponse.json({ 
+      error: 'Failed to save education history',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
