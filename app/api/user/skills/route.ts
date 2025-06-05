@@ -100,13 +100,14 @@ export async function POST(request: NextRequest) {
     console.log('🔍 Full user object keys:', Object.keys(user))
     console.log('🔍 User student profile:', user.studentProfile)
 
-    // Get user's age group to validate skills - only use what's saved in database
-    const ageGroup = user.studentProfile?.age_group
+    // Get user's age group to validate skills - try both possible locations
+    const ageGroup = user.ageGroup || user.studentProfile?.age_group
+    console.log('🔍 User age group from ageGroup field:', user.ageGroup)
     console.log('🔍 User age group from studentProfile:', user.studentProfile?.age_group)
-    console.log('🔍 Full user profile:', JSON.stringify(user.studentProfile, null, 2))
+    console.log('🔍 Final age group used:', ageGroup)
 
     if (!ageGroup) {
-      console.error('❌ No age_group found in student profile')
+      console.error('❌ No age_group found in user object')
       return NextResponse.json({ error: 'No age group found. Please complete your profile first.' }, { status: 400 })
     }
 
