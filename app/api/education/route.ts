@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
       id: entry.id,
       institutionName: entry.institutionName,
       institutionCategory: entry.institutionType?.category?.slug || '',
-      institutionType: entry.institutionTypeId || '',
+      institutionType: entry.institutionTypeId ? entry.institutionTypeId.toString() : '',
       degree: entry.degreeProgram || '',
       fieldOfStudy: entry.fieldOfStudy || '',
       startDate: entry.startDate ? entry.startDate.toISOString().split('T')[0] : '',
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
         const educationToInsert = education.map(entry => ({
           studentId: user.id,
           institutionName: entry.institutionName,
-          institutionTypeId: entry.institutionType || null,
+          institutionTypeId: entry.institutionType ? parseInt(entry.institutionType) : null,
           degreeProgram: entry.degree || null,
           fieldOfStudy: entry.fieldOfStudy,
           startDate: entry.startDate ? new Date(entry.startDate) : null,
