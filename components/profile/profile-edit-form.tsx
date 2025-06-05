@@ -57,7 +57,21 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
   const [saving, setSaving] = useState(false)
   const [completionData, setCompletionData] = useState<Record<string, boolean>>({})
   // Track unsaved changes across all forms
+  const [formDirtyStates, setFormDirtyStates] = useState<{[key: string]: boolean}>({})
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+
+  // Warn user about unsaved changes only when there are actual changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault()
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?'
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [hasUnsavedChanges])
   const [formData, setFormData] = useState<any>({})
   const [formDirtyStates, setFormDirtyStates] = useState<{[key: string]: boolean}>({})
 

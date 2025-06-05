@@ -152,18 +152,7 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
     }
   }
 
-  // Warn user about unsaved changes
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isDirty) {
-        e.preventDefault()
-        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?'
-      }
-    }
-
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeUnload', handleBeforeUnload)
-  }, [isDirty])
+  
 
   const addCustomInterest = () => {
     const trimmedInterest = customInterest.trim()
