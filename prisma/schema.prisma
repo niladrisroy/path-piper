@@ -57,9 +57,17 @@ model Profile {
   tagline            String?
   professionalSummary String?  @map("professional_summary")
   verificationStatus Boolean   @default(false) @map("verification_status")
+  email              String?
+  phone              String?
   githubUrl          String?   @map("github_url")
   linkedinUrl        String?   @map("linkedin_url")
   portfolioUrl       String?   @map("portfolio_url")
+  instagramUrl       String?   @map("instagram_url")
+  facebookUrl        String?   @map("facebook_url")
+  twitterUrl         String?   @map("twitter_url")
+  behanceUrl         String?   @map("behance_url")
+  dribbbleUrl        String?   @map("dribbble_url")
+  website            String?
   coverImageUrl      String?   @map("cover_image_url")
   themePreference    String    @default("default") @map("theme_preference")
   timezone           String?
