@@ -59,9 +59,6 @@ model Profile {
   verificationStatus Boolean   @default(false) @map("verification_status")
   email              String?   // User's registered email for authentication
   phone              String?   // Direct contact phone number
-  githubUrl          String?   @map("github_url")
-  linkedinUrl        String?   @map("linkedin_url")
-  portfolioUrl       String?   @map("portfolio_url")
   coverImageUrl      String?   @map("cover_image_url")
   themePreference    String    @default("default") @map("theme_preference")
   timezone           String?
