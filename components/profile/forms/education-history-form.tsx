@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -10,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Plus, X, GraduationCap, Edit, Calendar, Loader2 } from "lucide-react"
-import { INSTITUTION_CATEGORIES } from "@/data/institution-types"
 import { toast } from "sonner"
 
 interface EducationEntry {
@@ -32,6 +30,19 @@ interface EducationHistoryFormProps {
   onChange: (sectionId: string, data: EducationEntry[]) => void
 }
 
+interface InstitutionType {
+  id: string
+  name: string
+  slug: string
+}
+
+interface InstitutionCategory {
+  id: string
+  name: string
+  slug: string
+  types: InstitutionType[]
+}
+
 export default function EducationHistoryForm({ data, onChange }: EducationHistoryFormProps) {
   const [educationHistory, setEducationHistory] = useState<EducationEntry[]>([])
   const [loading, setLoading] = useState(true)
@@ -51,6 +62,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
     grade: "",
     description: ""
   })
+  const [institutionCategories, setInstitutionCategories] = useState<InstitutionCategory[]>([])
 
   // Fetch existing education history from database
   useEffect(() => {
@@ -79,7 +91,23 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
       }
     }
 
+    const fetchInstitutionTypes = async () => {
+      try {
+        const response = await fetch('/api/institution-types')
+        const data = await response.json()
+
+        if (data.success) {
+          setInstitutionCategories(data.data)
+        } else {
+          console.error('Failed to fetch institution types:', data.error)
+        }
+      } catch (error) {
+        console.error('Error fetching institution types:', error)
+      }
+    }
+
     fetchEducationHistory()
+    fetchInstitutionTypes()
   }, [])
 
   // Pass education history data back to parent component whenever it changes
@@ -243,22 +271,21 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
 
   // Get available institution types based on selected category
   const getAvailableTypes = (categoryId: string) => {
-    const category = INSTITUTION_CATEGORIES.find(cat => cat.id === categoryId)
+    const category = institutionCategories.find(cat => cat.id === categoryId)
     return category ? category.types : []
   }
 
-  // Get category label for display
   const getCategoryLabel = (categoryId: string) => {
-    const category = INSTITUTION_CATEGORIES.find(cat => cat.id === categoryId)
-    return category ? category.label : categoryId
+    const category = institutionCategories.find(cat => cat.id === categoryId)
+    return category ? category.name : ''
   }
 
   // Get type label for display
   const getTypeLabel = (categoryId: string, typeId: string) => {
-    const category = INSTITUTION_CATEGORIES.find(cat => cat.id === categoryId)
+    const category = institutionCategories.find(cat => cat.id === categoryId)
     if (!category) return typeId
     const type = category.types.find(t => t.id === typeId)
-    return type ? type.label : typeId
+    return type ? type.name : typeId
   }
 
   if (loading) {
@@ -335,9 +362,9 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {INSTITUTION_CATEGORIES.map((category) => (
+                      {institutionCategories.map((category) => (
                         <SelectItem key={category.id} value={category.id}>
-                          {category.label}
+                          {category.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -362,7 +389,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                     <SelectContent>
                       {getAvailableTypes(currentEntry.institutionCategory).map((type) => (
                         <SelectItem key={type.id} value={type.id}>
-                          {type.label}
+                          {type.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
