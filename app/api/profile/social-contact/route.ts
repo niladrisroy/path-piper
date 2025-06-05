@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { supabase } from '@/lib/supabase'
-import { updateUserProfile, getUserSocialLinks, updateUserSocialLinks } from '@/lib/db/profile'
+import { updateUserProfile, getUserSocialLinks, updateUserSocialLinks, getUserProfile } from '@/lib/db/profile'
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,11 +24,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Fetch social links
+    // Fetch profile data and social links
+    const profile = await getUserProfile(user.id)
     const socialLinks = await getUserSocialLinks(user.id)
-    console.log('✅ Fetched social links:', socialLinks.length)
+    console.log('✅ Fetched profile and social links:', { email: profile?.email, phone: profile?.phone, socialLinksCount: socialLinks.length })
 
-    return NextResponse.json({ socialLinks })
+    return NextResponse.json({ 
+      profile: {
+        email: profile?.email || null,
+        phone: profile?.phone || null
+      },
+      socialLinks 
+    })
 
   } catch (error) {
     console.error('❌ Error fetching social contact data:', error)

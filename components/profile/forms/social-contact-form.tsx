@@ -72,14 +72,14 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
           throw new Error('Failed to fetch social contact data')
         }
         
-        const { socialLinks: links } = await response.json()
+        const { profile, socialLinks: links } = await response.json()
         setSocialLinks(links)
-        console.log('📊 Fetched social links:', links)
+        console.log('📊 Fetched profile and social links:', { profile, socialLinksCount: links?.length || 0 })
 
         // Convert social links to form format
         const formData: Partial<SocialContactData> = {
-          email: data?.email || "",
-          phone: data?.phone || "",
+          email: profile?.email || data?.email || "",
+          phone: profile?.phone || data?.phone || "",
         }
 
         // Map social links to form fields
@@ -132,25 +132,60 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
     if (userId) {
       fetchData()
     }
-  }, [userId, data, form])
+  }, [userId, form])
 
   // Update form when data changes
   useEffect(() => {
     if (data) {
-      form.reset({
-        instagramUrl: data.instagramUrl || "",
-        facebookUrl: data.facebookUrl || "",
-        linkedinUrl: data.linkedinUrl || "",
-        twitterUrl: data.twitterUrl || "",
-        behanceUrl: data.behanceUrl || "",
-        dribbbleUrl: data.dribbbleUrl || "",
-        portfolioUrl: data.portfolioUrl || "",
-        website: data.website || "",
+      const formData = {
+        instagramUrl: "",
+        facebookUrl: "",
+        linkedinUrl: "",
+        twitterUrl: "",
+        behanceUrl: "",
+        dribbbleUrl: "",
+        portfolioUrl: "",
+        website: "",
         email: data.email || "",
         phone: data.phone || "",
-      })
+      }
+      
+      // Map social links from database if available
+      if (socialLinks && Array.isArray(socialLinks)) {
+        socialLinks.forEach((link: SocialLink) => {
+          switch (link.platform.toLowerCase()) {
+            case 'instagram':
+              formData.instagramUrl = link.url
+              break
+            case 'facebook':
+              formData.facebookUrl = link.url
+              break
+            case 'linkedin':
+              formData.linkedinUrl = link.url
+              break
+            case 'twitter':
+              formData.twitterUrl = link.url
+              break
+            case 'behance':
+              formData.behanceUrl = link.url
+              break
+            case 'dribbble':
+              formData.dribbbleUrl = link.url
+              break
+            case 'portfolio':
+              formData.portfolioUrl = link.url
+              break
+            case 'website':
+              formData.website = link.url
+              break
+          }
+        })
+      }
+      
+      form.reset(formData)
+      console.log('📝 Form updated with data and social links:', formData)
     }
-  }, [data, form])
+  }, [data, socialLinks, form])
 
   // Watch for form changes and call onChange when form data changes
   useEffect(() => {
@@ -241,7 +276,7 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
       label: "Email Address",
       placeholder: "your.email@example.com",
       icon: <Mail className="h-5 w-5" />,
-      description: "For direct communication with mentors",
+      description: "Your registered email address (cannot be changed here)",
       type: "email"
     },
     {
@@ -345,6 +380,8 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
                         <Input
                           type={contact.type}
                           placeholder={contact.placeholder}
+                          readOnly={contact.id === "email"}
+                          className={contact.id === "email" ? "bg-gray-50 dark:bg-gray-800 cursor-not-allowed" : ""}
                           {...field}
                         />
                       </FormControl>
