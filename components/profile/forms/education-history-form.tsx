@@ -13,14 +13,13 @@ interface EducationEntry {
   id: number | string
   institutionName: string
   institutionType: string
-  degreeProgram?: string
+  degree?: string
   fieldOfStudy: string
   startDate: string
   endDate?: string
   isCurrent: boolean
-  gradeLevel?: string
-  gpa?: number
-  achievements?: string
+  grade?: string
+  description?: string
 }
 
 interface EducationHistoryFormProps {
@@ -55,14 +54,13 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
     id: "",
     institutionName: "",
     institutionType: "",
-    degreeProgram: "",
+    degree: "",
     fieldOfStudy: "",
     startDate: "",
     endDate: "",
     isCurrent: true,
-    gradeLevel: "",
-    gpa: undefined,
-    achievements: ""
+    grade: "",
+    description: ""
   })
 
   // Update education history when data changes
@@ -98,14 +96,13 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
       id: "",
       institutionName: "",
       institutionType: "",
-      degreeProgram: "",
+      degree: "",
       fieldOfStudy: "",
       startDate: "",
       endDate: "",
       isCurrent: true,
-      gradeLevel: "",
-      gpa: undefined,
-      achievements: ""
+      grade: "",
+      description: ""
     })
     setIsAddingEntry(false)
   }
@@ -136,14 +133,13 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
       id: "",
       institutionName: "",
       institutionType: "",
-      degreeProgram: "",
+      degree: "",
       fieldOfStudy: "",
       startDate: "",
       endDate: "",
       isCurrent: true,
-      gradeLevel: "",
-      gpa: undefined,
-      achievements: ""
+      grade: "",
+      description: ""
     })
   }
 
@@ -207,8 +203,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                       <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
                         <div className="flex items-center space-x-4">
                           <span>{entry.institutionType}</span>
-                          {entry.gradeLevel && <span>• {entry.gradeLevel}</span>}
-                          {entry.gpa && <span>• GPA: {entry.gpa}</span>}
+                          {entry.grade && <span>• {entry.grade}</span>}
                         </div>
                         <div>{entry.fieldOfStudy}</div>
                         <div className="flex items-center space-x-2">
@@ -217,9 +212,9 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                             {entry.startDate} - {entry.isCurrent ? 'Present' : entry.endDate}
                           </span>
                         </div>
-                        {entry.achievements && (
+                        {entry.description && (
                           <div className="text-green-600 dark:text-green-400 text-sm">
-                            {entry.achievements}
+                            {entry.description}
                           </div>
                         )}
                       </div>
@@ -304,26 +299,17 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                   </div>
 
                   <div>
-                    <Label className="text-gray-700 dark:text-gray-300">Grade Level</Label>
-                    <Select
-                      value={currentEntry.gradeLevel}
-                      onValueChange={(value) => handleInputChange('gradeLevel', value)}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select grade level" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {GRADE_LEVELS.map((grade) => (
-                          <SelectItem key={grade} value={grade}>
-                            {grade}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label className="text-gray-700 dark:text-gray-300">Degree</Label>
+                    <Input
+                      value={currentEntry.degree}
+                      onChange={(e) => handleInputChange('degree', e.target.value)}
+                      placeholder="e.g., Bachelor of Science"
+                      className="mt-1"
+                    />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-gray-700 dark:text-gray-300">Start Date</Label>
                     <Input
@@ -344,20 +330,6 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                       className="mt-1"
                     />
                   </div>
-
-                  <div>
-                    <Label className="text-gray-700 dark:text-gray-300">GPA (optional)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="4"
-                      value={currentEntry.gpa || ""}
-                      onChange={(e) => handleInputChange('gpa', parseFloat(e.target.value))}
-                      placeholder="e.g., 3.85"
-                      className="mt-1"
-                    />
-                  </div>
                 </div>
 
                 <div className="flex items-center space-x-2">
@@ -371,10 +343,10 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                 </div>
 
                 <div>
-                  <Label className="text-gray-700 dark:text-gray-300">Achievements (optional)</Label>
+                  <Label className="text-gray-700 dark:text-gray-300">Description (optional)</Label>
                   <Textarea
-                    value={currentEntry.achievements}
-                    onChange={(e) => handleInputChange('achievements', e.target.value)}
+                    value={currentEntry.description}
+                    onChange={(e) => handleInputChange('description', e.target.value)}
                     placeholder="Awards, honors, notable achievements..."
                     className="mt-1 h-20"
                   />
