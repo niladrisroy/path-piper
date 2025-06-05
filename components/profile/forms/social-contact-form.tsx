@@ -7,16 +7,16 @@ import { z } from "zod"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Github, Linkedin, Globe, Mail, Phone, MessageSquare, Shield, Instagram, Facebook, Twitter } from "lucide-react"
+import { Github, Linkedin, Globe, Mail, Phone, MessageSquare, Shield, Instagram, Facebook, X } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 
 const socialContactSchema = z.object({
-  instagramUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
-  facebookUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
-  linkedinUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
-  twitterUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
-  behanceUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
-  dribbbleUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  instagramUrl: z.string().optional().or(z.literal("")),
+  facebookUrl: z.string().optional().or(z.literal("")),
+  linkedinUrl: z.string().optional().or(z.literal("")),
+  twitterUrl: z.string().optional().or(z.literal("")),
+  behanceUrl: z.string().optional().or(z.literal("")),
+  dribbbleUrl: z.string().optional().or(z.literal("")),
   portfolioUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
   website: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
   email: z.string().email("Please enter a valid email").optional().or(z.literal("")),
@@ -104,28 +104,33 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
           website: "",
         }
 
-        // Map social links to form fields
+        // Map social links to form fields - extract handles from URLs
         if (links && Array.isArray(links)) {
           links.forEach((link: SocialLink) => {
+            const extractHandle = (url: string, baseUrl: string) => {
+              if (!baseUrl) return url // For portfolio and website, return full URL
+              return url.replace(baseUrl, '').replace(/\/$/, '') // Remove base URL and trailing slash
+            }
+
             switch (link.platform.toLowerCase()) {
               case 'instagram':
-                formData.instagramUrl = link.url
+                formData.instagramUrl = extractHandle(link.url, 'https://instagram.com/')
                 break
               case 'facebook':
-                formData.facebookUrl = link.url
+                formData.facebookUrl = extractHandle(link.url, 'https://facebook.com/')
                 break
               case 'linkedin':
-                formData.linkedinUrl = link.url
+                formData.linkedinUrl = extractHandle(link.url, 'https://linkedin.com/in/')
                 break
               case 'twitter':
-            case 'x':
-              formData.twitterUrl = link.url
-              break
+              case 'x':
+                formData.twitterUrl = extractHandle(link.url, 'https://x.com/')
+                break
               case 'behance':
-                formData.behanceUrl = link.url
+                formData.behanceUrl = extractHandle(link.url, 'https://behance.net/')
                 break
               case 'dribbble':
-                formData.dribbbleUrl = link.url
+                formData.dribbbleUrl = extractHandle(link.url, 'https://dribbble.com/')
                 break
               case 'portfolio':
                 formData.portfolioUrl = link.url
@@ -172,26 +177,49 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
       setLoading(true)
       console.log('💾 Saving social contact data:', formData)
 
-      // Prepare social links data
+      // Prepare social links data - construct full URLs from handles
       const socialLinksData = []
 
+      const constructUrl = (handle: string, baseUrl: string) => {
+        if (!baseUrl) return handle // For portfolio and website, use as-is
+        return baseUrl + handle.replace(/^\/+/, '') // Remove leading slashes and prepend base URL
+      }
+
       if (formData.instagramUrl?.trim()) {
-        socialLinksData.push({ platform: 'instagram', url: formData.instagramUrl.trim() })
+        socialLinksData.push({ 
+          platform: 'instagram', 
+          url: constructUrl(formData.instagramUrl.trim(), 'https://instagram.com/') 
+        })
       }
       if (formData.facebookUrl?.trim()) {
-        socialLinksData.push({ platform: 'facebook', url: formData.facebookUrl.trim() })
+        socialLinksData.push({ 
+          platform: 'facebook', 
+          url: constructUrl(formData.facebookUrl.trim(), 'https://facebook.com/') 
+        })
       }
       if (formData.linkedinUrl?.trim()) {
-        socialLinksData.push({ platform: 'linkedin', url: formData.linkedinUrl.trim() })
+        socialLinksData.push({ 
+          platform: 'linkedin', 
+          url: constructUrl(formData.linkedinUrl.trim(), 'https://linkedin.com/in/') 
+        })
       }
       if (formData.twitterUrl?.trim()) {
-        socialLinksData.push({ platform: 'x', url: formData.twitterUrl.trim() })
+        socialLinksData.push({ 
+          platform: 'x', 
+          url: constructUrl(formData.twitterUrl.trim(), 'https://x.com/') 
+        })
       }
       if (formData.behanceUrl?.trim()) {
-        socialLinksData.push({ platform: 'behance', url: formData.behanceUrl.trim() })
+        socialLinksData.push({ 
+          platform: 'behance', 
+          url: constructUrl(formData.behanceUrl.trim(), 'https://behance.net/') 
+        })
       }
       if (formData.dribbbleUrl?.trim()) {
-        socialLinksData.push({ platform: 'dribbble', url: formData.dribbbleUrl.trim() })
+        socialLinksData.push({ 
+          platform: 'dribbble', 
+          url: constructUrl(formData.dribbbleUrl.trim(), 'https://dribbble.com/') 
+        })
       }
       if (formData.portfolioUrl?.trim()) {
         socialLinksData.push({ platform: 'portfolio', url: formData.portfolioUrl.trim() })
@@ -265,42 +293,48 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
     {
       id: "instagramUrl",
       label: "Instagram",
-      placeholder: "https://instagram.com/yourusername",
+      placeholder: "yourusername",
+      baseUrl: "https://instagram.com/",
       icon: <Instagram className="h-5 w-5" />,
       description: "Share your visual content and daily updates"
     },
     {
       id: "facebookUrl",
       label: "Facebook",
-      placeholder: "https://facebook.com/yourprofile",
+      placeholder: "yourprofile",
+      baseUrl: "https://facebook.com/",
       icon: <Facebook className="h-5 w-5" />,
       description: "Connect with friends and communities"
     },
     {
       id: "linkedinUrl",
       label: "LinkedIn",
-      placeholder: "https://linkedin.com/in/yourprofile",
+      placeholder: "yourprofile",
+      baseUrl: "https://linkedin.com/in/",
       icon: <Linkedin className="h-5 w-5" />,
       description: "Connect professionally with mentors and peers"
     },
     {
       id: "twitterUrl",
       label: "X",
-      placeholder: "https://x.com/yourusername",
-      icon: <Twitter className="h-5 w-5" />,
+      placeholder: "yourusername",
+      baseUrl: "https://x.com/",
+      icon: <X className="h-5 w-5" />,
       description: "Share thoughts and engage in conversations"
     },
     {
       id: "behanceUrl",
       label: "Behance",
-      placeholder: "https://behance.net/yourprofile",
+      placeholder: "yourprofile",
+      baseUrl: "https://behance.net/",
       icon: <Globe className="h-5 w-5" />,
       description: "Showcase your creative projects and designs"
     },
     {
       id: "dribbbleUrl",
       label: "Dribbble",
-      placeholder: "https://dribbble.com/yourusername",
+      placeholder: "yourusername",
+      baseUrl: "https://dribbble.com/",
       icon: <Globe className="h-5 w-5" />,
       description: "Display your design work and get inspiration"
     },
@@ -308,6 +342,7 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
       id: "portfolioUrl",
       label: "Portfolio Website",
       placeholder: "https://yourportfolio.com",
+      baseUrl: "",
       icon: <Globe className="h-5 w-5" />,
       description: "Showcase your work and achievements"
     },
@@ -315,6 +350,7 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
       id: "website",
       label: "Personal Website",
       placeholder: "https://yourwebsite.com",
+      baseUrl: "",
       icon: <Globe className="h-5 w-5" />,
       description: "Your personal blog or website"
     }
@@ -383,12 +419,25 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
                       <FormLabel className="flex items-center space-x-2">
                         <span className="text-gray-600 dark:text-gray-400">{link.icon}</span>
                         <span>{link.label}</span>
+                        {link.baseUrl && (
+                          <span className="text-sm text-gray-500 font-normal">
+                            {link.baseUrl}
+                          </span>
+                        )}
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder={link.placeholder}
-                          {...field}
-                        />
+                        <div className="relative">
+                          {link.baseUrl && (
+                            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500 pointer-events-none">
+                              {link.baseUrl}
+                            </div>
+                          )}
+                          <Input
+                            placeholder={link.placeholder}
+                            className={link.baseUrl ? "pl-[200px]" : ""}
+                            {...field}
+                          />
+                        </div>
                       </FormControl>
                       <p className="text-sm text-gray-500">{link.description}</p>
                       <FormMessage />
