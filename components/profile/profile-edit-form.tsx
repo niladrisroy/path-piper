@@ -56,9 +56,9 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [completionData, setCompletionData] = useState<Record<string, boolean>>({})
-  const [formData, setFormData] = useState<any>({})
   const [formDirtyStates, setFormDirtyStates] = useState<{[key: string]: boolean}>({})
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [formData, setFormData] = useState<any>({})
 
   // Warn user about unsaved changes only when there are actual changes
   useEffect(() => {

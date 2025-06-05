@@ -100,12 +100,17 @@ export async function POST(request: NextRequest) {
     console.log('🔍 Full user object keys:', Object.keys(user))
     console.log('🔍 User student profile:', user.studentProfile)
 
-    // Get user's age group to validate skills - check multiple possible locations
-    const ageGroup = user.studentProfile?.age_group || user.ageGroup || 'elementary'
+    // Get user's age group to validate skills - only use what's saved in database
+    const ageGroup = user.studentProfile?.age_group
     console.log('🔍 User age group from studentProfile:', user.studentProfile?.age_group)
-    console.log('🔍 User age group from user object:', user.ageGroup)
-    console.log('🔍 Final age group used:', ageGroup)
     console.log('🔍 Full user profile:', JSON.stringify(user.studentProfile, null, 2))
+
+    if (!ageGroup) {
+      console.error('❌ No age_group found in student profile')
+      return NextResponse.json({ error: 'No age group found. Please complete your profile first.' }, { status: 400 })
+    }
+
+    console.log('🔍 Using age group:', ageGroup)
 
     // Get available skills for user's current age group
     const availableSkills = await prisma.skill.findMany({

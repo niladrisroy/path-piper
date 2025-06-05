@@ -52,7 +52,14 @@ export default function SkillsAbilitiesForm({
         const userResponse = await fetch('/api/auth/user')
         if (userResponse.ok) {
           const userData = await userResponse.json()
-          const actualAgeGroup = userData.user?.studentProfile?.age_group || "high_school"
+          const actualAgeGroup = userData.user?.studentProfile?.age_group
+          
+          if (!actualAgeGroup) {
+            console.error('❌ No age_group found in student profile. Please set age_group first.')
+            setLoading(false)
+            return
+          }
+
           setUserAgeGroup(actualAgeGroup)
           console.log('🔍 Using user age group for skills:', actualAgeGroup)
 
@@ -64,30 +71,14 @@ export default function SkillsAbilitiesForm({
             setSkillCategories(skillsData.categories || [])
             setFilteredCategories(skillsData.categories || [])
           } else {
-            console.error('Failed to fetch skills:', skillsResponse.status)
-            // Try fallback to high_school if middle_school fails
-            if (actualAgeGroup !== 'high_school') {
-              console.log('🔄 Trying fallback to high_school age group')
-              const fallbackResponse = await fetch(`/api/skills?ageGroup=high_school`)
-              if (fallbackResponse.ok) {
-                const fallbackData = await fallbackResponse.json()
-                setSkillCategories(fallbackData.categories || [])
-                setFilteredCategories(fallbackData.categories || [])
-                setUserAgeGroup('high_school')
-              }
-            }
+            console.error('❌ Failed to fetch skills for age group:', actualAgeGroup, skillsResponse.status)
+            setLoading(false)
+            return
           }
         } else {
-          console.error('Failed to fetch user data:', userResponse.status)
-          // Fallback to middle_school age group as default
-          setUserAgeGroup("middle_school")
-          
-          const skillsResponse = await fetch(`/api/skills?ageGroup=middle_school`)
-          if (skillsResponse.ok) {
-            const skillsData = await skillsResponse.json()
-            setSkillCategories(skillsData.categories || [])
-            setFilteredCategories(skillsData.categories || [])
-          }
+          console.error('❌ Failed to fetch user data:', userResponse.status)
+          setLoading(false)
+          return
         }
 
         // Fetch user's current skills
