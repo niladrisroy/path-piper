@@ -235,6 +235,100 @@ export default function GoalsAspirationsForm({ data, onChange }: GoalsAspiration
       </div>
 
       <div className="space-y-6">
+        {/* Add/Edit Goal Form */}
+        {isAddingGoal && (
+          <div className="border border-pathpiper-teal/20 rounded-lg p-6 bg-pathpiper-teal/5">
+            <h4 className="font-medium text-pathpiper-teal mb-4">
+              {editingGoal ? 'Edit Goal' : 'Add New Goal'}
+            </h4>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="title" className="text-gray-700 dark:text-gray-300">
+                  Goal Title <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="title"
+                  value={currentGoal.title}
+                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  placeholder="e.g., Learn Python Programming"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="description" className="text-gray-700 dark:text-gray-300">
+                  Description
+                </Label>
+                <Textarea
+                  id="description"
+                  value={currentGoal.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  placeholder="Describe your goal in more detail..."
+                  className="mt-1 h-24"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-gray-700 dark:text-gray-300">Category</Label>
+                  <Select
+                    value={currentGoal.category}
+                    onValueChange={(value) => handleInputChange('category', value)}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {GOAL_CATEGORIES.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="text-gray-700 dark:text-gray-300">Timeframe</Label>
+                  <Select
+                    value={currentGoal.timeframe}
+                    onValueChange={(value) => handleInputChange('timeframe', value)}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select a timeframe" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TIMEFRAMES.map((timeframe) => (
+                        <SelectItem key={timeframe} value={timeframe}>
+                          {timeframe}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCancel}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={editingGoal ? handleSaveEdit : handleAddGoal}
+                  disabled={!currentGoal.title.trim()}
+                  className="bg-pathpiper-teal hover:bg-pathpiper-teal/90"
+                >
+                  {editingGoal ? 'Save Changes' : 'Add Goal'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Goals List */}
         <div>
           <div className="flex justify-between items-center mb-4">
@@ -314,100 +408,6 @@ export default function GoalsAspirationsForm({ data, onChange }: GoalsAspiration
                   </div>
                 </div>
               ))}
-            </div>
-          )}
-
-          {/* Add/Edit Goal Form */}
-          {isAddingGoal && (
-            <div className="border border-pathpiper-teal/20 rounded-lg p-6 bg-pathpiper-teal/5 mt-4">
-              <h4 className="font-medium text-pathpiper-teal mb-4">
-                {editingGoal ? 'Edit Goal' : 'Add New Goal'}
-              </h4>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="title" className="text-gray-700 dark:text-gray-300">
-                    Goal Title <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="title"
-                    value={currentGoal.title}
-                    onChange={(e) => handleInputChange('title', e.target.value)}
-                    placeholder="e.g., Learn Python Programming"
-                    className="mt-1"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="description" className="text-gray-700 dark:text-gray-300">
-                    Description
-                  </Label>
-                  <Textarea
-                    id="description"
-                    value={currentGoal.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
-                    placeholder="Describe your goal in more detail..."
-                    className="mt-1 h-24"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-gray-700 dark:text-gray-300">Category</Label>
-                    <Select
-                      value={currentGoal.category}
-                      onValueChange={(value) => handleInputChange('category', value)}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {GOAL_CATEGORIES.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label className="text-gray-700 dark:text-gray-300">Timeframe</Label>
-                    <Select
-                      value={currentGoal.timeframe}
-                      onValueChange={(value) => handleInputChange('timeframe', value)}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select a timeframe" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {TIMEFRAMES.map((timeframe) => (
-                          <SelectItem key={timeframe} value={timeframe}>
-                            {timeframe}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="flex justify-end space-x-3 pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleCancel}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={editingGoal ? handleSaveEdit : handleAddGoal}
-                    disabled={!currentGoal.title.trim()}
-                    className="bg-pathpiper-teal hover:bg-pathpiper-teal/90"
-                  >
-                    {editingGoal ? 'Save Changes' : 'Add Goal'}
-                  </Button>
-                </div>
-              </div>
             </div>
           )}
         </div>
