@@ -195,7 +195,7 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
 
     switch (sectionId) {
       case "personal":
-        return !!(data.firstName && data.lastName && data.bio && data.location)
+        return !!(data.firstName && data.lastName && data.bio && data.location && data.ageGroup && data.educationLevel)
       case "interests":
         return !!(data.interests && data.interests.length > 0)
       case "skills":
