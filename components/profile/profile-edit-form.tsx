@@ -50,7 +50,7 @@ interface PersonalInfoFormProps {
 
 export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
   const router = useRouter()
-  const { user: currentUser } = useAuth()
+  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState("personal")
   const [profileData, setProfileData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -59,6 +59,7 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
   const [formDirtyStates, setFormDirtyStates] = useState<{[key: string]: boolean}>({})
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [formData, setFormData] = useState<any>({})
+  const [activeSection, setActiveSection] = useState(null)
 
   // Warn user about unsaved changes only when there are actual changes
   useEffect(() => {
@@ -75,17 +76,18 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
 
   // Security check: Ensure user can only edit their own profile
   useEffect(() => {
-    if (currentUser && currentUser.id !== userId) {
+    if (user && user.id !== userId) {
       console.warn('User attempted to edit another user\'s profile')
       router.push(`/student/profile/edit`)
       return
     }
-  }, [currentUser, userId, router])
+  }, [user, userId, router])
 
   // Update form data and track changes
   const handleFormChange = useCallback((sectionId: string, data: any, isDirty?: boolean) => {
     console.log(`📝 Form change detected in ${sectionId}:`, data, 'isDirty:', isDirty)
     setFormData((prev: any) => ({ ...prev, [sectionId]: data }))
+    setActiveSection(sectionId)
 
     // For goals, also update the profileData to ensure completion calculation works
     if (sectionId === 'goals') {
@@ -109,6 +111,16 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
       setHasUnsavedChanges(hasAnyDirtyForm)
     }
   }, [formDirtyStates])
+
+  // Watch for form changes in any section
+  useEffect(() => {
+    console.log('📝 Form change detected in', activeSection + ':', formData[activeSection], 'isDirty:', formDirtyStates[activeSection])
+  }, [formData, activeSection, formDirtyStates])
+
+  // Debug user data
+  useEffect(() => {
+    console.log('👤 ProfileEditForm: User data:', { userId: user?.id, userExists: !!user })
+  }, [user])
 
   // Tab configuration
   const tabs: TabConfig[] = [
@@ -140,13 +152,27 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
       id: "goals",
       label: "Goals & Aspirations",
       icon: <Target className="h-4 w-4" />,
-      component: <GoalsAspirationsForm data={profileData} onChange={handleFormChange} />
+      // component: <GoalsAspirationsForm data={profileData} onChange={handleFormChange} />
+      component: <GoalsAspirationsForm data={formData.goals} onChange={handleFormChange} />
     },
     {
       id: "social",
       label: "Social & Contact",
       icon: <MessageSquare className="h-4 w-4" />,
-      component: <SocialContactForm data={profileData} onChange={handleFormChange} />
+      component: (() => {
+            console.log('🔧 ProfileEditForm: Rendering SocialContactForm with userId:', user?.id)
+            if (!user?.id) {
+              console.log('⚠️ ProfileEditForm: User ID not available yet, showing loading...')
+              return <div className="p-8 text-center">Loading user data...</div>
+            }
+            return (
+              <SocialContactForm
+                data={formData.social}
+                onChange={handleFormChange}
+                userId={user.id}
+              />
+            )
+          })()
     },
     {
       id: "education",
@@ -201,7 +227,7 @@ export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
     if (!profileData) {
       loadProfileData()
     }
-  }, [userId]) // Remove tabs dependency to prevent unnecessary reloads
+  }, [userId, tabs, profileData]) // Remove tabs dependency to prevent unnecessary reloads
 
   // Calculate section completion
   const calculateSectionCompletion = (sectionId: string, data: any): boolean => {

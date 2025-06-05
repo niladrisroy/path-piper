@@ -59,9 +59,14 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
     }
   })
 
-  // Fetch existing data when component mounts
+  // Fetch existing data when component mounts or userId changes
   useEffect(() => {
     const fetchData = async () => {
+      if (!userId) {
+        console.log('⚠️ SocialContactForm: No userId provided, cannot fetch data')
+        return
+      }
+
       try {
         setLoading(true)
         console.log('🔄 SocialContactForm: Fetching data for user:', userId)
@@ -76,7 +81,9 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
         console.log('📡 SocialContactForm: API response status:', response.status)
         
         if (!response.ok) {
-          throw new Error(`Failed to fetch social contact data: ${response.status}`)
+          const errorText = await response.text()
+          console.log('❌ SocialContactForm: API error response:', errorText)
+          throw new Error(`Failed to fetch social contact data: ${response.status} - ${errorText}`)
         }
         
         const responseData = await response.json()
@@ -146,13 +153,8 @@ export default function SocialContactForm({ data, onChange, userId }: SocialCont
     }
 
     console.log('🎯 SocialContactForm: useEffect triggered with userId:', userId)
-    if (userId) {
-      console.log('✅ SocialContactForm: Starting data fetch...')
-      fetchData()
-    } else {
-      console.log('⚠️ SocialContactForm: No userId provided, skipping fetch')
-    }
-  }, [userId, form])
+    fetchData()
+  }, [userId])
 
   // Update form when data changes
   useEffect(() => {
