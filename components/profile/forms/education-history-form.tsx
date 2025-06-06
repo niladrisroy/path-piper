@@ -175,7 +175,20 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
   }
 
   const handleEditEntry = (entry: EducationEntry) => {
-    setEditingEntry({ ...entry })
+    // Find the category for this institution type
+    let categoryId = ''
+    for (const category of institutionCategories) {
+      const type = category.types.find(t => t.id === entry.institutionType)
+      if (type) {
+        categoryId = category.id
+        break
+      }
+    }
+    
+    setEditingEntry({ 
+      ...entry, 
+      institutionCategory: categoryId // Set the category so the type dropdown works
+    })
     setIsAddingEntry(true)
   }
 
@@ -595,7 +608,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                       </div>
                       <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
                         <div className="flex items-center space-x-4">
-                          <span>{getTypeLabel(entry.institutionCategory, entry.institutionType)}</span>
+                          <span>{getInstitutionTypeName(entry.institutionType)}</span>
                           {entry.degree && <span>• {entry.degree}</span>}
                           {entry.grade && <span>• {entry.grade}</span>}
                         </div>
