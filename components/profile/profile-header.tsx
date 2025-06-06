@@ -38,7 +38,7 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
   const gradeLevel = currentEducation?.gradeLevel || currentEducation?.grade_level || "Student"
   const schoolName = currentEducation?.institutionName || currentEducation?.institution_name || "School"
   const profileImage = studentProp.profile?.profileImageUrl || "/images/student-profile.png"
-  const tagline = studentProp.profile?.tagline || "Aspiring Software Engineer | Math & Computer Science Enthusiast"
+  const tagline = studentProp.profile?.tagline
   
   // Check if this is the current user's own profile
   const isOwnProfile = currentUser && currentUser.id === studentProp.id
@@ -120,9 +120,11 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
                         <h1 className="text-xl sm:text-3xl font-bold truncate">{displayName}</h1>
                         {true && <BadgeCheck className="h-6 w-6 text-pathpiper-teal" />}
                       </div>
-                      <p className="text-gray-600 dark:text-gray-300 mt-1 text-sm sm:text-base truncate">
-                        {tagline}
-                      </p>
+                      {tagline && (
+                        <p className="text-gray-600 dark:text-gray-300 mt-1 text-sm sm:text-base truncate">
+                          {tagline}
+                        </p>
+                      )}
                       <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
                         {gradeLevel} • {schoolName}
                       </p>
