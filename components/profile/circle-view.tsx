@@ -33,6 +33,12 @@ interface CircleViewProps {
 }
 
 export default function CircleView({ student }: CircleViewProps) {
+  // Use real student data
+  const studentName = student?.profile ? `${student.profile.firstName} ${student.profile.lastName}` : "Student"
+  const tagline = student?.profile?.tagline
+  const bio = student?.profile?.bio
+  const currentEducation = student?.educationHistory?.find((edu: any) => edu.is_current || edu.isCurrent)
+  
   // Mock data for connections
   const connections: Connection[] = [
     {

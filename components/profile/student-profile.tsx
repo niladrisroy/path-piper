@@ -60,7 +60,7 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
         socialLinks: studentData.profile?.socialLinks || [],
         careerGoals: studentData.profile?.careerGoals || [],
         customBadges: studentData.profile?.customBadges || [],
-        
+
         // Placeholder data for sections without database tables
         // These sections will show "Coming Soon" or placeholder content
         projects: [],
@@ -125,7 +125,11 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
           {activeTab === "skills" && <SkillsCanvas student={student} />}
           {activeTab === "projects" && <ProjectsShowcase student={student} />}
           {activeTab === "achievements" && <AchievementTimeline student={student} />}
-          {activeTab === "circle" && <CircleView student={student} />}
+          {activeTab === "circle" && (
+        <div className="space-y-6">
+          <CircleView student={transformedStudent} />
+        </div>
+      )}
           {activeTab === "learning" && <LearningPath student={student} />}
         </div>
       </div>
