@@ -634,7 +634,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                       </div>
                       <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
                         <div className="flex items-center space-x-4">
-                          <span>{entry.institutionTypeName || 'Institution Type'}</span>
+                          <span>{entry.institutionTypeName || getInstitutionTypeName(entry.institutionType)}</span>
                           {entry.degree && <span>• {entry.degree}</span>}
                           {entry.grade && <span>• {entry.grade}</span>}
                         </div>
