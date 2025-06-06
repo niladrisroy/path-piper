@@ -158,6 +158,9 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
     // Auto-save to database
     await saveEducationToDatabase(updatedEducation)
 
+    // Fetch fresh data from database to ensure UI is in sync
+    await fetchEducationFromDatabase()
+
     setNewEntry({
       id: "",
       institutionName: "",
@@ -212,6 +215,9 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
     // Auto-save to database
     await saveEducationToDatabase(updatedEducation)
 
+    // Fetch fresh data from database to ensure UI is in sync
+    await fetchEducationFromDatabase()
+
     setEditingEntry(null)
     setIsAddingEntry(false)
   }
@@ -222,6 +228,9 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
 
     // Auto-save to database
     await saveEducationToDatabase(updatedEducation)
+
+    // Fetch fresh data from database to ensure UI is in sync
+    await fetchEducationFromDatabase()
   }
 
   const handleCancel = () => {
