@@ -11,7 +11,7 @@ interface ActionBarProps {
 
 export default function ActionBar({ student, currentUser }: ActionBarProps) {
   const router = useRouter()
-  
+
   // Check if this is the current user's own profile
   const isOwnProfile = currentUser && student && currentUser.id === student.id
   return (

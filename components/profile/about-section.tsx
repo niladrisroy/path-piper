@@ -35,6 +35,11 @@ export default function AboutSection({ student: studentProp, currentUser }: Abou
     ],
   }
 
+  // Extract real data from student prop if available
+  const realBio = studentProp?.profile?.bio || student.bio
+  const realLocation = studentProp?.profile?.location || student.location
+  const realInterests = studentProp?.interests?.map((interest: any) => interest.name) || student.interests
+
   // Check if this is the current user's own profile
   const isOwnProfile = currentUser && currentUser.id === student.id
 
@@ -52,20 +57,22 @@ export default function AboutSection({ student: studentProp, currentUser }: Abou
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">About Me</h2>
-        {!isEditing ? (
-          <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-            <EditIcon className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
-        ) : (
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>
-              Cancel
+        {isOwnProfile && (
+          !isEditing ? (
+            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+              <EditIcon className="h-4 w-4 mr-2" />
+              Edit
             </Button>
-            <Button size="sm" onClick={() => setIsEditing(false)}>
-              Save
-            </Button>
-          </div>
+          ) : (
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={() => setIsEditing(false)}>
+                Save
+              </Button>
+            </div>
+          )
         )}
       </div>
 
@@ -79,24 +86,24 @@ export default function AboutSection({ student: studentProp, currentUser }: Abou
           >
             <h3 className="font-semibold mb-3">Bio</h3>
             {!isEditing ? (
-              <p className="text-gray-700 dark:text-gray-300">{student.bio}</p>
+              <p className="text-gray-700 dark:text-gray-300">{realBio}</p>
             ) : (
               <textarea
                 className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
                 rows={4}
-                defaultValue={student.bio}
+                defaultValue={realBio}
               />
             )}
 
             <div className="flex items-center gap-2 mt-4 text-gray-600 dark:text-gray-400">
               <GlobeIcon className="h-4 w-4" />
               {!isEditing ? (
-                <span>{student.location}</span>
+                <span>{realLocation}</span>
               ) : (
                 <input
                   type="text"
                   className="p-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
-                  defaultValue={student.location}
+                  defaultValue={realLocation}
                 />
               )}
             </div>
@@ -104,7 +111,7 @@ export default function AboutSection({ student: studentProp, currentUser }: Abou
 
           {/* Education Cards */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-            <EducationCards />
+            <EducationCards educationHistory={studentProp?.educationHistory} />
           </motion.div>
 
           {/* Circle Friends - Mini avatars in About section */}
@@ -308,13 +315,14 @@ export default function AboutSection({ student: studentProp, currentUser }: Abou
             </div>
           </motion.div>
 
-          {/* Personal Information */}
-          <motion.div
-            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <h3 className="font-semibold mb-3">Personal Information</h3>
+          {/* Personal Information - Only show for own profile */}
+          {isOwnProfile && (
+            <motion.div
+              className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <h3 className="font-semibold mb-3">Personal Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                 <h4 className="font-medium text-gray-900 dark:text-white mb-2">Personal Details</h4>
@@ -368,7 +376,8 @@ export default function AboutSection({ student: studentProp, currentUser }: Abou
                 <p className="mt-1 italic text-gray-700 dark:text-gray-300">"{student.favoriteQuote}"</p>
               </div>
             )}
-          </motion.div>
+            </motion.div>
+          )}
 
           {/* Career Goals */}
           {student.careerGoals && student.careerGoals.length > 0 && (
