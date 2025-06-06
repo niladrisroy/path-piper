@@ -11,6 +11,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, X, GraduationCap, Edit, Calendar, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { getPlaceholdersForType } from "@/data/institution-placeholders"
+import { MultiSelect } from "@/components/ui/multi-select"
+import { getSubjectSuggestions } from "@/data/subject-suggestions"
 
 interface EducationEntry {
   id: number | string
@@ -118,7 +120,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
     onChange('education', educationHistory)
   }, [educationHistory, onChange])
 
-  const handleInputChange = (field: keyof EducationEntry, value: string | number | boolean) => {
+  const handleInputChange = (field: keyof EducationEntry, value: string | number | boolean | string[]) => {
     if (editingEntry) {
       setEditingEntry(prev => {
         if (!prev) return null
@@ -142,7 +144,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
   }
 
   const handleAddEntry = async () => {
-    if (!newEntry.institutionName.trim() || !newEntry.fieldOfStudy.trim()) return
+    if (!newEntry.institutionName.trim() || !newEntry.subjects?.length) return
 
     const entryToAdd = {
       ...newEntry,
@@ -178,7 +180,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
   }
 
   const handleSaveEdit = async () => {
-    if (!editingEntry?.institutionName.trim() || !editingEntry?.fieldOfStudy.trim()) return
+    if (!editingEntry?.institutionName.trim() || !editingEntry?.subjects?.length) return
 
     const updatedEducation = educationHistory.map(entry => 
       entry.id === editingEntry.id ? editingEntry : entry
@@ -307,6 +309,20 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
     return getPlaceholdersForType('default')
   }
 
+  // Get institution type slug for subject suggestions
+  const getInstitutionTypeSlug = (typeId: string) => {
+    if (!typeId) return 'default'
+
+    // Find the type slug from the institutionCategories
+    for (const category of institutionCategories) {
+      const type = category.types.find(t => t.id === typeId)
+      if (type) {
+        return type.slug
+      }
+    }
+    return 'default'
+  }
+
   if (loading) {
     return (
       <div className="space-y-8">
@@ -414,17 +430,22 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                 />
               </div>
 
-              {/* Step 3: Subject/Course */}
+              {/* Step 3: Subjects/Courses */}
               <div>
                 <Label className="text-gray-700 dark:text-gray-300">
-                  Subject/Course <span className="text-red-500">*</span>
+                  Subjects/Courses <span className="text-red-500">*</span>
                 </Label>
-                <Input
-                  value={currentEntry.fieldOfStudy}
-                  onChange={(e) => handleInputChange('fieldOfStudy', e.target.value)}
-                  placeholder={getDynamicPlaceholders(currentEntry.institutionType).course}
+                <MultiSelect
+                  value={currentEntry.subjects || []}
+                  onChange={(value) => handleInputChange('subjects', value)}
+                  placeholder="Add subjects you studied..."
+                  suggestions={getSubjectSuggestions(getInstitutionTypeSlug(currentEntry.institutionType))}
                   className="mt-1"
+                  maxItems={10}
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Add the subjects or courses you studied at this institution
+                </p>
               </div>
 
               {/* Step 4: Degree/Certificate and Grade/Level */}
@@ -504,7 +525,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                 <Button
                   type="button"
                   onClick={editingEntry ? handleSaveEdit : handleAddEntry}
-                  disabled={!currentEntry.institutionName.trim() || !currentEntry.fieldOfStudy.trim()}
+                  disabled={!currentEntry.institutionName.trim() || !currentEntry.subjects?.length}
                   className="bg-pathpiper-teal hover:bg-pathpiper-teal/90"
                 >
                   {editingEntry ? 'Save Changes' : 'Add Entry'}
@@ -565,7 +586,17 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                           {entry.degree && <span>• {entry.degree}</span>}
                           {entry.grade && <span>• {entry.grade}</span>}
                         </div>
-                        <div>{entry.fieldOfStudy}</div>
+                        <div className="flex flex-wrap gap-1">
+                          {entry.subjects && entry.subjects.length > 0 ? (
+                            entry.subjects.map((subject, idx) => (
+                              <span key={idx} className="text-xs px-2 py-1 bg-pathpiper-teal/10 text-pathpiper-teal rounded-full">
+                                {subject}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-gray-500 italic">No subjects specified</span>
+                          )}
+                        </div>
                         <div className="flex items-center space-x-2">
                           <Calendar size={14} />
                           <span>
