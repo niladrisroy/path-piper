@@ -16,7 +16,7 @@ export default function EducationCards({ educationHistory: realEducationHistory 
       type: edu.institutionType?.name || "Educational Institution",
       grade: edu.gradeLevel || edu.grade_level || "Student",
       period: `${new Date(edu.startDate).getFullYear()} - ${edu.isCurrent ? 'Present' : new Date(edu.endDate || Date.now()).getFullYear()}`,
-      gpa: edu.gpa || "N/A",
+      gpa: edu.gpa,
       subjects: edu.subjects || [],
       achievements: edu.achievements || [],
     })) : [
@@ -77,7 +77,7 @@ export default function EducationCards({ educationHistory: realEducationHistory 
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <h4 className="font-semibold text-lg">{education.school}</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{education.institutionType?.name || education.type}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{education.type}</p>
                   </div>
                   <span className="px-2 py-1 bg-pathpiper-teal/10 text-pathpiper-teal text-xs rounded-full">
                     {education.grade}
@@ -87,8 +87,12 @@ export default function EducationCards({ educationHistory: realEducationHistory 
                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-3">
                   <CalendarIcon className="h-4 w-4 mr-1" />
                   {education.period}
-                  <span className="mx-2">•</span>
-                  GPA: {education.gpa}
+                  {education.gpa && (
+                    <>
+                      <span className="mx-2">•</span>
+                      GPA: {education.gpa}
+                    </>
+                  )}
                 </div>
 
                 {education.subjects && education.subjects.length > 0 && (
