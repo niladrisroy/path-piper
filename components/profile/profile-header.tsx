@@ -39,7 +39,7 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
   const schoolName = currentEducation?.institutionName || currentEducation?.institution_name || "School"
   const profileImage = studentProp.profile?.profileImageUrl || "/images/student-profile.png"
   const tagline = studentProp.profile?.tagline
-  
+
   // Check if this is the current user's own profile
   const isOwnProfile = currentUser && currentUser.id === studentProp.id
 
@@ -531,7 +531,7 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
                             strokeLinejoin="round"
                             className="h-6 w-6 text-amber-600 dark:text-amber-400"
                           >
-                            <path d="M12 17.8 5.8 21 7 14.1 2 9.3l7-1L12 2l3 6.3 7 1-5 4.8 1.2 6.9-6.2-3.2Z"></path>
+                            <path d="M12 17.8 5.8 21 7 14.1 2 9.3l7-1L12 2l3 6.3 7 1-54.8 1.2 6.9-6.2-3.2Z"></path>
                           </svg>
                         </div>
                         <span className="text-[10px] text-center mt-1 text-gray-600 dark:text-gray-400">

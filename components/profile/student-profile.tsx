@@ -39,6 +39,7 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
           firstName: studentData.profile?.firstName || "Student",
           lastName: studentData.profile?.lastName || "",
           bio: studentData.profile?.bio || "No bio available",
+          tagline: studentData.profile?.tagline || "",
           location: studentData.profile?.location || "Location not specified",
           profileImageUrl: studentData.profile?.profileImageUrl || "/images/student-profile.png",
           coverImageUrl: studentData.profile?.coverImageUrl,
@@ -56,7 +57,14 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
           proficiencyLevel: us.proficiencyLevel || 50,
           category: us.skill.category?.name || "General"
         })) || [],
-        educationHistory: studentData.educationHistory || [],
+        educationHistory: studentData.educationHistory?.map((edu: any) => ({
+          ...edu,
+          isCurrent: edu.is_current, // Map database field to component expected field
+          institutionType: edu.institutionType || {
+            name: "Educational Institution",
+            category: { name: "General" }
+          }
+        })) || [],
         socialLinks: studentData.profile?.socialLinks || [],
         careerGoals: studentData.profile?.careerGoals || [],
         customBadges: studentData.profile?.customBadges || [],
@@ -125,11 +133,7 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
           {activeTab === "skills" && <SkillsCanvas student={student} />}
           {activeTab === "projects" && <ProjectsShowcase student={student} />}
           {activeTab === "achievements" && <AchievementTimeline student={student} />}
-          {activeTab === "circle" && (
-        <div className="space-y-6">
-          <CircleView student={transformedStudent} />
-        </div>
-      )}
+          {activeTab === "circle" && <CircleView student={student} />}
           {activeTab === "learning" && <LearningPath student={student} />}
         </div>
       </div>
