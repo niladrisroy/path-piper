@@ -441,7 +441,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                   placeholder="Add subjects you studied..."
                   suggestions={getSubjectSuggestions(getInstitutionTypeSlug(currentEntry.institutionType))}
                   className="mt-1"
-                  maxItems={10}
+                  maxItems={20}
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Add the subjects or courses you studied at this institution
