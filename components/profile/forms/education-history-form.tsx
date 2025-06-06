@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Plus, X, GraduationCap, Edit, Calendar, Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import { getPlaceholdersForType } from "@/data/institution-placeholders"
 
 interface EducationEntry {
   id: number | string
@@ -288,6 +289,20 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
     return type ? type.name : typeId
   }
 
+  // Get dynamic placeholders based on institution type
+  const getDynamicPlaceholders = (typeId: string) => {
+    if (!typeId) return getPlaceholdersForType('default')
+    
+    // Find the type slug from the institutionCategories
+    for (const category of institutionCategories) {
+      const type = category.types.find(t => t.id === typeId)
+      if (type) {
+        return getPlaceholdersForType(type.slug)
+      }
+    }
+    return getPlaceholdersForType('default')
+  }
+
   if (loading) {
     return (
       <div className="space-y-8">
@@ -325,32 +340,6 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
               {editingEntry ? 'Edit Education Entry' : 'Add Education Entry'}
             </h4>
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-gray-700 dark:text-gray-300">
-                    Institution Name <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    value={currentEntry.institutionName}
-                    onChange={(e) => handleInputChange('institutionName', e.target.value)}
-                    placeholder="e.g., Westlake High School, Harvard University, Coursera"
-                    className="mt-1"
-                  />
-                </div>
-
-                <div>
-                  <Label className="text-gray-700 dark:text-gray-300">
-                    Subject/Course <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    value={currentEntry.fieldOfStudy}
-                    onChange={(e) => handleInputChange('fieldOfStudy', e.target.value)}
-                    placeholder="e.g., General Studies, Computer Science, Web Development, Math, English"
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-gray-700 dark:text-gray-300">Institution Category</Label>
@@ -405,11 +394,37 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
+                  <Label className="text-gray-700 dark:text-gray-300">
+                    Institution Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    value={currentEntry.institutionName}
+                    onChange={(e) => handleInputChange('institutionName', e.target.value)}
+                    placeholder="e.g., Delhi Public School, IIT Delhi, BYJU'S"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-gray-700 dark:text-gray-300">
+                    Subject/Course <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    value={currentEntry.fieldOfStudy}
+                    onChange={(e) => handleInputChange('fieldOfStudy', e.target.value)}
+                    placeholder={getDynamicPlaceholders(currentEntry.institutionType).course}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
                   <Label className="text-gray-700 dark:text-gray-300">Degree/Certificate</Label>
                   <Input
                     value={currentEntry.degree}
                     onChange={(e) => handleInputChange('degree', e.target.value)}
-                    placeholder="e.g., High School Diploma, Bachelor's Degree, Certificate, Course Completion"
+                    placeholder={getDynamicPlaceholders(currentEntry.institutionType).degree}
                     className="mt-1"
                   />
                 </div>
@@ -419,7 +434,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                   <Input
                     value={currentEntry.grade}
                     onChange={(e) => handleInputChange('grade', e.target.value)}
-                    placeholder="e.g., 12th Grade, Freshman Year, Beginner Level, Advanced"
+                    placeholder={getDynamicPlaceholders(currentEntry.institutionType).grade}
                     className="mt-1"
                   />
                 </div>
