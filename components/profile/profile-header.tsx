@@ -34,10 +34,14 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
   }
 
   const displayName = studentProp.profile ? `${studentProp.profile.firstName} ${studentProp.profile.lastName}` : "Student"
-  const currentEducation = studentProp.educationHistory?.find((edu: any) => edu.isCurrent)
-  const gradeLevel = currentEducation?.gradeLevel || "Student"
-  const schoolName = currentEducation?.institutionName || "School"
+  const currentEducation = studentProp.educationHistory?.find((edu: any) => edu.is_current || edu.isCurrent)
+  const gradeLevel = currentEducation?.gradeLevel || currentEducation?.grade_level || "Student"
+  const schoolName = currentEducation?.institutionName || currentEducation?.institution_name || "School"
   const profileImage = studentProp.profile?.profileImageUrl || "/images/student-profile.png"
+  const tagline = studentProp.profile?.tagline || "Aspiring Software Engineer | Math & Computer Science Enthusiast"
+  
+  // Check if this is the current user's own profile
+  const isOwnProfile = currentUser && currentUser.id === studentProp.id
 
   // Mock circle members (would come from API in real app)
   const circleMembers = [
@@ -117,7 +121,7 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
                         {true && <BadgeCheck className="h-6 w-6 text-pathpiper-teal" />}
                       </div>
                       <p className="text-gray-600 dark:text-gray-300 mt-1 text-sm sm:text-base truncate">
-                        Aspiring Software Engineer | Math & Computer Science Enthusiast
+                        {tagline}
                       </p>
                       <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
                         {gradeLevel} • {schoolName}
@@ -546,7 +550,7 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
                   <div className="mt-6">
                   {/* Add/Edit Profile button */}
                   <div className="flex flex-col sm:flex-row gap-3">
-                    {currentUser && currentUser.id === studentProp.profile.id ? (
+                    {isOwnProfile ? (
                       <Button 
                         size="lg" 
                         className="bg-pathpiper-teal hover:bg-pathpiper-teal/90"

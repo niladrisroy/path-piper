@@ -121,7 +121,7 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-          {activeTab === "about" && <AboutSection student={student} />}
+          {activeTab === "about" && <AboutSection student={student} currentUser={currentUser} />}
           {activeTab === "skills" && <SkillsCanvas student={student} />}
           {activeTab === "projects" && <ProjectsShowcase student={student} />}
           {activeTab === "achievements" && <AchievementTimeline student={student} />}
@@ -130,7 +130,7 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
         </div>
       </div>
 
-      <ActionBar />
+      <ActionBar student={student} currentUser={currentUser} />
     </div>
   )
 }

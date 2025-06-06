@@ -29,10 +29,10 @@ interface Connection {
 }
 
 interface CircleViewProps {
-  userData: any
+  student: any
 }
 
-export default function CircleView({ userData }: CircleViewProps) {
+export default function CircleView({ student }: CircleViewProps) {
   // Mock data for connections
   const connections: Connection[] = [
     {

@@ -9,9 +9,10 @@ import EducationCards from "./education-cards"
 
 interface AboutSectionProps {
   student?: any
+  currentUser?: any
 }
 
-export default function AboutSection({ student: studentProp }: AboutSectionProps) {
+export default function AboutSection({ student: studentProp, currentUser }: AboutSectionProps) {
   const [isEditing, setIsEditing] = useState(false)
 
   // Use passed student data or fallback to mock data
@@ -28,11 +29,15 @@ export default function AboutSection({ student: studentProp }: AboutSectionProps
       "/multiple-monitor-coding.png",
       "/placeholder.svg?key=3nxmd",
       "/placeholder.svg?key=yf3oe",
-      "/majestic-mountain-vista.png",
+      "/placeholder.svg?key=majestic-mountain-vista.png",
       "/robotics-competition.png",
       "/placeholder.svg?key=ghok1",
     ],
   }
+
+  // Check if this is the current user's own profile
+  const isOwnProfile = currentUser && currentUser.id === student.id
+
 
   // Mock circle members (would come from API in real app)
   const circleMembers = [
