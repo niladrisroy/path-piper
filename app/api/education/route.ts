@@ -105,6 +105,7 @@ export async function POST(request: NextRequest) {
           institutionTypeId: entry.institutionType ? parseInt(entry.institutionType) : null,
           degreeProgram: entry.degree || null,
           fieldOfStudy: entry.fieldOfStudy,
+          subjects: Array.isArray(entry.subjects) ? entry.subjects : [],
           startDate: entry.startDate ? new Date(entry.startDate) : null,
           endDate: entry.endDate ? new Date(entry.endDate) : null,
           isCurrent: entry.isCurrent || false,

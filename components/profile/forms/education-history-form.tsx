@@ -19,6 +19,7 @@ interface EducationEntry {
   institutionType: string
   degree?: string
   fieldOfStudy: string
+  subjects?: string[]
   startDate: string
   endDate?: string
   isCurrent: boolean
@@ -57,6 +58,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
     institutionType: "",
     degree: "",
     fieldOfStudy: "",
+    subjects: [],
     startDate: "",
     endDate: "",
     isCurrent: true,
@@ -160,6 +162,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
       institutionType: "",
       degree: "",
       fieldOfStudy: "",
+      subjects: [],
       startDate: "",
       endDate: "",
       isCurrent: true,
@@ -207,6 +210,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
       institutionType: "",
       degree: "",
       fieldOfStudy: "",
+      subjects: [],
       startDate: "",
       endDate: "",
       isCurrent: true,
@@ -292,7 +296,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
   // Get dynamic placeholders based on institution type
   const getDynamicPlaceholders = (typeId: string) => {
     if (!typeId) return getPlaceholdersForType('default')
-    
+
     // Find the type slug from the institutionCategories
     for (const category of institutionCategories) {
       const type = category.types.find(t => t.id === typeId)
