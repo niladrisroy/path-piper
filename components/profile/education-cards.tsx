@@ -37,9 +37,10 @@ export default function EducationCards({ educationHistory: realEducationHistory 
         grade: edu.gradeLevel || edu.grade || "Student", 
         period: `${new Date(edu.startDate).getFullYear()} - ${edu.isCurrent ? 'Present' : new Date(edu.endDate || Date.now()).getFullYear()}`,
         gpa: edu.gpa && edu.gpa.trim() ? `GPA: ${edu.gpa}` : null,
-      subjects: edu.subjects || [],
-      achievements: edu.achievements || [],
-    })) : [
+        subjects: edu.subjects || [],
+        achievements: edu.achievements || [],
+      }
+    }) : [
     {
       school: "Westlake High School",
       type: "High School", 
