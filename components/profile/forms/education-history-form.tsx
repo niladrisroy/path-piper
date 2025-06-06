@@ -19,6 +19,7 @@ interface EducationEntry {
   institutionName: string
   institutionCategory: string
   institutionType: string
+  institutionTypeName?: string // Add the type name field
   degree?: string
   fieldOfStudy: string
   subjects?: string[]
@@ -613,7 +614,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                       </div>
                       <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
                         <div className="flex items-center space-x-4">
-                          <span>{getTypeLabel('', entry.institutionType)}</span>
+                          <span>{entry.institutionTypeName || 'Institution Type'}</span>
                           {entry.degree && <span>• {entry.degree}</span>}
                           {entry.grade && <span>• {entry.grade}</span>}
                         </div>

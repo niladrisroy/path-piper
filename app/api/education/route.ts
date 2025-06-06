@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
       institutionName: entry.institutionName,
       institutionCategory: entry.institutionType?.category?.slug || '',
       institutionType: entry.institutionTypeId ? entry.institutionTypeId.toString() : '',
+      institutionTypeName: entry.institutionType?.name || '', // Add the type name
       degree: entry.degreeProgram || '',
       fieldOfStudy: entry.fieldOfStudy || '',
       subjects: Array.isArray(entry.subjects) ? entry.subjects : [],
