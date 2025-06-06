@@ -9,17 +9,29 @@ interface EducationCardsProps {
 }
 
 export default function EducationCards({ educationHistory: realEducationHistory }: EducationCardsProps) {
+  // Debug logging to see the data structure
+  console.log('Raw education history data:', realEducationHistory)
+  
   // Use real education data if available, otherwise fallback to mock data
   const educationHistory = realEducationHistory && realEducationHistory.length > 0 ? 
-    realEducationHistory.map((edu: any) => ({
-      school: edu.institutionName,
-      type: edu.institutionTypeName || "Institution",
-      grade: edu.gradeLevel || edu.grade || "Student",
-      period: `${new Date(edu.startDate).getFullYear()} - ${edu.isCurrent ? 'Present' : new Date(edu.endDate || Date.now()).getFullYear()}`,
-      gpa: edu.gpa,
-      subjects: edu.subjects || [],
-      achievements: edu.achievements || [],
-    })) : [
+    realEducationHistory.map((edu: any) => {
+      console.log('Processing education entry:', edu)
+      console.log('Available institution type fields:', {
+        institutionTypeName: edu.institutionTypeName,
+        institutionTypeData: edu.institutionType,
+        institutionCategoryName: edu.institutionCategoryName
+      })
+      
+      return {
+        school: edu.institutionName,
+        type: edu.institutionTypeName || edu.institutionCategoryName || "Institution",
+        grade: edu.gradeLevel || edu.grade || "Student", 
+        period: `${new Date(edu.startDate).getFullYear()} - ${edu.isCurrent ? 'Present' : new Date(edu.endDate || Date.now()).getFullYear()}`,
+        gpa: edu.gpa,
+        subjects: edu.subjects || [],
+        achievements: edu.achievements || [],
+      }
+    }) : [
     {
       school: "Westlake High School",
       type: "High School", 
