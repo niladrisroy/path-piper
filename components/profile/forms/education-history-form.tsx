@@ -340,9 +340,12 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
               {editingEntry ? 'Edit Education Entry' : 'Add Education Entry'}
             </h4>
             <div className="space-y-4">
+              {/* Step 1: Institution Category and Type */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-gray-700 dark:text-gray-300">Institution Category</Label>
+                  <Label className="text-gray-700 dark:text-gray-300">
+                    Institution Category <span className="text-red-500">*</span>
+                  </Label>
                   <Select
                     value={currentEntry.institutionCategory}
                     onValueChange={(value) => handleInputChange('institutionCategory', value)}
@@ -364,7 +367,9 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                 </div>
 
                 <div>
-                  <Label className="text-gray-700 dark:text-gray-300">Institution Type</Label>
+                  <Label className="text-gray-700 dark:text-gray-300">
+                    Institution Type <span className="text-red-500">*</span>
+                  </Label>
                   <Select
                     value={currentEntry.institutionType}
                     onValueChange={(value) => handleInputChange('institutionType', value)}
@@ -392,32 +397,33 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-gray-700 dark:text-gray-300">
-                    Institution Name <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    value={currentEntry.institutionName}
-                    onChange={(e) => handleInputChange('institutionName', e.target.value)}
-                    placeholder="e.g., Delhi Public School, IIT Delhi, BYJU'S"
-                    className="mt-1"
-                  />
-                </div>
-
-                <div>
-                  <Label className="text-gray-700 dark:text-gray-300">
-                    Subject/Course <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    value={currentEntry.fieldOfStudy}
-                    onChange={(e) => handleInputChange('fieldOfStudy', e.target.value)}
-                    placeholder={getDynamicPlaceholders(currentEntry.institutionType).course}
-                    className="mt-1"
-                  />
-                </div>
+              {/* Step 2: Institution Name */}
+              <div>
+                <Label className="text-gray-700 dark:text-gray-300">
+                  Institution Name <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  value={currentEntry.institutionName}
+                  onChange={(e) => handleInputChange('institutionName', e.target.value)}
+                  placeholder="e.g., Delhi Public School, IIT Delhi, BYJU'S"
+                  className="mt-1"
+                />
               </div>
 
+              {/* Step 3: Subject/Course */}
+              <div>
+                <Label className="text-gray-700 dark:text-gray-300">
+                  Subject/Course <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  value={currentEntry.fieldOfStudy}
+                  onChange={(e) => handleInputChange('fieldOfStudy', e.target.value)}
+                  placeholder={getDynamicPlaceholders(currentEntry.institutionType).course}
+                  className="mt-1"
+                />
+              </div>
+
+              {/* Step 4: Degree/Certificate and Grade/Level */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-gray-700 dark:text-gray-300">Degree/Certificate</Label>
