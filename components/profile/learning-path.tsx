@@ -53,163 +53,59 @@ const learningPathData = [
   },
 ]
 
-export default function LearningPath() {
-  const [selectedCourse, setSelectedCourse] = useState<number | null>(null)
+export default function LearningPath({ student }: { student: any }) {
+  // Check if there's any learning path data
+  const hasLearningData = student.learningPath && (
+    (student.learningPath.currentCourses && student.learningPath.currentCourses.length > 0) ||
+    (student.learningPath.completedCourses && student.learningPath.completedCourses.length > 0) ||
+    (student.learningPath.recommendations && student.learningPath.recommendations.length > 0)
+  )
 
-  return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Learning Path</h2>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1">
-            <div className="h-3 w-3 rounded-full bg-green-500"></div>
-            <span className="text-sm text-gray-600 dark:text-gray-300">Completed</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="h-3 w-3 rounded-full bg-blue-500"></div>
-            <span className="text-sm text-gray-600 dark:text-gray-300">In Progress</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="h-3 w-3 rounded-full bg-gray-300 dark:bg-gray-600"></div>
-            <span className="text-sm text-gray-600 dark:text-gray-300">Planned</span>
+  if (!hasLearningData) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Learning Path</h2>
+          <p className="text-gray-600 dark:text-gray-400">Track progress and discover new opportunities</p>
+        </div>
+
+        <div className="text-center py-12">
+          <div className="max-w-md mx-auto">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Learning Path Coming Soon</h3>
+            <p className="text-gray-500 dark:text-gray-400">
+              This section will showcase learning courses and recommendations. Database tables for learning paths are not yet implemented.
+            </p>
           </div>
         </div>
       </div>
+    )
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Learning Path</h2>
+        <p className="text-gray-600 dark:text-gray-400">Track progress and discover new opportunities</p>
+      </div>
 
       <div className="relative">
-        {selectedCourse !== null && (
-          <motion.div
+        {/* Course detail view */}
+        {/*<motion.div
             className="absolute inset-0 bg-white dark:bg-gray-800 z-10 rounded-xl p-6 overflow-y-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
             <button
-              onClick={() => setSelectedCourse(null)}
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             >
               ✕
             </button>
-
-            {/* Course detail view */}
-            {(() => {
-              const course = learningPathData.find((c) => c.id === selectedCourse)
-              if (!course) return null
-
-              const statusColors = {
-                completed: "text-green-500",
-                "in-progress": "text-blue-500",
-                planned: "text-gray-500",
-              }
-
-              const statusIcons = {
-                completed: CheckCircleIcon,
-                "in-progress": ClockIcon,
-                planned: LockIcon,
-              }
-
-              const StatusIcon = statusIcons[course.status as keyof typeof statusIcons]
-
-              return (
-                <div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div
-                      className={`p-3 rounded-full bg-opacity-20 ${statusColors[course.status as keyof typeof statusColors]} bg-current`}
-                    >
-                      <StatusIcon className={`h-6 w-6 ${statusColors[course.status as keyof typeof statusColors]}`} />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-bold">{course.title}</h3>
-                      <p className="text-gray-500 dark:text-gray-400">
-                        {course.status === "completed"
-                          ? "Completed"
-                          : course.status === "in-progress"
-                            ? "In Progress"
-                            : "Planned"}{" "}
-                        • {course.date}
-                      </p>
-                    </div>
-                  </div>
-
-                  <p className="text-gray-700 dark:text-gray-300 mb-6">{course.description}</p>
-
-                  {course.status !== "planned" && (
-                    <div className="mb-6">
-                      <div className="flex justify-between mb-1">
-                        <span>Progress</span>
-                        <span>{course.progress}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                        <div
-                          className={`h-2.5 rounded-full ${
-                            course.status === "completed" ? "bg-green-500" : "bg-blue-500"
-                          }`}
-                          style={{ width: `${course.progress}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                      <h4 className="font-semibold mb-2">Skills Gained</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {course.skills.map((skill, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-pathpiper-teal bg-opacity-10 text-pathpiper-teal rounded-full text-xs"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                      <h4 className="font-semibold mb-2">Resources</h4>
-                      <ul className="space-y-2">
-                        <li className="text-sm flex items-center gap-2">
-                          <BookOpenIcon className="h-4 w-4 text-pathpiper-teal" />
-                          <span>Interactive Course Materials</span>
-                        </li>
-                        <li className="text-sm flex items-center gap-2">
-                          <BookOpenIcon className="h-4 w-4 text-pathpiper-teal" />
-                          <span>Video Tutorials</span>
-                        </li>
-                        <li className="text-sm flex items-center gap-2">
-                          <BookOpenIcon className="h-4 w-4 text-pathpiper-teal" />
-                          <span>Practice Exercises</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  {course.status === "completed" && (
-                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                      <h4 className="font-semibold mb-2 flex items-center gap-2">
-                        <TrendingUpIcon className="h-4 w-4 text-green-500" />
-                        Performance
-                      </h4>
-                      <div className="grid grid-cols-3 gap-4">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-green-500">A+</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">Final Grade</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-pathpiper-teal">95%</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">Quiz Average</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-purple-500">12</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">Projects Completed</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )
-            })()}
-          </motion.div>
-        )}
+          </motion.div>*/}
 
         <div className="relative pl-8 border-l-2 border-gray-200 dark:border-gray-700">
           {learningPathData.map((course, index) => {
@@ -243,7 +139,6 @@ export default function LearningPath() {
 
                 <div
                   className={`bg-white dark:bg-gray-800 border ${cardBorder} rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer`}
-                  onClick={() => setSelectedCourse(course.id)}
                 >
                   <div className="flex justify-between items-start">
                     <h3 className="font-bold text-lg">{course.title}</h3>

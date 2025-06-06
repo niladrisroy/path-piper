@@ -311,32 +311,47 @@ export default function AboutSection({ student: studentProp }: AboutSectionProps
           >
             <h3 className="font-semibold mb-3">Personal Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-500 dark:text-gray-400">Age Group:</span>
-                <span className="ml-2 capitalize">{student.ageGroup?.replace('_', ' ') || 'Not specified'}</span>
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 dark:text-white mb-2">Personal Details</h4>
+                <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="flex justify-between">
+                    <span>Age Group:</span>
+                    <span className="text-gray-900 dark:text-white">
+                      {student.ageGroup ? student.ageGroup.replace('_', ' ').toUpperCase() : 'Not specified'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Education Level:</span>
+                    <span className="text-gray-900 dark:text-white">
+                      {student.educationLevel ? student.educationLevel.replace('_', ' ').toUpperCase() : 'Not specified'}
+                    </span>
+                  </div>
+                  {student.birthMonth && (
+                    <div className="flex justify-between">
+                      <span>Birth Month:</span>
+                      <span className="text-gray-900 dark:text-white">{student.birthMonth}</span>
+                    </div>
+                  )}
+                  {student.birthYear && (
+                    <div className="flex justify-between">
+                      <span>Birth Year:</span>
+                      <span className="text-gray-900 dark:text-white">{student.birthYear}</span>
+                    </div>
+                  )}
+                  {student.personalityType && (
+                    <div className="flex justify-between">
+                      <span>Personality Type:</span>
+                      <span className="text-gray-900 dark:text-white">{student.personalityType}</span>
+                    </div>
+                  )}
+                  {student.learningStyle && (
+                    <div className="flex justify-between">
+                      <span>Learning Style:</span>
+                      <span className="text-gray-900 dark:text-white">{student.learningStyle}</span>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div>
-                <span className="text-gray-500 dark:text-gray-400">Education Level:</span>
-                <span className="ml-2 capitalize">{student.educationLevel?.replace('_', ' ') || 'Not specified'}</span>
-              </div>
-              {student.birthMonth && student.birthYear && (
-                <div>
-                  <span className="text-gray-500 dark:text-gray-400">Birth:</span>
-                  <span className="ml-2">{student.birthMonth} {student.birthYear}</span>
-                </div>
-              )}
-              {student.personalityType && (
-                <div>
-                  <span className="text-gray-500 dark:text-gray-400">Personality Type:</span>
-                  <span className="ml-2">{student.personalityType}</span>
-                </div>
-              )}
-              {student.learningStyle && (
-                <div>
-                  <span className="text-gray-500 dark:text-gray-400">Learning Style:</span>
-                  <span className="ml-2">{student.learningStyle}</span>
-                </div>
-              )}
               <div>
                 <span className="text-gray-500 dark:text-gray-400">Location:</span>
                 <span className="ml-2">{student.profile?.location || 'Not specified'}</span>

@@ -53,15 +53,42 @@ const achievementsData = [
   },
 ]
 
-export default function AchievementTimeline() {
-  const [selectedAchievement, setSelectedAchievement] = useState<number | null>(null)
+export default function AchievementTimeline({ student }: { student: any }) {
+  // Check if there are any achievements
+  if (!student.achievements || student.achievements.length === 0) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Achievement Timeline</h2>
+          <p className="text-gray-600 dark:text-gray-400">A journey through my accomplishments</p>
+        </div>
+
+        <div className="text-center py-12">
+          <div className="max-w-md mx-auto">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Achievements Coming Soon</h3>
+            <p className="text-gray-500 dark:text-gray-400">
+              This section will showcase achievements and milestones. Database tables for achievements are not yet implemented.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6">Achievement Timeline</h2>
+    <div className="p-6 space-y-6">
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Achievement Timeline</h2>
+        <p className="text-gray-600 dark:text-gray-400">A journey through my accomplishments</p>
+      </div>
 
       <div className="relative">
-        {selectedAchievement !== null && (
+        {/*selectedAchievement !== null && (
           <motion.div
             className="absolute inset-0 bg-white dark:bg-gray-800 z-10 rounded-xl p-6"
             initial={{ opacity: 0, y: 20 }}
@@ -74,7 +101,7 @@ export default function AchievementTimeline() {
               ✕
             </button>
 
-            {/* Achievement detail view */}
+            {/* Achievement detail view }
             {(() => {
               const achievement = achievementsData.find((a) => a.id === selectedAchievement)
               if (!achievement) return null
@@ -135,7 +162,7 @@ export default function AchievementTimeline() {
               )
             })()}
           </motion.div>
-        )}
+        )*/}
 
         <div className="relative pl-8 border-l-2 border-gray-200 dark:border-gray-700">
           {achievementsData.map((achievement, index) => {
@@ -157,7 +184,7 @@ export default function AchievementTimeline() {
 
                 <div
                   className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => setSelectedAchievement(achievement.id)}
+                  //onClick={() => setSelectedAchievement(achievement.id)}
                 >
                   <div className="flex justify-between items-start">
                     <h3 className="font-bold text-lg">{achievement.title}</h3>

@@ -61,117 +61,19 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
         careerGoals: studentData.profile?.careerGoals || [],
         customBadges: studentData.profile?.customBadges || [],
         
-        // Mock data for sections without database tables
-        projects: [
-          {
-            id: "1",
-            title: "Personal Website",
-            description: "Built a responsive portfolio website using React and Tailwind CSS",
-            image: "/images/placeholder.jpg",
-            link: "https://example.com",
-            technologies: ["React", "Tailwind CSS", "TypeScript"],
-            status: "completed",
-            completedDate: "2024-01-15"
-          },
-          {
-            id: "2", 
-            title: "Learning Management App",
-            description: "Developing a mobile app to track learning progress and goals",
-            image: "/images/placeholder.jpg",
-            technologies: ["React Native", "Node.js", "MongoDB"],
-            status: "in_progress",
-            progress: 75
-          }
-        ],
-        
-        achievements: [
-          {
-            id: "1",
-            title: "Dean's List",
-            description: "Achieved Dean's List recognition for academic excellence",
-            date: "2024-01-20",
-            type: "academic",
-            issuer: "University"
-          },
-          {
-            id: "2",
-            title: "Hackathon Winner",
-            description: "First place in regional coding hackathon",
-            date: "2023-11-15",
-            type: "competition",
-            issuer: "TechFest 2023"
-          }
-        ],
-        
+        // Placeholder data for sections without database tables
+        // These sections will show "Coming Soon" or placeholder content
+        projects: [],
+        achievements: [],
         learningPath: {
-          currentCourses: [
-            {
-              id: "1",
-              title: "Advanced React Development",
-              provider: "Online Academy",
-              progress: 65,
-              estimatedCompletion: "2024-03-15"
-            },
-            {
-              id: "2",
-              title: "Data Structures & Algorithms",
-              provider: "University",
-              progress: 80,
-              estimatedCompletion: "2024-02-28"
-            }
-          ],
-          completedCourses: [
-            {
-              id: "3",
-              title: "JavaScript Fundamentals",
-              provider: "CodeAcademy",
-              completedDate: "2023-12-10",
-              certificate: true
-            }
-          ],
-          recommendations: [
-            {
-              id: "1",
-              title: "Machine Learning Basics",
-              provider: "AI Institute",
-              difficulty: "intermediate",
-              duration: "6 weeks"
-            }
-          ]
+          currentCourses: [],
+          completedCourses: [],
+          recommendations: []
         },
-        
         connections: {
-          mentors: [
-            {
-              id: "1",
-              name: "Dr. Sarah Johnson",
-              title: "Software Engineering Mentor",
-              image: "/images/placeholder-user.jpg",
-              status: "active"
-            }
-          ],
-          peers: [
-            {
-              id: "1",
-              name: "Alex Chen",
-              commonInterests: ["Programming", "AI"],
-              image: "/images/placeholder-user.jpg"
-            },
-            {
-              id: "2", 
-              name: "Maria Garcia",
-              commonInterests: ["Web Development", "Design"],
-              image: "/images/placeholder-user.jpg"
-            }
-          ],
-          institutions: [
-            {
-              id: "1",
-              name: "Tech University",
-              relationship: "student",
-              image: "/images/placeholder-logo.png"
-            }
-          ]
+          mentors: [],
+          peers: [],
+          institutions: []
         }
       }
 
