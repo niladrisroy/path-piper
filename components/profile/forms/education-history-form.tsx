@@ -178,13 +178,21 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
   const handleEditEntry = (entry: EducationEntry) => {
     // Find the category for this institution type
     let categoryId = ''
+    
+    // Convert institutionType to string for comparison
+    const typeIdStr = String(entry.institutionType)
+    
     for (const category of institutionCategories) {
-      const type = category.types.find(t => t.id === entry.institutionType)
+      const type = category.types.find(t => String(t.id) === typeIdStr)
       if (type) {
-        categoryId = category.id
+        categoryId = String(category.id)
         break
       }
     }
+    
+    console.log('Editing entry:', entry)
+    console.log('Found category ID:', categoryId, 'for type ID:', typeIdStr)
+    console.log('Available categories:', institutionCategories.map(cat => ({ id: cat.id, name: cat.name, types: cat.types.map(t => ({ id: t.id, name: t.name })) })))
     
     setEditingEntry({ 
       ...entry, 
@@ -407,7 +415,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                     </SelectTrigger>
                     <SelectContent>
                       {institutionCategories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
+                        <SelectItem key={category.id} value={String(category.id)}>
                           {category.name}
                         </SelectItem>
                       ))}
@@ -434,7 +442,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                     </SelectTrigger>
                     <SelectContent>
                       {getAvailableTypes(currentEntry.institutionCategory).map((type) => (
-                        <SelectItem key={type.id} value={type.id}>
+                        <SelectItem key={type.id} value={String(type.id)}>
                           {type.name}
                         </SelectItem>
                       ))}
