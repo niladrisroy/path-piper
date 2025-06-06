@@ -13,7 +13,7 @@ export default function EducationCards({ educationHistory: realEducationHistory 
   const educationHistory = realEducationHistory && realEducationHistory.length > 0 ? 
     realEducationHistory.map((edu: any) => ({
       school: edu.institutionName,
-      type: edu.institutionTypeName || edu.institutionCategoryName || "Institution",
+      type: edu.institutionType?.name || "Institution",
       grade: edu.gradeLevel || edu.grade || "Student", 
       period: `${new Date(edu.startDate).getFullYear()} - ${edu.isCurrent ? 'Present' : new Date(edu.endDate || Date.now()).getFullYear()}`,
       gpa: edu.gpa && edu.gpa.trim() ? `GPA: ${edu.gpa}` : null,
