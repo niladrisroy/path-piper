@@ -303,6 +303,88 @@ export default function AboutSection({ student: studentProp }: AboutSectionProps
             </div>
           </motion.div>
 
+          {/* Personal Information */}
+          <motion.div
+            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <h3 className="font-semibold mb-3">Personal Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-gray-500 dark:text-gray-400">Age Group:</span>
+                <span className="ml-2 capitalize">{student.ageGroup?.replace('_', ' ') || 'Not specified'}</span>
+              </div>
+              <div>
+                <span className="text-gray-500 dark:text-gray-400">Education Level:</span>
+                <span className="ml-2 capitalize">{student.educationLevel?.replace('_', ' ') || 'Not specified'}</span>
+              </div>
+              {student.birthMonth && student.birthYear && (
+                <div>
+                  <span className="text-gray-500 dark:text-gray-400">Birth:</span>
+                  <span className="ml-2">{student.birthMonth} {student.birthYear}</span>
+                </div>
+              )}
+              {student.personalityType && (
+                <div>
+                  <span className="text-gray-500 dark:text-gray-400">Personality Type:</span>
+                  <span className="ml-2">{student.personalityType}</span>
+                </div>
+              )}
+              {student.learningStyle && (
+                <div>
+                  <span className="text-gray-500 dark:text-gray-400">Learning Style:</span>
+                  <span className="ml-2">{student.learningStyle}</span>
+                </div>
+              )}
+              <div>
+                <span className="text-gray-500 dark:text-gray-400">Location:</span>
+                <span className="ml-2">{student.profile?.location || 'Not specified'}</span>
+              </div>
+            </div>
+            {student.favoriteQuote && (
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <span className="text-gray-500 dark:text-gray-400">Favorite Quote:</span>
+                <p className="mt-1 italic text-gray-700 dark:text-gray-300">"{student.favoriteQuote}"</p>
+              </div>
+            )}
+          </motion.div>
+
+          {/* Career Goals */}
+          {student.careerGoals && student.careerGoals.length > 0 && (
+            <motion.div
+              className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <h3 className="font-semibold mb-3">Career Goals</h3>
+              <div className="space-y-3">
+                {student.careerGoals.map((goal: any) => (
+                  <div key={goal.id} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <h4 className="font-medium text-sm">{goal.title}</h4>
+                    {goal.description && (
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{goal.description}</p>
+                    )}
+                    <div className="flex items-center justify-between mt-2">
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        goal.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                        goal.status === 'completed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                        'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200'
+                      }`}>
+                        {goal.status}
+                      </span>
+                      {goal.targetDate && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          Target: {new Date(goal.targetDate).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
           {/* Mood Board */}
           <motion.div
             className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm"

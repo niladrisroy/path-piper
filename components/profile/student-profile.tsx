@@ -32,12 +32,17 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
         educationLevel: studentData.educationLevel || "undergraduate",
         birthMonth: studentData.birthMonth,
         birthYear: studentData.birthYear,
+        personalityType: studentData.personalityType,
+        learningStyle: studentData.learningStyle,
+        favoriteQuote: studentData.favoriteQuote,
         profile: {
           firstName: studentData.profile?.firstName || "Student",
           lastName: studentData.profile?.lastName || "",
           bio: studentData.profile?.bio || "No bio available",
           location: studentData.profile?.location || "Location not specified",
           profileImageUrl: studentData.profile?.profileImageUrl || "/images/student-profile.png",
+          coverImageUrl: studentData.profile?.coverImageUrl,
+          verificationStatus: studentData.profile?.verificationStatus || false,
           role: "student"
         },
         interests: studentData.profile?.userInterests?.map((ui: any) => ({
@@ -51,7 +56,123 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
           proficiencyLevel: us.proficiencyLevel || 50,
           category: us.skill.category?.name || "General"
         })) || [],
-        educationHistory: studentData.educationHistory || []
+        educationHistory: studentData.educationHistory || [],
+        socialLinks: studentData.profile?.socialLinks || [],
+        careerGoals: studentData.profile?.careerGoals || [],
+        customBadges: studentData.profile?.customBadges || [],
+        
+        // Mock data for sections without database tables
+        projects: [
+          {
+            id: "1",
+            title: "Personal Website",
+            description: "Built a responsive portfolio website using React and Tailwind CSS",
+            image: "/images/placeholder.jpg",
+            link: "https://example.com",
+            technologies: ["React", "Tailwind CSS", "TypeScript"],
+            status: "completed",
+            completedDate: "2024-01-15"
+          },
+          {
+            id: "2", 
+            title: "Learning Management App",
+            description: "Developing a mobile app to track learning progress and goals",
+            image: "/images/placeholder.jpg",
+            technologies: ["React Native", "Node.js", "MongoDB"],
+            status: "in_progress",
+            progress: 75
+          }
+        ],
+        
+        achievements: [
+          {
+            id: "1",
+            title: "Dean's List",
+            description: "Achieved Dean's List recognition for academic excellence",
+            date: "2024-01-20",
+            type: "academic",
+            issuer: "University"
+          },
+          {
+            id: "2",
+            title: "Hackathon Winner",
+            description: "First place in regional coding hackathon",
+            date: "2023-11-15",
+            type: "competition",
+            issuer: "TechFest 2023"
+          }
+        ],
+        
+        learningPath: {
+          currentCourses: [
+            {
+              id: "1",
+              title: "Advanced React Development",
+              provider: "Online Academy",
+              progress: 65,
+              estimatedCompletion: "2024-03-15"
+            },
+            {
+              id: "2",
+              title: "Data Structures & Algorithms",
+              provider: "University",
+              progress: 80,
+              estimatedCompletion: "2024-02-28"
+            }
+          ],
+          completedCourses: [
+            {
+              id: "3",
+              title: "JavaScript Fundamentals",
+              provider: "CodeAcademy",
+              completedDate: "2023-12-10",
+              certificate: true
+            }
+          ],
+          recommendations: [
+            {
+              id: "1",
+              title: "Machine Learning Basics",
+              provider: "AI Institute",
+              difficulty: "intermediate",
+              duration: "6 weeks"
+            }
+          ]
+        },
+        
+        connections: {
+          mentors: [
+            {
+              id: "1",
+              name: "Dr. Sarah Johnson",
+              title: "Software Engineering Mentor",
+              image: "/images/placeholder-user.jpg",
+              status: "active"
+            }
+          ],
+          peers: [
+            {
+              id: "1",
+              name: "Alex Chen",
+              commonInterests: ["Programming", "AI"],
+              image: "/images/placeholder-user.jpg"
+            },
+            {
+              id: "2", 
+              name: "Maria Garcia",
+              commonInterests: ["Web Development", "Design"],
+              image: "/images/placeholder-user.jpg"
+            }
+          ],
+          institutions: [
+            {
+              id: "1",
+              name: "Tech University",
+              relationship: "student",
+              image: "/images/placeholder-logo.png"
+            }
+          ]
+        }
       }
 
       setStudent(transformedStudent)

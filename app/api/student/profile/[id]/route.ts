@@ -63,7 +63,30 @@ export async function GET(
                   }
                 }
               }
+            },
+            socialLinks: true,
+            careerGoals: {
+              orderBy: {
+                createdAt: 'desc'
+              }
+            },
+            customBadges: {
+              orderBy: {
+                earnedDate: 'desc'
+              }
             }
+          }
+        },
+        educationHistory: {
+          include: {
+            institutionType: {
+              include: {
+                category: true
+              }
+            }
+          },
+          orderBy: {
+            startDate: 'desc'
           }
         }
       }
@@ -83,17 +106,41 @@ export async function GET(
       educationLevel: studentProfile.educationLevel,
       birthMonth: studentProfile.birthMonth,
       birthYear: studentProfile.birthYear,
+      personalityType: studentProfile.personalityType,
+      learningStyle: studentProfile.learningStyle,
+      favoriteQuote: studentProfile.favoriteQuote,
       profile: {
         firstName: studentProfile.profile.firstName,
         lastName: studentProfile.profile.lastName,
         bio: studentProfile.profile.bio,
         location: studentProfile.profile.location,
         profileImageUrl: studentProfile.profile.profileImageUrl,
+        coverImageUrl: studentProfile.profile.coverImageUrl,
+        verificationStatus: studentProfile.profile.verificationStatus,
         role: studentProfile.profile.role,
         userInterests: studentProfile.profile.userInterests,
-        userSkills: studentProfile.profile.userSkills
+        userSkills: studentProfile.profile.userSkills,
+        socialLinks: studentProfile.profile.socialLinks,
+        careerGoals: studentProfile.profile.careerGoals,
+        customBadges: studentProfile.profile.customBadges
       },
-      educationHistory: [] // Empty array for now since education history table isn't set up yet
+      educationHistory: studentProfile.educationHistory.map(edu => ({
+        id: edu.id,
+        institutionName: edu.institutionName,
+        institutionTypeId: edu.institutionTypeId,
+        institutionTypeName: edu.institutionType?.name,
+        institutionCategoryName: edu.institutionType?.category?.name,
+        degreeProgram: edu.degreeProgram,
+        fieldOfStudy: edu.fieldOfStudy,
+        subjects: edu.subjects,
+        startDate: edu.startDate,
+        endDate: edu.endDate,
+        isCurrent: edu.isCurrent,
+        gradeLevel: edu.gradeLevel,
+        gpa: edu.gpa,
+        achievements: edu.achievements,
+        description: edu.description
+      }))
     }
 
     return NextResponse.json(formattedProfile)
