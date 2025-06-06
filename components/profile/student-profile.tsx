@@ -43,7 +43,8 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
           profileImageUrl: studentData.profile?.profileImageUrl || "/images/student-profile.png",
           coverImageUrl: studentData.profile?.coverImageUrl,
           verificationStatus: studentData.profile?.verificationStatus || false,
-          role: "student"
+          role: "student",
+          tagline: studentData.profile?.tagline
         },
         interests: studentData.profile?.userInterests?.map((ui: any) => ({
           id: ui.interest.id,
@@ -56,7 +57,24 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
           proficiencyLevel: us.proficiencyLevel || 50,
           category: us.skill.category?.name || "General"
         })) || [],
-        educationHistory: studentData.educationHistory || [],
+        educationHistory: studentData.educationHistory?.map((edu: any) => ({
+          id: edu.id,
+          institutionName: edu.institutionName,
+          institutionType: edu.institutionType || {
+            name: "Educational Institution",
+            category: { name: "General" }
+          },
+          degreeProgram: edu.degreeProgram,
+          fieldOfStudy: edu.fieldOfStudy,
+          subjects: edu.subjects || [],
+          startDate: edu.startDate,
+          endDate: edu.endDate,
+          isCurrent: edu.is_current || edu.isCurrent,
+          gradeLevel: edu.gradeLevel || edu.grade_level,
+          gpa: edu.gpa,
+          achievements: edu.achievements || [],
+          description: edu.description
+        })) || [],
         socialLinks: studentData.profile?.socialLinks || [],
         careerGoals: studentData.profile?.careerGoals || [],
         customBadges: studentData.profile?.customBadges || [],
@@ -125,11 +143,7 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
           {activeTab === "skills" && <SkillsCanvas student={student} />}
           {activeTab === "projects" && <ProjectsShowcase student={student} />}
           {activeTab === "achievements" && <AchievementTimeline student={student} />}
-          {activeTab === "circle" && (
-        <div className="space-y-6">
-          <CircleView student={transformedStudent} />
-        </div>
-      )}
+          {activeTab === "circle" && <CircleView student={student} />}
           {activeTab === "learning" && <LearningPath student={student} />}
         </div>
       </div>

@@ -4,12 +4,25 @@ import { motion } from "framer-motion"
 import { BookOpenIcon, CalendarIcon, AwardIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-export default function EducationCards() {
-  // Mock education data - ordered with most recent first
-  const educationHistory = [
+interface EducationCardsProps {
+  educationHistory?: any[]
+}
+
+export default function EducationCards({ educationHistory: realEducationHistory }: EducationCardsProps) {
+  // Use real education data if available, otherwise fallback to mock data
+  const educationHistory = realEducationHistory && realEducationHistory.length > 0 ? 
+    realEducationHistory.map((edu: any) => ({
+      school: edu.institutionName,
+      type: edu.institutionType?.name || "Educational Institution",
+      grade: edu.gradeLevel || edu.grade_level || "Student",
+      period: `${new Date(edu.startDate).getFullYear()} - ${edu.isCurrent ? 'Present' : new Date(edu.endDate || Date.now()).getFullYear()}`,
+      gpa: edu.gpa || "N/A",
+      subjects: edu.subjects || [],
+      achievements: edu.achievements || [],
+    })) : [
     {
       school: "Westlake High School",
-      type: "High School",
+      type: "High School", 
       grade: "11th Grade",
       period: "2022 - Present",
       gpa: "4.0",
@@ -19,7 +32,7 @@ export default function EducationCards() {
     {
       school: "Oakridge Middle School",
       type: "Middle School",
-      grade: "8th Grade",
+      grade: "8th Grade", 
       period: "2019 - 2022",
       gpa: "3.9",
       subjects: ["Advanced Mathematics", "Introduction to Programming", "Science"],
@@ -29,7 +42,7 @@ export default function EducationCards() {
       school: "Pinecrest Elementary",
       type: "Elementary School",
       grade: "5th Grade",
-      period: "2014 - 2019",
+      period: "2014 - 2019", 
       gpa: "4.0",
       subjects: ["Mathematics", "Science", "English"],
       achievements: ["Spelling Bee Winner", "Math Challenge Champion"],
@@ -78,28 +91,32 @@ export default function EducationCards() {
                   GPA: {education.gpa}
                 </div>
 
-                <div className="mb-3">
-                  <h5 className="text-sm font-medium mb-1">Current Subjects</h5>
-                  <div className="flex flex-wrap gap-1">
-                    {education.subjects.map((subject, idx) => (
-                      <span key={idx} className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
-                        {subject}
-                      </span>
-                    ))}
+                {education.subjects && education.subjects.length > 0 && (
+                  <div className="mb-3">
+                    <h5 className="text-sm font-medium mb-1">Subjects</h5>
+                    <div className="flex flex-wrap gap-1">
+                      {education.subjects.map((subject, idx) => (
+                        <span key={idx} className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
+                          {subject}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
-                <div>
-                  <h5 className="text-sm font-medium mb-1">Achievements</h5>
-                  <ul className="space-y-1">
-                    {education.achievements.map((achievement, idx) => (
-                      <li key={idx} className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-2">
-                        <div className="h-1.5 w-1.5 rounded-full bg-amber-400"></div>
-                        {achievement}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                {education.achievements && education.achievements.length > 0 && (
+                  <div>
+                    <h5 className="text-sm font-medium mb-1">Achievements</h5>
+                    <ul className="space-y-1">
+                      {education.achievements.map((achievement, idx) => (
+                        <li key={idx} className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                          <div className="h-1.5 w-1.5 rounded-full bg-amber-400"></div>
+                          {achievement}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>
