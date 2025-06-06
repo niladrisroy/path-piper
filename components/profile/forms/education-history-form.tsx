@@ -337,16 +337,21 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
   }
 
   const getInstitutionTypeName = (typeId: string): string => {
-    if (!typeId) return 'Unknown Type'
+    if (!typeId) return 'Institution Type'
+
+    // Convert typeId to string if it's a number
+    const typeIdStr = String(typeId)
 
     // Find the type name from the institutionCategories
     for (const category of institutionCategories) {
-      const type = category.types.find(t => t.id === typeId)
+      const type = category.types.find(t => String(t.id) === typeIdStr)
       if (type) {
         return type.name
       }
     }
-    return 'Unknown Type'
+    
+    console.log('Type not found for ID:', typeIdStr, 'Available types:', institutionCategories.flatMap(cat => cat.types))
+    return 'Institution Type'
   }
 
   if (loading) {
@@ -608,7 +613,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                       </div>
                       <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
                         <div className="flex items-center space-x-4">
-                          <span>{getInstitutionTypeName(entry.institutionType)}</span>
+                          <span>{getTypeLabel('', entry.institutionType)}</span>
                           {entry.degree && <span>• {entry.degree}</span>}
                           {entry.grade && <span>• {entry.grade}</span>}
                         </div>
