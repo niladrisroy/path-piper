@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
       institutionType: entry.institutionTypeId ? entry.institutionTypeId.toString() : '',
       degree: entry.degreeProgram || '',
       fieldOfStudy: entry.fieldOfStudy || '',
+      subjects: Array.isArray(entry.subjects) ? entry.subjects : [],
       startDate: entry.startDate ? entry.startDate.toISOString().split('T')[0] : '',
       endDate: entry.endDate ? entry.endDate.toISOString().split('T')[0] : '',
       isCurrent: entry.isCurrent || false,

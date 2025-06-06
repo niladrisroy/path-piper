@@ -1,4 +1,3 @@
-
 // This is your Prisma schema file
 datasource db {
   provider = "postgresql"
@@ -67,7 +66,7 @@ model Profile {
   profileViews       Int       @default(0) @map("profile_views")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
-  
+
   student             StudentProfile?
   mentor              MentorProfile?
   institution         InstitutionProfile?
@@ -102,7 +101,7 @@ model StudentProfile {
   favoriteQuote      String?          @map("favorite_quote")
   createdAt          DateTime         @default(now()) @map("created_at")
   updatedAt          DateTime         @updatedAt @map("updated_at")
-  
+
   educationHistory   StudentEducationHistory[]
 
   @@map("student_profiles")
@@ -116,6 +115,7 @@ model StudentEducationHistory {
   institutionTypeId   Int?      @map("institution_type_id")
   degreeProgram       String?   @map("degree_program")
   fieldOfStudy        String?   @map("field_of_study")
+  subjects         Json?    @default("[]")
   startDate           DateTime? @map("start_date") @db.Date
   endDate             DateTime? @map("end_date") @db.Date
   isCurrent           Boolean   @default(false) @map("is_current")
@@ -125,7 +125,7 @@ model StudentEducationHistory {
   description         String?
   createdAt           DateTime  @default(now()) @map("created_at")
   updatedAt           DateTime  @updatedAt @map("updated_at")
-  
+
   student             StudentProfile      @relation(fields: [studentId], references: [id], onDelete: Cascade)
   institution         InstitutionProfile? @relation(fields: [institutionId], references: [id])
   institutionType     InstitutionType?    @relation(fields: [institutionTypeId], references: [id])
@@ -156,7 +156,7 @@ model InstitutionCategory {
   description  String?
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
-  
+
   types        InstitutionType[]
 
   @@map("institution_categories")
@@ -170,7 +170,7 @@ model InstitutionType {
   description  String?
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
-  
+
   category                    InstitutionCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   institutions                InstitutionProfile[]
   studentEducationHistory     StudentEducationHistory[]
@@ -191,7 +191,7 @@ model InstitutionProfile {
   onboardingCompleted Boolean  @default(false) @map("onboarding_completed")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
-  
+
   institutionType             InstitutionType? @relation(fields: [institutionTypeId], references: [id])
   studentEducationHistory     StudentEducationHistory[]
 
