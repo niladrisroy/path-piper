@@ -64,7 +64,7 @@ export default function EducationCards() {
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <h4 className="font-semibold text-lg">{education.school}</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{education.type}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{education.institutionType?.name || education.type}</p>
                   </div>
                   <span className="px-2 py-1 bg-pathpiper-teal/10 text-pathpiper-teal text-xs rounded-full">
                     {education.grade}

@@ -310,7 +310,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
   }
 
   // Get institution type slug for subject suggestions
-  const getInstitutionTypeSlug = (typeId: string) => {
+  const getInstitutionTypeSlug = (typeId: string): string => {
     if (!typeId) return 'default'
 
     // Find the type slug from the institutionCategories
@@ -321,6 +321,19 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
       }
     }
     return 'default'
+  }
+
+  const getInstitutionTypeName = (typeId: string): string => {
+    if (!typeId) return 'Unknown Type'
+
+    // Find the type name from the institutionCategories
+    for (const category of institutionCategories) {
+      const type = category.types.find(t => t.id === typeId)
+      if (type) {
+        return type.name
+      }
+    }
+    return 'Unknown Type'
   }
 
   if (loading) {
