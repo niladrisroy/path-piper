@@ -300,12 +300,14 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
 
   // Get available institution types based on selected category
   const getAvailableTypes = (categoryId: string) => {
-    const category = institutionCategories.find(cat => cat.id === categoryId)
+    if (!categoryId) return []
+    const category = institutionCategories.find(cat => String(cat.id) === String(categoryId))
     return category ? category.types : []
   }
 
   const getCategoryLabel = (categoryId: string) => {
-    const category = institutionCategories.find(cat => cat.id === categoryId)
+    if (!categoryId) return ''
+    const category = institutionCategories.find(cat => String(cat.id) === String(categoryId))
     return category ? category.name : ''
   }
 
@@ -431,9 +433,10 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                     Institution Type <span className="text-red-500">*</span>
                   </Label>
                   <Select
-                    value={currentEntry.institutionType}
+                    value={String(currentEntry.institutionType)}
                     onValueChange={(value) => handleInputChange('institutionType', value)}
                     disabled={!currentEntry.institutionCategory}
+                    key={`${currentEntry.institutionCategory}-${currentEntry.institutionType}`}
                   >
                     <SelectTrigger className="mt-1">
                       <SelectValue 
