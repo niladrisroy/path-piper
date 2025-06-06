@@ -10,12 +10,12 @@ export async function GET() {
       include: {
         types: {
           orderBy: {
-            name: 'asc'
+            id: 'asc'
           }
         }
       },
       orderBy: {
-        name: 'asc'
+        id: 'asc'
       }
     })
 
