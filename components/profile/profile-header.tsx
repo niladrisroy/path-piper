@@ -54,37 +54,37 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
 
   // Add this style to the head of the component, right after the imports
   const scrollbarHideStyle = `
-  .hide-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  .hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
 
-  /* Custom tooltip styles */
-  [data-tooltip] {
-    position: relative;
-    cursor: pointer;
-  }
+    /* Custom tooltip styles */
+    [data-tooltip] {
+      position: relative;
+      cursor: pointer;
+    }
 
-  [data-tooltip]:hover::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 10px;
-    white-space: nowrap;
-    z-index: 10;
-    pointer-events: none;
-    margin-bottom: 4px;
-  }
-`
+    [data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      white-space: nowrap;
+      z-index: 10;
+      pointer-events: none;
+      margin-bottom: 4px;
+    }
+  `
 
   return (
     <div>
