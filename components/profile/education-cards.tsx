@@ -9,38 +9,17 @@ interface EducationCardsProps {
 }
 
 export default function EducationCards({ educationHistory: realEducationHistory }: EducationCardsProps) {
-  // Debug logging to see the institution type data
-  console.log('=== EDUCATION CARDS DEBUG ===')
-  console.log('Raw education history received:', realEducationHistory)
-  
-  if (realEducationHistory && realEducationHistory.length > 0) {
-    realEducationHistory.forEach((edu: any, index: number) => {
-      console.log(`Education entry ${index}:`, {
-        institutionName: edu.institutionName,
-        institutionTypeName: edu.institutionTypeName,
-        institutionType: edu.institutionType,
-        institutionTypeId: edu.institutionTypeId,
-        allFields: Object.keys(edu)
-      })
-    })
-  }
-  
   // Use real education data if available, otherwise fallback to mock data
   const educationHistory = realEducationHistory && realEducationHistory.length > 0 ? 
-    realEducationHistory.map((edu: any) => {
-      const institutionTypeName = edu.institutionTypeName || edu.institutionType?.name || "Institution"
-      console.log(`Mapping education entry: ${edu.institutionName} -> type: ${institutionTypeName}`)
-      
-      return {
-        school: edu.institutionName,
-        type: institutionTypeName,
-        grade: edu.gradeLevel || edu.grade || "Student", 
-        period: `${new Date(edu.startDate).getFullYear()} - ${edu.isCurrent ? 'Present' : new Date(edu.endDate || Date.now()).getFullYear()}`,
-        gpa: edu.gpa && edu.gpa.trim() ? `GPA: ${edu.gpa}` : null,
-        subjects: edu.subjects || [],
-        achievements: edu.achievements || [],
-      }
-    }) : [
+    realEducationHistory.map((edu: any) => ({
+      school: edu.institutionName,
+      type: edu.institutionTypeName || "Institution",
+      grade: edu.gradeLevel || edu.grade || "Student", 
+      period: `${new Date(edu.startDate).getFullYear()} - ${edu.isCurrent ? 'Present' : new Date(edu.endDate || Date.now()).getFullYear()}`,
+      gpa: edu.gpa && edu.gpa.trim() ? `GPA: ${edu.gpa}` : null,
+      subjects: edu.subjects || [],
+      achievements: edu.achievements || [],
+    })) : [
     {
       school: "Westlake High School",
       type: "High School", 

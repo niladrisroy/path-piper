@@ -38,7 +38,7 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
   const gradeLevel = currentEducation?.gradeLevel || currentEducation?.grade_level || "Student"
   const schoolName = currentEducation?.institutionName || currentEducation?.institution_name || "School"
   const profileImage = studentProp.profile?.profileImageUrl || "/images/student-profile.png"
-  const tagline = studentProp.profile?.tagline
+  const tagline = studentProp.profile?.tagline || studentProp.tagline
   
   // Check if this is the current user's own profile
   const isOwnProfile = currentUser && currentUser.id === studentProp.id
