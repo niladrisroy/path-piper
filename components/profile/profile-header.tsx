@@ -87,7 +87,7 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
 `
 
   return (
-    <>
+    <div>
       <style jsx>{scrollbarHideStyle}</style>
       <div className="relative">
         {/* Customizable banner */}
@@ -591,6 +591,6 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
           </div>
         </div>
       </div>
-    </>
+    </div>
   )
 }
