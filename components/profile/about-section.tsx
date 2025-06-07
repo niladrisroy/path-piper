@@ -109,6 +109,26 @@ export default function AboutSection({ student: studentProp, currentUser }: Abou
             </div>
           </motion.div>
 
+          {/* Debug section - Education History */}
+          <motion.div 
+            className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-xl p-6 shadow-sm"
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ delay: 0.15 }}
+          >
+            <h3 className="font-semibold mb-3 text-yellow-700 dark:text-yellow-300">Debug - Education History Data</h3>
+            <div className="text-xs text-yellow-600 dark:text-yellow-400 space-y-2">
+              {studentProp?.educationHistory?.map((edu: any, index: number) => (
+                <div key={index} className="bg-white dark:bg-gray-800 p-2 rounded border">
+                  <div><strong>Institution:</strong> {edu.institutionName}</div>
+                  <div><strong>Institution Type Name:</strong> {edu.institutionTypeName || 'Missing'}</div>
+                  <div><strong>Raw Institution Type:</strong> {JSON.stringify(edu.institutionType)}</div>
+                  <div><strong>All Fields:</strong> {Object.keys(edu).join(', ')}</div>
+                </div>
+              )) || <div>No education history found</div>}
+            </div>
+          </motion.div>
+
           {/* Education Cards */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
             <EducationCards educationHistory={studentProp?.educationHistory} />

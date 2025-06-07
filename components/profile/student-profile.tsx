@@ -64,6 +64,7 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
             name: "Educational Institution",
             category: { name: "General" }
           },
+          institutionTypeName: edu.institutionTypeName || edu.institutionType?.name || "Educational Institution",
           degreeProgram: edu.degreeProgram,
           fieldOfStudy: edu.fieldOfStudy,
           subjects: edu.subjects || [],

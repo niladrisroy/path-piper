@@ -472,9 +472,19 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
                       </div>
                     </div>
                   </div>
+                  {/* Debug section - Institution Type & Tagline */}
+                  <div className="mt-3 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                    <h3 className="text-xs font-medium text-yellow-700 dark:text-yellow-300 mb-1">Debug Info</h3>
+                    <div className="text-xs text-yellow-600 dark:text-yellow-400 space-y-1">
+                      <div>Institution Type: {currentEducation?.institutionTypeName || 'Not found'}</div>
+                      <div>Tagline: {tagline || 'Not found'}</div>
+                      <div>Current Education: {JSON.stringify(currentEducation, null, 2)}</div>
+                    </div>
+                  </div>
+
                   {/* Recent Badges section */}
                   <div className="mt-3">
-                    <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Recent Badges</h3>
+                    <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Recent Badges</h3></div>
                     <div className="grid grid-cols-3 gap-2">
                       <div className="flex flex-col items-center">
                         <div className="bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 h-12 w-12 rounded-full flex items-center justify-center">
