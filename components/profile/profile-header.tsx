@@ -52,43 +52,8 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
     { id: 5, name: "Riverdale High", image: "/university-classroom.png", type: "institution" },
   ]
 
-  // Add this style to the head of the component, right after the imports
-  const scrollbarHideStyle = `
-    .hide-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .hide-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
-
-    /* Custom tooltip styles */
-    [data-tooltip] {
-      position: relative;
-      cursor: pointer;
-    }
-
-    [data-tooltip]:hover::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 10px;
-      white-space: nowrap;
-      z-index: 10;
-      pointer-events: none;
-      margin-bottom: 4px;
-    }
-  `
-
   return (
     <div>
-      <style jsx>{scrollbarHideStyle}</style>
       <div className="relative">
         {/* Customizable banner */}
         <div className={`h-48 w-full bg-gradient-to-r from-pathpiper-teal to-pathpiper-blue`}></div>
