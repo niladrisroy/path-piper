@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState } from "react"
@@ -437,6 +438,7 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
                       </div>
                     </div>
                   </div>
+
                   {/* Debug section - Institution Type & Tagline */}
                   <div className="mt-3 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded-lg border border-yellow-200 dark:border-yellow-800">
                     <h3 className="text-xs font-medium text-yellow-700 dark:text-yellow-300 mb-1">Debug Info</h3>
@@ -449,7 +451,7 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
 
                   {/* Recent Badges section */}
                   <div className="mt-3">
-                    <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Recent Badges</h3></div>
+                    <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Recent Badges</h3>
                     <div className="grid grid-cols-3 gap-2">
                       <div className="flex flex-col items-center">
                         <div className="bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 h-12 w-12 rounded-full flex items-center justify-center">
@@ -512,12 +514,12 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
                         <span className="text-[10px] text-center mt-1 text-gray-600 dark:text-gray-400">
                           Top Achiever
                         </span>
-                                            </div>
+                      </div>
                     </div>
                     <div className="mt-2 text-center">
                       <a
                         href="#"
-                        className="text-[10px] text-pink-500 hover:text-pink-600 dark:text-pink-400 dark:hover:text-pink-300 fontmedium"
+                        className="text-[10px] text-pink-500 hover:text-pink-600 dark:text-pink-400 dark:hover:text-pink-300 font-medium"
                       >
                         View All Badges
                       </a>
@@ -525,32 +527,32 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
                   </div>
 
                   <div className="mt-6">
-                  {/* Add/Edit Profile button */}
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    {isOwnProfile ? (
-                      <Button 
-                        size="lg" 
-                        className="bg-pathpiper-teal hover:bg-pathpiper-teal/90"
-                        onClick={() => router.push('/student/profile/edit')}
-                      >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit Profile
-                      </Button>
-                    ) : (
-                      <>
-                        <Button size="lg" className="bg-pathpiper-teal hover:bg-pathpiper-teal/90">
-                          <MessageCircle className="h-4 w-4 mr-2" />
-                          Message
+                    {/* Add/Edit Profile button */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      {isOwnProfile ? (
+                        <Button 
+                          size="lg" 
+                          className="bg-pathpiper-teal hover:bg-pathpiper-teal/90"
+                          onClick={() => router.push('/student/profile/edit')}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Profile
                         </Button>
-                        <Button variant="outline" size="lg">
-                          <UserPlus className="h-4 w-4 mr-2" />
-                          Connect
-                        </Button>
-                      </>
-                    )}
+                      ) : (
+                        <>
+                          <Button size="lg" className="bg-pathpiper-teal hover:bg-pathpiper-teal/90">
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            Message
+                          </Button>
+                          <Button variant="outline" size="lg">
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Connect
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-                                </div>
               </div>
             </div>
           </div>
