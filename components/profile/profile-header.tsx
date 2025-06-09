@@ -39,7 +39,8 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
   const gradeLevel = currentEducation?.gradeLevel || currentEducation?.grade_level || "Student"
   const schoolName = currentEducation?.institutionName || currentEducation?.institution_name || "School"
   const profileImage = studentProp.profile?.profileImageUrl || "/images/student-profile.png"
-  const tagline = studentProp.profile?.tagline || studentProp.tagline
+  // Fix tagline access - check multiple possible locations
+  const tagline = studentProp.profile?.tagline || studentProp.tagline || studentProp.profile?.bio || "Passionate learner exploring new horizons"
   
   // Check if this is the current user's own profile
   const isOwnProfile = currentUser && currentUser.id === studentProp.id
@@ -443,9 +444,16 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
                   <div className="mt-3 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded-lg border border-yellow-200 dark:border-yellow-800">
                     <h3 className="text-xs font-medium text-yellow-700 dark:text-yellow-300 mb-1">Debug Info</h3>
                     <div className="text-xs text-yellow-600 dark:text-yellow-400 space-y-1">
-                      <div>Institution Type: {currentEducation?.institutionTypeName || 'Not found'}</div>
-                      <div>Tagline: {tagline || 'Not found'}</div>
-                      <div>Current Education: {JSON.stringify(currentEducation, null, 2)}</div>
+                      <div>Institution Type: {currentEducation?.institutionTypeName || currentEducation?.institutionType?.name || 'Not found'}</div>
+                      <div>Tagline Sources:</div>
+                      <div className="ml-2">
+                        <div>- profile.tagline: {studentProp.profile?.tagline || 'Not found'}</div>
+                        <div>- root.tagline: {studentProp.tagline || 'Not found'}</div>
+                        <div>- profile.bio: {studentProp.profile?.bio || 'Not found'}</div>
+                        <div>- Final tagline: {tagline}</div>
+                      </div>
+                      <div>School: {schoolName}</div>
+                      <div>Grade: {gradeLevel}</div>
                     </div>
                   </div>
 
