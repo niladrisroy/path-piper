@@ -62,7 +62,6 @@ export async function registerStudent(data: UserRegistrationData) {
         educationLevel: "undergraduate", // Default value, can be updated later
         birthMonth: data.birthMonth || null,
         birthYear: data.birthYear || null,
-        onboardingCompleted: false, // Set as false by default so user goes through onboarding
       },
     });
 
@@ -126,7 +125,6 @@ export async function registerMentor(data: UserRegistrationData) {
         id: profile.id,
         profession: "Not specified", // Default value
         verified: false,
-        onboardingCompleted: false,
       },
     });
 
@@ -176,7 +174,6 @@ export async function registerInstitution(data: UserRegistrationData) {
         id: profile.id,
         institutionName: data.firstName + " " + data.lastName, // Temporary, update during onboarding
         verified: false,
-        onboardingCompleted: false,
       },
     });
 
@@ -235,22 +232,12 @@ export async function loginUser(data: LoginData) {
       };
     }
 
-    // Get onboarding status from the included profile data
-    let onboardingCompleted = false;
-    if (profile.role === "student" && profile.student) {
-      onboardingCompleted = Boolean(profile.student.onboarding_completed);
-    } else if (profile.role === "mentor" && profile.mentor) {
-      onboardingCompleted = Boolean(profile.mentor.onboarding_completed);
-    } else if (profile.role === "institution" && profile.institution) {
-      onboardingCompleted = Boolean(profile.institution.onboarding_completed);
-    }
-
     return {
       success: true,
       user: authData.user,
       session: authData.session,
       role: profile.role,
-      onboardingCompleted,
+      onboardingCompleted: false, // Default to false since field is removed
     };
   } catch (error) {
     console.error("Login failed:", error);
