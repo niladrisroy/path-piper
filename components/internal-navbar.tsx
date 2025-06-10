@@ -3,14 +3,37 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { Bell, Home, Search, MessageCircle, User, Menu, X, Settings, LogOut } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { usePathname } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 
 export function InternalNavbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      })
+
+      if (response.ok) {
+        toast.success("Logged out successfully")
+        router.push('/login')
+      } else {
+        toast.error("Failed to logout")
+      }
+    } catch (error) {
+      console.error('Logout error:', error)
+      toast.error("Failed to logout")
+    }
+  }
 
   useEffect(() => {
     const handleScroll = () => {
@@ -87,6 +110,16 @@ export function InternalNavbar() {
                 </span>
               </button>
 
+              <Button
+                onClick={handleLogout}
+                variant="ghost"
+                size="sm"
+                className="text-slate-700 hover:text-red-500 hover:bg-red-50"
+              >
+                <LogOut size={18} className="mr-2" />
+                Logout
+              </Button>
+
               <div className="h-8 w-8 rounded-full bg-gradient-to-r from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold">
                 A
               </div>
@@ -133,14 +166,16 @@ export function InternalNavbar() {
                     <Settings size={20} />
                     Settings
                   </Link>
-                  <Link
-                    href="/logout"
-                    className="text-slate-700 hover:text-teal-500 transition-colors py-2 font-medium flex items-center gap-2"
-                    onClick={() => setIsOpen(false)}
+                  <button
+                    onClick={() => {
+                      setIsOpen(false)
+                      handleLogout()
+                    }}
+                    className="text-slate-700 hover:text-red-500 transition-colors py-2 font-medium flex items-center gap-2 w-full text-left"
                   >
                     <LogOut size={20} />
                     Log Out
-                  </Link>
+                  </button>
                 </div>
               </motion.div>
             )}
