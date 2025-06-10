@@ -62,7 +62,7 @@ export async function registerStudent(data: UserRegistrationData) {
         educationLevel: "undergraduate", // Default value, can be updated later
         birthMonth: data.birthMonth || null,
         birthYear: data.birthYear || null,
-        onboarding_completed: false, // Set as false by default so user goes through onboarding
+        onboardingCompleted: false, // Set as false by default so user goes through onboarding
       },
     });
 
@@ -126,7 +126,7 @@ export async function registerMentor(data: UserRegistrationData) {
         id: profile.id,
         profession: "Not specified", // Default value
         verified: false,
-        onboarding_completed: false,
+        onboardingCompleted: false,
       },
     });
 
@@ -176,7 +176,7 @@ export async function registerInstitution(data: UserRegistrationData) {
         id: profile.id,
         institutionName: data.firstName + " " + data.lastName, // Temporary, update during onboarding
         verified: false,
-        onboarding_completed: false,
+        onboardingCompleted: false,
       },
     });
 
