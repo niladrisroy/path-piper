@@ -99,6 +99,7 @@ model StudentProfile {
   personalityType    String?          @map("personality_type")
   learningStyle      String?          @map("learning_style")
   favoriteQuote      String?          @map("favorite_quote")
+  onboardingCompleted Boolean          @default(false) @map("onboarding_completed")
   createdAt          DateTime         @default(now()) @map("created_at")
   updatedAt          DateTime         @updatedAt @map("updated_at")
 
