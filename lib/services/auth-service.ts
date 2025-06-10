@@ -61,7 +61,7 @@ export async function registerStudent(data: UserRegistrationData) {
         educationLevel: 'undergraduate', // Default value, can be updated later
         birthMonth: data.birthMonth || null,
         birthYear: data.birthYear || null,
-        onboarding_completed: false, // Set as false by default so user goes through onboarding
+        onboardingCompleted: false, // Set as false by default so user goes through onboarding
       }
     });
 
@@ -117,7 +117,7 @@ export async function registerMentor(data: UserRegistrationData) {
         id: profile.id,
         profession: 'Not specified', // Default value
         verified: false,
-        onboarding_completed: false
+        onboardingCompleted: false
       }
     });
 
@@ -166,7 +166,7 @@ export async function registerInstitution(data: UserRegistrationData) {
         institutionType: 'Not specified',
         category: 'Not specified',
         verified: false,
-        onboarding_completed: false
+        onboardingCompleted: false
       }
     });
 
@@ -223,11 +223,11 @@ export async function loginUser(data: LoginData) {
     // Get onboarding status from the included profile data
     let onboardingCompleted = false;
     if (profile.role === 'student' && profile.student) {
-      onboardingCompleted = Boolean(profile.student.onboarding_completed);
+      onboardingCompleted = Boolean(profile.student.onboardingCompleted);
     } else if (profile.role === 'mentor' && profile.mentor) {
-      onboardingCompleted = Boolean(profile.mentor.onboarding_completed);
+      onboardingCompleted = Boolean(profile.mentor.onboardingCompleted);
     } else if (profile.role === 'institution' && profile.institution) {
-      onboardingCompleted = Boolean(profile.institution.onboarding_completed);
+      onboardingCompleted = Boolean(profile.institution.onboardingCompleted);
     }
 
     return { 
