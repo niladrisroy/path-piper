@@ -99,7 +99,7 @@ graph TD
     FF --> GG[Singleton Pattern]
     GG --> HH[Connection Pooling]
     
-    II[Status Monitoring] --> JJ[/api/status]
+    II[Status Monitoring] --> JJ["API: /status"]
     JJ --> KK[prisma.profile.count]
     
     LL[Profile Queries] --> MM[Complex Includes]
