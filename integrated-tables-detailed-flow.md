@@ -8,123 +8,123 @@ flowchart TD
     %% Authentication Flow
     A[User Authentication] --> A1[Supabase Auth]
     A1 --> A2[auth-service.ts registerStudent]
-    A2 --> A3[prisma.profile.create]
-    A3 --> A4[prisma.studentProfile.create]
+    A2 --> A3[prisma.profile.create → profiles table]
+    A3 --> A4[prisma.studentProfile.create → student_profiles table]
     
     A1 --> A5[auth-service.ts registerMentor]
-    A5 --> A6[prisma.profile.create]
-    A6 --> A7[prisma.mentorProfile.create]
+    A5 --> A6[prisma.profile.create → profiles table]
+    A6 --> A7[prisma.mentorProfile.create → mentor_profiles table]
     
     A1 --> A8[auth-service.ts registerInstitution]
-    A8 --> A9[prisma.profile.create]
-    A9 --> A10[prisma.institutionProfile.create]
+    A8 --> A9[prisma.profile.create → profiles table]
+    A9 --> A10[prisma.institutionProfile.create → institution_profiles table]
     
     %% Profile Management Flow
     B[Profile Pages] --> B1["/student/profile/edit"]
     B1 --> B2[ProfileEditForm Component]
     B2 --> B3[personal-info-form.tsx]
     B3 --> B4["/api/profile/personal-info"]
-    B4 --> B5[prisma.profile.update + prisma.studentProfile.update]
+    B4 --> B5[profiles table + student_profiles table updates]
     
     B2 --> B6[social-contact-form.tsx]
     B6 --> B7["/api/profile/social-contact"]
-    B7 --> B8[prisma.socialLink.upsert/deleteMany]
+    B7 --> B8[social_links table operations + profiles table email/phone]
     
     %% Education History Flow
     C[Education Management] --> C1[education-history-form.tsx]
     C1 --> C2["/api/education POST/PUT/DELETE"]
-    C2 --> C3[prisma.studentEducationHistory operations]
-    C3 --> C4[prisma.institutionType.findMany for dropdowns]
+    C2 --> C3[student_education_history table CRUD]
+    C3 --> C4[institution_types + institution_categories tables read]
     
     %% Institution Types Flow
     D[Institution Management] --> D1["/api/institution-types GET"]
-    D1 --> D2[prisma.institutionType.findMany with categories]
+    D1 --> D2[institution_types + institution_categories tables read]
     D2 --> D3[Used in education forms for dropdowns]
     D3 --> D4[getPlaceholdersForType function]
     
     %% Skills & Interests Flow
     E[Skills Management] --> E1[skills-abilities-form.tsx]
     E1 --> E2["/api/skills GET"]
-    E2 --> E3[prisma.skill.findMany grouped by category]
+    E2 --> E3[skills + skill_categories tables read]
     E3 --> E4["/api/user/skills POST/DELETE"]
-    E4 --> E5[prisma.userSkill.create/delete operations]
+    E4 --> E5[user_skills table create/delete operations]
     
     F[Interests Management] --> F1[interests-passions-form.tsx]
     F1 --> F2["/api/interests GET"]
-    F2 --> F3[prisma.interest.findMany with categories]
+    F2 --> F3[interests + interest_categories tables read]
     F3 --> F4["/api/user/interests POST/DELETE"]
-    F4 --> F5[prisma.userInterest.create/delete operations]
+    F4 --> F5[user_interests table create/delete operations]
     
     %% Goals Flow
     G[Goals Management] --> G1[goals-aspirations-form.tsx]
     G1 --> G2["/api/goals POST/PUT/DELETE"]
-    G2 --> G3[prisma.careerGoal CRUD operations]
+    G2 --> G3[career_goals table CRUD operations]
     
     %% Profile Viewing Flow
     H[Profile Display] --> H1["/student/profile/[handle]"]
     H1 --> H2["/api/student/profile/[id] GET"]
-    H2 --> H3[Complex Prisma Query with includes]
-    H3 --> H4[prisma.studentProfile.findUnique with nested includes]
-    H4 --> H5[Includes: profile, educationHistory, userInterests, userSkills, socialLinks, careerGoals]
+    H2 --> H3[Multi-table JOIN query]
+    H3 --> H4[student_profiles table with includes]
+    H4 --> H5[JOIN: profiles + student_education_history + user_interests + user_skills + social_links + career_goals tables]
     
     %% Status Monitoring
     I[System Status] --> I1["/status page"]
     I1 --> I2["/api/status GET"]
-    I2 --> I3[prisma.profile.count for health check]
+    I2 --> I3[profiles table count for health check]
     
     %% Mood Board Flow
     J[Mood Board] --> J1[mood-board-media-form.tsx]
-    J1 --> J2[prisma.moodBoard operations]
+    J1 --> J2[mood_board table operations]
     
     %% Detailed Operation Breakdowns
     K[Detailed Operations] --> K1[Profile Operations]
-    K1 --> K1a[getUserProfile: findUnique with student/mentor/institution includes]
-    K1 --> K1b[updateUserProfile: update with filtered data]
-    K1 --> K1c[updateStudentProfile: update with enum casting]
+    K1 --> K1a[profiles table SELECT with JOINs to student_profiles/mentor_profiles/institution_profiles]
+    K1 --> K1b[profiles table UPDATE with filtered data]
+    K1 --> K1c[student_profiles table UPDATE with enum casting]
     
     K --> K2[Social Links Operations]
-    K2 --> K2a[getUserSocialLinks: findMany by userId]
-    K2 --> K2b[updateUserSocialLinks: deleteMany + createMany batch]
-    K2 --> K2c[upsertSocialLink: upsert with userId_platform unique constraint]
+    K2 --> K2a[social_links table SELECT WHERE user_id]
+    K2 --> K2b[social_links table DELETE + INSERT batch operations]
+    K2 --> K2c[social_links table UPSERT with user_id + platform constraint]
     
     K --> K3[Education Operations]
-    K3 --> K3a[Create: prisma.studentEducationHistory.create with institutionType relation]
-    K3 --> K3b[Update: prisma.studentEducationHistory.update by id]
-    K3 --> K3c[Delete: prisma.studentEducationHistory.delete by id]
-    K3 --> K3d[List: findMany with institutionType and category includes]
+    K3 --> K3a[student_education_history table INSERT with institution_types FK]
+    K3 --> K3b[student_education_history table UPDATE WHERE id]
+    K3 --> K3c[student_education_history table DELETE WHERE id]
+    K3 --> K3d[student_education_history JOIN institution_types JOIN institution_categories]
     
     K --> K4[Skills Operations]
-    K4 --> K4a[Get Available: prisma.skill.findMany grouped by category]
-    K4 --> K4b[Get User Skills: prisma.userSkill.findMany with skill includes]
-    K4 --> K4c[Add Skill: prisma.userSkill.create with proficiency]
-    K4 --> K4d[Remove Skill: prisma.userSkill.delete by userId_skillId]
+    K4 --> K4a[skills table SELECT JOIN skill_categories GROUP BY category]
+    K4 --> K4b[user_skills table SELECT JOIN skills WHERE user_id]
+    K4 --> K4c[user_skills table INSERT with proficiency_level]
+    K4 --> K4d[user_skills table DELETE WHERE user_id AND skill_id]
     
     K --> K5[Interest Operations]
-    K5 --> K5a[Get Available: prisma.interest.findMany with category includes]
-    K5 --> K5b[Get User Interests: prisma.userInterest.findMany with interest includes]
-    K5 --> K5c[Add Interest: prisma.userInterest.create]
-    K5 --> K5d[Remove Interest: prisma.userInterest.delete by userId_interestId]
+    K5 --> K5a[interests table SELECT JOIN interest_categories]
+    K5 --> K5b[user_interests table SELECT JOIN interests WHERE user_id]
+    K5 --> K5c[user_interests table INSERT]
+    K5 --> K5d[user_interests table DELETE WHERE user_id AND interest_id]
     
     K --> K6[Goal Operations]
-    K6 --> K6a[Create Goal: prisma.careerGoal.create with userId]
-    K6 --> K6b[Update Goal: prisma.careerGoal.update by id]
-    K6 --> K6c[Delete Goal: prisma.careerGoal.delete by id]
-    K6 --> K6d[List Goals: findMany ordered by createdAt desc]
+    K6 --> K6a[career_goals table INSERT with user_id]
+    K6 --> K6b[career_goals table UPDATE WHERE id]
+    K6 --> K6c[career_goals table DELETE WHERE id]
+    K6 --> K6d[career_goals table SELECT WHERE user_id ORDER BY created_at DESC]
     
     %% Data Flow Integration
     L[Data Integration Points] --> L1[Registration Flow]
-    L1 --> L1a[Supabase creates auth user]
-    L1a --> L1b[Prisma creates profile with same UUID]
-    L1b --> L1c[Prisma creates role-specific profile]
+    L1 --> L1a[Supabase auth.users table INSERT]
+    L1a --> L1b[profiles table INSERT with matching UUID]
+    L1b --> L1c[student_profiles/mentor_profiles/institution_profiles table INSERT]
     
     L --> L2[Profile Edit Flow]
     L2 --> L2a[Forms collect data]
     L2a --> L2b[API endpoints validate and process]
-    L2b --> L2c[Prisma updates multiple related tables]
+    L2b --> L2c[UPDATE profiles + student_profiles + social_links tables]
     
     L --> L3[Profile View Flow]
     L3 --> L3a[Single API call fetches all related data]
-    L3a --> L3b[Complex includes join multiple tables]
+    L3a --> L3b[Complex JOINs: profiles + student_profiles + student_education_history + user_interests + user_skills + social_links + career_goals]
     L3b --> L3c[Formatted response with nested relationships]
     
     %% Error Handling & Transactions
@@ -135,7 +135,7 @@ flowchart TD
     %% Security & Access Control
     N[Security Layer] --> N1[Supabase Auth token verification]
     N1 --> N2[User ID matching for profile access]
-    N2 --> N3[Prisma queries filtered by userId]
+    N2 --> N3[Row Level Security on all tables + WHERE user_id filters]
     
     %% Styling
     classDef authFlow fill:#e1f5fe
