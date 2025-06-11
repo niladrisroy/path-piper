@@ -76,14 +76,14 @@ graph TD
     
     AA[API Endpoints] --> BB[Database Operations]
     
-    BB --> BB1[/api/profile/personal-info]
-    BB --> BB2[/api/profile/social-contact]
-    BB --> BB3[/api/education]
-    BB --> BB4[/api/interests]
-    BB --> BB5[/api/skills]
-    BB --> BB6[/api/goals]
-    BB --> BB7[/api/student/profile/[id]]
-    BB --> BB8[/api/institution-types]
+    BB --> BB1["API: /profile/personal-info"]
+    BB --> BB2["API: /profile/social-contact"]
+    BB --> BB3["API: /education"]
+    BB --> BB4["API: /interests"]
+    BB --> BB5["API: /skills"]
+    BB --> BB6["API: /goals"]
+    BB --> BB7["API: /student/profile/[id]"]
+    BB --> BB8["API: /institution-types"]
     
     BB1 --> CC1[prisma.profile.update + prisma.studentProfile.update]
     BB2 --> CC2[prisma.socialLink operations]
