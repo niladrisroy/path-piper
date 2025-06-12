@@ -3,14 +3,12 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 
-type SkillCategory = "all" | "academic" | "technical" | "soft"
-
 interface Skill {
   id: number
   name: string
   level: number
   category: string
-  categoryName?:string
+  categoryName: string
   color: string
 }
 
@@ -20,9 +18,10 @@ interface SkillsCanvasProps {
 }
 
 export default function SkillsCanvas({ userId, skills: passedSkills }: SkillsCanvasProps) {
-  const [selectedCategory, setSelectedCategory] = useState<SkillCategory>("all")
+  const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [selectedSkill, setSelectedSkill] = useState<number | null>(null)
   const [skills, setSkills] = useState<Skill[]>([])
+  const [availableCategories, setAvailableCategories] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -32,15 +31,21 @@ export default function SkillsCanvas({ userId, skills: passedSkills }: SkillsCan
         id: skill.id || index,
         name: skill.name,
         level: skill.proficiencyLevel || skill.proficiency_level || 0,
-        category: skill.category?.toLowerCase() || "academic",
-        categoryName: skill.categoryName,
+        category: skill.category || "Unknown",
+        categoryName: skill.categoryName || skill.category || "Unknown",
         color: getColorForSkill(index)
       }))
 
       setSkills(transformedSkills)
+      
+      // Extract unique categories from skills
+      const uniqueCategories = [...new Set(transformedSkills.map(skill => skill.categoryName))]
+      setAvailableCategories(uniqueCategories)
+      
       setLoading(false)
     } else {
       setSkills([])
+      setAvailableCategories([])
       setLoading(false)
     }
   }, [passedSkills])
@@ -65,7 +70,7 @@ export default function SkillsCanvas({ userId, skills: passedSkills }: SkillsCan
   }
 
   const filteredSkills =
-    selectedCategory === "all" ? skills : skills.filter((skill) => skill.category === selectedCategory)
+    selectedCategory === "all" ? skills : skills.filter((skill) => skill.categoryName === selectedCategory)
 
   if (loading) {
     return (
@@ -84,9 +89,20 @@ export default function SkillsCanvas({ userId, skills: passedSkills }: SkillsCan
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Skills Canvas</h2>
-        {skills.length > 0 && (
-          <div className="flex gap-2">
-            {(["all", "academic", "technical", "soft"] as SkillCategory[]).map((category) => (
+        {skills.length > 0 && availableCategories.length > 0 && (
+          <div className="flex gap-2 flex-wrap">
+            <button
+              key="all"
+              onClick={() => setSelectedCategory("all")}
+              className={`px-3 py-1 rounded-full text-sm ${
+                selectedCategory === "all"
+                  ? "bg-pathpiper-teal text-white"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+              }`}
+            >
+              All
+            </button>
+            {availableCategories.map((category) => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
@@ -96,7 +112,7 @@ export default function SkillsCanvas({ userId, skills: passedSkills }: SkillsCan
                     : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                 }`}
               >
-                {category.charAt(0).toUpperCase() + category.slice(1)}
+                {category}
               </button>
             ))}
           </div>
@@ -147,8 +163,8 @@ export default function SkillsCanvas({ userId, skills: passedSkills }: SkillsCan
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                       <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                         <h4 className="font-semibold mb-2">Category</h4>
-                        <span className="inline-block px-3 py-1 rounded-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 capitalize">
-                          {skill.category}
+                        <span className="inline-block px-3 py-1 rounded-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                          {skill.categoryName}
                         </span>
                       </div>
 
