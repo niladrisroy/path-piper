@@ -390,38 +390,6 @@ export default function AboutSection({ student: studentProp, currentUser }: Abou
             </motion.div>
           )}
 
-          {/* Top Skills - Dynamic from Database */}
-          <motion.div
-            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-          >
-            <h3 className="font-semibold mb-3">Top Skills</h3>
-            <div className="flex flex-wrap gap-2">
-              {studentProp?.skills && studentProp.skills.length > 0 ? (
-                studentProp.skills.map((skill, i) => (
-                  <span
-                    key={skill.id || i}
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      i % 4 === 0
-                        ? "bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-200"
-                        : i % 4 === 1
-                          ? "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200"
-                          : i % 4 === 2
-                            ? "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200"
-                            : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200"
-                    }`}
-                  >
-                    {skill.name}
-                  </span>
-                ))
-              ) : (
-                <p className="text-gray-500 dark:text-gray-400 text-sm">No skills added yet</p>
-              )}
-            </div>
-          </motion.div>
-
           {/* Career Goals */}
           {student.careerGoals && student.careerGoals.length > 0 && (
             <motion.div
