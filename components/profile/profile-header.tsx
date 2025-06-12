@@ -404,25 +404,30 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
 
                 {/* Right column - Profile highlights */}
                 <div className="md:col-span-2 md:border-l md:border-gray-200 md:dark:border-gray-700 md:pl-6">
-                  {/* Top Skills section */}
+                  {/* Top Skills section - Dynamic from Database */}
                   <div>
                     <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Top Skills</h3>
                     <div className="flex flex-wrap gap-2">
-                      <div className="bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 px-3 py-1 rounded-full text-xs">
-                        Physics
-                      </div>
-                      <div className="bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 px-3 py-1 rounded-full text-xs">
-                        Coding
-                      </div>
-                      <div className="bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 px-3 py-1 rounded-full text-xs">
-                        Debate
-                      </div>
-                      <div className="bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300 px-3 py-1 rounded-full text-xs">
-                        Mathematics
-                      </div>
-                      <div className="bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 px-3 py-1 rounded-full text-xs">
-                        Chess
-                      </div>
+                      {student?.skills && student.skills.length > 0 ? (
+                        student.skills.slice(0, 5).map((skill: any, i: number) => (
+                          <div
+                            key={skill.id || i}
+                            className={`px-3 py-1 rounded-full text-xs ${
+                              i % 4 === 0
+                                ? "bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300"
+                                : i % 4 === 1
+                                  ? "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300"
+                                  : i % 4 === 2
+                                    ? "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300"
+                                    : "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300"
+                            }`}
+                          >
+                            {skill.name}
+                          </div>
+                        ))
+                      ) : (
+                        <span className="text-xs text-gray-500 dark:text-gray-400">No skills added yet</span>
+                      )}
                     </div>
                   </div>
 
