@@ -118,7 +118,14 @@ export async function GET(
         verificationStatus: studentProfile.profile.verificationStatus,
         role: studentProfile.profile.role,
         userInterests: studentProfile.profile.userInterests,
-        userSkills: studentProfile.profile.userSkills,
+        userSkills: studentProfile.profile.userSkills.map(userSkill => ({
+          ...userSkill,
+          skill: {
+            ...userSkill.skill,
+            categoryId: userSkill.skill.categoryId,
+            categoryName: userSkill.skill.category?.name || 'Uncategorized'
+          }
+        })),
         socialLinks: studentProfile.profile.socialLinks,
         careerGoals: studentProfile.profile.careerGoals,
         customBadges: studentProfile.profile.customBadges

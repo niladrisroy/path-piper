@@ -10,6 +10,7 @@ interface Skill {
   name: string
   level: number
   category: string
+  categoryName?:string
   color: string
 }
 
@@ -32,6 +33,7 @@ export default function SkillsCanvas({ userId, skills: passedSkills }: SkillsCan
         name: skill.name,
         level: skill.proficiencyLevel || skill.proficiency_level || 0,
         category: skill.category?.toLowerCase() || "academic",
+        categoryName: skill.categoryName,
         color: getColorForSkill(index)
       }))
 
@@ -197,12 +199,12 @@ export default function SkillsCanvas({ userId, skills: passedSkills }: SkillsCan
                 }}
               >
                 <div className="h-full flex flex-col justify-between">
-                  <h3 className="font-semibold text-sm">{skill.name}</h3>
-                  <div className="flex justify-between items-end">
-                    <span className="text-xs uppercase">{skill.category}</span>
-                    <span className="text-lg font-bold">{skill.level}%</span>
+                    <h3 className="font-semibold text-sm">{skill.name}</h3>
+                    <div className="flex justify-between items-end">
+                      <span className="text-xs uppercase">{skill.categoryName}</span>
+                      <span className="text-lg font-bold">{skill.level}%</span>
+                    </div>
                   </div>
-                </div>
               </motion.div>
             ))}
           </motion.div>
