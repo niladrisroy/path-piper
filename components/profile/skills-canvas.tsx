@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -16,49 +15,33 @@ interface Skill {
 
 interface SkillsCanvasProps {
   userId?: string
+  skills?: Skill[]
 }
 
-export default function SkillsCanvas({ userId }: SkillsCanvasProps) {
+export default function SkillsCanvas({ userId, skills: passedSkills }: SkillsCanvasProps) {
   const [selectedCategory, setSelectedCategory] = useState<SkillCategory>("all")
   const [selectedSkill, setSelectedSkill] = useState<number | null>(null)
   const [skills, setSkills] = useState<Skill[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetchSkills = async () => {
-      if (!userId) {
-        setLoading(false)
-        return
-      }
+    if (passedSkills && passedSkills.length > 0) {
+      // Transform the passed skills data to match component format
+      const transformedSkills = passedSkills.map((skill: any, index: number) => ({
+        id: skill.id || index,
+        name: skill.name,
+        level: skill.proficiencyLevel || skill.proficiency_level || 0,
+        category: skill.category?.toLowerCase() || "academic",
+        color: getColorForSkill(index)
+      }))
 
-      try {
-        const response = await fetch('/api/user/skills')
-        if (!response.ok) {
-          throw new Error('Failed to fetch skills')
-        }
-        
-        const data = await response.json()
-        
-        // Transform the database skills into the format expected by the component
-        const transformedSkills = data.skills?.map((skill: any, index: number) => ({
-          id: skill.id || index,
-          name: skill.name,
-          level: skill.level || skill.proficiency_level || 0,
-          category: skill.category?.toLowerCase() || "academic",
-          color: getColorForSkill(index)
-        })) || []
-        
-        setSkills(transformedSkills)
-      } catch (error) {
-        console.error('Error fetching skills:', error)
-        setSkills([])
-      } finally {
-        setLoading(false)
-      }
+      setSkills(transformedSkills)
+      setLoading(false)
+    } else {
+      setSkills([])
+      setLoading(false)
     }
-
-    fetchSkills()
-  }, [userId])
+  }, [passedSkills])
 
   // Helper function to assign colors to skills
   const getColorForSkill = (index: number) => {
@@ -228,3 +211,4 @@ export default function SkillsCanvas({ userId }: SkillsCanvasProps) {
     </div>
   )
 }
+`
