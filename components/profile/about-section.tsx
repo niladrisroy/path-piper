@@ -15,30 +15,17 @@ interface AboutSectionProps {
 export default function AboutSection({ student: studentProp, currentUser }: AboutSectionProps) {
   const [isEditing, setIsEditing] = useState(false)
 
-  // Use passed student data or fallback to mock data
+  // Use passed student data or empty defaults
   const student = studentProp || {
-    bio: "I'm a high school student passionate about technology, mathematics, and science. I love solving complex problems and building projects that make a positive impact. Currently exploring machine learning and web development.",
-    location: "San Francisco, CA",
-    interests: ["Artificial Intelligence", "Web Development", "Mathematics", "Physics", "Chess", "Photography"],
-    socialLinks: {
-      github: "#",
-      linkedin: "#",
-      portfolio: "#",
-    },
-    moodBoard: [
-      "/multiple-monitor-coding.png",
-      "/placeholder.svg?key=3nxmd",
-      "/placeholder.svg?key=yf3oe",
-      "/placeholder.svg?key=majestic-mountain-vista.png",
-      "/robotics-competition.png",
-      "/placeholder.svg?key=ghok1",
-    ],
+    bio: "",
+    location: "",
+    socialLinks: {},
+    moodBoard: [],
   }
 
-  // Extract real data from student prop if available
-  const realBio = studentProp?.profile?.bio || student.bio
-  const realLocation = studentProp?.profile?.location || student.location
-  const realInterests = studentProp?.interests?.map((interest: any) => interest.name) || student.interests
+  // Extract real data from student prop
+  const realBio = studentProp?.profile?.bio || ""
+  const realLocation = studentProp?.profile?.location || ""
 
   // Check if this is the current user's own profile
   const isOwnProfile = currentUser && currentUser.id === student.id
@@ -86,24 +73,28 @@ export default function AboutSection({ student: studentProp, currentUser }: Abou
           >
             <h3 className="font-semibold mb-3">Bio</h3>
             {!isEditing ? (
-              <p className="text-gray-700 dark:text-gray-300">{realBio}</p>
+              <p className="text-gray-700 dark:text-gray-300">
+                {realBio || "No bio added yet"}
+              </p>
             ) : (
               <textarea
                 className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
                 rows={4}
                 defaultValue={realBio}
+                placeholder="Tell others about yourself..."
               />
             )}
 
             <div className="flex items-center gap-2 mt-4 text-gray-600 dark:text-gray-400">
               <GlobeIcon className="h-4 w-4" />
               {!isEditing ? (
-                <span>{realLocation}</span>
+                <span>{realLocation || "Location not specified"}</span>
               ) : (
                 <input
                   type="text"
                   className="p-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
                   defaultValue={realLocation}
+                  placeholder="Your location"
                 />
               )}
             </div>
@@ -479,17 +470,17 @@ export default function AboutSection({ student: studentProp, currentUser }: Abou
             </div>
 
             <div className="grid grid-cols-3 gap-2">
-              {student.moodBoard?.map((image, index) => (
-                <div key={index} className="aspect-square rounded-lg overflow-hidden relative">
-                  <Image src={image || "/placeholder.svg"} alt="Mood board image" fill className="object-cover" />
-                </div>
-              )) || (
-                // Show placeholder if no mood board data
-                Array.from({ length: 6 }, (_, index) => (
-                  <div key={index} className="aspect-square rounded-lg overflow-hidden relative bg-gray-100 dark:bg-gray-700">
-                    <Image src="/placeholder.svg" alt="Mood board placeholder" fill className="object-cover" />
+              {studentProp?.moodBoard && studentProp.moodBoard.length > 0 ? (
+                studentProp.moodBoard.map((image, index) => (
+                  <div key={index} className="aspect-square rounded-lg overflow-hidden relative">
+                    <Image src={image || "/placeholder.svg"} alt="Mood board image" fill className="object-cover" />
                   </div>
                 ))
+              ) : (
+                <div className="col-span-3 text-center py-8 text-gray-500 dark:text-gray-400">
+                  <BrainIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No mood board images yet</p>
+                </div>
               )}
 
               {isEditing && (
