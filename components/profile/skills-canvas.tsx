@@ -211,4 +211,3 @@ export default function SkillsCanvas({ userId, skills: passedSkills }: SkillsCan
     </div>
   )
 }
-`
