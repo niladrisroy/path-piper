@@ -434,6 +434,8 @@ export default function AboutSection({ student: studentProp, currentUser }: Abou
             </motion.div>
           )}
 
+          
+
           {/* Mood Board */}
           <motion.div
             className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm"
@@ -468,6 +470,31 @@ export default function AboutSection({ student: studentProp, currentUser }: Abou
             </div>
           </motion.div>
         </div>
+                  <div className="mt-6">
+                    <h4 className="font-medium text-slate-800 mb-2">Top Skills</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {student.skills && student.skills.length > 0 ? (
+                        student.skills.map((skill, i) => (
+                          <span
+                            key={skill.id || i}
+                            className={`px-3 py-1 rounded-full text-sm ${
+                              i % 4 === 0
+                                ? "bg-teal-100 text-teal-700"
+                                : i % 4 === 1
+                                  ? "bg-orange-100 text-orange-700"
+                                  : i % 4 === 2
+                                    ? "bg-purple-100 text-purple-700"
+                                    : "bg-yellow-100 text-yellow-700"
+                            }`}
+                          >
+                            {skill.name}
+                          </span>
+                        ))
+                      ) : (
+                        <p className="text-gray-500 text-sm">No skills to display</p>
+                      )}
+                    </div>
+                  </div>
       </div>
     </div>
   )
