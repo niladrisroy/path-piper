@@ -27,14 +27,20 @@ export default function SkillsCanvas({ userId, skills: passedSkills }: SkillsCan
   useEffect(() => {
     if (passedSkills && passedSkills.length > 0) {
       // Transform the passed skills data to match component format
-      const transformedSkills = passedSkills.map((skill: any, index: number) => ({
-        id: skill.id || index,
-        name: skill.name,
-        level: skill.proficiencyLevel || skill.proficiency_level || 0,
-        category: skill.category || "Unknown",
-        categoryName: skill.categoryName || skill.category || "Unknown",
-        color: getColorForSkill(index)
-      }))
+      const transformedSkills = passedSkills.map((skill: any, index: number) => {
+        // Convert proficiency level (1-5) to percentage (20-100%)
+        const proficiencyLevel = skill.proficiencyLevel || skill.proficiency_level || 1
+        const percentageLevel = (proficiencyLevel / 5) * 100
+        
+        return {
+          id: skill.id || index,
+          name: skill.name,
+          level: Math.round(percentageLevel),
+          category: skill.category || "Unknown",
+          categoryName: skill.categoryName || skill.category || "Unknown",
+          color: getColorForSkill(index)
+        }
+      })
 
       setSkills(transformedSkills)
       
