@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
         await prisma.studentProfile.create({
           data: {
             id: profile.id,
-            ageGroup: 'young_adult',
+            age_group: 'young_adult',
             educationLevel: 'undergraduate',
             parentEmail: null,
             parentVerified: true,
