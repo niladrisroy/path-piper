@@ -7,9 +7,10 @@ import AboutSection from "./about-section"
 import SkillsCanvas from "./skills-canvas"
 import ProjectsShowcase from "./projects-showcase"
 import AchievementTimeline from "./achievement-timeline"
-import LearningPath from "./learning-path"
 import CircleView from "./circle-view"
 import ActionBar from "./action-bar"
+import Goals from "./goals"; // Import the Goals component
+
 
 interface StudentProfileProps {
   studentId?: string
@@ -84,8 +85,7 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
         // These sections will show "Coming Soon" or placeholder content
         projects: [],
         achievements: [],
-        learningPath: {
-          currentCourses: [],
+        learningPath: {          currentCourses: [],
           completedCourses: [],
           recommendations: []
         },
@@ -145,7 +145,7 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
           {activeTab === "projects" && <ProjectsShowcase student={student} />}
           {activeTab === "achievements" && <AchievementTimeline student={student} />}
           {activeTab === "circle" && <CircleView student={student} />}
-          {activeTab === "learning" && <LearningPath student={student} />}
+          {activeTab === "goals" && <Goals student={student} currentUser={currentUser} />}
         </div>
       </div>
 
@@ -159,5 +159,130 @@ const tabs = [
   { id: "skills", label: "Skills Canvas" },
   { id: "projects", label: "Projects" },
   { id: "achievements", label: "Achievements" },
-  { id: "learning", label: "Learning Path" },
+  { id: "goals", label: "Goals" },
 ]
+
+// HorizontalNavigation component updated to reflect the Goals tab.
+"use client";
+
+import React from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  BookOpen,
+  Calendar,
+  GraduationCap,
+  MapPin,
+  Target,
+} from "lucide-react";
+
+interface HorizontalNavigationProps {
+  tabs: { id: string; label: string }[];
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}
+
+const HorizontalNavigation: React.FC<HorizontalNavigationProps> = ({
+  tabs,
+  activeTab,
+  setActiveTab,
+}) => {
+  return (
+    <div className="border-b">
+      <div className="mx-auto max-w-7xl py-4 px-4 sm:px-6 lg:px-8">
+        <Tabs
+          defaultValue={activeTab}
+          className="w-full"
+          onValueChange={setActiveTab}
+        >
+          <TabsList className="w-full bg-transparent">
+            {tabs.map((tab) => (
+              <TabsTrigger
+                key={tab.id}
+                value={tab.id}
+                className="data-[state=active]:text-sky-500 data-[state=active]:shadow-sm"
+              >
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          <TabsContent value="about">
+            About
+          </TabsContent>
+          <TabsContent value="circle">
+            My Circle
+          </TabsContent>
+          <TabsContent value="skills">
+            Skills Canvas
+          </TabsContent>
+          <TabsContent value="projects">
+            Projects
+          </TabsContent>
+          <TabsContent value="achievements">
+            Achievements
+          </TabsContent>
+          <TabsContent value="goals">
+            <Goals/>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
+
+export default HorizontalNavigation;
+
+// Goals component updated to display user's goals and provide an edit button.
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Edit } from "lucide-react";
+
+interface GoalsProps {
+  student: any;
+  currentUser: any;
+}
+
+const Goals: React.FC<GoalsProps> = ({ student, currentUser }) => {
+  const router = useRouter();
+  const [goals, setGoals] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Extract career goals from student data
+    if (student && student.careerGoals) {
+      setGoals(student.careerGoals);
+    }
+  }, [student]);
+
+  const handleEdit = () => {
+    // Redirect to the edit profile section
+    router.push("/edit-profile"); // Replace with the actual edit profile route
+  };
+
+  return (
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-semibold">Goals</h2>
+        <Button variant="outline" size="sm" onClick={handleEdit}>
+          <Edit className="h-4 w-4 mr-2" />
+          Edit
+        </Button>
+      </div>
+
+      {goals.length > 0 ? (
+        <ul className="list-disc pl-5">
+          {goals.map((goal, index) => (
+            <li key={index} className="text-gray-700 dark:text-gray-300">
+              {goal}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-gray-500 dark:text-gray-400">No goals added yet.</p>
+      )}
+    </div>
+  );
+};
+
+export default Goals;
