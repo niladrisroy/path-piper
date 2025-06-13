@@ -326,67 +326,40 @@ export default function AboutSection({ student: studentProp, currentUser }: Abou
             </div>
           </motion.div>
 
-          {/* Personal Information - Only show for own profile */}
+          {/* Interests Section - Only show for own profile */}
           {isOwnProfile && (
             <motion.div
               className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <h3 className="font-semibold mb-3">Personal Information</h3>
-            <div className="space-y-4 text-sm">
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 dark:text-white mb-3">Personal Details</h4>
-                <div className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
-                  <div className="flex flex-col">
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Age Group:</span>
-                    <span className="text-gray-900 dark:text-white mt-1">
-                      {student.ageGroup ? student.ageGroup.replace('_', ' ').toUpperCase() : 'Not specified'}
-                    </span>
+              <h3 className="font-semibold mb-3">My Interests</h3>
+              <div className="space-y-4">
+                {student.interests && student.interests.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {student.interests.map((interest, index) => (
+                      <span
+                        key={`interest-${interest.id || index}`}
+                        className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-pathpiper-teal/10 text-pathpiper-teal border border-pathpiper-teal/20"
+                      >
+                        {interest.name}
+                      </span>
+                    ))}
                   </div>
-                  <div className="flex flex-col">
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Education Level:</span>
-                    <span className="text-gray-900 dark:text-white mt-1">
-                      {student.educationLevel ? student.educationLevel.replace('_', ' ').toUpperCase() : 'Not specified'}
-                    </span>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="bg-gray-100 dark:bg-gray-700 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">No interests added yet</p>
+                    <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">
+                      Add interests to help others discover your passions
+                    </p>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Location:</span>
-                    <span className="text-gray-900 dark:text-white mt-1">{student.profile?.location || 'Not specified'}</span>
-                  </div>
-                  {student.birthMonth && (
-                    <div className="flex flex-col">
-                      <span className="font-medium text-gray-700 dark:text-gray-300">Birth Month:</span>
-                      <span className="text-gray-900 dark:text-white mt-1">{student.birthMonth}</span>
-                    </div>
-                  )}
-                  {student.birthYear && (
-                    <div className="flex flex-col">
-                      <span className="font-medium text-gray-700 dark:text-gray-300">Birth Year:</span>
-                      <span className="text-gray-900 dark:text-white mt-1">{student.birthYear}</span>
-                    </div>
-                  )}
-                  {student.personalityType && (
-                    <div className="flex flex-col">
-                      <span className="font-medium text-gray-700 dark:text-gray-300">Personality Type:</span>
-                      <span className="text-gray-900 dark:text-white mt-1">{student.personalityType}</span>
-                    </div>
-                  )}
-                  {student.learningStyle && (
-                    <div className="flex flex-col">
-                      <span className="font-medium text-gray-700 dark:text-gray-300">Learning Style:</span>
-                      <span className="text-gray-900 dark:text-white mt-1">{student.learningStyle}</span>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
-            </div>
-            {student.favoriteQuote && (
-              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <span className="text-gray-500 dark:text-gray-400">Favorite Quote:</span>
-                <p className="mt-1 italic text-gray-700 dark:text-gray-300">"{student.favoriteQuote}"</p>
-              </div>
-            )}
             </motion.div>
           )}
 
