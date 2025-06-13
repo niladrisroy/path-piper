@@ -175,13 +175,13 @@ flowchart TD
     I4 --> I4a[content_ratings, resource_metadata, learning_objectives, difficulty_levels]
 
     %% API Endpoints Required
-    J[New API Endpoints] --> J1[/api/ai/learning-analytics]
-    J --> J2[/api/ai/skill-assessment]
-    J --> J3[/api/ai/career-guidance]
-    J --> J4[/api/ai/recommendations]
-    J --> J5[/api/ai/social-intelligence]
-    J --> J6[/api/ai/achievements]
-    J --> J7[/api/ai/personalization]
+    J[New API Endpoints] --> J1["/api/ai/learning-analytics"]
+    J --> J2["/api/ai/skill-assessment"]
+    J --> J3["/api/ai/career-guidance"]
+    J --> J4["/api/ai/recommendations"]
+    J --> J5["/api/ai/social-intelligence"]
+    J --> J6["/api/ai/achievements"]
+    J --> J7["/api/ai/personalization"]
 
     %% Integration with Existing Features
     K[Integration Points] --> K1[Skills Canvas Enhancement]
