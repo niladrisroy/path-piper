@@ -35,7 +35,10 @@ export async function middleware(request: NextRequest) {
   
   // If it's a protected path, validate authentication properly
   if (isProtectedPath && !isPublicPath) {
-    const accessToken = request.cookies.get('sb-access-token')?.value;
+    // Try multiple cookie names that Supabase might use
+    const accessToken = request.cookies.get('sb-access-token')?.value || 
+                       request.cookies.get('supabase-auth-token')?.value ||
+                       request.cookies.get('sb-auth-token')?.value;
     
     if (!accessToken) {
       // No token, redirect to login
