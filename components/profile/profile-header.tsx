@@ -1,7 +1,4 @@
-The skills section in the profile header component is updated to sort skills by proficiency level and display the top 5.
-```
 
-```typescript
 "use client"
 
 import React, { useState } from "react"
@@ -407,7 +404,7 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
 
                 {/* Right column - Profile highlights */}
                 <div className="md:col-span-2 md:border-l md:border-gray-200 md:dark:border-gray-700 md:pl-6">
-                  {/* Top Skills section - Dynamic from Database */}
+                  {/* Top Skills section - Dynamic from Database with sorting by proficiency */}
                   <div>
                     <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Top Skills</h3>
                     <div className="flex flex-wrap gap-2">
@@ -433,7 +430,8 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
                         ))
                       ) : (
                         <span className="text-xs text-gray-500 dark:text-gray-400">No skills added yet</span>
-                      )}</div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Recent Achievement section */}
@@ -521,3 +519,61 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
                             viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="h-6 w-6 text-amber-600 dark:text-amber-400"
+                          >
+                            <path d="M12 17.8 5.8 21 7 14.1 2 9.3l7-1L12 2l3 6.3 7 1-5 4.8 1.2 6.9-6.2-3.2Z"></path>
+                          </svg>
+                        </div>
+                        <span className="text-[10px] text-center mt-1 text-gray-600 dark:text-gray-400">
+                          Top Achiever
+                        </span>
+                      </div>
+                    </div>
+                    <div className="mt-2 text-center">
+                      <a
+                        href="#"
+                        className="text-[10px] text-pink-500 hover:text-pink-600 dark:text-pink-400 dark:hover:text-pink-300 font-medium"
+                      >
+                        View All Badges
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="mt-6">
+                    {/* Add/Edit Profile button */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      {isOwnProfile ? (
+                        <Button 
+                          size="lg" 
+                          className="bg-pathpiper-teal hover:bg-pathpiper-teal/90"
+                          onClick={() => router.push('/student/profile/edit')}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Profile
+                        </Button>
+                      ) : (
+                        <>
+                          <Button size="lg" className="bg-pathpiper-teal hover:bg-pathpiper-teal/90">
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            Message
+                          </Button>
+                          <Button variant="outline" size="lg">
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Connect
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
