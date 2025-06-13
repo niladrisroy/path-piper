@@ -55,8 +55,6 @@ export async function GET(request: NextRequest) {
             id: profile.id,
             age_group: 'young_adult',
             educationLevel: 'undergraduate',
-            parentEmail: null,
-            parentVerified: true,
             onboardingCompleted: false
           }
         });
