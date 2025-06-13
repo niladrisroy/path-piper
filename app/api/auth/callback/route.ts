@@ -84,9 +84,7 @@ export async function GET(request: NextRequest) {
         
         // Redirect based on role and onboarding status
         if (!onboardingCompleted) {
-          if (existingProfile.onboardingCompleted) {
-            return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/feed`);
-          } else if (existingProfile.role === 'mentor') {
+          if (existingProfile.role === 'mentor') {
             return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/mentor-onboarding`);
           } else if (existingProfile.role === 'institution') {
             return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/institution-onboarding`);
