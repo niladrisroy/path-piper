@@ -19,15 +19,6 @@ const STEPS = [
   { id: "completion", title: "Complete", icon: <CheckCircle className="h-5 w-5" /> },
 ]
 
-// Define the steps for the institution onboarding process
-const STEPS = [
-  { id: "institution-info", title: "Institution Info", icon: <Building className="h-5 w-5" /> },
-  { id: "programs", title: "Programs", icon: <BookOpen className="h-5 w-5" /> },
-  { id: "events", title: "Events", icon: <Calendar className="h-5 w-5" /> },
-  { id: "gallery", title: "Gallery", icon: <ImageIcon className="h-5 w-5" /> },
-  { id: "completion", title: "Complete", icon: <CheckCircle className="h-5 w-5" /> },
-]
-
 export default function InstitutionOnboardingPage() {
   const [currentStep, setCurrentStep] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
@@ -168,9 +159,6 @@ export default function InstitutionOnboardingPage() {
     
     fetchInstitutionData()
   }, [])
-
-
-export default function InstitutionOnboardingPage() {
   const [currentStep, setCurrentStep] = useState(0)
   const [profileData, setProfileData] = useState({
     institutionInfo: {
