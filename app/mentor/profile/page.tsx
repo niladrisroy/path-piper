@@ -9,14 +9,15 @@ export const metadata: Metadata = {
   description: "View and manage your mentor profile on PathPiper",
 }
 
-export default function MentorProfilePage({
+export default async function MentorProfilePage({
   searchParams,
 }: {
-  searchParams?: {
+  searchParams?: Promise<{
     id?: string
-  }
+  }>
 }) {
-  const mentorId = searchParams?.id
+  const resolvedSearchParams = await searchParams
+  const mentorId = resolvedSearchParams?.id
 
   return (
     <ProtectedLayout>
