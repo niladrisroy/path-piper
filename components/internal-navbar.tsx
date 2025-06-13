@@ -1,52 +1,62 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { useRouter } from "next/navigation"
-import { Bell, Home, Search, MessageCircle, User, Menu, X, Settings, LogOut } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
-import { usePathname } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { toast } from "sonner"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import {
+  Bell,
+  Home,
+  Search,
+  MessageCircle,
+  User,
+  Menu,
+  X,
+  Settings,
+  LogOut,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export function InternalNavbar() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
-  const pathname = usePathname()
-  const router = useRouter()
+  const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      })
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
 
       if (response.ok) {
-        toast.success("Logged out successfully")
-        router.push('/login')
+        toast.success("Logged out successfully");
+        router.push("/login");
       } else {
-        toast.error("Failed to logout")
+        toast.error("Failed to logout");
       }
     } catch (error) {
-      console.error('Logout error:', error)
-      toast.error("Failed to logout")
+      console.error("Logout error:", error);
+      toast.error("Failed to logout");
     }
-  }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 10) {
-        setScrolled(true)
+        setScrolled(true);
       } else {
-        setScrolled(false)
+        setScrolled(false);
       }
-    }
+    };
 
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Navigation items for logged-in users
   const navItems = [
@@ -54,7 +64,7 @@ export function InternalNavbar() {
     { name: "Explore", href: "/explore", icon: <Search size={20} /> },
     { name: "Messages", href: "/messages", icon: <MessageCircle size={20} /> },
     { name: "Profile", href: "/student/profile", icon: <User size={20} /> },
-  ]
+  ];
 
   return (
     <>
@@ -67,7 +77,9 @@ export function InternalNavbar() {
         <div className="container mx-auto px-4">
           <div className="py-3 flex items-center justify-between">
             <Link href="/feed" className="flex items-center">
-              <div className={`transition-all duration-300 h-${scrolled ? "10" : "12"}`}>
+              <div
+                className={`transition-all duration-300 h-${scrolled ? "10" : "12"}`}
+              >
                 <Image
                   src="/images/pathpiper-logo-full.png"
                   width={scrolled ? 180 : 220}
@@ -87,7 +99,10 @@ export function InternalNavbar() {
                   placeholder="Search..."
                   className="pl-10 pr-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent w-64"
                 />
-                <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                <Search
+                  className="absolute left-3 top-2.5 text-gray-400"
+                  size={18}
+                />
               </div>
 
               {navItems.map((link) => (
@@ -104,7 +119,10 @@ export function InternalNavbar() {
               ))}
 
               <button className="relative">
-                <Bell size={24} className="text-slate-700 hover:text-teal-500 transition-colors" />
+                <Bell
+                  size={24}
+                  className="text-slate-700 hover:text-teal-500 transition-colors"
+                />
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
                   3
                 </span>
@@ -119,14 +137,13 @@ export function InternalNavbar() {
                 <LogOut size={18} className="mr-2" />
                 Logout
               </Button>
-
-              <div className="h-8 w-8 rounded-full bg-gradient-to-r from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold">
-                A
-              </div>
             </div>
 
             {/* Mobile Navigation Toggle */}
-            <button className="md:hidden text-slate-700" onClick={() => setIsOpen(!isOpen)}>
+            <button
+              className="md:hidden text-slate-700"
+              onClick={() => setIsOpen(!isOpen)}
+            >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
@@ -156,7 +173,10 @@ export function InternalNavbar() {
                       placeholder="Search..."
                       className="pl-10 pr-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent w-full"
                     />
-                    <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                    <Search
+                      className="absolute left-3 top-2.5 text-gray-400"
+                      size={18}
+                    />
                   </div>
                   <Link
                     href="/settings"
@@ -168,8 +188,8 @@ export function InternalNavbar() {
                   </Link>
                   <button
                     onClick={() => {
-                      setIsOpen(false)
-                      handleLogout()
+                      setIsOpen(false);
+                      handleLogout();
                     }}
                     className="text-slate-700 hover:text-red-500 transition-colors py-2 font-medium flex items-center gap-2 w-full text-left"
                   >
@@ -191,7 +211,9 @@ export function InternalNavbar() {
               key={item.name}
               href={item.href}
               className={`flex flex-col items-center p-2 ${
-                pathname === item.href ? "text-teal-500" : "text-gray-500 hover:text-teal-500"
+                pathname === item.href
+                  ? "text-teal-500"
+                  : "text-gray-500 hover:text-teal-500"
               }`}
             >
               {item.icon}
@@ -208,7 +230,7 @@ export function InternalNavbar() {
         </div>
       </div>
     </>
-  )
+  );
 }
 
-export default InternalNavbar
+export default InternalNavbar;
