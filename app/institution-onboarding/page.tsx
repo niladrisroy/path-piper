@@ -159,22 +159,6 @@ export default function InstitutionOnboardingPage() {
     
     fetchInstitutionData()
   }, [])
-  const [currentStep, setCurrentStep] = useState(0)
-  const [profileData, setProfileData] = useState({
-    institutionInfo: {
-      name: "",
-      description: "",
-      location: "",
-      type: "",
-      website: "",
-      logo: null,
-      coverImage: null,
-    },
-    programs: [],
-    events: [],
-    gallery: [],
-  })
-  const [completedSteps, setCompletedSteps] = useState<Record<string, boolean>>({})
 
   // Calculate completion percentage
   const completionPercentage = Math.round(
@@ -339,7 +323,6 @@ export default function InstitutionOnboardingPage() {
             )}
           </div>
         </div>
-      </div>
         )}
       </div>
 

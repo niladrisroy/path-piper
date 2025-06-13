@@ -346,7 +346,6 @@ export default function MentorOnboardingPage() {
             )}
           </div>
         </div>
-      </div>
         )}
       </div>
 
