@@ -39,9 +39,16 @@ export default function EducationCards({ educationHistory: realEducationHistory 
           <div className="text-center py-12">
             <BookOpenIcon className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Education History</h3>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-gray-500 dark:text-gray-400 mb-4">
               No education history has been added yet.
             </p>
+            <Button
+              onClick={() => window.location.href = '/student/profile/edit'}
+              className="bg-pathpiper-teal hover:bg-pathpiper-teal/90"
+            >
+              <AwardIcon className="h-4 w-4 mr-2" />
+              Add Education
+            </Button>
           </div>
         ) : (
           <div className="overflow-x-auto hide-scrollbar pb-4">
