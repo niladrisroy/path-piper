@@ -1,6 +1,7 @@
+
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import InternalNavbar from "@/components/internal-navbar"
@@ -8,7 +9,7 @@ import Footer from "@/components/footer"
 import ProtectedLayout from "@/app/protected-layout"
 import ProfileEditForm from "@/components/profile/profile-edit-form"
 
-export default function ProfileEditPage() {
+function ProfileEditContent() {
   const { user, loading } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
@@ -94,5 +95,26 @@ export default function ProfileEditPage() {
         <Footer />
       </div>
     </ProtectedLayout>
+  )
+}
+
+export default function ProfileEditPage() {
+  return (
+    <Suspense fallback={
+      <ProtectedLayout>
+        <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+          <InternalNavbar />
+          <main className="flex-grow pt-16 sm:pt-24 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-pathpiper-teal"></div>
+              <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      </ProtectedLayout>
+    }>
+      <ProfileEditContent />
+    </Suspense>
   )
 }
