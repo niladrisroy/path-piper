@@ -31,7 +31,7 @@ export default function EducationCards({ educationHistory: realEducationHistory 
         <Button 
           variant="outline" 
           size="sm"
-          onClick={() => window.location.href = '/student/profile/edit'}
+          onClick={() => window.location.href = '/student/profile/edit?section=education'}
         >
           <AwardIcon className="h-4 w-4 mr-2" />
           Add Education

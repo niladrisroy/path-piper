@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import InternalNavbar from "@/components/internal-navbar"
 import Footer from "@/components/footer"
@@ -12,6 +12,7 @@ export default function ProfileEditPage() {
   const { user, loading } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   useEffect(() => {
     if (loading) return
@@ -84,7 +85,10 @@ export default function ProfileEditPage() {
                 Update your profile information to help others get to know you better
               </p>
             </div>
-            <ProfileEditForm userId={user.id} />
+            <ProfileEditForm 
+              userId={user.id} 
+              initialSection={searchParams.get('section') || undefined}
+            />
           </div>
         </main>
         <Footer />

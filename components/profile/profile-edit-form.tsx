@@ -32,6 +32,7 @@ import PrivacySettingsForm from "./forms/privacy-settings-form"
 
 interface ProfileEditFormProps {
   userId: string
+  initialSection?: string
 }
 
 interface TabConfig {
@@ -48,10 +49,10 @@ interface PersonalInfoFormProps {
   onSave?: (data: any) => Promise<void>
 }
 
-export default function ProfileEditForm({ userId }: ProfileEditFormProps) {
+export default function ProfileEditForm({ userId, initialSection }: ProfileEditFormProps) {
   const router = useRouter()
   const { user } = useAuth()
-  const [activeTab, setActiveTab] = useState("personal")
+  const [activeTab, setActiveTab] = useState(initialSection || "personal")
   const [profileData, setProfileData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
