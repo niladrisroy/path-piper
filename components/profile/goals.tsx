@@ -47,7 +47,7 @@ const Goals: React.FC<GoalsProps> = ({ student, currentUser }) => {
   };
 
   const handleEdit = () => {
-    router.push("/student/profile/edit");
+    router.push("/student/profile/edit?section=goals");
   };
 
   if (loading) {
