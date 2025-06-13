@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
           tokenVerificationError = error?.message || "Unknown error";
         }
       } catch (e) {
-        tokenVerificationError = e.message;
+        tokenVerificationError = e instanceof Error ? e.message : String(e);
       }
     }
     
