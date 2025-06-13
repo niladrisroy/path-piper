@@ -334,51 +334,51 @@ export default function AboutSection({ student: studentProp, currentUser }: Abou
               animate={{ opacity: 1, y: 0 }}
             >
               <h3 className="font-semibold mb-3">Personal Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="space-y-4 text-sm">
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 dark:text-white mb-2">Personal Details</h4>
-                <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                  <div className="flex justify-between">
-                    <span>Age Group:</span>
-                    <span className="text-gray-900 dark:text-white">
+                <h4 className="font-medium text-gray-900 dark:text-white mb-3">Personal Details</h4>
+                <div className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="flex flex-col">
+                    <span className="font-medium text-gray-700 dark:text-gray-300">Age Group:</span>
+                    <span className="text-gray-900 dark:text-white mt-1">
                       {student.ageGroup ? student.ageGroup.replace('_', ' ').toUpperCase() : 'Not specified'}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Education Level:</span>
-                    <span className="text-gray-900 dark:text-white">
+                  <div className="flex flex-col">
+                    <span className="font-medium text-gray-700 dark:text-gray-300">Education Level:</span>
+                    <span className="text-gray-900 dark:text-white mt-1">
                       {student.educationLevel ? student.educationLevel.replace('_', ' ').toUpperCase() : 'Not specified'}
                     </span>
                   </div>
+                  <div className="flex flex-col">
+                    <span className="font-medium text-gray-700 dark:text-gray-300">Location:</span>
+                    <span className="text-gray-900 dark:text-white mt-1">{student.profile?.location || 'Not specified'}</span>
+                  </div>
                   {student.birthMonth && (
-                    <div className="flex justify-between">
-                      <span>Birth Month:</span>
-                      <span className="text-gray-900 dark:text-white">{student.birthMonth}</span>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Birth Month:</span>
+                      <span className="text-gray-900 dark:text-white mt-1">{student.birthMonth}</span>
                     </div>
                   )}
                   {student.birthYear && (
-                    <div className="flex justify-between">
-                      <span>Birth Year:</span>
-                      <span className="text-gray-900 dark:text-white">{student.birthYear}</span>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Birth Year:</span>
+                      <span className="text-gray-900 dark:text-white mt-1">{student.birthYear}</span>
                     </div>
                   )}
                   {student.personalityType && (
-                    <div className="flex justify-between">
-                      <span>Personality Type:</span>
-                      <span className="text-gray-900 dark:text-white">{student.personalityType}</span>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Personality Type:</span>
+                      <span className="text-gray-900 dark:text-white mt-1">{student.personalityType}</span>
                     </div>
                   )}
                   {student.learningStyle && (
-                    <div className="flex justify-between">
-                      <span>Learning Style:</span>
-                      <span className="text-gray-900 dark:text-white">{student.learningStyle}</span>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Learning Style:</span>
+                      <span className="text-gray-900 dark:text-white mt-1">{student.learningStyle}</span>
                     </div>
                   )}
                 </div>
-              </div>
-              <div>
-                <span className="text-gray-500 dark:text-gray-400">Location:</span>
-                <span className="ml-2">{student.profile?.location || 'Not specified'}</span>
               </div>
             </div>
             {student.favoriteQuote && (
