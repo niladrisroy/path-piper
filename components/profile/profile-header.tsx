@@ -17,9 +17,10 @@ interface ProfileHeaderProps {
     mentors: number
     institutions: number
   }
+  isViewMode?: boolean
 }
 
-export default function ProfileHeader({ student, currentUser, connectionCounts }: ProfileHeaderProps) {
+export default function ProfileHeader({ student, currentUser, connectionCounts, isViewMode = false }: ProfileHeaderProps) {
   const router = useRouter()
 
   const [isEditing, setIsEditing] = useState(false)

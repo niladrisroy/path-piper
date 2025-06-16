@@ -144,7 +144,8 @@ export default function SuggestedConnections({ student }: SuggestedConnectionsPr
         ) : (
           <div className="space-y-4">
             {suggestedUsers.map((suggestedUser) => (
-              <div key={suggestedUser.id} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+              <div key={suggestedUser.id} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                onClick={() => window.open(`/student/profile/view/${suggestedUser.id}`, '_blank')}>
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={suggestedUser.profileImageUrl} alt={`${suggestedUser.firstName} ${suggestedUser.lastName}`} />
                   <AvatarFallback>
@@ -191,7 +192,10 @@ export default function SuggestedConnections({ student }: SuggestedConnectionsPr
 
                 <Button
                   size="sm"
-                  onClick={() => sendConnectionRequest(suggestedUser.id)}
+                  onClick={(e) => {
+                    e.stopPropagation() // Prevent card click when clicking connect button
+                    sendConnectionRequest(suggestedUser.id)
+                  }}
                   disabled={sendingRequest === suggestedUser.id}
                   className="shrink-0 bg-pathpiper-teal hover:bg-pathpiper-teal/90"
                 >

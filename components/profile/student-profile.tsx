@@ -17,9 +17,10 @@ interface StudentProfileProps {
   studentId?: string
   currentUser?: any
   studentData?: any
+  isViewMode?: boolean // New prop to indicate if this is a view-only mode
 }
 
-export default function StudentProfile({ studentId, currentUser, studentData }: StudentProfileProps) {
+export default function StudentProfile({ studentId, currentUser, studentData, isViewMode = false }: StudentProfileProps) {
   const [student, setStudent] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -170,8 +171,8 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
   const tabs = [
     { id: "about", label: "About" },
     { id: "interests", label: "Interests" },
-    { id: "suggested", label: "Suggested Connections" },
-    { id: "circle", label: "My Circle" },
+    ...(isViewMode ? [] : [{ id: "suggested", label: "Suggested Connections" }]),
+    { id: "circle", label: isViewMode ? "Circle" : "My Circle" },
     { id: "skills", label: "Skills Canvas" },
     { id: "projects", label: "Projects" },
     { id: "achievements", label: "Achievements" },
@@ -180,24 +181,24 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
-      <ProfileHeader student={student} currentUser={currentUser} connectionCounts={connectionCounts} />
+      <ProfileHeader student={student} currentUser={currentUser} connectionCounts={connectionCounts} isViewMode={isViewMode} />
 
       <HorizontalNavigation tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-          {activeTab === "about" && <AboutSection student={student} currentUser={currentUser} />}
-          {activeTab === "interests" && <InterestsSection student={student} currentUser={currentUser} />}
-          {activeTab === "suggested" && <SuggestedConnections student={student} />}
-          {activeTab === "skills" && <SkillsCanvas userId={student.id} skills={student.skills} />}
-          {activeTab === "projects" && <ProjectsShowcase student={student} />}
-          {activeTab === "achievements" && <AchievementTimeline student={student} />}
-          {activeTab === "circle" && <CircleView student={student} />}
-          {activeTab === "goals" && <Goals student={student} currentUser={currentUser} />}
+          {activeTab === "about" && <AboutSection student={student} currentUser={currentUser} isViewMode={isViewMode} />}
+          {activeTab === "interests" && <InterestsSection student={student} currentUser={currentUser} isViewMode={isViewMode} />}
+          {activeTab === "suggested" && !isViewMode && <SuggestedConnections student={student} />}
+          {activeTab === "skills" && <SkillsCanvas userId={student.id} skills={student.skills} isViewMode={isViewMode} />}
+          {activeTab === "projects" && <ProjectsShowcase student={student} isViewMode={isViewMode} />}
+          {activeTab === "achievements" && <AchievementTimeline student={student} isViewMode={isViewMode} />}
+          {activeTab === "circle" && <CircleView student={student} isViewMode={isViewMode} />}
+          {activeTab === "goals" && <Goals student={student} currentUser={currentUser} isViewMode={isViewMode} />}
         </div>
       </div>
 
-      <ActionBar student={student} currentUser={currentUser} />
+      {!isViewMode && <ActionBar student={student} currentUser={currentUser} />}
     </div>
   )
 }
