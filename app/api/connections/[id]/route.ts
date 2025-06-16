@@ -9,7 +9,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get the session from cookies
@@ -27,7 +27,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const connectionId = params.id
+    // Await the params to get the connection ID
+    const { id: connectionId } = await params
 
     // Find the connection first to ensure user is authorized to delete it
     const connection = await prisma.connections.findUnique({
