@@ -291,6 +291,14 @@ export default function CircleView({ student }: CircleViewProps) {
                               <Button variant="ghost" size="sm">
                                 <Calendar className="h-4 w-4" />
                               </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => removeConnection(connection.id)}
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <UserMinus className="h-4 w-4" />
+                              </Button>
                             </div>
                           </div>
                         </CardContent>
