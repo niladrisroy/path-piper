@@ -10,6 +10,7 @@ import AchievementTimeline from "./achievement-timeline"
 import CircleView from "./circle-view"
 import ActionBar from "./action-bar"
 import Goals from "./goals"
+import InterestsSection from "./interests-section"
 
 interface StudentProfileProps {
   studentId?: string
@@ -167,6 +168,7 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
 
   const tabs = [
     { id: "about", label: "About" },
+    { id: "interests", label: "Interests" },
     { id: "circle", label: "My Circle" },
     { id: "skills", label: "Skills Canvas" },
     { id: "projects", label: "Projects" },
@@ -183,6 +185,7 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
           {activeTab === "about" && <AboutSection student={student} currentUser={currentUser} />}
+          {activeTab === "interests" && <InterestsSection student={student} currentUser={currentUser} />}
           {activeTab === "skills" && <SkillsCanvas userId={student.id} skills={student.skills} />}
           {activeTab === "projects" && <ProjectsShowcase student={student} />}
           {activeTab === "achievements" && <AchievementTimeline student={student} />}

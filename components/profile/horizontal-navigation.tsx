@@ -12,6 +12,7 @@ import {
   MapPinIcon,
   CalendarIcon,
   ImageIcon,
+  HeartIcon,
 } from "lucide-react"
 
 interface HorizontalNavigationProps {
@@ -31,6 +32,9 @@ export default function HorizontalNavigation({ tabs, activeTab, setActiveTab }: 
             switch (tab.id) {
               case "about":
                 Icon = UserIcon
+                break
+              case "interests":
+                Icon = HeartIcon
                 break
               case "circle":
                 Icon = CircleIcon
