@@ -12,23 +12,30 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Get the session from cookies
+    // Get all cookies from the request
     const cookieStore = request.cookies
     const accessToken = cookieStore.get('sb-access-token')?.value
+    const refreshToken = cookieStore.get('sb-refresh-token')?.value
 
     if (!accessToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'No access token found' }, { status: 401 })
     }
 
     // Verify the token with Supabase
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
 
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      console.error('Auth error:', authError)
+      return NextResponse.json({ error: 'Invalid token or user not found' }, { status: 401 })
     }
+
+    console.log('Authenticated user ID:', user.id)
 
     // Await the params to get the connection ID
     const { id: connectionId } = await params
+
+    console.log('Looking for connection ID:', connectionId)
+    console.log('Current user ID:', user.id)
 
     // Find the connection first to ensure user is authorized to delete it
     const connection = await prisma.connection.findUnique({
@@ -36,13 +43,31 @@ export async function DELETE(
     })
 
     if (!connection) {
+      console.log('Connection not found with ID:', connectionId)
       return NextResponse.json({ error: 'Connection not found' }, { status: 404 })
     }
 
+    console.log('Found connection:', {
+      id: connection.id,
+      user1_id: connection.user1_id,
+      user2_id: connection.user2_id,
+      currentUserId: user.id
+    })
+
     // Check if the current user is part of this connection
     if (connection.user1_id !== user.id && connection.user2_id !== user.id) {
-      return NextResponse.json({ error: 'Unauthorized to delete this connection' }, { status: 403 })
+      console.log('Authorization failed - user not part of connection')
+      return NextResponse.json({ 
+        error: 'Unauthorized to delete this connection',
+        debug: {
+          connectionUser1: connection.user1_id,
+          connectionUser2: connection.user2_id,
+          currentUser: user.id
+        }
+      }, { status: 403 })
     }
+
+    console.log('User authorized to delete connection')
 
     // Delete the connection
     await prisma.connection.delete({
