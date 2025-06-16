@@ -31,7 +31,7 @@ export async function DELETE(
     const { id: connectionId } = await params
 
     // Find the connection first to ensure user is authorized to delete it
-    const connection = await prisma.connections.findUnique({
+    const connection = await prisma.connection.findUnique({
       where: { id: connectionId }
     })
 
@@ -45,7 +45,7 @@ export async function DELETE(
     }
 
     // Delete the connection
-    await prisma.connections.delete({
+    await prisma.connection.delete({
       where: { id: connectionId }
     })
 
