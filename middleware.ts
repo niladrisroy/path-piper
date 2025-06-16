@@ -40,8 +40,10 @@ export async function middleware(request: NextRequest) {
                        request.cookies.get('supabase-auth-token')?.value ||
                        request.cookies.get('sb-auth-token')?.value;
     
-    if (!accessToken) {
-      // No token, redirect to login
+    const refreshToken = request.cookies.get('sb-refresh-token')?.value;
+    
+    if (!accessToken && !refreshToken) {
+      // No tokens at all, redirect to login
       const redirectUrl = new URL('/login', request.url);
       redirectUrl.searchParams.set('from', path);
       return NextResponse.redirect(redirectUrl);
@@ -50,9 +52,44 @@ export async function middleware(request: NextRequest) {
     // Verify token with Supabase
     try {
       const supabase = createClient(supabaseUrl, supabaseServiceKey);
-      const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+      let user = null;
+      let authError = null;
       
-      if (error || !user) {
+      // First try with access token
+      if (accessToken) {
+        const { data: { user: authUser }, error } = await supabase.auth.getUser(accessToken);
+        user = authUser;
+        authError = error;
+      }
+      
+      // If access token failed and we have refresh token, try to refresh
+      if ((!user || authError) && refreshToken) {
+        console.log('Middleware: Attempting token refresh');
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({
+          refresh_token: refreshToken
+        });
+        
+        if (refreshData?.session?.user) {
+          user = refreshData.session.user;
+          authError = null;
+          
+          // Set new access token in response
+          const response = NextResponse.next();
+          response.cookies.set('sb-access-token', refreshData.session.access_token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'lax',
+            maxAge: 60 * 60 * 24 * 7,
+            path: '/'
+          });
+          response.headers.set('x-user-id', user.id);
+          response.headers.set('x-user-email', user.email || '');
+          return response;
+        }
+      }
+      
+      if (authError || !user) {
+        console.log('Middleware: Invalid token, redirecting to login');
         // Invalid token, redirect to login
         const redirectUrl = new URL('/login', request.url);
         redirectUrl.searchParams.set('from', path);

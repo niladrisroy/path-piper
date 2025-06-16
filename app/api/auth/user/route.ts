@@ -178,11 +178,20 @@ export async function GET(request: NextRequest) {
               const response = NextResponse.json(responseData);
               response.cookies.set('sb-access-token', refreshData.session.access_token, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
+                secure: true, // Always secure in production
                 sameSite: 'lax',
                 maxAge: 60 * 60 * 24 * 7, // 7 days
                 path: '/'
               });
+              if (refreshData.session.refresh_token) {
+                response.cookies.set('sb-refresh-token', refreshData.session.refresh_token, {
+                  httpOnly: true,
+                  secure: true,
+                  sameSite: 'lax',
+                  maxAge: 60 * 60 * 24 * 30, // 30 days
+                  path: '/'
+                });
+              }
               return response;
             } else {
               return NextResponse.json(responseData);

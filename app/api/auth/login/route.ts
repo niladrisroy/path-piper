@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
         // Set access token cookie (this is what we'll use for API calls)
         response.cookies.set('sb-access-token', result.session.access_token, {
           httpOnly: true,
-          secure: false, // Set to false for local development
+          secure: true, // Always secure for production
           sameSite: 'lax',
           maxAge: result.session.expires_in || 3600, // Use session expiry or 1 hour
           path: '/',
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
         // Set refresh token cookie
         response.cookies.set('sb-refresh-token', result.session.refresh_token, {
           httpOnly: true,
-          secure: false,
+          secure: true, // Always secure for production
           sameSite: 'lax',
           maxAge: 60 * 60 * 24 * 30, // 30 days for refresh token
           path: '/',
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         // Set user ID cookie for easy access
         response.cookies.set('sb-user-id', result.user.id, {
           httpOnly: true,
-          secure: false,
+          secure: true, // Always secure for production
           sameSite: 'lax',
           maxAge: result.session.expires_in || 3600,
           path: '/',
