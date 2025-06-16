@@ -573,7 +573,35 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                             <MessageCircle className="h-4 w-4 mr-2" />
                             Message
                           </Button>
-                          <Button variant="outline" size="lg">
+                          <Button 
+                            variant="outline" 
+                            size="lg"
+                            onClick={async () => {
+                              try {
+                                const response = await fetch('/api/connections/request', {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                  },
+                                  credentials: 'include',
+                                  body: JSON.stringify({
+                                    targetUserId: studentProp.id,
+                                    connectionType: 'peer'
+                                  }),
+                                })
+
+                                if (response.ok) {
+                                  alert('Connection request sent successfully!')
+                                } else {
+                                  const error = await response.json()
+                                  alert(`Failed to send connection request: ${error.error || 'Unknown error'}`)
+                                }
+                              } catch (error) {
+                                console.error('Error sending connection request:', error)
+                                alert('Failed to send connection request')
+                              }
+                            }}
+                          >
                             <UserPlus className="h-4 w-4 mr-2" />
                             Connect
                           </Button>

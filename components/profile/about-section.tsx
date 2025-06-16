@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { GlobeIcon, BrainIcon, EditIcon, Users } from "lucide-react"
+import { GlobeIcon, BrainIcon, EditIcon, Users, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import EducationCards from "./education-cards"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 interface AboutSectionProps {
   student?: any
   currentUser?: any
+  isViewMode?: boolean;
 }
 
 interface Connection {
@@ -25,7 +26,7 @@ interface Connection {
   }
 }
 
-export default function AboutSection({ student: studentProp, currentUser }: AboutSectionProps) {
+export default function AboutSection({ student: studentProp, currentUser, isViewMode }: AboutSectionProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [connections, setConnections] = useState<Connection[]>([])
   const [loading, setLoading] = useState(true)
@@ -155,7 +156,7 @@ export default function AboutSection({ student: studentProp, currentUser }: Abou
 
           {/* Education Cards */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-            <EducationCards educationHistory={studentProp?.educationHistory} />
+            <EducationCards educationHistory={studentProp?.educationHistory} isViewMode={isViewMode}/>
           </motion.div>
 
           {/* Circle Friends - Real connections */}
