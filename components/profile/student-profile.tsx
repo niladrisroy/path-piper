@@ -172,7 +172,7 @@ export default function StudentProfile({ studentId, currentUser, studentData, is
     { id: "about", label: "About" },
     { id: "interests", label: "Interests" },
     ...(isViewMode ? [] : [{ id: "suggested", label: "Suggested Connections" }]),
-    { id: "circle", label: isViewMode ? "Circle" : "My Circle" },
+    ...(isViewMode ? [] : [{ id: "circle", label: "My Circle" }]),
     { id: "skills", label: "Skills Canvas" },
     { id: "projects", label: "Projects" },
     { id: "achievements", label: "Achievements" },
