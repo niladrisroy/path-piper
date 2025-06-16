@@ -49,19 +49,19 @@ export async function DELETE(
 
     console.log('Found connection:', {
       id: connection.id,
-      user1_id: connection.user1_id,
-      user2_id: connection.user2_id,
+      user1Id: connection.user1Id,
+      user2Id: connection.user2Id,
       currentUserId: user.id
     })
 
     // Check if the current user is part of this connection
-    if (connection.user1_id !== user.id && connection.user2_id !== user.id) {
+    if (connection.user1Id !== user.id && connection.user2Id !== user.id) {
       console.log('Authorization failed - user not part of connection')
       return NextResponse.json({ 
         error: 'Unauthorized to delete this connection',
         debug: {
-          connectionUser1: connection.user1_id,
-          connectionUser2: connection.user2_id,
+          connectionUser1: connection.user1Id,
+          connectionUser2: connection.user2Id,
           currentUser: user.id
         }
       }, { status: 403 })
