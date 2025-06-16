@@ -59,7 +59,11 @@ export default function ProfileEditForm({ userId, initialSection }: ProfileEditF
   const [completionData, setCompletionData] = useState<Record<string, boolean>>({})
   const [formDirtyStates, setFormDirtyStates] = useState<{[key: string]: boolean}>({})
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
-  const [formData, setFormData] = useState<any>({})
+  const [formData, setFormData] = useState<any>({
+    skills: [],
+    interests: [],
+    goals: [],
+  })
   const [activeSection, setActiveSection] = useState(null)
 
   // Warn user about unsaved changes only when there are actual changes

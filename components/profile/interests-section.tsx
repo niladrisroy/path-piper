@@ -2,6 +2,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Heart, Sparkles, Edit, User, Camera, Book, Music, Palette, Code, Gamepad2, Globe, Star, Search, Plus, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -28,10 +29,15 @@ interface InterestsSectionProps {
 }
 
 export default function InterestsSection({ student, currentUser }: InterestsSectionProps) {
+  const router = useRouter()
   const [searchTerm, setSearchTerm] = useState("")
   const [filteredInterests, setFilteredInterests] = useState<Interest[]>([])
   const [groupedInterests, setGroupedInterests] = useState<InterestCategory[]>([])
   const isOwnProfile = currentUser?.id === student?.id
+
+  const handleEditInterests = () => {
+    router.push('/student/profile/edit?section=interests')
+  }
 
   // Category mapping with icons and colors
   const categoryMap: Record<string, { icon: any; color: string; bgColor: string }> = {
@@ -107,7 +113,10 @@ export default function InterestsSection({ student, currentUser }: InterestsSect
             }
           </p>
           {isOwnProfile && (
-            <Button className="bg-pathpiper-teal hover:bg-pathpiper-teal/90">
+            <Button 
+              className="bg-pathpiper-teal hover:bg-pathpiper-teal/90"
+              onClick={handleEditInterests}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add Interests
             </Button>
@@ -130,7 +139,11 @@ export default function InterestsSection({ student, currentUser }: InterestsSect
           </p>
         </div>
         {isOwnProfile && (
-          <Button variant="outline" className="border-pathpiper-teal text-pathpiper-teal hover:bg-pathpiper-teal hover:text-white">
+          <Button 
+            variant="outline" 
+            className="border-pathpiper-teal text-pathpiper-teal hover:bg-pathpiper-teal hover:text-white"
+            onClick={handleEditInterests}
+          >
             <Edit className="w-4 h-4 mr-2" />
             Edit Interests
           </Button>
