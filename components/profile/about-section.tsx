@@ -1,19 +1,34 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { GlobeIcon, BrainIcon, EditIcon, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import EducationCards from "./education-cards"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface AboutSectionProps {
   student?: any
   currentUser?: any
 }
 
+interface Connection {
+  id: string
+  user: {
+    id: string
+    name: string
+    firstName: string
+    lastName: string
+    avatar?: string
+    role: string
+  }
+}
+
 export default function AboutSection({ student: studentProp, currentUser }: AboutSectionProps) {
   const [isEditing, setIsEditing] = useState(false)
+  const [connections, setConnections] = useState<Connection[]>([])
+  const [loading, setLoading] = useState(true)
 
   // Use passed student data or empty defaults
   const student = studentProp || {
@@ -30,15 +45,33 @@ export default function AboutSection({ student: studentProp, currentUser }: Abou
   // Check if this is the current user's own profile
   const isOwnProfile = currentUser && currentUser.id === student.id
 
+  useEffect(() => {
+    const fetchConnections = async () => {
+      try {
+        const response = await fetch('/api/connections')
+        if (response.ok) {
+          const data = await response.json()
+          // Limit to first 5 connections for the about section
+          setConnections(data.slice(0, 5))
+        }
+      } catch (error) {
+        console.error('Error fetching connections:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  // Mock circle members (would come from API in real app)
-  const circleMembers = [
-    { id: 1, name: "Emma W.", image: "/diverse-students-studying.png", type: "student" },
-    { id: 2, name: "Noah T.", image: "/placeholder.svg?key=hwap2", type: "student" },
-    { id: 3, name: "Ms. Chen", image: "/diverse-classroom-teacher.png", type: "mentor" },
-    { id: 4, name: "Olivia R.", image: "/placeholder.svg?key=oez43", type: "student" },
-    { id: 5, name: "Riverdale High", image: "/university-classroom.png", type: "institution" },
-  ]
+    fetchConnections()
+  }, [])
+
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'mentor': return 'ring-yellow-400'
+      case 'institution': return 'ring-blue-400 ring-dashed'
+      default: return 'ring-white dark:ring-gray-800'
+    }
+  }
 
   return (
     <div className="p-6">
@@ -125,7 +158,7 @@ export default function AboutSection({ student: studentProp, currentUser }: Abou
             <EducationCards educationHistory={studentProp?.educationHistory} />
           </motion.div>
 
-          {/* Circle Friends - Mini avatars in About section */}
+          {/* Circle Friends - Real connections */}
           <motion.div
             className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm"
             initial={{ opacity: 0, y: 20 }}
@@ -142,30 +175,40 @@ export default function AboutSection({ student: studentProp, currentUser }: Abou
               </Button>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              {circleMembers.map((member) => (
-                <div key={member.id} className="flex flex-col items-center">
-                  <div
-                    className={`h-12 w-12 rounded-full overflow-hidden mb-1 ${
-                      member.type === "mentor"
-                        ? "ring-2 ring-yellow-400"
-                        : member.type === "institution"
-                          ? "ring-2 ring-blue-400 ring-dashed"
-                          : "ring-2 ring-white dark:ring-gray-800"
-                    }`}
-                  >
-                    <Image
-                      src={member.image || "/placeholder.svg"}
-                      alt={member.name}
-                      width={48}
-                      height={48}
-                      className="object-cover"
-                    />
+            {loading ? (
+              <div className="flex space-x-3">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex flex-col items-center">
+                    <div className="h-12 w-12 rounded-full bg-gray-200 animate-pulse mb-1"></div>
+                    <div className="h-3 w-12 bg-gray-200 rounded animate-pulse"></div>
                   </div>
-                  <span className="text-xs text-gray-600 dark:text-gray-400">{member.name}</span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : connections.length > 0 ? (
+              <div className="flex flex-wrap gap-3">
+                {connections.map((connection) => (
+                  <div key={connection.id} className="flex flex-col items-center">
+                    <div className={`h-12 w-12 rounded-full overflow-hidden mb-1 ring-2 ${getRoleColor(connection.user.role)}`}>
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={connection.user.avatar} alt={connection.user.name} />
+                        <AvatarFallback>
+                          {connection.user.firstName[0]}{connection.user.lastName[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                    <span className="text-xs text-gray-600 dark:text-gray-400 text-center">
+                      {connection.user.firstName} {connection.user.lastName[0]}.
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <Users className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                <p className="text-sm text-gray-500">No connections made yet</p>
+                <p className="text-xs text-gray-400">Start connecting with others!</p>
+              </div>
+            )}
           </motion.div>
         </div>
 
