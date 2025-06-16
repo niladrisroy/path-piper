@@ -16,7 +16,9 @@ import {
   ChevronRight,
   UserPlus,
   Filter,
-  Inbox
+  Inbox,
+  UserMinus,
+  Trash2
 } from "lucide-react"
 import AddConnectionDialog from "./add-connection-dialog"
 import ConnectionRequestsView from "./connection-requests-view"
@@ -112,6 +114,29 @@ export default function CircleView({ student }: CircleViewProps) {
   const totalConnections = connections.length
   const mentorConnections = connections.filter(c => c.user.role === 'mentor').length
   const institutionConnections = connections.filter(c => c.user.role === 'institution').length
+
+  const removeConnection = async (connectionId: string) => {
+    try {
+      // Optimistically update the UI
+      setConnections(prevConnections =>
+        prevConnections.filter(connection => connection.id !== connectionId)
+      );
+
+      const response = await fetch(`/api/connections/${connectionId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        console.error('Failed to remove connection');
+        // Revert the UI update if the API call fails
+        fetchConnections();
+      }
+    } catch (error) {
+      console.error('Error removing connection:', error);
+      // Revert the UI update if there's an error
+      fetchConnections();
+    }
+  };
 
   if (loading) {
     return (

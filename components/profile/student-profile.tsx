@@ -22,9 +22,40 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("about")
+  const [connections, setConnections] = useState<any[]>([])
+  const [connectionCounts, setConnectionCounts] = useState({
+    total: 0,
+    students: 0,
+    mentors: 0,
+    institutions: 0
+  })
+
+  // Fetch connections data
+  const fetchConnections = async () => {
+    try {
+      const response = await fetch('/api/connections')
+      if (response.ok) {
+        const data = await response.json()
+        setConnections(data)
+        
+        // Calculate connection counts by role
+        const counts = {
+          total: data.length,
+          students: data.filter((conn: any) => conn.user.role === 'student').length,
+          mentors: data.filter((conn: any) => conn.user.role === 'mentor').length,
+          institutions: data.filter((conn: any) => conn.user.role === 'institution').length
+        }
+        setConnectionCounts(counts)
+      }
+    } catch (error) {
+      console.error('Error fetching connections:', error)
+    }
+  }
 
   useEffect(() => {
     if (studentData) {
+      fetchConnections()
+      
       // Transform the real data to match our component's expected structure
       const transformedStudent = {
         id: studentData.id,
@@ -92,7 +123,9 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
         connections: {
           mentors: [],
           peers: [],
-          institutions: []
+          institutions: [],
+          total: connectionCounts.total,
+          students: connectionCounts.students
         }
       }
 

@@ -102,9 +102,11 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
                   <div className="flex flex-wrap gap-3 text-xs font-medium mt-4">
                     <div className="flex items-center gap-1.5 bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 text-pink-600 dark:text-pink-300 px-3 py-1.5 rounded-full">
                       <Users className="h-3.5 w-3.5 text-pink-500" data-tooltip="Total connections in your circle" />
-                      <span data-tooltip="Total connections in your circle">48 in My Circle</span>
+                      <span data-tooltip="Total connections in your circle">
+                        {student?.connections?.total || 0} in My Circle
+                      </span>
                       <div className="ml-1.5 flex items-center gap-1 border-l border-pink-200 dark:border-pink-800/30 pl-1.5">
-                        <div className="flex items-center" data-tooltip="36 Friends in your circle">
+                        <div className="flex items-center" data-tooltip="Students in your circle">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="24"
@@ -116,18 +118,18 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             className="h-3 w-3 text-pink-500"
-                            data-tooltip="Friends"
+                            data-tooltip="Students"
                           >
                             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                             <circle cx="9" cy="7" r="4"></circle>
                             <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
                             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                           </svg>
-                          <span className="text-[10px] ml-0.5" data-tooltip="36 Friends in your circle">
-                            36
+                          <span className="text-[10px] ml-0.5" data-tooltip="Students in your circle">
+                            {student?.connections?.students || 0}
                           </span>
                         </div>
-                        <div className="flex items-center" data-tooltip="8 Mentors guiding you">
+                        <div className="flex items-center" data-tooltip="Mentors guiding you">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="24"
@@ -143,11 +145,11 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
                           >
                             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                           </svg>
-                          <span className="text-[10px] ml-0.5" data-tooltip="8 Mentors guiding you">
-                            8
+                          <span className="text-[10px] ml-0.5" data-tooltip="Mentors guiding you">
+                            {student?.connections?.mentors || 0}
                           </span>
                         </div>
-                        <div className="flex items-center" data-tooltip="4 Institutions connected with you">
+                        <div className="flex items-center" data-tooltip="Institutions connected with you">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="24"
@@ -167,8 +169,8 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
                             <path d="M16 21v-4"></path>
                             <path d="M12 21v-4"></path>
                           </svg>
-                          <span className="text-[10px] ml-0.5" data-tooltip="4 Institutions connected with you">
-                            4
+                          <span className="text-[10px] ml-0.5" data-tooltip="Institutions connected with you">
+                            {student?.connections?.institutions || 0}
                           </span>
                         </div>
                       </div>
@@ -179,16 +181,20 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
                         data-tooltip="Projects you've created or contributed to"
                       />
                       <span data-tooltip="Projects you've created or contributed to">
-                        Projects: 12
+                        Projects: {student?.projects?.length || 0}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 text-amber-600 dark:text-amber-300 px-3 py-1.5 rounded-full">
                       <Award className="h-3.5 w-3.5 text-amber-500" data-tooltip="Badges you've earned" />
-                      <span data-tooltip="Badges you've earned">Badges: 15</span>
+                      <span data-tooltip="Badges you've earned">
+                        Badges: {student?.customBadges?.length || 0}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1.5 bg-gradient-to-r from-teal-50 to-green-50 dark:from-teal-900/20 dark:to-green-900/20 text-teal-600 dark:text-teal-300 px-3 py-1.5 rounded-full">
                       <BrainIcon className="h-3.5 w-3.5 text-teal-500" data-tooltip="Skills you've developed" />
-                      <span data-tooltip="Skills you've developed">Skills: 24</span>
+                      <span data-tooltip="Skills you've developed">
+                        Skills: {student?.skills?.length || 0}
+                      </span>
                     </div>
                   </div>
 
