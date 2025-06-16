@@ -585,8 +585,8 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                                   },
                                   credentials: 'include',
                                   body: JSON.stringify({
-                                    targetUserId: studentProp.id,
-                                    connectionType: 'peer'
+                                    receiverId: studentProp.id,
+                                    message: `Hi! I'd like to connect with you on PathPiper.`
                                   }),
                                 })
 
