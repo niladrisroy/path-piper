@@ -1,5 +1,11 @@
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function GET(
   request: NextRequest,
@@ -24,17 +30,41 @@ export async function GET(
     }
 
     // Verify token with Supabase
-    const { supabase } = await import('@/lib/supabase')
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Security check: Users can only access their own profile
-    if (user.id !== studentId) {
+    // Check if the current user is a student (only students can view student profiles)
+    const currentUserProfile = await prisma.profile.findUnique({
+      where: { id: user.id },
+      select: { role: true }
+    })
+
+    if (!currentUserProfile || currentUserProfile.role !== 'student') {
       return NextResponse.json(
-        { error: 'You can only access your own profile' },
+        { error: 'Only students can view student profiles' },
+        { status: 403 }
+      )
+    }
+
+    // Check if the target profile exists and is a student
+    const targetProfile = await prisma.profile.findUnique({
+      where: { id: studentId },
+      select: { role: true }
+    })
+
+    if (!targetProfile) {
+      return NextResponse.json(
+        { error: 'Profile not found' },
+        { status: 404 }
+      )
+    }
+
+    if (targetProfile.role !== 'student') {
+      return NextResponse.json(
+        { error: 'Profile is not a student profile' },
         { status: 403 }
       )
     }
@@ -98,13 +128,16 @@ export async function GET(
       )
     }
 
-    // Format the response
+    // Format the response - for viewing other profiles, we might want to limit some sensitive data
+    const isOwnProfile = studentId === user.id
+    
     const formattedProfile = {
       id: studentProfile.id,
       ageGroup: studentProfile.age_group,
       educationLevel: studentProfile.educationLevel,
-      birthMonth: studentProfile.birthMonth,
-      birthYear: studentProfile.birthYear,
+      // Only show birth info for own profile
+      birthMonth: isOwnProfile ? studentProfile.birthMonth : null,
+      birthYear: isOwnProfile ? studentProfile.birthYear : null,
       personalityType: studentProfile.personalityType,
       learningStyle: studentProfile.learningStyle,
       favoriteQuote: studentProfile.favoriteQuote,
@@ -126,7 +159,8 @@ export async function GET(
             categoryName: userSkill.skill.category?.name || 'Uncategorized'
           }
         })),
-        socialLinks: studentProfile.profile.socialLinks,
+        // Only show sensitive contact info for own profile
+        socialLinks: isOwnProfile ? studentProfile.profile.socialLinks : [],
         careerGoals: studentProfile.profile.careerGoals,
         customBadges: studentProfile.profile.customBadges
       },
