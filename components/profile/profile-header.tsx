@@ -11,9 +11,15 @@ import { MapPin, Calendar, Users, Award, Star, MessageCircle, Heart, Share2, Mor
 interface ProfileHeaderProps {
   student: any
   currentUser?: any
+  connectionCounts?: {
+    total: number
+    students: number
+    mentors: number
+    institutions: number
+  }
 }
 
-export default function ProfileHeader({ student, currentUser }: ProfileHeaderProps) {
+export default function ProfileHeader({ student, currentUser, connectionCounts }: ProfileHeaderProps) {
   const router = useRouter()
 
   const [isEditing, setIsEditing] = useState(false)
@@ -103,7 +109,7 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
                     <div className="flex items-center gap-1.5 bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 text-pink-600 dark:text-pink-300 px-3 py-1.5 rounded-full">
                       <Users className="h-3.5 w-3.5 text-pink-500" data-tooltip="Total connections in your circle" />
                       <span data-tooltip="Total connections in your circle">
-                        {student?.connections?.total || 0} in My Circle
+                        {connectionCounts?.total || 0} in My Circle
                       </span>
                       <div className="ml-1.5 flex items-center gap-1 border-l border-pink-200 dark:border-pink-800/30 pl-1.5">
                         <div className="flex items-center" data-tooltip="Students in your circle">
@@ -126,7 +132,7 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
                             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                           </svg>
                           <span className="text-[10px] ml-0.5" data-tooltip="Students in your circle">
-                            {student?.connections?.students || 0}
+                            {connectionCounts?.students || 0}
                           </span>
                         </div>
                         <div className="flex items-center" data-tooltip="Mentors guiding you">
@@ -146,7 +152,7 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
                             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                           </svg>
                           <span className="text-[10px] ml-0.5" data-tooltip="Mentors guiding you">
-                            {student?.connections?.mentors || 0}
+                            {connectionCounts?.mentors || 0}
                           </span>
                         </div>
                         <div className="flex items-center" data-tooltip="Institutions connected with you">
@@ -170,7 +176,7 @@ export default function ProfileHeader({ student, currentUser }: ProfileHeaderPro
                             <path d="M12 21v-4"></path>
                           </svg>
                           <span className="text-[10px] ml-0.5" data-tooltip="Institutions connected with you">
-                            {student?.connections?.institutions || 0}
+                            {connectionCounts?.institutions || 0}
                           </span>
                         </div>
                       </div>

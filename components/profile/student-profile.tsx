@@ -176,7 +176,7 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
-      <ProfileHeader student={student} currentUser={currentUser} />
+      <ProfileHeader student={student} currentUser={currentUser} connectionCounts={connectionCounts} />
 
       <HorizontalNavigation tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
 
