@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button"
 
 interface EducationCardsProps {
   educationHistory?: any[]
+  isViewMode?: boolean
 }
 
-export default function EducationCards({ educationHistory: realEducationHistory }: EducationCardsProps) {
+export default function EducationCards({ educationHistory: realEducationHistory, isViewMode = false }: EducationCardsProps) {
   // Use real education data only - no fallback to mock data
   const educationHistory = realEducationHistory && realEducationHistory.length > 0 ? 
     realEducationHistory.map((edu: any) => ({
@@ -28,14 +29,16 @@ export default function EducationCards({ educationHistory: realEducationHistory 
           <BookOpenIcon className="h-5 w-5 mr-2 text-pathpiper-teal" />
           Education
         </h3>
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => window.location.href = '/student/profile/edit?section=education'}
-        >
-          <AwardIcon className="h-4 w-4 mr-2" />
-          Add Education
-        </Button>
+        {!isViewMode && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => window.location.href = '/student/profile/edit?section=education'}
+          >
+            <AwardIcon className="h-4 w-4 mr-2" />
+            Add Education
+          </Button>
+        )}
       </div>
 
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
