@@ -95,7 +95,7 @@ export default function CircleView({ student }: CircleViewProps) {
       ])
       setLoading(false)
     }
-    
+
     fetchData()
   }, [])
 
@@ -449,11 +449,11 @@ export default function CircleView({ student }: CircleViewProps) {
               </div>
             </TabsContent>
           </Tabs>
-        </CardContent>
+          </CardContent>
+        </Card>
       ) : (
         <ConnectionRequestsView />
       )}
-    </Card>
     </div>
   )
 }
