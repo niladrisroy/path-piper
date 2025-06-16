@@ -11,6 +11,7 @@ import CircleView from "./circle-view"
 import ActionBar from "./action-bar"
 import Goals from "./goals"
 import InterestsSection from "./interests-section"
+import SuggestedConnections from "./suggested-connections"
 
 interface StudentProfileProps {
   studentId?: string
@@ -169,6 +170,7 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
   const tabs = [
     { id: "about", label: "About" },
     { id: "interests", label: "Interests" },
+    { id: "suggested", label: "Suggested Connections" },
     { id: "circle", label: "My Circle" },
     { id: "skills", label: "Skills Canvas" },
     { id: "projects", label: "Projects" },
@@ -186,6 +188,7 @@ export default function StudentProfile({ studentId, currentUser, studentData }: 
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
           {activeTab === "about" && <AboutSection student={student} currentUser={currentUser} />}
           {activeTab === "interests" && <InterestsSection student={student} currentUser={currentUser} />}
+          {activeTab === "suggested" && <SuggestedConnections student={student} />}
           {activeTab === "skills" && <SkillsCanvas userId={student.id} skills={student.skills} />}
           {activeTab === "projects" && <ProjectsShowcase student={student} />}
           {activeTab === "achievements" && <AchievementTimeline student={student} />}
