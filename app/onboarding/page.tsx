@@ -61,10 +61,36 @@ export default function Onboarding() {
           const data = await response.json()
           console.log("User data received:", data)
 
-          // If user is already onboarded, redirect to feed
+          // If user has minimum required data, redirect to profile
           if (data.user?.onboardingCompleted) {
-            router.push("/feed")
+            router.push("/student/profile")
             return
+          }
+          
+          // Also check if user has minimum required data but wasn't marked as completed
+          if (data.user) {
+            try {
+              const profileResponse = await fetch('/api/student/profile/' + data.user.id, {
+                method: 'GET',
+                credentials: 'include',
+                cache: 'no-store'
+              });
+
+              if (profileResponse.ok) {
+                const profileData = await profileResponse.json();
+                const hasBasicInfo = profileData.profile.firstName && profileData.profile.lastName && profileData.profile.bio;
+                const hasInterests = profileData.profile.userInterests && profileData.profile.userInterests.length > 0;
+                const hasEducation = profileData.educationHistory && profileData.educationHistory.length > 0;
+                
+                if (hasBasicInfo && hasInterests && hasEducation) {
+                  // User has minimum required data, redirect to profile
+                  router.push("/student/profile")
+                  return
+                }
+              }
+            } catch (error) {
+              console.error('Error checking profile completeness:', error);
+            }
           }
 
           if (data.user) {

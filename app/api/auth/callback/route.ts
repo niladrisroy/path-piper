@@ -62,14 +62,27 @@ export async function GET(request: NextRequest) {
         // Redirect to onboarding
         return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/onboarding`);
       } else {
-        // Check if onboarding is completed
+        // Check if minimum required data is present
         let onboardingCompleted = false;
         
         if (existingProfile.role === 'student') {
           const studentProfile = await prisma.studentProfile.findUnique({
             where: { id: existingProfile.id },
+            include: {
+              profile: {
+                include: {
+                  userInterests: true,
+                  educationHistory: true
+                }
+              }
+            }
           });
-          onboardingCompleted = studentProfile?.onboardingCompleted || false;
+          
+          const hasBasicInfo = existingProfile.firstName && existingProfile.lastName && existingProfile.bio;
+          const hasInterests = studentProfile?.profile.userInterests && studentProfile.profile.userInterests.length > 0;
+          const hasEducation = studentProfile?.profile.educationHistory && studentProfile.profile.educationHistory.length > 0;
+          
+          onboardingCompleted = hasBasicInfo && hasInterests && hasEducation;
         } else if (existingProfile.role === 'mentor') {
           const mentorProfile = await prisma.mentorProfile.findUnique({
             where: { id: existingProfile.id },
@@ -92,7 +105,15 @@ export async function GET(request: NextRequest) {
             return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/onboarding`);
           }
         } else {
-          return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/feed`);
+          if (existingProfile.role === 'student') {
+            return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/student/profile`);
+          } else if (existingProfile.role === 'mentor') {
+            return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/mentor/profile`);
+          } else if (existingProfile.role === 'institution') {
+            return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/institution/profile`);
+          } else {
+            return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/feed`);
+          }
         }
       }
     } catch (error) {
