@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect } from 'react';
@@ -65,7 +64,16 @@ export default function EducationStep({
         const response = await fetch('/api/institution-types');
         if (response.ok) {
           const data = await response.json();
-          setInstitutionTypes(data.institutionTypes || []);
+          // Flatten the categories and types structure
+          const allTypes: any[] = [];
+          if (data.data && Array.isArray(data.data)) {
+            data.data.forEach((category: any) => {
+              if (category.types && Array.isArray(category.types)) {
+                allTypes.push(...category.types);
+              }
+            });
+          }
+          setInstitutionTypes(allTypes);
         }
       } catch (error) {
         console.error('Error fetching institution types:', error);
@@ -117,7 +125,7 @@ export default function EducationStep({
 
   const handleComplete = async () => {
     setLoading(true);
-    
+
     try {
       if (educationHistory.length > 0) {
         // Save education history to database
