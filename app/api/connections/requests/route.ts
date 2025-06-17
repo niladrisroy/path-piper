@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@supabase/supabase-js'
@@ -31,12 +30,13 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const type = searchParams.get('type') || 'received' // 'sent' or 'received'
+    const type = searchParams.get('type') || 'received'
 
-    let connectionRequests
+    let requests;
 
     if (type === 'sent') {
-      connectionRequests = await prisma.connectionRequest.findMany({
+      // Get connection requests where user is the sender
+      requests = await prisma.connectionRequest.findMany({
         where: {
           senderId: user.id
         },
@@ -48,7 +48,8 @@ export async function GET(request: NextRequest) {
               lastName: true,
               profileImageUrl: true,
               role: true,
-              bio: true
+              bio: true,
+              location: true
             }
           }
         },
@@ -57,7 +58,8 @@ export async function GET(request: NextRequest) {
         }
       })
     } else {
-      connectionRequests = await prisma.connectionRequest.findMany({
+      // Get connection requests where user is the receiver
+      requests = await prisma.connectionRequest.findMany({
         where: {
           receiverId: user.id
         },
@@ -69,7 +71,8 @@ export async function GET(request: NextRequest) {
               lastName: true,
               profileImageUrl: true,
               role: true,
-              bio: true
+              bio: true,
+              location: true
             }
           }
         },
@@ -79,7 +82,7 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    return NextResponse.json(connectionRequests)
+    return NextResponse.json(requests)
 
   } catch (error) {
     console.error('Error fetching connection requests:', error)

@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -31,30 +30,74 @@ export default function AddConnectionDialog({ onConnectionRequestSent }: AddConn
   const [loading, setLoading] = useState(false)
   const [sendingRequest, setSendingRequest] = useState<string | null>(null)
   const { user } = useAuth()
+    const [connections, setConnections] = useState<any[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<any[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  const fetchConnections = async () => {
+    try {
+      const response = await fetch("/api/connections", {
+        credentials: "include",
+      });
+      if (response.ok) {
+        const connectionsData = await response.json();
+        setConnections(connectionsData);
+      }
+    } catch (error) {
+      console.error("Error fetching connections:", error);
+    }
+  };
+
+  const fetchPendingRequests = async () => {
+    try {
+      const response = await fetch("/api/connections/requests?type=sent", {
+        credentials: "include",
+      });
+      if (response.ok) {
+        const requestsData = await response.json();
+        setPendingRequests(requestsData);
+      }
+    } catch (error) {
+      console.error("Error fetching pending requests:", error);
+    }
+  };
 
   const searchUsers = async (query: string) => {
     if (!query.trim() || query.length < 2) {
       setSearchResults([])
+      setShowResults(false)
       return
     }
 
-    setLoading(true)
+    setSearchLoading(true)
     try {
       const response = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`)
       if (response.ok) {
         const users = await response.json()
         setSearchResults(users)
+        setShowResults(true)
       }
     } catch (error) {
       console.error('Error searching users:', error)
     } finally {
-      setLoading(false)
+      setSearchLoading(false)
     }
   }
 
-  const sendConnectionRequest = async (receiverId: string) => {
-    if (!user) return
+  const getConnectionStatus = (userId: string) => {
+    // Check if already connected
+    const isConnected = connections.some(conn => conn.user.id === userId);
+    if (isConnected) return 'connected';
 
+    // Check if request is pending
+    const isPending = pendingRequests.some(req => req.receiverId === userId);
+    if (isPending) return 'pending';
+
+    return 'none';
+  };
+
+  const sendConnectionRequest = async (receiverId: string) => {
     setSendingRequest(receiverId)
     try {
       const response = await fetch('/api/connections/request', {
@@ -64,13 +107,13 @@ export default function AddConnectionDialog({ onConnectionRequestSent }: AddConn
         },
         body: JSON.stringify({
           receiverId,
-          message: `Hi! I'd like to connect with you on PathPiper.`
+          message: `Hi! I'd like to connect with you on PathPiper.`,
         }),
       })
 
       if (response.ok) {
-        // Remove the user from search results since request is sent
-        setSearchResults(prev => prev.filter(u => u.id !== receiverId))
+        // Add to pending requests instead of removing from search
+        setPendingRequests(prev => [...prev, { receiverId, status: 'pending' }]);
         onConnectionRequestSent?.()
       } else {
         const error = await response.json()
@@ -91,6 +134,11 @@ export default function AddConnectionDialog({ onConnectionRequestSent }: AddConn
 
     return () => clearTimeout(timeoutId)
   }, [searchQuery])
+
+    useEffect(() => {
+    fetchConnections();
+    fetchPendingRequests();
+  }, []);
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -150,7 +198,7 @@ export default function AddConnectionDialog({ onConnectionRequestSent }: AddConn
                     {user.firstName[0]}{user.lastName[0]}
                   </AvatarFallback>
                 </Avatar>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2">
                     <h4 className="font-medium text-sm">
@@ -168,21 +216,27 @@ export default function AddConnectionDialog({ onConnectionRequestSent }: AddConn
                   )}
                 </div>
 
-                <Button
-                  size="sm"
-                  onClick={() => sendConnectionRequest(user.id)}
-                  disabled={sendingRequest === user.id}
-                  className="shrink-0"
-                >
-                  {sendingRequest === user.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <UserPlus className="h-4 w-4 mr-1" />
-                      Connect
-                    </>
-                  )}
-                </Button>
+                {getConnectionStatus(user.id) === 'connected' ? (
+                  <Button variant="secondary" disabled>Connected</Button>
+                ) : getConnectionStatus(user.id) === 'pending' ? (
+                  <Button variant="secondary" disabled>Pending</Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={() => sendConnectionRequest(user.id)}
+                    disabled={sendingRequest === user.id}
+                    className="shrink-0"
+                  >
+                    {sendingRequest === user.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <UserPlus className="h-4 w-4 mr-1" />
+                        Connect
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             ))}
           </div>

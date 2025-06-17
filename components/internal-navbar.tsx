@@ -45,6 +45,8 @@ export function InternalNavbar() {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [sendingRequest, setSendingRequest] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
+  const [connections, setConnections] = useState<any[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<any[]>([]);
 
   const handleLogout = async () => {
     try {
@@ -93,7 +95,37 @@ export function InternalNavbar() {
       }
     };
 
+    const fetchConnections = async () => {
+      try {
+        const response = await fetch("/api/connections", {
+          credentials: "include",
+        });
+        if (response.ok) {
+          const connectionsData = await response.json();
+          setConnections(connectionsData);
+        }
+      } catch (error) {
+        console.error("Error fetching connections:", error);
+      }
+    };
+
+    const fetchPendingRequests = async () => {
+      try {
+        const response = await fetch("/api/connections/requests?type=sent", {
+          credentials: "include",
+        });
+        if (response.ok) {
+          const requestsData = await response.json();
+          setPendingRequests(requestsData);
+        }
+      } catch (error) {
+        console.error("Error fetching pending requests:", error);
+      }
+    };
+
     fetchUser();
+    fetchConnections();
+    fetchPendingRequests();
   }, []);
 
   const searchUsers = async (query: string) => {
@@ -118,6 +150,18 @@ export function InternalNavbar() {
     }
   };
 
+  const getConnectionStatus = (userId: string) => {
+    // Check if already connected
+    const isConnected = connections.some(conn => conn.user.id === userId);
+    if (isConnected) return 'connected';
+
+    // Check if request is pending
+    const isPending = pendingRequests.some(req => req.receiverId === userId);
+    if (isPending) return 'pending';
+
+    return 'none';
+  };
+
   const sendConnectionRequest = async (receiverId: string) => {
     if (!user) return;
 
@@ -135,7 +179,8 @@ export function InternalNavbar() {
       });
 
       if (response.ok) {
-        setSearchResults((prev) => prev.filter((u) => u.id !== receiverId));
+        // Add to pending requests instead of removing from search
+        setPendingRequests(prev => [...prev, { receiverId, status: 'pending' }]);
       } else {
         const error = await response.json();
         alert(error.error || "Failed to send connection request");
@@ -303,24 +348,51 @@ export function InternalNavbar() {
                           </div>
                         </div>
 
-                        <Button
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            sendConnectionRequest(searchUser.id);
-                          }}
-                          disabled={sendingRequest === searchUser.id}
-                          className="shrink-0 bg-pathpiper-teal hover:bg-pathpiper-teal/90 text-white px-3 py-1.5 text-xs font-medium"
-                        >
-                          {sendingRequest === searchUser.id ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <>
-                              <UserPlus className="h-3 w-3 mr-1" />
-                              Connect
-                            </>
-                          )}
-                        </Button>
+                        {(() => {
+                          const status = getConnectionStatus(searchUser.id);
+                          if (status === 'connected') {
+                            return (
+                              <Button
+                                size="sm"
+                                disabled
+                                className="shrink-0 bg-green-100 text-green-800 px-3 py-1.5 text-xs font-medium cursor-not-allowed"
+                              >
+                                Connected
+                              </Button>
+                            );
+                          } else if (status === 'pending') {
+                            return (
+                              <Button
+                                size="sm"
+                                disabled
+                                className="shrink-0 bg-yellow-100 text-yellow-800 px-3 py-1.5 text-xs font-medium cursor-not-allowed"
+                              >
+                                Pending
+                              </Button>
+                            );
+                          } else {
+                            return (
+                              <Button
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  sendConnectionRequest(searchUser.id);
+                                }}
+                                disabled={sendingRequest === searchUser.id}
+                                className="shrink-0 bg-pathpiper-teal hover:bg-pathpiper-teal/90 text-white px-3 py-1.5 text-xs font-medium"
+                              >
+                                {sendingRequest === searchUser.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <>
+                                    <UserPlus className="h-3 w-3 mr-1" />
+                                    Connect
+                                  </>
+                                )}
+                              </Button>
+                            );
+                          }
+                        })()}
                       </div>
                     ))}
 
