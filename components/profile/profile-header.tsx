@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect } from "react"
@@ -52,17 +51,47 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
   // Check if this is the current user's own profile
   const isOwnProfile = currentUser && currentUser.id === studentProp.id
 
-  // Fetch connection counts for the viewed user if in view mode
+  // Initialize and fetch connection counts
   React.useEffect(() => {
-    if (isViewMode && studentProp.id && !isOwnProfile) {
-      const fetchConnectionCounts = async () => {
+    if (isOwnProfile) {
+      // For own profile, use the passed connectionCounts if available
+      if (connectionCounts) {
+        setActualConnectionCounts(connectionCounts)
+      } else {
+        // If no connectionCounts passed, fetch for current user
+        const fetchOwnConnectionCounts = async () => {
+          try {
+            const response = await fetch(`/api/connections`, {
+              credentials: 'include'
+            })
+            if (response.ok) {
+              const connections = await response.json()
+
+              const counts = {
+                total: connections.length,
+                students: connections.filter((conn: any) => conn.user.role === 'student').length,
+                mentors: connections.filter((conn: any) => conn.user.role === 'mentor').length,
+                institutions: connections.filter((conn: any) => conn.user.role === 'institution').length
+              }
+
+              setActualConnectionCounts(counts)
+            }
+          } catch (error) {
+            console.error('Error fetching own connection counts:', error)
+          }
+        }
+        fetchOwnConnectionCounts()
+      }
+    } else {
+      // For viewing someone else's profile, always fetch their connection counts
+      const fetchViewedUserConnectionCounts = async () => {
         try {
           const response = await fetch(`/api/connections?userId=${studentProp.id}`, {
             credentials: 'include'
           })
           if (response.ok) {
             const connections = await response.json()
-            
+
             // Count connections by role
             const counts = {
               total: connections.length,
@@ -70,7 +99,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
               mentors: connections.filter((conn: any) => conn.user.role === 'mentor').length,
               institutions: connections.filter((conn: any) => conn.user.role === 'institution').length
             }
-            
+
             setActualConnectionCounts(counts)
           }
         } catch (error) {
@@ -78,9 +107,11 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
         }
       }
 
-      fetchConnectionCounts()
+      if (studentProp.id) {
+        fetchViewedUserConnectionCounts()
+      }
     }
-  }, [isViewMode, studentProp.id, isOwnProfile])
+  }, [isOwnProfile, studentProp.id, connectionCounts])
 
   // Mock circle members (would come from API in real app)
   const circleMembers = [
@@ -518,7 +549,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                             xmlns="http://www.w3.org/2000/svg"
                             width="24"
                             height="24"
-                            viewBox="0 0 24 24"
+                            viewBox="0 024 24"
                             fill="none"
                             stroke="currentColor"
                             strokeWidth="2"
