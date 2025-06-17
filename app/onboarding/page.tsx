@@ -10,15 +10,17 @@ import InternalNavbar from "@/components/internal-navbar"
 import PersonalInfoStep from "@/components/onboarding/personal-info-step"
 import InterestsStep from "@/components/onboarding/interests-step"
 import SkillsStep from "@/components/onboarding/skills-step"
+import EducationStep from "@/components/onboarding/education-step"
 import GoalsStep from "@/components/onboarding/goals-step"
 import CompletionStep from "@/components/onboarding/completion-step"
-import { User, BookOpen, Code, Target, CheckCircle } from "lucide-react"
+import { User, BookOpen, Code, GraduationCap, Target, CheckCircle } from "lucide-react"
 
 // Define the steps for the student onboarding process
 const STEPS = [
   { id: "personal-info", title: "Personal Info", icon: <User className="h-5 w-5" /> },
   { id: "interests", title: "Interests", icon: <BookOpen className="h-5 w-5" /> },
   { id: "skills", title: "Skills", icon: <Code className="h-5 w-5" /> },
+  { id: "education", title: "Education", icon: <GraduationCap className="h-5 w-5" /> },
   { id: "goals", title: "Goals", icon: <Target className="h-5 w-5" /> },
   { id: "completion", title: "Complete", icon: <CheckCircle className="h-5 w-5" /> },
 ]
@@ -35,6 +37,7 @@ export default function Onboarding() {
     interests: [],
     skills: [],
     skillLevels: {},
+    educationHistory: [],
     goals: [],
     educationLevel: "",
     bio: "",
@@ -370,10 +373,10 @@ export default function Onboarding() {
                 </div>
 
                 <button
-                  onClick={step < 4 ? handleNext : handleSubmit}
-                  disabled={step === 5}
+                  onClick={step < 5 ? handleNext : handleSubmit}
+                  disabled={step === 6}
                   className={`p-2 rounded-full ${
-                    step === 5
+                    step === 6
                       ? "text-slate-300 cursor-not-allowed"
                       : "text-slate-500 hover:text-teal-500 hover:bg-teal-50"
                   }`}
@@ -442,6 +445,19 @@ export default function Onboarding() {
               )}
 
               {step === 4 && (
+                <EducationStep
+                  initialData={userData.educationHistory || []}
+                  onComplete={(educationHistory) => {
+                    setUserData({ ...userData, educationHistory });
+                    handleNext();
+                  }}
+                  onNext={handleNext}
+                  onSkip={handleNext}
+                  ageGroup={userData.ageGroup}
+                />
+              )}
+
+              {step === 5 && (
                 <GoalsStep
                   initialData={userData.goals || []}
                   onComplete={async (goals) => {
@@ -485,7 +501,7 @@ export default function Onboarding() {
 
                       if (profileResponse.ok) {
                         toast.success('Onboarding completed successfully!');
-                        setStep(5); // Move to completion step
+                        setStep(6); // Move to completion step
                       } else {
                         const error = await profileResponse.json();
                         console.error('Failed to complete onboarding:', error);
@@ -502,7 +518,7 @@ export default function Onboarding() {
                 />
               )}
 
-              {step === 5 && (
+              {step === 6 && (
                 <CompletionStep 
                   profileData={{
                     personalInfo: {
@@ -517,7 +533,7 @@ export default function Onboarding() {
                     skills: userData.skills,
                     goals: userData.goals
                   }}
-                  completionPercentage={Math.round((step / 5) * 100)}
+                  completionPercentage={Math.round((step / 6) * 100)}
                 />
               )}
             </div>
