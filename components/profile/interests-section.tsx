@@ -223,38 +223,7 @@ export default function InterestsSection({ student, currentUser }: InterestsSect
         </div>
       )}
 
-      {/* Stats */}
-      <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-xl">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-blue-100 text-sm">Total Interests</p>
-              <p className="text-2xl font-bold">{student.interests.length}</p>
-            </div>
-            <Heart className="w-8 h-8 text-blue-200" />
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-green-500 to-teal-600 text-white p-6 rounded-xl">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-green-100 text-sm">Categories</p>
-              <p className="text-2xl font-bold">{groupedInterests.length}</p>
-            </div>
-            <Sparkles className="w-8 h-8 text-green-200" />
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white p-6 rounded-xl">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-orange-100 text-sm">Passion Score</p>
-              <p className="text-2xl font-bold">{Math.min(100, student.interests.length * 8)}%</p>
-            </div>
-            <Star className="w-8 h-8 text-orange-200" />
-          </div>
-        </div>
-      </div>
+      
     </div>
   )
 }

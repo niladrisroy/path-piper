@@ -330,13 +330,13 @@ export function InternalNavbar() {
                                 {searchUser.role}
                               </Badge>
                             </div>
-                            
+
                             {searchUser.bio && (
                               <p className="text-xs text-gray-600 leading-relaxed line-clamp-2">
                                 {searchUser.bio}
                               </p>
                             )}
-                            
+
                             {searchUser.location && (
                               <p className="text-xs text-gray-500 flex items-center">
                                 <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">

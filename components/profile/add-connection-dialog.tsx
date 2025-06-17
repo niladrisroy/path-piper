@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { UserPlus, Search, Users, Loader2 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
+import { useCustomToast } from "@/hooks/use-custom-toast"
 
 interface User {
   id: string
@@ -34,6 +35,7 @@ export default function AddConnectionDialog({ onConnectionRequestSent }: AddConn
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
+  const { connectionToast } = useCustomToast()
 
   const fetchConnections = async () => {
     try {
