@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
         // Redirect to onboarding
         return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/onboarding`);
       } else {
-        // Check if minimum required data is present
+        // Check if minimum required data is present for all three essential sections
         let onboardingCompleted = false;
         
         if (existingProfile.role === 'student') {
@@ -78,11 +78,32 @@ export async function GET(request: NextRequest) {
             }
           });
           
-          const hasBasicInfo = existingProfile.firstName && existingProfile.lastName && existingProfile.bio;
-          const hasInterests = studentProfile?.profile.userInterests && studentProfile.profile.userInterests.length > 0;
-          const hasEducation = studentProfile?.profile.educationHistory && studentProfile.profile.educationHistory.length > 0;
-          
-          onboardingCompleted = hasBasicInfo && hasInterests && hasEducation;
+          if (studentProfile) {
+            // Check 1: Personal Information (first name, last name, bio)
+            const hasBasicInfo = existingProfile.firstName && 
+                               existingProfile.lastName && 
+                               existingProfile.bio;
+
+            // Check 2: Interests (at least one interest)
+            const hasInterests = studentProfile.profile.userInterests && 
+                               studentProfile.profile.userInterests.length > 0;
+
+            // Check 3: Education History (at least one education entry)
+            const hasEducation = studentProfile.profile.educationHistory && 
+                               studentProfile.profile.educationHistory.length > 0;
+
+            // Only mark as completed if ALL THREE sections have data
+            onboardingCompleted = hasBasicInfo && hasInterests && hasEducation;
+            
+            console.log('Callback onboarding check:', {
+              hasBasicInfo,
+              hasInterests,
+              hasEducation,
+              onboardingCompleted
+            });
+          } else {
+            onboardingCompleted = false;
+          }
         } else if (existingProfile.role === 'mentor') {
           const mentorProfile = await prisma.mentorProfile.findUnique({
             where: { id: existingProfile.id },

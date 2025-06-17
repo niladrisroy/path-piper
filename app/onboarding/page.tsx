@@ -67,7 +67,7 @@ export default function Onboarding() {
             return
           }
           
-          // Also check if user has minimum required data but wasn't marked as completed
+          // Check if user has minimum required data for all three essential sections
           if (data.user) {
             try {
               const profileResponse = await fetch('/api/student/profile/' + data.user.id, {
@@ -78,14 +78,33 @@ export default function Onboarding() {
 
               if (profileResponse.ok) {
                 const profileData = await profileResponse.json();
-                const hasBasicInfo = profileData.profile.firstName && profileData.profile.lastName && profileData.profile.bio;
-                const hasInterests = profileData.profile.userInterests && profileData.profile.userInterests.length > 0;
-                const hasEducation = profileData.educationHistory && profileData.educationHistory.length > 0;
                 
+                // Check 1: Personal Information (first name, last name, bio)
+                const hasBasicInfo = profileData.profile.firstName && 
+                                   profileData.profile.lastName && 
+                                   profileData.profile.bio;
+
+                // Check 2: Interests (at least one interest)
+                const hasInterests = profileData.profile.userInterests && 
+                                   profileData.profile.userInterests.length > 0;
+
+                // Check 3: Education History (at least one education entry)
+                const hasEducation = profileData.educationHistory && 
+                                   profileData.educationHistory.length > 0;
+                
+                console.log('Onboarding page check:', {
+                  hasBasicInfo,
+                  hasInterests,
+                  hasEducation
+                });
+                
+                // Only redirect to profile if ALL THREE sections have data
                 if (hasBasicInfo && hasInterests && hasEducation) {
-                  // User has minimum required data, redirect to profile
+                  console.log('All three sections complete, redirecting to profile');
                   router.push("/student/profile")
                   return
+                } else {
+                  console.log('One or more sections incomplete, staying on onboarding');
                 }
               }
             } catch (error) {

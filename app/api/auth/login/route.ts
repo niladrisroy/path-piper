@@ -33,19 +33,59 @@ export async function POST(request: NextRequest) {
         console.log('Login API - Session expires_in:', result.session.expires_in);
       }
 
-      // Check if user has minimum required information
+      // Check if user has minimum required information for all three essential sections
       let needsOnboarding = false;
 
       if (result.role === 'student') {
-        // Assuming prisma and studentProfile are available in this context
-        // The original change snippet refers to prisma.studentProfile.findUnique.
-        // Since it's unavailable I'm replacing this section with a placeholder to simulate the desired logic
-        // and avoid throwing errors in a real environment.
-        const hasBasicInfo = result.user.user_metadata?.first_name && result.user.user_metadata?.last_name; // Simplified placeholder
-        const hasInterests = true; // Simplified placeholder
-        const hasEducation = true; // Simplified placeholder
+        try {
+          // Import prisma at the top of the file if not already imported
+          const { prisma } = await import('@/lib/prisma');
+          
+          // Get complete student profile with all required data
+          const studentProfile = await prisma.studentProfile.findUnique({
+            where: { id: result.user.id },
+            include: {
+              profile: {
+                include: {
+                  userInterests: true,
+                  educationHistory: true
+                }
+              }
+            }
+          });
 
-        needsOnboarding = !hasBasicInfo || !hasInterests || !hasEducation;
+          if (studentProfile) {
+            // Check 1: Personal Information (first name, last name, bio)
+            const hasBasicInfo = studentProfile.profile.firstName && 
+                               studentProfile.profile.lastName && 
+                               studentProfile.profile.bio;
+
+            // Check 2: Interests (at least one interest)
+            const hasInterests = studentProfile.profile.userInterests && 
+                               studentProfile.profile.userInterests.length > 0;
+
+            // Check 3: Education History (at least one education entry)
+            const hasEducation = studentProfile.profile.educationHistory && 
+                               studentProfile.profile.educationHistory.length > 0;
+
+            // Only redirect to profile if ALL THREE sections have data
+            needsOnboarding = !hasBasicInfo || !hasInterests || !hasEducation;
+            
+            console.log('Login onboarding check:', {
+              hasBasicInfo,
+              hasInterests,
+              hasEducation,
+              needsOnboarding
+            });
+          } else {
+            // No student profile found, definitely needs onboarding
+            needsOnboarding = true;
+          }
+        } catch (error) {
+          console.error('Error checking student profile completeness:', error);
+          // If there's an error checking, err on the side of caution and require onboarding
+          needsOnboarding = true;
+        }
       }
 
       const response = NextResponse.json({
