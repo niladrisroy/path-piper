@@ -118,7 +118,7 @@ export default function CompletionStep({ profileData = {}, completionPercentage 
             Go to Feed <ArrowRight size={16} className="ml-2" />
           </Button>
         </Link>
-        <Link href="/profile">
+        <Link href="/student/profile">
           <Button variant="outline" className="rounded-full px-8 py-6 border-slate-300 w-full md:w-auto">
             View Your Profile
           </Button>

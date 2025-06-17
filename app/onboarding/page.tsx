@@ -238,18 +238,42 @@ export default function Onboarding() {
     console.log('Personal info completed:', data);
 
     try {
-      // Submit the form data to update profile
+      // Submit the form data to update profile with proper field mapping
       const response = await fetch('/api/auth/user', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({profile: data}),
+        body: JSON.stringify({
+          profile: {
+            firstName: data.firstName,
+            lastName: data.lastName,
+            bio: data.bio,
+            location: data.location,
+            educationLevel: data.educationLevel,
+            birthMonth: data.birthMonth,
+            birthYear: data.birthYear,
+            ageGroup: data.ageGroup
+          }
+        }),
       });
 
       if (response.ok) {
         const result = await response.json();
         console.log('Profile updated successfully:', result);
+
+        // Update local state with the saved data
+        setUserData({
+          ...userData,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          bio: data.bio,
+          location: data.location,
+          educationLevel: data.educationLevel,
+          birthMonth: data.birthMonth,
+          birthYear: data.birthYear,
+          ageGroup: data.ageGroup
+        });
 
         // Navigate to interests step
         setStep(2);
@@ -257,12 +281,10 @@ export default function Onboarding() {
         const error = await response.json();
         console.error('Failed to update profile:', error);
         toast.error("Failed to update profile: " + (error.message || "Unknown error"))
-        // You could show an error message to the user here
       }
     } catch (error) {
       console.error('Error submitting form:', error);
       toast.error("An error occurred: " + error.message)
-      // You could show an error message to the user here
     }
   };
 
