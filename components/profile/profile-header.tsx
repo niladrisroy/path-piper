@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
@@ -22,8 +22,8 @@ interface ProfileHeaderProps {
 
 export default function ProfileHeader({ student, currentUser, connectionCounts, isViewMode = false }: ProfileHeaderProps) {
   const router = useRouter()
-
   const [isEditing, setIsEditing] = useState(false)
+  const [actualConnectionCounts, setActualConnectionCounts] = useState(connectionCounts)
 
   // Use passed student data or fallback to mock data
   const studentProp = student || {
@@ -51,6 +51,36 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
 
   // Check if this is the current user's own profile
   const isOwnProfile = currentUser && currentUser.id === studentProp.id
+
+  // Fetch connection counts for the viewed user if in view mode
+  React.useEffect(() => {
+    if (isViewMode && studentProp.id && !isOwnProfile) {
+      const fetchConnectionCounts = async () => {
+        try {
+          const response = await fetch(`/api/connections?userId=${studentProp.id}`, {
+            credentials: 'include'
+          })
+          if (response.ok) {
+            const connections = await response.json()
+            
+            // Count connections by role
+            const counts = {
+              total: connections.length,
+              students: connections.filter((conn: any) => conn.user.role === 'student').length,
+              mentors: connections.filter((conn: any) => conn.user.role === 'mentor').length,
+              institutions: connections.filter((conn: any) => conn.user.role === 'institution').length
+            }
+            
+            setActualConnectionCounts(counts)
+          }
+        } catch (error) {
+          console.error('Error fetching connection counts for viewed user:', error)
+        }
+      }
+
+      fetchConnectionCounts()
+    }
+  }, [isViewMode, studentProp.id, isOwnProfile])
 
   // Mock circle members (would come from API in real app)
   const circleMembers = [
@@ -110,7 +140,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                     <div className="flex items-center gap-1.5 bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 text-pink-600 dark:text-pink-300 px-3 py-1.5 rounded-full">
                       <Users className="h-3.5 w-3.5 text-pink-500" data-tooltip="Total connections in their circle" />
                       <span data-tooltip="Total connections in their circle">
-                        {connectionCounts?.total || 0} in {isOwnProfile ? 'My' : 'Their'} Circle
+                        {actualConnectionCounts?.total || 0} in {isOwnProfile ? 'My' : 'Their'} Circle
                       </span>
                       <div className="ml-1.5 flex items-center gap-1 border-l border-pink-200 dark:border-pink-800/30 pl-1.5">
                         <div className="flex items-center" data-tooltip="Students in their circle">
@@ -133,7 +163,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                           </svg>
                           <span className="text-[10px] ml-0.5" data-tooltip="Students in their circle">
-                            {connectionCounts?.students || 0}
+                            {actualConnectionCounts?.students || 0}
                           </span>
                         </div>
                         <div className="flex items-center" data-tooltip="Mentors guiding them">
@@ -153,7 +183,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                           </svg>
                           <span className="text-[10px] ml-0.5" data-tooltip="Mentors guiding them">
-                            {connectionCounts?.mentors || 0}
+                            {actualConnectionCounts?.mentors || 0}
                           </span>
                         </div>
                         <div className="flex items-center" data-tooltip="Institutions connected with them">
@@ -177,7 +207,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                             <path d="M12 21v-4"></path>
                           </svg>
                           <span className="text-[10px] ml-0.5" data-tooltip="Institutions connected with them">
-                            {connectionCounts?.institutions || 0}
+                            {actualConnectionCounts?.institutions || 0}
                           </span>
                         </div>
                       </div>
