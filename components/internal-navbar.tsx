@@ -14,17 +14,34 @@ import {
   X,
   Settings,
   LogOut,
+  UserPlus,
+  Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
+interface SearchUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  profileImageUrl?: string;
+  bio?: string;
+  location?: string;
+}
+
 export function InternalNavbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [sendingRequest, setSendingRequest] = useState<string | null>(null);
 
   const handleLogout = async () => {
     try {
@@ -56,6 +73,97 @@ export function InternalNavbar() {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const searchUsers = async (query: string) => {
+    if (!query.trim() || query.length < 2) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    setSearchLoading(true);
+    try {
+      const response = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`);
+      if (response.ok) {
+        const users = await response.json();
+        setSearchResults(users);
+        setShowSearchResults(true);
+      }
+    } catch (error) {
+      console.error("Error searching users:", error);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const sendConnectionRequest = async (receiverId: string) => {
+    if (!user) return;
+
+    setSendingRequest(receiverId);
+    try {
+      const response = await fetch("/api/connections/request", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          receiverId,
+          message: `Hi! I'd like to connect with you on PathPiper.`,
+        }),
+      });
+
+      if (response.ok) {
+        setSearchResults((prev) => prev.filter((u) => u.id !== receiverId));
+      } else {
+        const error = await response.json();
+        alert(error.error || "Failed to send connection request");
+      }
+    } catch (error) {
+      console.error("Error sending connection request:", error);
+      alert("Failed to send connection request");
+    } finally {
+      setSendingRequest(null);
+    }
+  };
+
+  const handleProfileClick = (userId: string) => {
+    setShowSearchResults(false);
+    setSearchQuery("");
+    router.push(`/student/profile/view/${userId}`);
+  };
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case "mentor":
+        return "bg-green-100 text-green-800";
+      case "institution":
+        return "bg-purple-100 text-purple-800";
+      case "student":
+        return "bg-blue-100 text-blue-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      searchUsers(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const searchContainer = document.getElementById("search-container");
+      if (searchContainer && !searchContainer.contains(event.target as Node)) {
+        setShowSearchResults(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Navigation items for logged-in users
@@ -93,16 +201,111 @@ export function InternalNavbar() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-6">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="pl-10 pr-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent w-64"
-                />
+              <div className="relative" id="search-container">
                 <Search
                   className="absolute left-3 top-2.5 text-gray-400"
                   size={18}
                 />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  className="pl-10 pr-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent w-64"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {showSearchResults && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50">
+                    {searchLoading && (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin text-pathpiper-teal" />
+                        <span className="ml-2 text-sm text-gray-500">
+                          Searching...
+                        </span>
+                      </div>
+                    )}
+
+                    {!searchLoading &&
+                      searchQuery.length >= 2 &&
+                      searchResults.length === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                          <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                          <p>No users found matching "{searchQuery}"</p>
+                        </div>
+                      )}
+
+                    {searchResults.map((searchUser) => (
+                      <div
+                        key={searchUser.id}
+                        className="flex items-center space-x-3 p-3 border-b last:border-b-0 hover:bg-gray-50"
+                      >
+                        <div
+                          className="flex items-center space-x-3 flex-1 cursor-pointer"
+                          onClick={() => handleProfileClick(searchUser.id)}
+                        >
+                          <Image
+                            src={searchUser.profileImageUrl || "/images/default-profile.png"}
+                            alt={`${searchUser.firstName} ${searchUser.lastName}`}
+                            width={48}
+                            height={48}
+                            className="rounded-full"
+                          />
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2">
+                              <h4 className="font-medium text-sm text-gray-900">
+                                {searchUser.firstName} {searchUser.lastName}
+                              </h4>
+                              <Badge
+                                variant="outline"
+                                className={`text-xs ${getRoleColor(searchUser.role)}`}
+                              >
+                                {searchUser.role}
+                              </Badge>
+                            </div>
+                            {searchUser.bio && (
+                              <p className="text-xs text-gray-600 truncate">
+                                {searchUser.bio}
+                              </p>
+                            )}
+                            {searchUser.location && (
+                              <p className="text-xs text-gray-500">
+                                {searchUser.location}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <Button
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            sendConnectionRequest(searchUser.id);
+                          }}
+                          disabled={sendingRequest === searchUser.id}
+                          className="shrink-0 bg-pathpiper-teal hover:bg-pathpiper-teal/90"
+                        >
+                          {sendingRequest === searchUser.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <UserPlus className="h-4 w-4 mr-1" />
+                              Connect
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    ))}
+
+                    {searchQuery.length < 2 && (
+                      <div className="text-center py-8 text-gray-500">
+                        <Search className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                        <p className="text-sm">
+                          Type at least 2 characters to search for users
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {navItems.map((link) => (
@@ -234,3 +437,6 @@ export function InternalNavbar() {
 }
 
 export default InternalNavbar;
+```
+
+The code is now modified to include operational search functionality in the header search bar, reusing the search logic and UI elements from the Add Connection feature.
