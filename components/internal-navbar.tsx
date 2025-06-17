@@ -44,6 +44,7 @@ export function InternalNavbar() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [sendingRequest, setSendingRequest] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
 
   const handleLogout = async () => {
     try {
@@ -75,6 +76,24 @@ export function InternalNavbar() {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch("/api/auth/user", {
+          credentials: "include",
+        });
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+
+    fetchUser();
   }, []);
 
   const searchUsers = async (query: string) => {
@@ -216,7 +235,7 @@ export function InternalNavbar() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
                 {showSearchResults && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-96 overflow-y-auto z-50 min-w-[400px]">
                     {searchLoading && (
                       <div className="flex items-center justify-center py-8">
                         <Loader2 className="h-6 w-6 animate-spin text-pathpiper-teal" />
@@ -231,46 +250,53 @@ export function InternalNavbar() {
                       searchResults.length === 0 && (
                         <div className="text-center py-8 text-gray-500">
                           <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                          <p>No users found matching "{searchQuery}"</p>
+                          <p className="text-sm">No users found matching "{searchQuery}"</p>
                         </div>
                       )}
 
                     {searchResults.map((searchUser) => (
                       <div
                         key={searchUser.id}
-                        className="flex items-center space-x-3 p-3 border-b last:border-b-0 hover:bg-gray-50"
+                        className="flex items-start space-x-3 p-4 border-b last:border-b-0 hover:bg-gray-50 transition-colors"
                       >
                         <div
-                          className="flex items-center space-x-3 flex-1 cursor-pointer"
+                          className="flex items-start space-x-3 flex-1 cursor-pointer"
                           onClick={() => handleProfileClick(searchUser.id)}
                         >
-                          <Image
-                            src={searchUser.profileImageUrl || "/images/default-profile.png"}
-                            alt={`${searchUser.firstName} ${searchUser.lastName}`}
-                            width={48}
-                            height={48}
-                            className="rounded-full"
-                          />
+                          <div className="relative">
+                            <Image
+                              src={searchUser.profileImageUrl || "/images/default-profile.png"}
+                              alt={`${searchUser.firstName} ${searchUser.lastName}`}
+                              width={48}
+                              height={48}
+                              className="rounded-full border-2 border-gray-100"
+                            />
+                          </div>
 
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 space-y-1">
                             <div className="flex items-center space-x-2">
-                              <h4 className="font-medium text-sm text-gray-900">
+                              <h4 className="font-semibold text-sm text-gray-900">
                                 {searchUser.firstName} {searchUser.lastName}
                               </h4>
                               <Badge
                                 variant="outline"
-                                className={`text-xs ${getRoleColor(searchUser.role)}`}
+                                className={`text-xs px-2 py-0.5 font-medium ${getRoleColor(searchUser.role)}`}
                               >
                                 {searchUser.role}
                               </Badge>
                             </div>
+                            
                             {searchUser.bio && (
-                              <p className="text-xs text-gray-600 truncate">
+                              <p className="text-xs text-gray-600 leading-relaxed line-clamp-2">
                                 {searchUser.bio}
                               </p>
                             )}
+                            
                             {searchUser.location && (
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs text-gray-500 flex items-center">
+                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                                </svg>
                                 {searchUser.location}
                               </p>
                             )}
@@ -284,13 +310,13 @@ export function InternalNavbar() {
                             sendConnectionRequest(searchUser.id);
                           }}
                           disabled={sendingRequest === searchUser.id}
-                          className="shrink-0 bg-pathpiper-teal hover:bg-pathpiper-teal/90"
+                          className="shrink-0 bg-pathpiper-teal hover:bg-pathpiper-teal/90 text-white px-3 py-1.5 text-xs font-medium"
                         >
                           {sendingRequest === searchUser.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <Loader2 className="h-3 w-3 animate-spin" />
                           ) : (
                             <>
-                              <UserPlus className="h-4 w-4 mr-1" />
+                              <UserPlus className="h-3 w-3 mr-1" />
                               Connect
                             </>
                           )}
