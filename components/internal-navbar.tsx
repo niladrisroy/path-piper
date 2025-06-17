@@ -437,6 +437,3 @@ export function InternalNavbar() {
 }
 
 export default InternalNavbar;
-```
-
-The code is now modified to include operational search functionality in the header search bar, reusing the search logic and UI elements from the Add Connection feature.
