@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@supabase/supabase-js'
@@ -30,12 +29,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Check if we're fetching connections for a specific user
+    const { searchParams } = new URL(request.url)
+    const targetUserId = searchParams.get('userId')
+
+    // If no specific user is requested, default to current user
+    const userIdToQuery = targetUserId || user.id
+
     // Get connections where user is either user1 or user2
     const connections = await prisma.connection.findMany({
       where: {
         OR: [
-          { user1Id: user.id },
-          { user2Id: user.id }
+          { user1Id: userIdToQuery },
+          { user2Id: userIdToQuery }
         ]
       },
       include: {
@@ -73,8 +79,8 @@ export async function GET(request: NextRequest) {
 
     // Format connections to show the other user's info
     const formattedConnections = connections.map(connection => {
-      const otherUser = connection.user1Id === user.id ? connection.user2 : connection.user1
-      
+      const otherUser = connection.user1Id === userIdToQuery ? connection.user2 : connection.user1
+
       return {
         id: connection.id,
         connectionType: connection.connectionType,
@@ -110,12 +116,12 @@ function getStatusFromAvailability(availabilityStatus: string, lastActiveDate: D
     const now = new Date()
     const lastActive = new Date(lastActiveDate)
     const diffMinutes = (now.getTime() - lastActive.getTime()) / (1000 * 60)
-    
+
     if (diffMinutes < 5) return 'online'
     if (diffMinutes < 30) return 'away'
     return 'offline'
   }
-  
+
   return 'offline'
 }
 
@@ -131,6 +137,6 @@ function formatLastInteraction(lastActiveDate: Date): string {
   if (diffMinutes < 60) return `${diffMinutes} minutes ago`
   if (diffHours < 24) return `${diffHours} hours ago`
   if (diffDays < 7) return `${diffDays} days ago`
-  
+
   return lastActive.toLocaleDateString()
 }

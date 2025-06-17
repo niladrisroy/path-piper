@@ -48,22 +48,24 @@ export default function AboutSection({ student: studentProp, currentUser, isView
 
   useEffect(() => {
     const fetchConnections = async () => {
-      try {
-        const response = await fetch('/api/connections')
-        if (response.ok) {
-          const data = await response.json()
-          // Limit to first 5 connections for the about section
-          setConnections(data.slice(0, 5))
-        }
-      } catch (error) {
-        console.error('Error fetching connections:', error)
-      } finally {
-        setLoading(false)
+    try {
+      setLoading(true)
+      // Fetch connections for the specific user being viewed, not the current user
+      const response = await fetch(`/api/connections?userId=${student.id}`)
+      if (response.ok) {
+        const data = await response.json()
+        // Show only first 5 connections for preview
+        setConnections(data.slice(0, 5))
       }
+    } catch (error) {
+      console.error('Error fetching connections:', error)
+    } finally {
+      setLoading(false)
     }
+  }
 
     fetchConnections()
-  }, [])
+  }, [student.id])
 
 
   const getRoleColor = (role: string) => {
