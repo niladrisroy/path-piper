@@ -142,72 +142,69 @@ export default function SuggestedConnections({ student }: SuggestedConnectionsPr
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {suggestedUsers.map((suggestedUser) => (
-              <div key={suggestedUser.id} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
-                onClick={() => window.open(`/student/profile/view/${suggestedUser.id}`, '_blank')}>
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={suggestedUser.profileImageUrl} alt={`${suggestedUser.firstName} ${suggestedUser.lastName}`} />
-                  <AvatarFallback>
-                    {suggestedUser.firstName[0]}{suggestedUser.lastName[0]}
-                  </AvatarFallback>
-                </Avatar>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <h4 className="font-medium text-sm">
+              <div 
+                key={suggestedUser.id} 
+                className="relative bg-white dark:bg-gray-800 border rounded-xl p-3 hover:shadow-md transition-all duration-200 cursor-pointer group"
+                onClick={() => window.open(`/student/profile/view/${suggestedUser.id}`, '_blank')}
+              >
+                <div className="flex flex-col items-center text-center space-y-2">
+                  <Avatar className="h-12 w-12">
+                    <AvatarImage src={suggestedUser.profileImageUrl} alt={`${suggestedUser.firstName} ${suggestedUser.lastName}`} />
+                    <AvatarFallback className="text-sm">
+                      {suggestedUser.firstName[0]}{suggestedUser.lastName[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  <div className="w-full">
+                    <h4 className="font-medium text-xs truncate">
                       {suggestedUser.firstName} {suggestedUser.lastName}
                     </h4>
-                    <Badge variant="outline" className={`text-xs ${getRoleColor(suggestedUser.role)}`}>
+                    <Badge variant="outline" className={`text-xs mt-1 ${getRoleColor(suggestedUser.role)}`}>
                       {suggestedUser.role}
                     </Badge>
                   </div>
                   
-                  {suggestedUser.bio && (
-                    <p className="text-xs text-gray-600 dark:text-gray-400 truncate mb-1">{suggestedUser.bio}</p>
-                  )}
-                  
-                  <div className="flex items-center space-x-1 mb-1">
-                    <span className="text-xs text-pathpiper-teal font-medium">
-                      {suggestedUser.totalSharedInterests} shared interest{suggestedUser.totalSharedInterests !== 1 ? 's' : ''}
-                    </span>
+                  <div className="text-xs text-pathpiper-teal font-medium">
+                    {suggestedUser.totalSharedInterests} shared
                   </div>
                   
-                  <div className="flex flex-wrap gap-1">
-                    {suggestedUser.sharedInterests.slice(0, 2).map((interest, index) => (
+                  <div className="flex flex-wrap gap-1 justify-center">
+                    {suggestedUser.sharedInterests.slice(0, 1).map((interest, index) => (
                       <span
                         key={index}
-                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-pathpiper-teal/10 text-pathpiper-teal border border-pathpiper-teal/20"
+                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-pathpiper-teal/10 text-pathpiper-teal border border-pathpiper-teal/20 truncate max-w-full"
                       >
                         {interest}
                       </span>
                     ))}
-                    {suggestedUser.sharedInterests.length > 2 && (
+                    {suggestedUser.sharedInterests.length > 1 && (
                       <span className="text-xs text-gray-500">
-                        +{suggestedUser.sharedInterests.length - 2} more
+                        +{suggestedUser.sharedInterests.length - 1}
                       </span>
                     )}
                   </div>
-                </div>
 
-                <Button
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation() // Prevent card click when clicking connect button
-                    sendConnectionRequest(suggestedUser.id)
-                  }}
-                  disabled={sendingRequest === suggestedUser.id}
-                  className="shrink-0 bg-pathpiper-teal hover:bg-pathpiper-teal/90"
-                >
-                  {sendingRequest === suggestedUser.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <UserPlus className="h-4 w-4 mr-1" />
-                      Connect
-                    </>
-                  )}
-                </Button>
+                  <Button
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      sendConnectionRequest(suggestedUser.id)
+                    }}
+                    disabled={sendingRequest === suggestedUser.id}
+                    className="w-full h-7 text-xs bg-pathpiper-teal hover:bg-pathpiper-teal/90"
+                  >
+                    {sendingRequest === suggestedUser.id ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <>
+                        <UserPlus className="h-3 w-3 mr-1" />
+                        Connect
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
