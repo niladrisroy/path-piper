@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect } from 'react';
@@ -80,7 +79,7 @@ export default function EducationStep({
     description: ""
   });
 
-  // Fetch institution types on component mount
+  // Fetch institution types and existing education data on component mount
   useEffect(() => {
     const fetchInstitutionTypes = async () => {
       try {
@@ -98,7 +97,32 @@ export default function EducationStep({
       }
     };
 
+    const fetchExistingEducation = async () => {
+      try {
+        const response = await fetch('/api/education', {
+          method: 'GET',
+          credentials: 'include',
+          cache: 'no-store'
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const existingEducation = data.education || [];
+          console.log('📚 Loaded existing education history for onboarding:', existingEducation);
+
+          if (existingEducation.length > 0) {
+            setEducationHistory(existingEducation);
+          }
+        } else {
+          console.log('No existing education found or failed to fetch');
+        }
+      } catch (error) {
+        console.error('Error fetching existing education:', error);
+      }
+    };
+
     fetchInstitutionTypes();
+    fetchExistingEducation();
   }, []);
 
   const handleInputChange = (field: keyof EducationEntry, value: string | number | boolean | string[]) => {
@@ -158,10 +182,10 @@ export default function EducationStep({
   const handleEditEntry = (entry: EducationEntry) => {
     // Find the category for this institution type
     let categoryId = '';
-    
+
     // Convert institutionType to string for comparison
     const typeIdStr = String(entry.institutionType);
-    
+
     for (const category of institutionCategories) {
       const type = category.types.find(t => String(t.id) === typeIdStr);
       if (type) {
@@ -169,7 +193,7 @@ export default function EducationStep({
         break;
       }
     }
-    
+
     setEditingEntry({ 
       ...entry, 
       institutionCategory: categoryId // Set the category so the type dropdown works
@@ -310,7 +334,7 @@ export default function EducationStep({
         return type.name;
       }
     }
-    
+
     return 'Institution Type';
   };
 
