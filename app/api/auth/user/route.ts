@@ -249,16 +249,25 @@ export async function PUT(request: Request) {
     // Extract profile data from the nested structure
     const profileData = body.profile || body;
 
-    // Update profile in database
-    const updatedProfile = await prisma.profile.update({
-      where: { id: user.id },
-      data: {
-        firstName: profileData.firstName,
-        lastName: profileData.lastName,
-        bio: profileData.bio || null,
-        location: profileData.location || null,
-      }
-    });
+    // Update profile data
+    if (profileData) {
+      console.log('Updating profile with data:', profileData);
+
+      const profileUpdateData: any = {};
+      if (profileData.firstName !== undefined) profileUpdateData.firstName = profileData.firstName;
+      if (profileData.lastName !== undefined) profileUpdateData.lastName = profileData.lastName;
+      if (profileData.bio !== undefined) profileUpdateData.bio = profileData.bio;
+      if (profileData.location !== undefined) profileUpdateData.location = profileData.location;
+      if (profileData.tagline !== undefined) profileUpdateData.tagline = profileData.tagline;
+      if (profileData.onboarding_completed !== undefined) profileUpdateData.onboarding_completed = profileData.onboarding_completed;
+
+      console.log('Profile update data being sent to database:', profileUpdateData);
+
+      const updatedProfile = await prisma.profile.update({
+        where: { id: user.id },
+        data: profileUpdateData
+      });
+    
 
     console.log("API: Profile updated successfully");
 
@@ -297,6 +306,7 @@ export async function PUT(request: Request) {
         location: updatedProfile.location,
       }
     });
+}
 
   } catch (error) {
     console.error('Error updating profile:', error);

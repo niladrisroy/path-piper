@@ -69,7 +69,7 @@ export default function Onboarding() {
             router.push("/student/profile")
             return
           }
-          
+
           // Check if user has minimum required data for all three essential sections
           if (data.user) {
             try {
@@ -81,7 +81,7 @@ export default function Onboarding() {
 
               if (profileResponse.ok) {
                 const profileData = await profileResponse.json();
-                
+
                 // Check 1: Personal Information (first name, last name, bio)
                 const hasBasicInfo = profileData.profile.firstName && 
                                    profileData.profile.lastName && 
@@ -94,13 +94,13 @@ export default function Onboarding() {
                 // Check 3: Education History (at least one education entry)
                 const hasEducation = profileData.educationHistory && 
                                    profileData.educationHistory.length > 0;
-                
+
                 console.log('Onboarding page check:', {
                   hasBasicInfo,
                   hasInterests,
                   hasEducation
                 });
-                
+
                 // Only redirect to profile if ALL THREE sections have data
                 if (hasBasicInfo && hasInterests && hasEducation) {
                   console.log('All three sections complete, redirecting to profile');
@@ -387,8 +387,9 @@ export default function Onboarding() {
             </div>
 
             <div className="p-6 md:p-8">
-              {step === 1 && (
-                <PersonalInfoStep 
+              
+{step === 1 && (
+                <PersonalInfoStep
                   initialData={{
                     firstName: userData.firstName,
                     lastName: userData.lastName,
@@ -400,20 +401,57 @@ export default function Onboarding() {
                     ageGroup: userData.ageGroup,
                     profileImage: null
                   }}
-                  onComplete={(data) => {
-                    console.log("PersonalInfoStep onComplete called with data:", data);
-                    setUserData({
-                      ...userData,
-                      firstName: data.firstName,
-                      lastName: data.lastName,
-                      bio: data.bio,
-                      location: data.location,
-                      educationLevel: data.educationLevel,
-                      birthMonth: data.birthMonth,
-                      birthYear: data.birthYear,
-                      ageGroup: data.ageGroup
-                    });
-                    handlePersonalInfoComplete(data);
+                  onComplete={async (data) => {
+                    console.log('📝 Personal info step completed with data:', data);
+
+                    try {
+                      // Save personal info data to database immediately
+                      const personalInfoResponse = await fetch("/api/auth/user", {
+                        method: "PUT",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                          profile: {
+                            firstName: data.firstName,
+                            lastName: data.lastName,
+                            bio: data.bio,
+                            location: data.location,
+                          },
+                          studentProfile: {
+                            educationLevel: data.educationLevel,
+                            age_group: data.ageGroup,
+                            birthMonth: data.birthMonth,
+                            birthYear: data.birthYear
+                          }
+                        }),
+                      });
+
+                      if (personalInfoResponse.ok) {
+                        console.log('✅ Personal info saved successfully');
+                        toast.success('Personal information saved');
+                        setUserData(prev => ({
+                          ...prev,
+                          firstName: data.firstName,
+                          lastName: data.lastName,
+                          bio: data.bio,
+                          location: data.location,
+                          educationLevel: data.educationLevel,
+                          birthMonth: data.birthMonth,
+                          birthYear: data.birthYear,
+                          ageGroup: data.ageGroup
+                        }));
+                        setStep(2);
+                      } else {
+                        const error = await personalInfoResponse.json();
+                        console.error('❌ Failed to save personal info:', error);
+                        toast.error('Failed to save personal information: ' + (error.message || 'Unknown error'));
+                      }
+                    } catch (error) {
+                      console.error('❌ Error saving personal info:', error);
+                      toast.error('Failed to save personal information');
+                    }
                   }}
                   onNext={handleNext}
                 />
