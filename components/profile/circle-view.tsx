@@ -258,7 +258,7 @@ export default function CircleView({ student }: CircleViewProps) {
                         key={connection.id} 
                         className="relative bg-white dark:bg-gray-800 border rounded-xl p-3 hover:shadow-md transition-all duration-200 cursor-pointer group"
                       >
-                        <div className="flex flex-col items-center text-center space-y-2">
+                        <div className="flex flex-col items-center text-center space-y-2 pb-6">
                           <div className="relative">
                             <Avatar className="h-12 w-12">
                               <AvatarImage src={connection.user.avatar} alt={connection.user.name} />
@@ -279,12 +279,12 @@ export default function CircleView({ student }: CircleViewProps) {
                           </div>
 
                           {connection.user.bio && (
-                            <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                            <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 px-1">
                               {connection.user.bio}
                             </p>
                           )}
 
-                          <div className="flex items-center justify-center space-x-1 w-full mb-2">
+                          <div className="flex items-center justify-center space-x-1 w-full mt-3">
                             <Button 
                               variant="ghost" 
                               size="sm" 
@@ -313,7 +313,7 @@ export default function CircleView({ student }: CircleViewProps) {
                           </div>
                         </div>
 
-                        <div className="absolute bottom-1 left-1 right-1 text-xs text-gray-400 text-center truncate">
+                        <div className="absolute bottom-1 left-1 right-1 text-xs text-gray-400 text-center truncate border-t border-gray-100 pt-1">
                           {connection.user.lastInteraction}
                         </div>
                       </div>
@@ -331,7 +331,7 @@ export default function CircleView({ student }: CircleViewProps) {
                       key={connection.id} 
                       className="relative bg-white dark:bg-gray-800 border rounded-xl p-3 hover:shadow-md transition-all duration-200 cursor-pointer group"
                     >
-                      <div className="flex flex-col items-center text-center space-y-2">
+                      <div className="flex flex-col items-center text-center space-y-2 pb-6">
                         <div className="relative">
                           <Avatar className="h-12 w-12">
                             <AvatarImage src={connection.user.avatar} alt={connection.user.name} />
@@ -353,12 +353,12 @@ export default function CircleView({ student }: CircleViewProps) {
                         </div>
 
                         {connection.user.bio && (
-                          <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                          <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 px-1">
                             {connection.user.bio}
                           </p>
                         )}
 
-                        <div className="flex items-center justify-center space-x-1 w-full mb-2">
+                        <div className="flex items-center justify-center space-x-1 w-full mt-3">
                           <Button 
                             variant="ghost" 
                             size="sm" 
@@ -387,7 +387,7 @@ export default function CircleView({ student }: CircleViewProps) {
                         </div>
                       </div>
 
-                      <div className="absolute bottom-1 left-1 right-1 text-xs text-gray-400 text-center truncate">
+                      <div className="absolute bottom-1 left-1 right-1 text-xs text-gray-400 text-center truncate border-t border-gray-100 pt-1">
                         {connection.user.lastInteraction}
                       </div>
                     </div>
@@ -404,7 +404,7 @@ export default function CircleView({ student }: CircleViewProps) {
                       key={connection.id} 
                       className="relative bg-white dark:bg-gray-800 border rounded-xl p-3 hover:shadow-md transition-all duration-200 cursor-pointer group"
                     >
-                      <div className="flex flex-col items-center text-center space-y-2">
+                      <div className="flex flex-col items-center text-center space-y-2 pb-6">
                         <div className="relative">
                           <Avatar className="h-12 w-12">
                             <AvatarImage src={connection.user.avatar} alt={connection.user.name} />
@@ -425,12 +425,12 @@ export default function CircleView({ student }: CircleViewProps) {
                         </div>
 
                         {connection.user.bio && (
-                          <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                          <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 px-1">
                             {connection.user.bio}
                           </p>
                         )}
 
-                        <div className="flex items-center justify-center space-x-1 w-full mb-2">
+                        <div className="flex items-center justify-center space-x-1 w-full mt-3">
                           <Button 
                             variant="ghost" 
                             size="sm" 
@@ -459,7 +459,7 @@ export default function CircleView({ student }: CircleViewProps) {
                         </div>
                       </div>
 
-                      <div className="absolute bottom-1 left-1 right-1 text-xs text-gray-400 text-center truncate">
+                      <div className="absolute bottom-1 left-1 right-1 text-xs text-gray-400 text-center truncate border-t border-gray-100 pt-1">
                         {connection.user.lastInteraction}
                       </div>
                     </div>
@@ -476,7 +476,7 @@ export default function CircleView({ student }: CircleViewProps) {
                       key={connection.id} 
                       className="relative bg-white dark:bg-gray-800 border rounded-xl p-3 hover:shadow-md transition-all duration-200 cursor-pointer group"
                     >
-                      <div className="flex flex-col items-center text-center space-y-2">
+                      <div className="flex flex-col items-center text-center space-y-2 pb-6">
                         <div className="relative">
                           <Avatar className="h-12 w-12">
                             <AvatarImage src={connection.user.avatar} alt={connection.user.name} />
@@ -498,12 +498,12 @@ export default function CircleView({ student }: CircleViewProps) {
                         </div>
 
                         {connection.user.bio && (
-                          <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                          <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 px-1">
                             {connection.user.bio}
                           </p>
                         )}
 
-                        <div className="flex items-center justify-center space-x-1 w-full mb-2">
+                        <div className="flex items-center justify-center space-x-1 w-full mt-3">
                           <Button 
                             variant="ghost" 
                             size="sm" 
@@ -532,7 +532,7 @@ export default function CircleView({ student }: CircleViewProps) {
                         </div>
                       </div>
 
-                      <div className="absolute bottom-1 left-1 right-1 text-xs text-gray-400 text-center truncate">
+                      <div className="absolute bottom-1 left-1 right-1 text-xs text-gray-400 text-center truncate border-t border-gray-100 pt-1">
                         {connection.user.lastInteraction}
                       </div>
                     </div>
