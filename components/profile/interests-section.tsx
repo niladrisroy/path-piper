@@ -198,11 +198,10 @@ export default function InterestsSection({ student, currentUser }: InterestsSect
                       transition={{ delay: (categoryIndex * 0.1) + (index * 0.05) }}
                       className={`${getInterestColor(index)} text-white p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group hover:scale-105`}
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-sm truncate pr-2">
+                      <div className="flex items-center justify-center">
+                        <span className="font-medium text-sm truncate">
                           {interest.name}
                         </span>
-                        <Heart className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity" />
                       </div>
                     </motion.div>
                   ))}
