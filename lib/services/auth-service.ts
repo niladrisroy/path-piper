@@ -252,6 +252,14 @@ export async function loginUser(data: LoginData) {
         const hasEducation = education.length > 0;
         
         onboardingCompleted = hasBasicInfo && hasInterests && hasEducation;
+        
+        console.log('🔍 Onboarding completion check:', {
+          userId: profile.id,
+          hasBasicInfo,
+          hasInterests: `${interests.length} interests`,
+          hasEducation: `${education.length} education entries`,
+          onboardingCompleted
+        });
       } catch (error) {
         console.error('Error checking onboarding completion:', error);
         onboardingCompleted = false;

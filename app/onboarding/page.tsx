@@ -64,12 +64,6 @@ export default function Onboarding() {
           const data = await response.json()
           console.log("User data received:", data)
 
-          // If user has minimum required data, redirect to profile
-          if (data.user?.onboardingCompleted) {
-            router.push("/student/profile")
-            return
-          }
-
           // Check if user has minimum required data for all three essential sections
           if (data.user) {
             try {
@@ -95,19 +89,19 @@ export default function Onboarding() {
                 const hasEducation = profileData.educationHistory && 
                                    profileData.educationHistory.length > 0;
 
-                console.log('Onboarding page check:', {
+                console.log('🔍 Onboarding page completion check:', {
                   hasBasicInfo,
-                  hasInterests,
-                  hasEducation
+                  hasInterests: `${profileData.profile.userInterests?.length || 0} interests`,
+                  hasEducation: `${profileData.educationHistory?.length || 0} education entries`
                 });
 
                 // Only redirect to profile if ALL THREE sections have data
                 if (hasBasicInfo && hasInterests && hasEducation) {
-                  console.log('All three sections complete, redirecting to profile');
+                  console.log('✅ All three sections complete, redirecting to profile');
                   router.push("/student/profile")
                   return
                 } else {
-                  console.log('One or more sections incomplete, staying on onboarding');
+                  console.log('❌ One or more sections incomplete, staying on onboarding');
                 }
               }
             } catch (error) {
@@ -460,9 +454,20 @@ export default function Onboarding() {
               {step === 2 && (
                 <InterestsStep
                   initialData={userData.interests || []}
-                  onComplete={(interests) => {
-                    setUserData({ ...userData, interests });
-                    handleNext();
+                  onComplete={async (interests) => {
+                    console.log('🎯 Interests step completed with data:', interests);
+                    
+                    // Save interests data immediately (matching edit profile behavior)
+                    try {
+                      // Interests data is saved within the InterestsStep component itself
+                      // Just update local state and proceed
+                      setUserData({ ...userData, interests });
+                      console.log('✅ Interests data updated in local state');
+                      handleNext();
+                    } catch (error) {
+                      console.error('❌ Error in interests step completion:', error);
+                      toast.error('Failed to save interests data');
+                    }
                   }}
                   onNext={handleNext}
                   onSkip={handleNext}
@@ -473,8 +478,20 @@ export default function Onboarding() {
               {step === 3 && (
                 <SkillsStep
                   initialData={userData.skills || []}
-                  onComplete={(skills) => {
-                    setUserData({ ...userData, skills });
+                  onComplete={async (skills) => {
+                    console.log('🛠️ Skills step completed with data:', skills);
+                    
+                    // Save skills data immediately (matching edit profile behavior)
+                    try {
+                      // Skills data is saved within the SkillsStep component itself
+                      // Just update local state and proceed
+                      setUserData({ ...userData, skills });
+                      console.log('✅ Skills data updated in local state');
+                      handleNext();
+                    } catch (error) {
+                      console.error('❌ Error in skills step completion:', error);
+                      toast.error('Failed to save skills data');
+                    }
                   }}
                   onNext={handleNext}
                   onSkip={handleNext}
@@ -485,9 +502,20 @@ export default function Onboarding() {
               {step === 4 && (
                 <EducationStep
                   initialData={userData.educationHistory || []}
-                  onComplete={(educationHistory) => {
-                    setUserData({ ...userData, educationHistory });
-                    handleNext();
+                  onComplete={async (educationHistory) => {
+                    console.log('📚 Education step completed with data:', educationHistory);
+                    
+                    // Save education data immediately (matching edit profile behavior)
+                    try {
+                      // Education data is saved within the EducationStep component itself
+                      // Just update local state and proceed
+                      setUserData({ ...userData, educationHistory });
+                      console.log('✅ Education data updated in local state');
+                      handleNext();
+                    } catch (error) {
+                      console.error('❌ Error in education step completion:', error);
+                      toast.error('Failed to save education data');
+                    }
                   }}
                   onNext={handleNext}
                   onSkip={handleNext}
