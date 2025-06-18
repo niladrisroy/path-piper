@@ -268,7 +268,7 @@ export default function CircleView({ student }: CircleViewProps) {
                             </Avatar>
                             <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${getStatusColor(connection.user.status)}`} />
                           </div>
-                          
+
                           <div className="w-full">
                             <h3 className="font-medium text-xs truncate">
                               {connection.user.name}
@@ -277,14 +277,14 @@ export default function CircleView({ student }: CircleViewProps) {
                               {connection.user.role}
                             </Badge>
                           </div>
-                          
+
                           {connection.user.bio && (
                             <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
                               {connection.user.bio}
                             </p>
                           )}
-                          
-                          <div className="flex items-center justify-center space-x-1 w-full">
+
+                          <div className="flex items-center justify-center space-x-1 w-full mb-2">
                             <Button 
                               variant="ghost" 
                               size="sm" 
@@ -312,7 +312,7 @@ export default function CircleView({ student }: CircleViewProps) {
                             </Button>
                           </div>
                         </div>
-                        
+
                         <div className="absolute bottom-1 left-1 right-1 text-xs text-gray-400 text-center truncate">
                           {connection.user.lastInteraction}
                         </div>
@@ -342,7 +342,7 @@ export default function CircleView({ student }: CircleViewProps) {
                           <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${getStatusColor(connection.user.status)}`} />
                           <Star className="absolute -top-1 -left-1 h-4 w-4 text-yellow-500 bg-white rounded-full p-0.5" />
                         </div>
-                        
+
                         <div className="w-full">
                           <h3 className="font-medium text-xs truncate">
                             {connection.user.name}
@@ -351,14 +351,14 @@ export default function CircleView({ student }: CircleViewProps) {
                             mentor
                           </Badge>
                         </div>
-                        
+
                         {connection.user.bio && (
                           <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
                             {connection.user.bio}
                           </p>
                         )}
-                        
-                        <div className="flex items-center justify-center space-x-1 w-full">
+
+                        <div className="flex items-center justify-center space-x-1 w-full mb-2">
                           <Button 
                             variant="ghost" 
                             size="sm" 
@@ -386,7 +386,7 @@ export default function CircleView({ student }: CircleViewProps) {
                           </Button>
                         </div>
                       </div>
-                      
+
                       <div className="absolute bottom-1 left-1 right-1 text-xs text-gray-400 text-center truncate">
                         {connection.user.lastInteraction}
                       </div>
@@ -414,7 +414,7 @@ export default function CircleView({ student }: CircleViewProps) {
                           </Avatar>
                           <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${getStatusColor(connection.user.status)}`} />
                         </div>
-                        
+
                         <div className="w-full">
                           <h3 className="font-medium text-xs truncate">
                             {connection.user.name}
@@ -423,14 +423,14 @@ export default function CircleView({ student }: CircleViewProps) {
                             peer
                           </Badge>
                         </div>
-                        
+
                         {connection.user.bio && (
                           <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
                             {connection.user.bio}
                           </p>
                         )}
-                        
-                        <div className="flex items-center justify-center space-x-1 w-full">
+
+                        <div className="flex items-center justify-center space-x-1 w-full mb-2">
                           <Button 
                             variant="ghost" 
                             size="sm" 
@@ -458,7 +458,7 @@ export default function CircleView({ student }: CircleViewProps) {
                           </Button>
                         </div>
                       </div>
-                      
+
                       <div className="absolute bottom-1 left-1 right-1 text-xs text-gray-400 text-center truncate">
                         {connection.user.lastInteraction}
                       </div>
@@ -487,7 +487,7 @@ export default function CircleView({ student }: CircleViewProps) {
                           <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${getStatusColor(connection.user.status)}`} />
                           <Building className="absolute -top-1 -left-1 h-4 w-4 text-purple-600 bg-white rounded-full p-0.5" />
                         </div>
-                        
+
                         <div className="w-full">
                           <h3 className="font-medium text-xs truncate">
                             {connection.user.name}
@@ -496,14 +496,14 @@ export default function CircleView({ student }: CircleViewProps) {
                             institution
                           </Badge>
                         </div>
-                        
+
                         {connection.user.bio && (
                           <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
                             {connection.user.bio}
                           </p>
                         )}
-                        
-                        <div className="flex items-center justify-center space-x-1 w-full">
+
+                        <div className="flex items-center justify-center space-x-1 w-full mb-2">
                           <Button 
                             variant="ghost" 
                             size="sm" 
@@ -531,7 +531,7 @@ export default function CircleView({ student }: CircleViewProps) {
                           </Button>
                         </div>
                       </div>
-                      
+
                       <div className="absolute bottom-1 left-1 right-1 text-xs text-gray-400 text-center truncate">
                         {connection.user.lastInteraction}
                       </div>
