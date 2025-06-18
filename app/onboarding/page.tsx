@@ -523,28 +523,11 @@ export default function Onboarding() {
 
                       console.log('Goals saved successfully');
 
-                      // Mark onboarding as completed (keep using auth API for this)
-                      const profileResponse = await fetch("/api/auth/user", {
-                        method: "PUT",
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
-                        credentials: 'include',
-                        body: JSON.stringify({
-                          profile: {
-                            onboarding_completed: true,
-                          },
-                        }),
-                      })
-
-                      if (profileResponse.ok) {
-                        toast.success('Onboarding completed successfully!');
-                        setStep(6); // Move to completion step
-                      } else {
-                        const error = await profileResponse.json();
-                        console.error('Failed to complete onboarding:', error);
-                        toast.error('Failed to complete onboarding: ' + (error.message || 'Unknown error'));
-                      }
+                      // For students, onboarding completion is determined by data presence
+                      // No need to set a completion flag since it's dynamically checked
+                      console.log('Goals saved successfully - onboarding complete');
+                      toast.success('Onboarding completed successfully!');
+                      setStep(6); // Move to completion step
                     } catch (error) {
                       console.error('Error during onboarding completion:', error);
                       toast.error('Failed to complete onboarding');

@@ -232,12 +232,42 @@ export async function loginUser(data: LoginData) {
       };
     }
 
+    // For students, determine onboarding completion by checking data presence
+    let onboardingCompleted = false;
+    if (profile.role === 'student') {
+      try {
+        // Check if user has minimum required data for all three essential sections
+        const hasBasicInfo = profile.firstName && profile.lastName && profile.bio;
+        
+        // Check interests
+        const interests = await prisma.userInterest.findMany({
+          where: { userId: profile.id }
+        });
+        const hasInterests = interests.length > 0;
+        
+        // Check education
+        const education = await prisma.educationHistory.findMany({
+          where: { userId: profile.id }
+        });
+        const hasEducation = education.length > 0;
+        
+        onboardingCompleted = hasBasicInfo && hasInterests && hasEducation;
+      } catch (error) {
+        console.error('Error checking onboarding completion:', error);
+        onboardingCompleted = false;
+      }
+    } else if (profile.role === 'mentor' && profile.mentor) {
+      onboardingCompleted = profile.mentor.onboardingCompleted || false;
+    } else if (profile.role === 'institution' && profile.institution) {
+      onboardingCompleted = profile.institution.onboardingCompleted || false;
+    }
+
     return {
       success: true,
       user: authData.user,
       session: authData.session,
       role: profile.role,
-      onboardingCompleted: false, // Default to false since field is removed
+      onboardingCompleted,
     };
   } catch (error) {
     console.error("Login failed:", error);

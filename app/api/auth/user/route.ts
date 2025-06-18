@@ -259,7 +259,9 @@ export async function PUT(request: Request) {
       if (profileData.bio !== undefined) profileUpdateData.bio = profileData.bio;
       if (profileData.location !== undefined) profileUpdateData.location = profileData.location;
       if (profileData.tagline !== undefined) profileUpdateData.tagline = profileData.tagline;
-      if (profileData.onboarding_completed !== undefined) profileUpdateData.onboarding_completed = profileData.onboarding_completed;
+      // Note: onboarding_completed field has been removed from Profile model
+        // Onboarding completion is now determined by data presence for students
+        // and stored in role-specific profile tables for mentors/institutions
 
       console.log('Profile update data being sent to database:', profileUpdateData);
 
@@ -267,7 +269,7 @@ export async function PUT(request: Request) {
         where: { id: user.id },
         data: profileUpdateData
       });
-    
+
 
     console.log("API: Profile updated successfully");
 

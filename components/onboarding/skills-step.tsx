@@ -62,7 +62,8 @@ export default function SkillsStep({
             const skillsData = await skillsResponse.json()
             setSkillCategories(skillsData.categories || [])
           } else {
-            console.error('Failed to fetch skills:', skillsResponse.status)
+            const errorText = await skillsResponse.text()
+            console.error('Failed to fetch skills:', skillsResponse.status, errorText)
           }
         } else {
           console.error('Failed to fetch user data:', userResponse.status)
@@ -76,7 +77,8 @@ export default function SkillsStep({
             const skillsData = await skillsResponse.json()
             setSkillCategories(skillsData.categories || [])
           } else {
-            console.error('Failed to fetch skills:', skillsResponse.status)
+            const errorText = await skillsResponse.text()
+            console.error('Failed to fetch skills:', skillsResponse.status, errorText)
           }
         }
 
