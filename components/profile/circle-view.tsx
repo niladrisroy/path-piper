@@ -520,7 +520,7 @@ export default function CircleView({ student }: CircleViewProps) {
             </CardHeader>
             <CardContent className="pt-0">
               <Tabs defaultValue="all" className="w-full">
-                <TabsList className="grid w-full grid-cols-4 mb-6 mt-6">
+                <TabsList className="grid w-full grid-cols-4 mb-6 mt-2">
                   <TabsTrigger value="all">All ({totalConnections})</TabsTrigger>
                   <TabsTrigger value="mentors">Mentors ({mentorConnections})</TabsTrigger>
                   <TabsTrigger value="peers">Peers ({connections.filter(c => c.user.role === 'student').length})</TabsTrigger>
