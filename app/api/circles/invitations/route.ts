@@ -25,13 +25,20 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type') || 'received'
+    const circleId = searchParams.get('circleId')
 
     let invitations
     if (type === 'sent') {
+      const whereClause: any = {
+        inviterId: user.id
+      }
+      
+      if (circleId) {
+        whereClause.circleId = circleId
+      }
+      
       invitations = await prisma.circleInvitation.findMany({
-        where: {
-          inviterId: user.id
-        },
+        where: whereClause,
         include: {
           circle: {
             select: {

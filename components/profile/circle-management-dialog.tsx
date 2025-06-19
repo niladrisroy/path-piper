@@ -39,6 +39,12 @@ interface Connection {
   }
 }
 
+interface ExistingInvitation {
+  id: string
+  inviteeId: string
+  status: 'pending' | 'accepted' | 'declined'
+}
+
 interface CircleManagementDialogProps {
   circle: Circle | null
   open: boolean
@@ -56,6 +62,7 @@ export default function CircleManagementDialog({
   const [selectedConnections, setSelectedConnections] = useState<string[]>([])
   const [inviteMessage, setInviteMessage] = useState('')
   const [loading, setLoading] = useState(false)
+  const [existingInvitations, setExistingInvitations] = useState<ExistingInvitation[]>([])
 
   useEffect(() => {
     if (open && circle) {
@@ -75,6 +82,7 @@ export default function CircleManagementDialog({
         // For Friends circle, show all connections and no invite functionality
         if (circle?.id === 'friends') {
           setConnections([])
+          setExistingInvitations([])
           return
         }
         
@@ -85,9 +93,29 @@ export default function CircleManagementDialog({
         )
         
         setConnections(availableConnections)
+        
+        // Fetch existing invitations for this circle
+        if (circle?.id) {
+          await fetchExistingInvitations()
+        }
       }
     } catch (error) {
       console.error('Error fetching connections:', error)
+    }
+  }
+
+  const fetchExistingInvitations = async () => {
+    try {
+      const response = await fetch(`/api/circles/invitations?type=sent&circleId=${circle?.id}`, {
+        credentials: 'include'
+      })
+      
+      if (response.ok) {
+        const invitations = await response.json()
+        setExistingInvitations(invitations)
+      }
+    } catch (error) {
+      console.error('Error fetching existing invitations:', error)
     }
   }
 
@@ -119,6 +147,7 @@ export default function CircleManagementDialog({
       if (allSuccessful) {
         setSelectedConnections([])
         setInviteMessage('')
+        await fetchExistingInvitations() // Refresh invitations list
         onCircleUpdated()
         onOpenChange(false)
       } else {
@@ -132,7 +161,15 @@ export default function CircleManagementDialog({
     }
   }
 
+  const getInvitationStatus = (userId: string) => {
+    return existingInvitations.find(inv => inv.inviteeId === userId)?.status || null
+  }
+
   const toggleConnection = (connectionId: string) => {
+    // Don't allow selection if there's already an invitation
+    const status = getInvitationStatus(connectionId)
+    if (status && status !== 'declined') return
+    
     setSelectedConnections(prev =>
       prev.includes(connectionId)
         ? prev.filter(id => id !== connectionId)
@@ -233,37 +270,51 @@ export default function CircleManagementDialog({
                 {connections.length === 0 ? (
                   <p className="text-sm text-gray-500">No available connections to invite</p>
                 ) : (
-                  connections.map((connection) => (
-                    <div 
-                      key={connection.id}
-                      className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
-                        selectedConnections.includes(connection.user.id)
-                          ? 'bg-blue-50 border border-blue-200'
-                          : 'hover:bg-gray-50'
-                      }`}
-                      onClick={() => toggleConnection(connection.user.id)}
-                    >
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={connection.user.profileImageUrl} />
-                        <AvatarFallback className="text-xs">
-                          {connection.user.firstName[0]}{connection.user.lastName[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {connection.user.firstName} {connection.user.lastName}
-                        </p>
-                        <Badge variant="outline" className="text-xs">
-                          {connection.user.role}
-                        </Badge>
-                      </div>
-                      {selectedConnections.includes(connection.user.id) && (
-                        <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs">✓</span>
+                  connections.map((connection) => {
+                    const invitationStatus = getInvitationStatus(connection.user.id)
+                    const canInvite = !invitationStatus || invitationStatus === 'declined'
+                    
+                    return (
+                      <div 
+                        key={connection.id}
+                        className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
+                          canInvite 
+                            ? selectedConnections.includes(connection.user.id)
+                              ? 'bg-blue-50 border border-blue-200 cursor-pointer'
+                              : 'hover:bg-gray-50 cursor-pointer'
+                            : 'bg-gray-50 opacity-75'
+                        }`}
+                        onClick={() => canInvite && toggleConnection(connection.user.id)}
+                      >
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={connection.user.profileImageUrl} />
+                          <AvatarFallback className="text-xs">
+                            {connection.user.firstName[0]}{connection.user.lastName[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {connection.user.firstName} {connection.user.lastName}
+                          </p>
+                          <Badge variant="outline" className="text-xs">
+                            {connection.user.role}
+                          </Badge>
                         </div>
-                      )}
-                    </div>
-                  ))
+                        {invitationStatus && invitationStatus !== 'declined' ? (
+                          <Badge 
+                            variant={invitationStatus === 'pending' ? 'secondary' : 'default'}
+                            className="text-xs"
+                          >
+                            {invitationStatus === 'pending' ? 'Pending' : 'Accepted'}
+                          </Badge>
+                        ) : selectedConnections.includes(connection.user.id) ? (
+                          <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs">✓</span>
+                          </div>
+                        ) : null}
+                      </div>
+                    )
+                  })
                 )}
               </div>
             </div>
