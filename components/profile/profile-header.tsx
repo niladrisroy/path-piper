@@ -658,7 +658,6 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                                 })
 
                                 if (response.ok) {
-                                  ```text
                                   alert('Connection request sent successfully!')
                                 } else {
                                   const error = await response.json()
