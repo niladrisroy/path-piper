@@ -492,6 +492,13 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
 
                 {/* Right column - Profile highlights */}
                 <div className="md:col-span-2 md:border-l md:border-gray-200 md:dark:border-gray-700 md:pl-6">
+                  {/* Circle Invitations Section - Only show for own profile */}
+                  {isOwnProfile && (
+                    <div className="mb-6">
+                      <CircleInvitationsSection onInvitationHandled={handleCircleUpdated} />
+                    </div>
+                  )}
+
                   {/* Top Skills section - Dynamic from Database with sorting by proficiency */}
                   <div>
                     <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Top Skills</h3>
@@ -651,6 +658,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                                 })
 
                                 if (response.ok) {
+                                  ```text
                                   alert('Connection request sent successfully!')
                                 } else {
                                   const error = await response.json()
