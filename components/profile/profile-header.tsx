@@ -1,3 +1,7 @@
+The code is modified to include description and avatar image upload fields in the create circle dialog, and the circle display is updated to use uploaded images as icons.
+```
+
+```replit_final_file
 "use client"
 
 import React, { useState, useEffect } from "react"
@@ -30,6 +34,9 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
   const [circles, setCircles] = useState<any[]>([])
   const [showCreateCircle, setShowCreateCircle] = useState(false)
   const [newCircleName, setNewCircleName] = useState('')
+  const [newCircleDescription, setNewCircleDescription] = useState('')
+  const [newCircleImagePreview, setNewCircleImagePreview] = useState<string>('')
+  const [newCircleImageFile, setNewCircleImageFile] = useState<File | null>(null)
   const [selectedCircle, setSelectedCircle] = useState<any>(null)
   const [showCircleManagement, setShowCircleManagement] = useState(false)
   const [connections, setConnections] = useState<any[]>([])
@@ -161,29 +168,71 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
     }
   }, [isOwnProfile])
 
-  const handleCreateCircle = async () => {
-    if (newCircleName.trim() !== '') {
-      try {
-        const response = await fetch('/api/circles', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          credentials: 'include',
-          body: JSON.stringify({ name: newCircleName })
-        })
+  const handleCircleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
 
-        if (response.ok) {
-          const newCircle = await response.json()
-          setCircles([...circles, newCircle])
-          setShowCreateCircle(false)
-          setNewCircleName('')
-        } else {
-          console.error('Error creating circle:', response.status)
-        }
-      } catch (error) {
-        console.error('Error creating circle:', error)
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a valid image file')
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size should be less than 5MB')
+      return
+    }
+
+    setNewCircleImageFile(file)
+
+    // Create preview URL
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setNewCircleImagePreview(e.target?.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleCreateCircle = async () => {
+    if (!newCircleName.trim()) return
+
+    try {
+      let iconValue = 'users' // default icon
+
+      // If image is uploaded, we'll use the image URL as the icon
+      if (newCircleImageFile) {
+        // For now, we'll use the data URL as the icon
+        // In a production app, you'd upload to a storage service first
+        iconValue = newCircleImagePreview
       }
+
+      const response = await fetch('/api/circles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: newCircleName.trim(),
+          description: newCircleDescription.trim() || null,
+          color: '#3B82F6',
+          icon: iconValue
+        })
+      })
+
+      if (response.ok) {
+        setNewCircleName('')
+        setNewCircleDescription('')
+        setNewCircleImagePreview('')
+        setNewCircleImageFile(null)
+        setShowCreateCircle(false)
+        handleCircleUpdated()
+      } else {
+        console.error('Failed to create circle')
+      }
+    } catch (error) {
+      console.error('Error creating circle:', error)
     }
   }
 
@@ -421,11 +470,16 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                                 }}
                               >
                                 <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
-                                  <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                                    <div 
-                                      className="w-3 h-3 rounded-full"
-                                      style={{ backgroundColor: circle.color }}
-                                    />
+                                  <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                                    {circle.icon && circle.icon.startsWith('data:image/') ? (
+                                      <img 
+                                        src={circle.icon} 
+                                        alt={`${circle.name} avatar`}
+                                        className="w-full h-full object-cover rounded-full"
+                                      />
+                                    ) : (
+                                      <Users className="h-6 w-6 text-gray-600 dark:text-gray-300" />
+                                    )}
                                   </div>
                                 </div>
                               </button>
@@ -460,33 +514,103 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                     </div>
 
                     {/* Create Circle Modal */}
-                    {showCreateCircle && (
-                      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-                          <h3 className="text-lg font-semibold mb-4">Create New Circle</h3>
-                          <Input
-                            placeholder="Circle name"
-                            value={newCircleName}
-                            onChange={(e) => setNewCircleName(e.target.value)}
-                            className="mb-4"
-                          />
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              onClick={() => {
-                                setShowCreateCircle(false)
-                                setNewCircleName('')
-                              }}
-                            >
+                    <Dialog open={showCreateCircle} onOpenChange={setShowCreateCircle}>
+                      <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Create New Circle</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div>
+                            <label htmlFor="circle-name" className="block text-sm font-medium mb-2">
+                              Circle name
+                            </label>
+                            <Input
+                              id="circle-name"
+                              value={newCircleName}
+                              onChange={(e) => setNewCircleName(e.target.value)}
+                              placeholder="Enter circle name"
+                              maxLength={50}
+                            />
+                          </div>
+
+                          <div>
+                            <label htmlFor="circle-description" className="block text-sm font-medium mb-2">
+                              Description (optional)
+                            </label>
+                            <textarea
+                              id="circle-description"
+                              value={newCircleDescription}
+                              onChange={(e) => setNewCircleDescription(e.target.value)}
+                              placeholder="Describe your circle..."
+                              maxLength={200}
+                              rows={3}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pathpiper-teal focus:border-transparent resize-none"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              {newCircleDescription.length}/200 characters
+                            </p>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium mb-2">
+                              Circle Avatar (optional)
+                            </label>
+                            <div className="flex items-center gap-4">
+                              <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600">
+                                {newCircleImagePreview ? (
+                                  <img 
+                                    src={newCircleImagePreview} 
+                                    alt="Circle avatar preview" 
+                                    className="w-full h-full rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <Users className="h-6 w-6 text-gray-400" />
+                                )}
+                              </div>
+                              <div className="flex flex-col gap-2">
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={handleCircleImageUpload}
+                                  className="hidden"
+                                  id="circle-image-upload"
+                                />
+                                <label
+                                  htmlFor="circle-image-upload"
+                                  className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-md cursor-pointer transition-colors"
+                                >
+                                  Choose Image
+                                </label>
+                                {newCircleImagePreview && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setNewCircleImagePreview('')
+                                      setNewCircleImageFile(null)
+                                    }}
+                                    className="px-3 py-1 text-sm text-red-600 hover:text-red-700 transition-colors"
+                                  >
+                                    Remove
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end gap-2 pt-4">
+                            <Button variant="outline" onClick={() => setShowCreateCircle(false)}>
                               Cancel
                             </Button>
-                            <Button onClick={handleCreateCircle}>
+                            <Button 
+                              onClick={handleCreateCircle}
+                              disabled={!newCircleName.trim()}
+                            >
                               Create Circle
                             </Button>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </div>
 
@@ -570,240 +694,4 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                         <span className="text-[10px] text-center mt-1 text-gray-600 dark:text-gray-400">Math Whiz</span>
                       </div>
                       <div className="flex flex-col items-center">
-                        <div className="bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 h-12 w-12 rounded-full flex items-center justify-center">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="h-6 w-6 text-purple-600 dark:text-purple-400"
-                          >
-                            <path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"></path>
-                          </svg>
-                        </div>
-                        <span className="text-[10px] text-center mt-1 text-gray-600 dark:text-gray-400">
-                          Coding Pro
-                        </span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <div className="bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 h-12 w-12 rounded-full flex items-center justify-center">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="h-6 w-6 text-amber-600 dark:text-amber-400"
-                          >
-                            <path d="M12 17.8 5.8 21 7 14.1 2 9.3l7-1L12 2l3 6.3 7 1-5 4.8 1.2 6.9-6.2-3.2Z"></path>
-                          </svg>
-                        </div>
-                        <span className="text-[10px] text-center mt-1 text-gray-600 dark:text-gray-400">
-                          Top Achiever
-                        </span>
-                      </div>
-                    </div>
-                    <div className="mt-2 text-center">
-                      <a
-                        href="#"
-                        className="text-[10px] text-pink-500 hover:text-pink-600 dark:text-pink-400 dark:hover:text-pink-300 font-medium"
-                      >
-                        View All Badges
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="mt-6">
-                    {/* Add/Edit Profile button */}
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      {isOwnProfile ? (
-                        <Button 
-                          size="lg" 
-                          className="bg-pathpiper-teal hover:bg-pathpiper-teal/90"
-                          onClick={() => router.push('/student/profile/edit')}
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit Profile
-                        </Button>
-                      ) : (
-                        <>
-                          <Button size="lg" className="bg-pathpiper-teal hover:bg-pathpiper-teal/90">
-                            <MessageCircle className="h-4 w-4 mr-2" />
-                            Message
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="lg"
-                            onClick={async () => {
-                              try {
-                                const response = await fetch('/api/connections/request', {
-                                  method: 'POST',
-                                  headers: {
-                                    'Content-Type': 'application/json',
-                                  },
-                                  credentials: 'include',
-                                  body: JSON.stringify({
-                                    receiverId: studentProp.id,
-                                    message: `Hi! I'd like to connect with you on PathPiper.`
-                                  }),
-                                })
-
-                                if (response.ok) {
-                                  alert('Connection request sent successfully!')
-                                } else {
-                                  const error = await response.json()
-                                  alert(`Failed to send connection request: ${error.error || 'Unknown error'}`)
-                                }
-                              } catch (error) {
-                                console.error('Error sending connection request:', error)
-                                alert('Failed to send connection request')
-                              }
-                            }}
-                          >
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            Connect
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <CircleManagementDialog
-        circle={selectedCircle}
-        open={showCircleManagement}
-        onOpenChange={setShowCircleManagement}
-        onCircleUpdated={handleCircleUpdated}
-      />
-    </div>
-  )
-}
-
-// Circle Invitations Section Component
-interface CircleInvitationsSectionProps {
-  onInvitationHandled: () => void
-}
-
-function CircleInvitationsSection({ onInvitationHandled }: CircleInvitationsSectionProps) {
-  const [invitations, setInvitations] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    fetchInvitations()
-  }, [])
-
-  const fetchInvitations = async () => {
-    try {
-      const response = await fetch('/api/circles/invitations?type=received', {
-        credentials: 'include'
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        // Only show pending invitations
-        setInvitations(data.filter((inv: any) => inv.status === 'pending'))
-      }
-    } catch (error) {
-      console.error('Error fetching invitations:', error)
-    }
-  }
-
-  const handleInvitation = async (invitationId: string, action: 'accept' | 'decline') => {
-    setLoading(true)
-    try {
-      const response = await fetch(`/api/circles/invitations/${invitationId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({ action })
-      })
-
-      if (response.ok) {
-        // Remove the invitation from the list
-        setInvitations(prev => prev.filter(inv => inv.id !== invitationId))
-        onInvitationHandled()
-      }
-    } catch (error) {
-      console.error('Error handling invitation:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (invitations.length === 0) {
-    return null
-  }
-
-  return (
-    <div className="flex flex-col">
-      <h3 className="text-lg font-semibold mb-4">Circle Requests</h3>
-      <div className="space-y-3 max-w-xs">
-        {invitations.map((invitation) => (
-          <div key={invitation.id} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border">
-            <div className="flex items-center gap-2 mb-2">
-              <div 
-                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs"
-                style={{ backgroundColor: invitation.circle.color }}
-              >
-                {invitation.circle.icon === 'users' ? (
-                  <Users className="h-4 w-4" />
-                ) : (
-                  invitation.circle.icon
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{invitation.circle.name}</p>
-                <p className="text-xs text-gray-500">
-                  from {invitation.inviter.firstName} {invitation.inviter.lastName}
-                </p>
-              </div>
-            </div>
-
-            {invitation.message && (
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-3 italic">
-                "{invitation.message}"
-              </p>
-            )}
-
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                onClick={() => handleInvitation(invitation.id, 'accept')}
-                disabled={loading}
-                className="flex-1 h-7 text-xs"
-              >
-                <UserCheck className="h-3 w-3 mr-1" />
-                Accept
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleInvitation(invitation.id, 'decline')}
-                disabled={loading}
-                className="flex-1 h-7 text-xs"
-              >
-                <UserX className="h-3 w-3 mr-1" />
-                Decline
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
+                        <div className="bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:
