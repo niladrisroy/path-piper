@@ -551,18 +551,18 @@ export default function CircleView({ student }: CircleViewProps) {
       {/* Content based on active view */}
       {activeView === "connections" ? (
         <div className="space-y-6">
-          {/* Top Level Section with Circle Badges and Connection Tabs */}
+          {/* Horizontal Layout: Circle Badges and Connections */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Circle Badges Section - Takes 4 columns on large screens */}
             <div className="lg:col-span-4">
               <CircleBadgesSection />
             </div>
 
-            {/* Connection Tabs Section - Takes 8 columns on large screens, aligned with Circle Badges title */}
+            {/* Connections Section - Takes 8 columns on large screens */}
             <div className="lg:col-span-8">
-              <div className="space-y-6">
-                {/* Tabs aligned with Circle Badges title */}
-                <div className="pt-6"> {/* Match the padding-top from CircleBadgesSection CardHeader */}
+              <Card>
+                <CardHeader className="pb-4"></CardHeader>
+                <CardContent className="pt-0">
                   <Tabs defaultValue="all" className="w-full">
                     <TabsList className="grid w-full grid-cols-4 mb-6">
                       <TabsTrigger value="all">
@@ -938,8 +938,8 @@ export default function CircleView({ student }: CircleViewProps) {
                       </div>
                     </TabsContent>
                   </Tabs>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
