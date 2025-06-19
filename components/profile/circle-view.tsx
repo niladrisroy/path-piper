@@ -102,17 +102,17 @@ function CircleBadgesSection() {
   const getIconComponent = (iconName: string) => {
     switch (iconName) {
       case 'crown':
-        return <Crown className="h-6 w-6" />
+        return <Crown className="h-4 w-4" />
       case 'shield':
-        return <Shield className="h-6 w-6" />
+        return <Shield className="h-4 w-4" />
       case 'star':
-        return <Star className="h-6 w-6" />
+        return <Star className="h-4 w-4" />
       case 'graduation-cap':
-        return <GraduationCap className="h-6 w-6" />
+        return <GraduationCap className="h-4 w-4" />
       case 'building':
-        return <Building className="h-6 w-6" />
+        return <Building className="h-4 w-4" />
       default:
-        return <Users className="h-6 w-6" />
+        return <Users className="h-4 w-4" />
     }
   }
 
@@ -136,10 +136,15 @@ function CircleBadgesSection() {
           <CardTitle>My Circle Badges</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="animate-pulse space-y-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-20 bg-gray-200 rounded"></div>
-            ))}
+          <div className="animate-pulse">
+            <div className="flex flex-wrap gap-4">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="flex flex-col items-center">
+                  <div className="h-16 w-16 bg-gray-200 rounded-full mb-2"></div>
+                  <div className="h-3 w-12 bg-gray-200 rounded"></div>
+                </div>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -166,115 +171,143 @@ function CircleBadgesSection() {
           </div>
         ) : (
           <div className="space-y-4">
-            {circles.map((circle) => (
-              <div
-                key={circle.id}
-                className="border rounded-lg p-4 hover:shadow-md transition-all duration-200"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+            {/* Compact Circular Grid Layout */}
+            <div className="flex flex-wrap gap-4">
+              {circles.map((circle) => (
+                <div
+                  key={circle.id}
+                  className="flex flex-col items-center group cursor-pointer"
+                  onClick={() => setExpandedCircle(
+                    expandedCircle === circle.id ? null : circle.id
+                  )}
+                >
+                  {/* Circle Badge */}
+                  <div className="relative mb-2">
                     <div
-                      className="w-12 h-12 rounded-full flex items-center justify-center text-white"
+                      className="w-16 h-16 rounded-full flex items-center justify-center text-white shadow-lg group-hover:shadow-xl transition-all duration-200 group-hover:scale-105"
                       style={{ backgroundColor: circle.color }}
                     >
                       {getIconComponent(circle.icon)}
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-gray-900 dark:text-white">
-                          {circle.name}
-                        </h3>
-                        {circle.isDefault && (
-                          <Badge variant="outline" className="text-xs">
-                            Default
-                          </Badge>
-                        )}
+                    {/* Member count indicator */}
+                    {circle._count.memberships > 0 && (
+                      <div className="absolute -top-1 -right-1 bg-gray-900 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        {circle._count.memberships}
                       </div>
-                      {circle.description && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {circle.description}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-1 mt-1">
-                        <Users className="h-3 w-3 text-gray-400" />
-                        <span className="text-xs text-gray-500">
-                          {circle._count.memberships} members
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setExpandedCircle(
-                        expandedCircle === circle.id ? null : circle.id
-                      )}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <Settings className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Expanded Members View */}
-                {expandedCircle === circle.id && (
-                  <div className="mt-4 pt-4 border-t">
-                    <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
-                      Circle Members ({circle._count.memberships})
-                    </h4>
-                    {circle.memberships.length === 0 ? (
-                      <p className="text-sm text-gray-500 text-center py-4">
-                        No members in this circle yet
-                      </p>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {circle.memberships.map((membership) => (
-                          <div
-                            key={membership.user.id}
-                            className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
-                          >
-                            <div className="relative">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage
-                                  src={membership.user.profileImageUrl}
-                                  alt={`${membership.user.firstName} ${membership.user.lastName}`}
-                                />
-                                <AvatarFallback className="text-xs">
-                                  {membership.user.firstName?.[0]}{membership.user.lastName?.[0]}
-                                </AvatarFallback>
-                              </Avatar>
-                              {membership.user.status && (
-                                <div
-                                  className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-white ${getStatusColor(membership.user.status)}`}
-                                />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                {membership.user.firstName} {membership.user.lastName}
-                              </p>
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="text-xs">
-                                  {membership.user.role}
-                                </Badge>
-                              </div>
-                            </div>
-                            <div className="flex gap-1">
-                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                <MessageCircle className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
+                    )}
+                    {/* Default badge indicator */}
+                    {circle.isDefault && (
+                      <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full w-4 h-4 flex items-center justify-center">
+                        <Crown className="h-2 w-2" />
                       </div>
                     )}
                   </div>
-                )}
+                  
+                  {/* Circle Name */}
+                  <span className="text-xs text-center text-gray-700 dark:text-gray-300 font-medium truncate w-20">
+                    {circle.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Expanded Circle Details */}
+            {expandedCircle && (
+              <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+                {(() => {
+                  const selectedCircle = circles.find(c => c.id === expandedCircle)
+                  if (!selectedCircle) return null
+                  
+                  return (
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-12 h-12 rounded-full flex items-center justify-center text-white"
+                            style={{ backgroundColor: selectedCircle.color }}
+                          >
+                            {getIconComponent(selectedCircle.icon)}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-semibold text-gray-900 dark:text-white">
+                                {selectedCircle.name}
+                              </h3>
+                              {selectedCircle.isDefault && (
+                                <Badge variant="outline" className="text-xs">
+                                  Default
+                                </Badge>
+                              )}
+                            </div>
+                            {selectedCircle.description && (
+                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                {selectedCircle.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setExpandedCircle(null)}
+                        >
+                          ✕
+                        </Button>
+                      </div>
+
+                      {/* Circle Members */}
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                          Circle Members ({selectedCircle._count.memberships})
+                        </h4>
+                        {selectedCircle.memberships.length === 0 ? (
+                          <p className="text-sm text-gray-500 text-center py-4">
+                            No members in this circle yet
+                          </p>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {selectedCircle.memberships.map((membership) => (
+                              <div
+                                key={membership.user.id}
+                                className="flex items-center gap-3 p-3 bg-white dark:bg-gray-700 rounded-lg"
+                              >
+                                <div className="relative">
+                                  <Avatar className="h-8 w-8">
+                                    <AvatarImage
+                                      src={membership.user.profileImageUrl}
+                                      alt={`${membership.user.firstName} ${membership.user.lastName}`}
+                                    />
+                                    <AvatarFallback className="text-xs">
+                                      {membership.user.firstName?.[0]}{membership.user.lastName?.[0]}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  {membership.user.status && (
+                                    <div
+                                      className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-white ${getStatusColor(membership.user.status)}`}
+                                    />
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                    {membership.user.firstName} {membership.user.lastName}
+                                  </p>
+                                  <Badge variant="outline" className="text-xs mt-1">
+                                    {membership.user.role}
+                                  </Badge>
+                                </div>
+                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                  <MessageCircle className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
-            ))}
+            )}
           </div>
         )}
       </CardContent>
