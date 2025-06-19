@@ -86,6 +86,10 @@ model Profile {
   connections2        Connection[] @relation("User2Connections")
   givenEndorsements   SkillEndorsement[] @relation("Endorser")
   receivedEndorsements SkillEndorsement[] @relation("EndorsedUser")
+  createdCircles      CircleBadge[] @relation("CreatedCircles")
+  circleMemberships   CircleMembership[] @relation("CircleMemberships")
+  sentCircleInvitations CircleInvitation[] @relation("SentCircleInvitations")
+  receivedCircleInvitations CircleInvitation[] @relation("ReceivedCircleInvitations")
 
   @@map("profiles")
 }
@@ -420,6 +424,55 @@ model SkillEndorsement {
 
   @@unique([endorserId, endorsedUserId, skillId])
   @@map("skill_endorsements")
+}
+
+model CircleBadge {
+  id              String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  creatorId       String              @map("creator_id") @db.Uuid
+  name            String              @db.VarChar(50)
+  description     String?
+  color           String              @default("#3B82F6") @db.VarChar(20)
+  icon            String              @default("users") @db.VarChar(50)
+  isDefault       Boolean             @default(false) @map("is_default")
+  creator         Profile             @relation("CreatedCircles", fields: [creatorId], references: [id], onDelete: Cascade)
+  memberships     CircleMembership[]
+  invitations     CircleInvitation[]
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  @@map("circle_badges")
+}
+
+model CircleMembership {
+  id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  circleId  String      @map("circle_id") @db.Uuid
+  userId    String      @map("user_id") @db.Uuid
+  status    String      @default("active") // 'active', 'pending', 'declined', 'left'
+  joinedAt  DateTime    @default(now()) @map("joined_at")
+  circle    CircleBadge @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  user      Profile     @relation("CircleMemberships", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+
+  @@unique([circleId, userId])
+  @@map("circle_memberships")
+}
+
+model CircleInvitation {
+  id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  circleId  String      @map("circle_id") @db.Uuid
+  inviterId String      @map("inviter_id") @db.Uuid
+  inviteeId String      @map("invitee_id") @db.Uuid
+  status    String      @default("pending") // 'pending', 'accepted', 'declined', 'cancelled'
+  message   String?
+  circle    CircleBadge @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  inviter   Profile     @relation("SentCircleInvitations", fields: [inviterId], references: [id], onDelete: Cascade)
+  invitee   Profile     @relation("ReceivedCircleInvitations", fields: [inviteeId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+
+  @@unique([circleId, inviteeId])
+  @@map("circle_invitations")
 }
 
 model FeedPost {

@@ -5,7 +5,36 @@ import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { MapPin, Calendar, Users, Award, Star, MessageCircle, Heart, Share2, MoreHorizontal, Edit, BadgeCheck, FolderKanban, BrainIcon, UserPlus } from "lucide-react"
+import { 
+  Users, 
+  MapPin, 
+  Calendar, 
+  Mail, 
+  Phone, 
+  Edit3, 
+  Settings, 
+  MoreHorizontal,
+  BookOpen,
+  Gamepad2,
+  Mountain,
+  Coffee,
+  Zap,
+  Star,
+  Award,
+  Heart,
+  MessageCircle,
+  Share2,
+  Clock,
+  Globe,
+  Instagram,
+  Twitter,
+  Linkedin,
+  Link,
+  MapPinIcon,
+  Building,
+  GraduationCap,
+  Plus
+} from "lucide-react"
 
 interface ProfileHeaderProps {
   student: any
@@ -23,6 +52,9 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [actualConnectionCounts, setActualConnectionCounts] = useState(connectionCounts)
+  const [circles, setCircles] = useState([]) // Fetch circles from database
+  const [newCircleName, setNewCircleName] = useState('')
+  const [showCreateCircle, setShowCreateCircle] = useState(false)
 
   // Use passed student data or fallback to mock data
   const studentProp = student || {
@@ -112,6 +144,56 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
       }
     }
   }, [isOwnProfile, studentProp.id, connectionCounts])
+
+  // Fetch user's circles
+  useEffect(() => {
+    const fetchCircles = async () => {
+      if (isOwnProfile) {
+        try {
+          const response = await fetch('/api/circles', {
+            credentials: 'include'
+          })
+          if (response.ok) {
+            const fetchedCircles = await response.json()
+            setCircles(fetchedCircles)
+          } else {
+            console.error('Error fetching circles:', response.status)
+          }
+        } catch (error) {
+          console.error('Error fetching circles:', error)
+        }
+      }
+    }
+
+    fetchCircles()
+  }, [isOwnProfile])
+
+  const handleCreateCircle = async () => {
+    if (newCircleName.trim() !== '') {
+      try {
+        const response = await fetch('/api/circles', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({ name: newCircleName })
+        })
+
+        if (response.ok) {
+          const newCircle = await response.json()
+          setCircles([...circles, newCircle])
+          setShowCreateCircle(false)
+          setNewCircleName('')
+        } else {
+          console.error('Error creating circle:', response.status)
+        }
+      } catch (error) {
+        console.error('Error creating circle:', error)
+      }
+    }
+  }
+
 
   // Mock circle members (would come from API in real app)
   const circleMembers = [
@@ -522,7 +604,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                     </div>
                   </div>
 
-                  
+
 
                   {/* Recent Badges section */}
                   <div className="mt-3">

@@ -1,0 +1,244 @@
+
+"use client"
+
+import { useState, useEffect } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Users, UserPlus, Send } from "lucide-react"
+
+interface Circle {
+  id: string
+  name: string
+  color: string
+  icon: string
+  memberships: Array<{
+    user: {
+      id: string
+      firstName: string
+      lastName: string
+      profileImageUrl?: string
+      role: string
+    }
+  }>
+  _count: {
+    memberships: number
+  }
+}
+
+interface Connection {
+  id: string
+  user: {
+    id: string
+    name: string
+    firstName: string
+    lastName: string
+    avatar?: string
+    role: string
+  }
+}
+
+interface CircleManagementDialogProps {
+  circle: Circle | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onCircleUpdated: () => void
+}
+
+export default function CircleManagementDialog({
+  circle,
+  open,
+  onOpenChange,
+  onCircleUpdated
+}: CircleManagementDialogProps) {
+  const [connections, setConnections] = useState<Connection[]>([])
+  const [selectedConnections, setSelectedConnections] = useState<string[]>([])
+  const [inviteMessage, setInviteMessage] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (open && circle) {
+      fetchConnections()
+    }
+  }, [open, circle])
+
+  const fetchConnections = async () => {
+    try {
+      const response = await fetch('/api/connections', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('sb-access-token')}`
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        
+        // Filter out users who are already in this circle
+        const currentMemberIds = circle?.memberships.map(m => m.user.id) || []
+        const availableConnections = data.filter((conn: Connection) => 
+          !currentMemberIds.includes(conn.user.id)
+        )
+        
+        setConnections(availableConnections)
+      }
+    } catch (error) {
+      console.error('Error fetching connections:', error)
+    }
+  }
+
+  const handleSendInvitations = async () => {
+    if (!circle || selectedConnections.length === 0) return
+
+    setLoading(true)
+    try {
+      const promises = selectedConnections.map(connectionId =>
+        fetch('/api/circles/invitations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('sb-access-token')}`
+          },
+          body: JSON.stringify({
+            circleId: circle.id,
+            inviteeId: connectionId,
+            message: inviteMessage.trim() || `Join my "${circle.name}" circle!`
+          })
+        })
+      )
+
+      await Promise.all(promises)
+      
+      setSelectedConnections([])
+      setInviteMessage('')
+      onCircleUpdated()
+      onOpenChange(false)
+    } catch (error) {
+      console.error('Error sending invitations:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const toggleConnection = (connectionId: string) => {
+    setSelectedConnections(prev =>
+      prev.includes(connectionId)
+        ? prev.filter(id => id !== connectionId)
+        : [...prev, connectionId]
+    )
+  }
+
+  if (!circle) return null
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <div 
+              className="w-4 h-4 rounded-full"
+              style={{ backgroundColor: circle.color }}
+            />
+            Invite to {circle.name}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Current members */}
+          <div>
+            <h4 className="text-sm font-medium mb-2">Current Members ({circle._count.memberships})</h4>
+            <div className="flex flex-wrap gap-2">
+              {circle.memberships.slice(0, 6).map((membership) => (
+                <div key={membership.user.id} className="flex items-center gap-1 text-xs">
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage src={membership.user.profileImageUrl} />
+                    <AvatarFallback className="text-xs">
+                      {membership.user.firstName[0]}{membership.user.lastName[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="truncate max-w-16">
+                    {membership.user.firstName}
+                  </span>
+                </div>
+              ))}
+              {circle._count.memberships > 6 && (
+                <span className="text-xs text-gray-500">
+                  +{circle._count.memberships - 6} more
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Available connections to invite */}
+          <div>
+            <h4 className="text-sm font-medium mb-2">Invite Connections</h4>
+            <div className="max-h-40 overflow-y-auto space-y-2">
+              {connections.length === 0 ? (
+                <p className="text-sm text-gray-500">No available connections to invite</p>
+              ) : (
+                connections.map((connection) => (
+                  <div 
+                    key={connection.id}
+                    className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
+                      selectedConnections.includes(connection.user.id)
+                        ? 'bg-blue-50 border border-blue-200'
+                        : 'hover:bg-gray-50'
+                    }`}
+                    onClick={() => toggleConnection(connection.user.id)}
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={connection.user.avatar} />
+                      <AvatarFallback className="text-xs">
+                        {connection.user.firstName[0]}{connection.user.lastName[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{connection.user.name}</p>
+                      <Badge variant="outline" className="text-xs">
+                        {connection.user.role}
+                      </Badge>
+                    </div>
+                    {selectedConnections.includes(connection.user.id) && (
+                      <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs">✓</span>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Invitation message */}
+          {selectedConnections.length > 0 && (
+            <div>
+              <label className="text-sm font-medium mb-2 block">Invitation Message</label>
+              <Input
+                value={inviteMessage}
+                onChange={(e) => setInviteMessage(e.target.value)}
+                placeholder={`Join my "${circle.name}" circle!`}
+                maxLength={200}
+              />
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSendInvitations}
+              disabled={selectedConnections.length === 0 || loading}
+              className="flex-1"
+            >
+              <Send className="h-4 w-4 mr-2" />
+              Send Invites ({selectedConnections.length})
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
