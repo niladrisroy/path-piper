@@ -15,6 +15,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
+  const [isRedirecting, setIsRedirecting] = useState(false)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,30 +37,36 @@ export default function LoginPage() {
       if (response.ok && data.success) {
         toast.success('Login successful!')
         invalidateUserCache();
-
-        // Redirect based on user role and onboarding status
-        if (data.onboardingCompleted) {
-          if (data.role === 'student') {
-            router.push('/student/profile')
-          } else if (data.role === 'mentor') {
-            router.push('/mentor/profile')
-          } else if (data.role === 'institution') {
-            router.push('/institution/profile')
+        
+        // Show redirecting state
+        setIsRedirecting(true)
+        
+        // Small delay to ensure smooth transition
+        setTimeout(() => {
+          // Redirect based on user role and onboarding status
+          if (data.onboardingCompleted) {
+            if (data.role === 'student') {
+              router.push('/student/profile')
+            } else if (data.role === 'mentor') {
+              router.push('/mentor/profile')
+            } else if (data.role === 'institution') {
+              router.push('/institution/profile')
+            } else {
+              router.push('/feed')
+            }
           } else {
-            router.push('/feed')
+            // User needs to complete onboarding
+            if (data.role === 'student') {
+              router.push('/onboarding')
+            } else if (data.role === 'mentor') {
+              router.push('/mentor-onboarding')
+            } else if (data.role === 'institution') {
+              router.push('/institution-onboarding')
+            } else {
+              router.push('/onboarding')
+            }
           }
-        } else {
-          // User needs to complete onboarding
-          if (data.role === 'student') {
-            router.push('/onboarding')
-          } else if (data.role === 'mentor') {
-            router.push('/mentor-onboarding')
-          } else if (data.role === 'institution') {
-            router.push('/institution-onboarding')
-          } else {
-            router.push('/onboarding')
-          }
-        }
+        }, 500)
       } else {
         toast.error(data.error || 'Login failed')
       }
@@ -73,6 +80,18 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-teal-50 p-4">
+      {/* Loading overlay when redirecting */}
+      {isRedirecting && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 shadow-lg max-w-sm w-full mx-4">
+            <div className="flex items-center justify-center space-x-3">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-pathpiper-teal"></div>
+              <p className="text-gray-700 font-medium">Setting up your profile...</p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
@@ -100,7 +119,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={loading}
+                disabled={loading || isRedirecting}
               />
             </div>
             <div className="space-y-2">
@@ -112,15 +131,15 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                disabled={loading}
+                disabled={loading || isRedirecting}
               />
             </div>
             <Button 
               type="submit" 
               className="w-full bg-pathpiper-teal hover:bg-pathpiper-teal/90"
-              disabled={loading}
+              disabled={loading || isRedirecting}
             >
-              {loading ? "Signing in..." : "Sign in"}
+              {loading ? "Signing in..." : isRedirecting ? "Redirecting..." : "Sign in"}
             </Button>
           </form>
 
