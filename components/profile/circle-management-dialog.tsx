@@ -1,16 +1,13 @@
+
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Users, UserPlus, Send, Upload, X, Image as ImageIcon } from "lucide-react"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { DialogTrigger } from "@/components/ui/dialog"
-import { Plus } from 'lucide-react'
+import { Users, UserPlus, Send } from "lucide-react"
 
 interface Circle {
   id: string
@@ -55,225 +52,6 @@ interface CircleManagementDialogProps {
   onCircleUpdated: () => void
 }
 
-interface CreateCircleDialogProps {
-  trigger?: React.ReactNode
-  onCircleCreated?: () => void
-}
-
-export function CreateCircleDialog({ trigger, onCircleCreated }: CreateCircleDialogProps) {
-  const [open, setOpen] = useState(false)
-  const [circleName, setCircleName] = useState('')
-  const [description, setDescription] = useState('')
-  const [selectedImage, setSelectedImage] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      // Check file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('File size must be less than 5MB')
-        return
-      }
-
-      // Check file type
-      if (!file.type.startsWith('image/')) {
-        alert('Please select an image file')
-        return
-      }
-
-      setSelectedImage(file)
-
-      // Create preview
-      const reader = new FileReader()
-      reader.onload = () => {
-        setImagePreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const removeImage = () => {
-    setSelectedImage(null)
-    setImagePreview(null)
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
-  }
-
-  const uploadImage = async (file: File): Promise<string | null> => {
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      // Upload to a simple file upload endpoint (you may need to implement this)
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        return data.url
-      }
-    } catch (error) {
-      console.error('Error uploading image:', error)
-    }
-    return null
-  }
-
-  const handleCreateCircle = async () => {
-    if (!circleName.trim()) return
-
-    setLoading(true)
-    try {
-      let iconUrl = 'users' // Default icon
-
-      // Upload image if selected
-      if (selectedImage) {
-        const uploadedUrl = await uploadImage(selectedImage)
-        if (uploadedUrl) {
-          iconUrl = uploadedUrl
-        }
-      }
-
-      const response = await fetch('/api/circles', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: circleName,
-          description: description.trim() || null,
-          color: '#3B82F6',
-          icon: iconUrl
-        }),
-      })
-
-      if (response.ok) {
-        setCircleName('')
-        setDescription('')
-        setSelectedImage(null)
-        setImagePreview(null)
-        setOpen(false)
-        onCircleCreated?.()
-      }
-    } catch (error) {
-      console.error('Error creating circle:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button variant="outline" size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Circle
-          </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Create New Circle</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="circleName">Circle name</Label>
-            <Input
-              id="circleName"
-              value={circleName}
-              onChange={(e) => setCircleName(e.target.value)}
-              placeholder="Enter circle name"
-              maxLength={50}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description (optional)</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe your circle..."
-              maxLength={200}
-              rows={3}
-            />
-            <div className="text-xs text-gray-500 text-right">
-              {description.length}/200
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Circle Icon (optional)</Label>
-            <div className="space-y-3">
-              {imagePreview ? (
-                <div className="relative inline-block">
-                  <img
-                    src={imagePreview}
-                    alt="Circle icon preview"
-                    className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
-                  />
-                  <button
-                    onClick={removeImage}
-                    className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ) : (
-                <div className="w-16 h-16 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50">
-                  <ImageIcon className="w-6 h-6 text-gray-400" />
-                </div>
-              )}
-
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageSelect}
-                className="hidden"
-              />
-
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-2"
-              >
-                <Upload className="w-4 h-4" />
-                {imagePreview ? 'Change Image' : 'Upload Image'}
-              </Button>
-
-              <p className="text-xs text-gray-500">
-                Upload a custom icon for your circle. Max size: 5MB. Recommended: Square image, 256x256px.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleCreateCircle}
-              disabled={!circleName.trim() || loading}
-            >
-              {loading ? 'Creating...' : 'Create Circle'}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-
 export default function CircleManagementDialog({
   circle,
   open,
@@ -297,25 +75,25 @@ export default function CircleManagementDialog({
       const response = await fetch('/api/connections', {
         credentials: 'include'
       })
-
+      
       if (response.ok) {
         const data = await response.json()
-
+        
         // For Friends circle, show all connections and no invite functionality
         if (circle?.id === 'friends') {
           setConnections([])
           setExistingInvitations([])
           return
         }
-
+        
         // Filter out users who are already in this circle
         const currentMemberIds = circle?.memberships?.map(m => m.user.id) || []
         const availableConnections = data.filter((conn: Connection) => 
           !currentMemberIds.includes(conn.user.id)
         )
-
+        
         setConnections(availableConnections)
-
+        
         // Fetch existing invitations for this circle
         if (circle?.id) {
           await fetchExistingInvitations()
@@ -331,7 +109,7 @@ export default function CircleManagementDialog({
       const response = await fetch(`/api/circles/invitations?type=sent&circleId=${circle?.id}`, {
         credentials: 'include'
       })
-
+      
       if (response.ok) {
         const invitations = await response.json()
         setExistingInvitations(invitations)
@@ -362,10 +140,10 @@ export default function CircleManagementDialog({
       )
 
       const responses = await Promise.all(promises)
-
+      
       // Check if all requests were successful
       const allSuccessful = responses.every(response => response.ok)
-
+      
       if (allSuccessful) {
         setSelectedConnections([])
         setInviteMessage('')
@@ -391,7 +169,7 @@ export default function CircleManagementDialog({
     // Don't allow selection if there's already an invitation
     const status = getInvitationStatus(connectionId)
     if (status && status !== 'declined') return
-
+    
     setSelectedConnections(prev =>
       prev.includes(connectionId)
         ? prev.filter(id => id !== connectionId)
@@ -459,7 +237,7 @@ export default function CircleManagementDialog({
                       Creator
                     </Badge>
                   </div>
-
+                  
                   {/* Show other members */}
                   {circle.memberships?.slice(0, 5).map((membership) => (
                     <div key={membership.user.id} className="flex items-center gap-1 text-xs">
@@ -495,7 +273,7 @@ export default function CircleManagementDialog({
                   connections.map((connection) => {
                     const invitationStatus = getInvitationStatus(connection.user.id)
                     const canInvite = !invitationStatus || invitationStatus === 'declined'
-
+                    
                     return (
                       <div 
                         key={connection.id}
@@ -576,4 +354,3 @@ export default function CircleManagementDialog({
     </Dialog>
   )
 }
-// Added CreateCircleDialog and updated imports

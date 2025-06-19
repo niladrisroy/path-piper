@@ -191,22 +191,12 @@ function CircleBadgesSection() {
                   {/* Circle Badge */}
                   <div className="relative mb-2">
                     <div
-                      className={`h-12 w-12 rounded-full flex items-center justify-center text-white shadow-lg group-hover:shadow-xl transition-all duration-200 overflow-hidden`}
-                      style={{
-                        background: circle.icon.startsWith('/uploads/') || circle.icon.startsWith('http') 
-                          ? 'transparent' 
-                          : `linear-gradient(135deg, ${circle.color}, ${circle.color}dd)`,
-                      }}
+                      className="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg group-hover:shadow-xl transition-all duration-200 group-hover:scale-105"
+                      style={{ backgroundColor: circle.color }}
                     >
-                      {circle.icon.startsWith('/uploads/') || circle.icon.startsWith('http') ? (
-                        <img 
-                          src={circle.icon} 
-                          alt={`${circle.name} icon`} 
-                          className="h-12 w-12 rounded-full object-cover"
-                        />
-                      ) : (
-                        getIconComponent(circle.icon)
-                      )}
+                      <div className="scale-75">
+                        {getIconComponent(circle.icon)}
+                      </div>
                     </div>
                     {/* Member count indicator */}
                     {circle._count.memberships > 0 && (
@@ -246,22 +236,12 @@ function CircleBadgesSection() {
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <div
-                            className="h-8 w-8 rounded-full flex items-center justify-center text-white overflow-hidden"
-                            style={{ 
-                              backgroundColor: selectedCircle.icon.startsWith('/uploads/') || selectedCircle.icon.startsWith('http') 
-                                ? 'transparent' 
-                                : selectedCircle.color 
-                            }}
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-white"
+                            style={{ backgroundColor: selectedCircle.color }}
                           >
-                            {selectedCircle.icon.startsWith('/uploads/') || selectedCircle.icon.startsWith('http') ? (
-                              <img 
-                                src={selectedCircle.icon} 
-                                alt={`${selectedCircle.name} icon`} 
-                                className="h-8 w-8 rounded-full object-cover"
-                              />
-                            ) : (
-                              getIconComponent(selectedCircle.icon)
-                            )}
+                            <div className="scale-75">
+                              {getIconComponent(selectedCircle.icon)}
+                            </div>
                           </div>
                           <div>
                             <div className="flex items-center gap-2">

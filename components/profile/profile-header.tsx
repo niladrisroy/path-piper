@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Settings, Plus, Users, MessageSquare, Share2, Calendar, MapPin, Briefcase, GraduationCap, Mail, Phone, Globe, Instagram, Twitter, Linkedin, Github, Youtube, Facebook, UserPlus, BadgeCheck, Edit, MessageCircle, UserIcon, FolderKanban, Award, BrainIcon, UserCheck, UserX, Crown, Shield, Star, GraduationCap as GraduationCapIcon, Building } from "lucide-react"
-import CircleManagementDialog, { CreateCircleDialog } from "./circle-management-dialog"
+import { Settings, Plus, Users, MessageSquare, Share2, Calendar, MapPin, Briefcase, GraduationCap, Mail, Phone, Globe, Instagram, Twitter, Linkedin, Github, Youtube, Facebook, UserPlus, BadgeCheck, Edit, MessageCircle, UserIcon, FolderKanban, Award, BrainIcon, UserCheck, UserX } from "lucide-react"
+import CircleManagementDialog from "./circle-management-dialog"
 
 interface ProfileHeaderProps {
   student: any
@@ -28,7 +28,8 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
   const [isEditing, setIsEditing] = useState(false)
   const [actualConnectionCounts, setActualConnectionCounts] = useState(connectionCounts)
   const [circles, setCircles] = useState<any[]>([])
-  
+  const [showCreateCircle, setShowCreateCircle] = useState(false)
+  const [newCircleName, setNewCircleName] = useState('')
   const [selectedCircle, setSelectedCircle] = useState<any>(null)
   const [showCircleManagement, setShowCircleManagement] = useState(false)
   const [connections, setConnections] = useState<any[]>([])
@@ -160,7 +161,31 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
     }
   }, [isOwnProfile])
 
-  
+  const handleCreateCircle = async () => {
+    if (newCircleName.trim() !== '') {
+      try {
+        const response = await fetch('/api/circles', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({ name: newCircleName })
+        })
+
+        if (response.ok) {
+          const newCircle = await response.json()
+          setCircles([...circles, newCircle])
+          setShowCreateCircle(false)
+          setNewCircleName('')
+        } else {
+          console.error('Error creating circle:', response.status)
+        }
+      } catch (error) {
+        console.error('Error creating circle:', error)
+      }
+    }
+  }
 
   const handleCircleClick = (circle: any) => {
     setSelectedCircle(circle)
@@ -191,36 +216,9 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
     { id: 5, name: "Riverdale High", image: "/university-classroom.png", type: "institution" },
   ]
 
-    
-
-    const getIconComponent = (iconName: string) => {
-    // Check if iconName is a URL (uploaded image)
-    if (iconName.startsWith('/uploads/') || iconName.startsWith('http')) {
-      return (
-        <img 
-          src={iconName} 
-          alt="Circle icon" 
-          className="h-3 w-3 rounded-full object-cover"
-        />
-      );
+    const handleAddCircle = () => {
+        setShowCreateCircle(true)
     }
-
-    // Default icon components for backward compatibility
-    switch (iconName) {
-      case "crown":
-        return <Crown className="h-3 w-3" />;
-      case "shield":
-        return <Shield className="h-3 w-3" />;
-      case "star":
-        return <Star className="h-3 w-3" />;
-      case "graduation-cap":
-        return <GraduationCapIcon className="h-3 w-3" />;
-      case "building":
-        return <Building className="h-3 w-3" />;
-      default:
-        return <Users className="h-3 w-3" />;
-    }
-  };
 
   return (
     <div>
@@ -424,24 +422,10 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                               >
                                 <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
                                   <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                                    <div
-                          className={`h-6 w-6 rounded-full flex items-center justify-center text-white text-xs shadow-sm overflow-hidden`}
-                          style={{ 
-                            backgroundColor: circle.icon.startsWith('/uploads/') || circle.icon.startsWith('http') 
-                              ? 'transparent' 
-                              : circle.color 
-                          }}
-                        >
-                          {circle.icon.startsWith('/uploads/') || circle.icon.startsWith('http') ? (
-                            <img 
-                              src={circle.icon} 
-                              alt={`${circle.name} icon`} 
-                              className="h-6 w-6 rounded-full object-cover"
-                            />
-                          ) : (
-                            getIconComponent(circle.icon)
-                          )}
-                        </div>
+                                    <div 
+                                      className="w-3 h-3 rounded-full"
+                                      style={{ backgroundColor: circle.color }}
+                                    />
                                   </div>
                                 </div>
                               </button>
@@ -456,18 +440,16 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                         {isOwnProfile && (
                           <div className="flex flex-col items-center min-w-[72px]">
                             <div className="relative mb-1">
-                              <CreateCircleDialog
-                                onCircleCreated={handleCircleUpdated}
-                                trigger={
-                                  <button className="w-16 h-16 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 p-[3px] hover:from-pathpiper-teal hover:to-pathpiper-blue transition-all duration-200">
-                                    <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
-                                      <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                                        <Plus className="h-6 w-6 text-gray-500 dark:text-gray-400" />
-                                      </div>
-                                    </div>
-                                  </button>
-                                }
-                              />
+                              <button
+                                onClick={() => setShowCreateCircle(true)}
+                                className="w-16 h-16 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 p-[3px] hover:from-pathpiper-teal hover:to-pathpiper-blue transition-all duration-200"
+                              >
+                                <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
+                                  <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                                    <Plus className="h-6 w-6 text-gray-500 dark:text-gray-400" />
+                                  </div>
+                                </div>
+                              </button>
                             </div>
                             <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
                               Add Circle
@@ -477,7 +459,34 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                       </div>
                     </div>
 
-                    
+                    {/* Create Circle Modal */}
+                    {showCreateCircle && (
+                      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+                          <h3 className="text-lg font-semibold mb-4">Create New Circle</h3>
+                          <Input
+                            placeholder="Circle name"
+                            value={newCircleName}
+                            onChange={(e) => setNewCircleName(e.target.value)}
+                            className="mb-4"
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setShowCreateCircle(false)
+                                setNewCircleName('')
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                            <Button onClick={handleCreateCircle}>
+                              Create Circle
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
