@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@supabase/supabase-js'
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest) {
   try {
     console.log('API: Circles request received')
     console.log('API: Checking cookies for auth token')
-
+    
     const cookieStore = request.cookies
     console.log('API: Cookie store available')
 
@@ -94,7 +95,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     console.log('API: Create circle request received')
-
+    
     const cookieStore = request.cookies
     const accessToken = cookieStore.get('sb-access-token')?.value
 
@@ -113,41 +114,15 @@ export async function POST(request: NextRequest) {
     console.log('API: Authenticated user found:', user.id)
 
     const body = await request.json()
-    const { name, description, color, icon, iconImage } = body
+    const { name, description, color, icon } = body
 
-    // Validation
-    if (!name?.trim()) {
+    if (!name || name.trim().length === 0) {
       return NextResponse.json({ error: 'Circle name is required' }, { status: 400 })
     }
 
     if (name.trim().length > 50) {
-      return NextResponse.json({ error: 'Circle name must be 50 characters or less' }, { status: 400 })
+      return NextResponse.json({ error: 'Circle name too long' }, { status: 400 })
     }
-
-    if (description && description.trim().length > 500) {
-      return NextResponse.json({ error: 'Description must be 500 characters or less' }, { status: 400 })
-    }
-
-    if (color && color.length > 20) {
-      return NextResponse.json({ error: 'Color value too long' }, { status: 400 })
-    }
-
-    // Handle icon - use image URL if provided, otherwise use icon name
-    let finalIcon = 'users' // default
-    if (iconImage && iconImage.trim()) {
-      // If an image is uploaded, use the image URL (truncate if too long)
-      finalIcon = iconImage.trim().substring(0, 50)
-    } else if (icon && icon.trim()) {
-      // Otherwise use the icon name (truncate if too long)
-      finalIcon = icon.trim().substring(0, 50)
-    }
-
-    console.log('Creating circle with data:', {
-      name: name.trim(),
-      description: description?.trim() || null,
-      color: color || '#3B82F6',
-      icon: finalIcon
-    })
 
     const circle = await prisma.circleBadge.create({
       data: {
@@ -155,7 +130,7 @@ export async function POST(request: NextRequest) {
         name: name.trim(),
         description: description?.trim() || null,
         color: color || '#3B82F6',
-        icon: finalIcon,
+        icon: icon || 'users',
         isDefault: false
       },
       include: {
@@ -190,7 +165,6 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    console.log('Circle created successfully:', circle.id)
     return NextResponse.json(circle, { status: 201 })
   } catch (error) {
     console.error('Error creating circle:', error)
