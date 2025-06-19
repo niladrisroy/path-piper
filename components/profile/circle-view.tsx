@@ -164,15 +164,15 @@ function CircleBadgesSection() {
       </CardHeader>
       <CardContent>
         {circles.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-            <p>No circle badges yet</p>
-            <p className="text-sm">Create your first circle to get started!</p>
+          <div className="text-center py-6 text-gray-500">
+            <Users className="h-10 w-10 mx-auto mb-2 text-gray-300" />
+            <p className="text-sm">No circle badges yet</p>
+            <p className="text-xs">Create your first circle!</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {/* Compact Circular Grid Layout */}
-            <div className="flex flex-wrap gap-4">
+          <div className="space-y-3">
+            {/* Compact Circular Grid Layout - Optimized for side panel */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3">
               {circles.map((circle) => (
                 <div
                   key={circle.id}
@@ -184,27 +184,29 @@ function CircleBadgesSection() {
                   {/* Circle Badge */}
                   <div className="relative mb-2">
                     <div
-                      className="w-16 h-16 rounded-full flex items-center justify-center text-white shadow-lg group-hover:shadow-xl transition-all duration-200 group-hover:scale-105"
+                      className="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg group-hover:shadow-xl transition-all duration-200 group-hover:scale-105"
                       style={{ backgroundColor: circle.color }}
                     >
-                      {getIconComponent(circle.icon)}
+                      <div className="scale-75">
+                        {getIconComponent(circle.icon)}
+                      </div>
                     </div>
                     {/* Member count indicator */}
                     {circle._count.memberships > 0 && (
-                      <div className="absolute -top-1 -right-1 bg-gray-900 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                        {circle._count.memberships}
+                      <div className="absolute -top-0.5 -right-0.5 bg-gray-900 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                        <span className="text-xs leading-none">{circle._count.memberships}</span>
                       </div>
                     )}
                     {/* Default badge indicator */}
                     {circle.isDefault && (
-                      <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full w-4 h-4 flex items-center justify-center">
-                        <Crown className="h-2 w-2" />
+                      <div className="absolute -bottom-0.5 -right-0.5 bg-blue-500 text-white rounded-full w-3 h-3 flex items-center justify-center">
+                        <Crown className="h-1.5 w-1.5" />
                       </div>
                     )}
                   </div>
                   
                   {/* Circle Name */}
-                  <span className="text-xs text-center text-gray-700 dark:text-gray-300 font-medium truncate w-20">
+                  <span className="text-xs text-center text-gray-700 dark:text-gray-300 font-medium truncate w-16">
                     {circle.name}
                   </span>
                 </div>
@@ -213,20 +215,22 @@ function CircleBadgesSection() {
 
             {/* Expanded Circle Details */}
             {expandedCircle && (
-              <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+              <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border">
                 {(() => {
                   const selectedCircle = circles.find(c => c.id === expandedCircle)
                   if (!selectedCircle) return null
                   
                   return (
                     <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
                           <div
-                            className="w-12 h-12 rounded-full flex items-center justify-center text-white"
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-white"
                             style={{ backgroundColor: selectedCircle.color }}
                           >
-                            {getIconComponent(selectedCircle.icon)}
+                            <div className="scale-75">
+                              {getIconComponent(selectedCircle.icon)}
+                            </div>
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
@@ -261,18 +265,18 @@ function CircleBadgesSection() {
                           Circle Members ({selectedCircle._count.memberships})
                         </h4>
                         {selectedCircle.memberships.length === 0 ? (
-                          <p className="text-sm text-gray-500 text-center py-4">
-                            No members in this circle yet
+                          <p className="text-sm text-gray-500 text-center py-3">
+                            No members yet
                           </p>
                         ) : (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          <div className="grid grid-cols-1 gap-2">
                             {selectedCircle.memberships.map((membership) => (
                               <div
                                 key={membership.user.id}
-                                className="flex items-center gap-3 p-3 bg-white dark:bg-gray-700 rounded-lg"
+                                className="flex items-center gap-2 p-2 bg-white dark:bg-gray-700 rounded-lg"
                               >
                                 <div className="relative">
-                                  <Avatar className="h-8 w-8">
+                                  <Avatar className="h-6 w-6">
                                     <AvatarImage
                                       src={membership.user.profileImageUrl}
                                       alt={`${membership.user.firstName} ${membership.user.lastName}`}
@@ -283,20 +287,20 @@ function CircleBadgesSection() {
                                   </Avatar>
                                   {membership.user.status && (
                                     <div
-                                      className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-white ${getStatusColor(membership.user.status)}`}
+                                      className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-white ${getStatusColor(membership.user.status)}`}
                                     />
                                   )}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                  <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
                                     {membership.user.firstName} {membership.user.lastName}
                                   </p>
-                                  <Badge variant="outline" className="text-xs mt-1">
+                                  <Badge variant="outline" className="text-xs">
                                     {membership.user.role}
                                   </Badge>
                                 </div>
-                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                  <MessageCircle className="h-3 w-3" />
+                                <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
+                                  <MessageCircle className="h-2.5 w-2.5" />
                                 </Button>
                               </div>
                             ))}
@@ -489,10 +493,16 @@ export default function CircleView({ student }: CircleViewProps) {
       {/* Content based on active view */}
       {activeView === 'connections' ? (
         <div className="space-y-6">
-          {/* Circle Badges Section */}
-          <CircleBadgesSection />
-          
-          <Card>
+          {/* Horizontal Layout: Circle Badges and Connections */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Circle Badges Section - Takes 4 columns on large screens */}
+            <div className="lg:col-span-4">
+              <CircleBadgesSection />
+            </div>
+            
+            {/* Connections Section - Takes 8 columns on large screens */}
+            <div className="lg:col-span-8">
+              <Card>
             <CardHeader>
               <div className="flex justify-end items-center">
                 <div className="flex gap-2">
@@ -811,6 +821,8 @@ export default function CircleView({ student }: CircleViewProps) {
               </Tabs>
             </CardContent>
           </Card>
+            </div>
+          </div>
         </div>
       ) : (
         <ConnectionRequestsView />
