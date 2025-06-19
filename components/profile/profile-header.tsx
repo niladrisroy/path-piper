@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Settings, Plus, Users, MessageSquare, Share2, Calendar, MapPin, Briefcase, GraduationCap, Mail, Phone, Globe, Instagram, Twitter, Linkedin, Github, Youtube, Facebook, UserPlus, BadgeCheck, Edit, MessageCircle, UserIcon, FolderKanban, Award, BrainIcon } from "lucide-react"
+import { Settings, Plus, Users, MessageSquare, Share2, Calendar, MapPin, Briefcase, GraduationCap, Mail, Phone, Globe, Instagram, Twitter, Linkedin, Github, Youtube, Facebook, UserPlus, BadgeCheck, Edit, MessageCircle, UserIcon, FolderKanban, Award, BrainIcon, UserCheck, UserX } from "lucide-react"
 import CircleManagementDialog from "./circle-management-dialog"
 
 interface ProfileHeaderProps {
@@ -215,6 +215,10 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
     { id: 4, name: "Ms. Chen", image: "/diverse-classroom-teacher.png", type: "mentor" },
     { id: 5, name: "Riverdale High", image: "/university-classroom.png", type: "institution" },
   ]
+
+    const handleAddCircle = () => {
+        setShowCreateCircle(true)
+    }
 
   return (
     <div>
@@ -677,6 +681,122 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
         onOpenChange={setShowCircleManagement}
         onCircleUpdated={handleCircleUpdated}
       />
+    </div>
+  )
+}
+
+// Circle Invitations Section Component
+interface CircleInvitationsSectionProps {
+  onInvitationHandled: () => void
+}
+
+function CircleInvitationsSection({ onInvitationHandled }: CircleInvitationsSectionProps) {
+  const [invitations, setInvitations] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    fetchInvitations()
+  }, [])
+
+  const fetchInvitations = async () => {
+    try {
+      const response = await fetch('/api/circles/invitations?type=received', {
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Only show pending invitations
+        setInvitations(data.filter((inv: any) => inv.status === 'pending'))
+      }
+    } catch (error) {
+      console.error('Error fetching invitations:', error)
+    }
+  }
+
+  const handleInvitation = async (invitationId: string, action: 'accept' | 'decline') => {
+    setLoading(true)
+    try {
+      const response = await fetch(`/api/circles/invitations/${invitationId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ action })
+      })
+
+      if (response.ok) {
+        // Remove the invitation from the list
+        setInvitations(prev => prev.filter(inv => inv.id !== invitationId))
+        onInvitationHandled()
+      }
+    } catch (error) {
+      console.error('Error handling invitation:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (invitations.length === 0) {
+    return null
+  }
+
+  return (
+    <div className="flex flex-col">
+      <h3 className="text-lg font-semibold mb-4">Circle Requests</h3>
+      <div className="space-y-3 max-w-xs">
+        {invitations.map((invitation) => (
+          <div key={invitation.id} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border">
+            <div className="flex items-center gap-2 mb-2">
+              <div 
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs"
+                style={{ backgroundColor: invitation.circle.color }}
+              >
+                {invitation.circle.icon === 'users' ? (
+                  <Users className="h-4 w-4" />
+                ) : (
+                  invitation.circle.icon
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{invitation.circle.name}</p>
+                <p className="text-xs text-gray-500">
+                  from {invitation.inviter.firstName} {invitation.inviter.lastName}
+                </p>
+              </div>
+            </div>
+
+            {invitation.message && (
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-3 italic">
+                "{invitation.message}"
+              </p>
+            )}
+
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={() => handleInvitation(invitation.id, 'accept')}
+                disabled={loading}
+                className="flex-1 h-7 text-xs"
+              >
+                <UserCheck className="h-3 w-3 mr-1" />
+                Accept
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleInvitation(invitation.id, 'decline')}
+                disabled={loading}
+                className="flex-1 h-7 text-xs"
+              >
+                <UserX className="h-3 w-3 mr-1" />
+                Decline
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
