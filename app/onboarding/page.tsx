@@ -49,11 +49,12 @@ export default function Onboarding() {
   const [loading, setLoading] = useState(true)
   const [isCheckingProfile, setIsCheckingProfile] = useState(true)
 
-  // Fetch user data on component mount using session cookie
+  // Fetch user data and check profile completeness first
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchUserDataAndCheckCompletion = async () => {
       try {
         console.log("Fetching user data from API...")
+        setIsCheckingProfile(true)
 
         const response = await fetch("/api/auth/user", {
           method: "GET",
@@ -65,7 +66,7 @@ export default function Onboarding() {
           const data = await response.json()
           console.log("User data received:", data)
 
-          // Check if user has minimum required data for all three essential sections
+          // FIRST: Check profile completeness before setting any user data
           if (data.user) {
             try {
               const profileResponse = await fetch('/api/student/profile/' + data.user.id, {
@@ -96,17 +97,17 @@ export default function Onboarding() {
                   hasEducation: `${profileData.educationHistory?.length || 0} education entries`
                 });
 
-                // Only redirect to profile if ALL THREE sections have data
+                // If profile is complete, redirect immediately before loading any form data
                 if (hasBasicInfo && hasInterests && hasEducation) {
                   console.log('✅ All three sections complete, redirecting to profile');
-                  setIsCheckingProfile(false)
                   router.push("/student/profile")
-                  return
+                  return // Exit early, don't load form data
                 } else {
-                  console.log('❌ One or more sections incomplete, staying on onboarding');
+                  console.log('❌ One or more sections incomplete, loading onboarding form');
                   setIsCheckingProfile(false)
                 }
               } else {
+                console.log('❌ Failed to fetch profile data, loading onboarding form');
                 setIsCheckingProfile(false)
               }
             } catch (error) {
@@ -114,9 +115,11 @@ export default function Onboarding() {
               setIsCheckingProfile(false)
             }
           } else {
+            console.log('❌ No user data, loading onboarding form');
             setIsCheckingProfile(false)
           }
 
+          // ONLY load user data if profile is incomplete (we reach this point)
           if (data.user) {
             // Fetch existing goals
             let existingGoals = [];
@@ -172,7 +175,7 @@ export default function Onboarding() {
       }
     }
 
-    fetchUserData()
+    fetchUserDataAndCheckCompletion()
   }, [router])
 
   // Show loading while checking profile completeness
