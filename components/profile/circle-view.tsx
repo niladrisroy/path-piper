@@ -33,6 +33,7 @@ interface Connection {
     firstName: string
     lastName: string
     avatar?: string
+    profileImageUrl?: string
     role: string
     bio?: string
     location?: string
@@ -261,9 +262,9 @@ export default function CircleView({ student }: CircleViewProps) {
                         <div className="flex flex-col items-center text-center space-y-2 pb-6">
                           <div className="relative">
                             <Avatar className="h-12 w-12">
-                              <AvatarImage src={connection.user.avatar} alt={connection.user.name} />
+                              <AvatarImage src={connection.user.profileImageUrl || connection.user.avatar} alt={connection.user.name} />
                               <AvatarFallback className="text-sm">
-                                {connection.user.firstName[0]}{connection.user.lastName[0]}
+                                {connection.user.firstName?.[0]}{connection.user.lastName?.[0]}
                               </AvatarFallback>
                             </Avatar>
                             <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${getStatusColor(connection.user.status)}`} />
@@ -334,9 +335,9 @@ export default function CircleView({ student }: CircleViewProps) {
                       <div className="flex flex-col items-center text-center space-y-2 pb-6">
                         <div className="relative">
                           <Avatar className="h-12 w-12">
-                            <AvatarImage src={connection.user.avatar} alt={connection.user.name} />
+                            <AvatarImage src={connection.user.profileImageUrl || connection.user.avatar} alt={connection.user.name} />
                             <AvatarFallback className="text-sm">
-                              {connection.user.firstName[0]}{connection.user.lastName[0]}
+                              {connection.user.firstName?.[0]}{connection.user.lastName?.[0]}
                             </AvatarFallback>
                           </Avatar>
                           <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${getStatusColor(connection.user.status)}`} />
@@ -407,9 +408,9 @@ export default function CircleView({ student }: CircleViewProps) {
                       <div className="flex flex-col items-center text-center space-y-2 pb-6">
                         <div className="relative">
                           <Avatar className="h-12 w-12">
-                            <AvatarImage src={connection.user.avatar} alt={connection.user.name} />
+                            <AvatarImage src={connection.user.profileImageUrl || connection.user.avatar} alt={connection.user.name} />
                             <AvatarFallback className="text-sm">
-                              {connection.user.firstName[0]}{connection.user.lastName[0]}
+                              {connection.user.firstName?.[0]}{connection.user.lastName?.[0]}
                             </AvatarFallback>
                           </Avatar>
                           <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${getStatusColor(connection.user.status)}`} />
@@ -479,9 +480,9 @@ export default function CircleView({ student }: CircleViewProps) {
                       <div className="flex flex-col items-center text-center space-y-2 pb-6">
                         <div className="relative">
                           <Avatar className="h-12 w-12">
-                            <AvatarImage src={connection.user.avatar} alt={connection.user.name} />
+                            <AvatarImage src={connection.user.profileImageUrl || connection.user.avatar} alt={connection.user.name} />
                             <AvatarFallback className="text-sm">
-                              {connection.user.firstName[0]}{connection.user.lastName[0]}
+                              {connection.user.firstName?.[0]}{connection.user.lastName?.[0]}
                             </AvatarFallback>
                           </Avatar>
                           <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${getStatusColor(connection.user.status)}`} />
