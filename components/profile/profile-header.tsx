@@ -1,7 +1,4 @@
-The code is modified to include description and avatar image upload fields in the create circle dialog, and the circle display is updated to use uploaded images as icons.
-```
 
-```replit_final_file
 "use client"
 
 import React, { useState, useEffect } from "react"
@@ -25,6 +22,112 @@ interface ProfileHeaderProps {
     institutions: number
   }
   isViewMode?: boolean
+}
+
+// Component to handle Circle Invitations
+function CircleInvitationsSection({ onInvitationHandled }: { onInvitationHandled: () => void }) {
+  const [pendingInvitations, setPendingInvitations] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    fetchPendingInvitations()
+  }, [])
+
+  const fetchPendingInvitations = async () => {
+    try {
+      const response = await fetch('/api/circles/invitations?type=received', {
+        credentials: 'include'
+      })
+      if (response.ok) {
+        const invitations = await response.json()
+        const pending = invitations.filter((inv: any) => inv.status === 'pending')
+        setPendingInvitations(pending)
+      }
+    } catch (error) {
+      console.error('Error fetching pending invitations:', error)
+    }
+  }
+
+  const handleInvitationResponse = async (invitationId: string, action: 'accept' | 'decline') => {
+    setLoading(true)
+    try {
+      const response = await fetch(`/api/circles/invitations/${invitationId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ action })
+      })
+
+      if (response.ok) {
+        // Remove the invitation from the list
+        setPendingInvitations(prev => prev.filter(inv => inv.id !== invitationId))
+        onInvitationHandled()
+      }
+    } catch (error) {
+      console.error('Error responding to invitation:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (pendingInvitations.length === 0) return null
+
+  return (
+    <div className="mb-4">
+      <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        Circle Invitations ({pendingInvitations.length})
+      </h3>
+      <div className="space-y-2">
+        {pendingInvitations.slice(0, 2).map((invitation) => (
+          <div 
+            key={invitation.id}
+            className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-blue-900 dark:text-blue-100 truncate">
+                  {invitation.circle.name}
+                </p>
+                <p className="text-xs text-blue-700 dark:text-blue-300 truncate">
+                  from {invitation.inviter.firstName} {invitation.inviter.lastName}
+                </p>
+                {invitation.message && (
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 line-clamp-2">
+                    "{invitation.message}"
+                  </p>
+                )}
+              </div>
+              <div className="flex gap-1 flex-shrink-0">
+                <button
+                  onClick={() => handleInvitationResponse(invitation.id, 'accept')}
+                  disabled={loading}
+                  className="p-1.5 bg-green-100 hover:bg-green-200 dark:bg-green-900/40 dark:hover:bg-green-900/60 text-green-700 dark:text-green-300 rounded transition-colors disabled:opacity-50"
+                  title="Accept"
+                >
+                  <UserCheck className="h-3 w-3" />
+                </button>
+                <button
+                  onClick={() => handleInvitationResponse(invitation.id, 'decline')}
+                  disabled={loading}
+                  className="p-1.5 bg-red-100 hover:bg-red-200 dark:bg-red-900/40 dark:hover:bg-red-900/60 text-red-700 dark:text-red-300 rounded transition-colors disabled:opacity-50"
+                  title="Decline"
+                >
+                  <UserX className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+        {pendingInvitations.length > 2 && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+            +{pendingInvitations.length - 2} more invitations
+          </p>
+        )}
+      </div>
+    </div>
+  )
 }
 
 export default function ProfileHeader({ student, currentUser, connectionCounts, isViewMode = false }: ProfileHeaderProps) {
@@ -667,8 +770,6 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                     </div>
                   </div>
 
-
-
                   {/* Recent Badges section */}
                   <div className="mt-3">
                     <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Recent Badges</h3>
@@ -679,7 +780,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                             xmlns="http://www.w3.org/2000/svg"
                             width="24"
                             height="24"
-                            viewBox="0 024 24"
+                            viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
                             strokeWidth="2"
@@ -694,4 +795,62 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                         <span className="text-[10px] text-center mt-1 text-gray-600 dark:text-gray-400">Math Whiz</span>
                       </div>
                       <div className="flex flex-col items-center">
-                        <div className="bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:
+                        <div className="bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 h-12 w-12 rounded-full flex items-center justify-center">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="h-6 w-6 text-purple-600 dark:text-purple-400"
+                          >
+                            <polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"></polygon>
+                          </svg>
+                        </div>
+                        <span className="text-[10px] text-center mt-1 text-gray-600 dark:text-gray-400">Quick Learner</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <div className="bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 h-12 w-12 rounded-full flex items-center justify-center">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="h-6 w-6 text-green-600 dark:text-green-400"
+                          >
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                          </svg>
+                        </div>
+                        <span className="text-[10px] text-center mt-1 text-gray-600 dark:text-gray-400">Team Player</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Circle Management Dialog */}
+      <CircleManagementDialog
+        circle={selectedCircle}
+        open={showCircleManagement}
+        onOpenChange={setShowCircleManagement}
+        onCircleUpdated={handleCircleUpdated}
+      />
+    </div>
+  )
+}
