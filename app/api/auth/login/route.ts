@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
         try {
           // Import prisma at the top of the file if not already imported
           const { prisma } = await import('@/lib/prisma');
-          
+
           // Get complete student profile with all required data
           const studentProfile = await prisma.studentProfile.findUnique({
             where: { id: result.user.id },
@@ -48,9 +48,9 @@ export async function POST(request: NextRequest) {
               profile: {
                 include: {
                   userInterests: true,
-                  educationHistory: true
                 }
-              }
+              },
+              educationHistory: true
             }
           });
 
@@ -65,12 +65,12 @@ export async function POST(request: NextRequest) {
                                studentProfile.profile.userInterests.length > 0;
 
             // Check 3: Education History (at least one education entry)
-            const hasEducation = studentProfile.profile.educationHistory && 
-                               studentProfile.profile.educationHistory.length > 0;
+            const hasEducation = studentProfile.educationHistory && 
+                               studentProfile.educationHistory.length > 0;
 
             // Only redirect to profile if ALL THREE sections have data
             needsOnboarding = !hasBasicInfo || !hasInterests || !hasEducation;
-            
+
             console.log('Login onboarding check:', {
               hasBasicInfo,
               hasInterests,

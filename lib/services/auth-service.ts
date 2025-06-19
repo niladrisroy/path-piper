@@ -246,8 +246,8 @@ export async function loginUser(data: LoginData) {
         const hasInterests = interests.length > 0;
         
         // Check education
-        const education = await prisma.educationHistory.findMany({
-          where: { userId: profile.id }
+        const education = await prisma.studentEducationHistory.findMany({
+          where: { studentId: profile.id }
         });
         const hasEducation = education.length > 0;
         
