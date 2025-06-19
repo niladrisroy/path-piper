@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@supabase/supabase-js'
@@ -12,7 +11,7 @@ export async function GET(request: NextRequest) {
   try {
     console.log('API: Circles request received')
     console.log('API: Checking cookies for auth token')
-    
+
     const cookieStore = request.cookies
     console.log('API: Cookie store available')
 
@@ -95,7 +94,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     console.log('API: Create circle request received')
-    
+
     const cookieStore = request.cookies
     const accessToken = cookieStore.get('sb-access-token')?.value
 
@@ -116,7 +115,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { name, description, color, icon } = body
 
-    if (!name || name.trim().length === 0) {
+    if (!name?.trim()) {
       return NextResponse.json({ error: 'Circle name is required' }, { status: 400 })
     }
 

@@ -30,6 +30,9 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
   const [circles, setCircles] = useState<any[]>([])
   const [showCreateCircle, setShowCreateCircle] = useState(false)
   const [newCircleName, setNewCircleName] = useState('')
+  const [newCircleColor, setNewCircleColor] = useState('#3B82F6')
+  const [newCircleDescription, setNewCircleDescription] = useState('')
+  const [newCircleIcon, setNewCircleIcon] = useState<File | null>(null)
   const [selectedCircle, setSelectedCircle] = useState<any>(null)
   const [showCircleManagement, setShowCircleManagement] = useState(false)
   const [connections, setConnections] = useState<any[]>([])
@@ -162,28 +165,61 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
   }, [isOwnProfile])
 
   const handleCreateCircle = async () => {
-    if (newCircleName.trim() !== '') {
-      try {
-        const response = await fetch('/api/circles', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          credentials: 'include',
-          body: JSON.stringify({ name: newCircleName })
-        })
+    if (!newCircleName.trim()) return
 
-        if (response.ok) {
-          const newCircle = await response.json()
-          setCircles([...circles, newCircle])
-          setShowCreateCircle(false)
-          setNewCircleName('')
-        } else {
-          console.error('Error creating circle:', response.status)
-        }
-      } catch (error) {
-        console.error('Error creating circle:', error)
+    try {
+      let iconUrl = 'users' // Default icon
+
+      // If user uploaded an image, convert to base64 or handle upload
+      if (newCircleIcon) {
+        const reader = new FileReader()
+        iconUrl = await new Promise((resolve) => {
+          reader.onload = (e) => resolve(e.target?.result as string)
+          reader.readAsDataURL(newCircleIcon)
+        })
       }
+
+      const response = await fetch('/api/circles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: newCircleName.trim(),
+          description: newCircleDescription.trim() || null,
+          color: newCircleColor,
+          icon: iconUrl
+        })
+      })
+
+      if (response.ok) {
+        setNewCircleName('')
+        setNewCircleDescription('')
+        setNewCircleColor('#3B82F6')
+        setNewCircleIcon(null)
+        setShowCreateCircle(false)
+        // Refresh circles data
+        fetchCircles()
+      }
+    } catch (error) {
+      console.error('Error creating circle:', error)
+    }
+  }
+
+  const fetchCircles = async () => {
+    try {
+      const response = await fetch('/api/circles', {
+        credentials: 'include'
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setCircles(data)
+      } else {
+        console.error('Error fetching circles:', response.status)
+      }
+    } catch (error) {
+      console.error('Error fetching circles:', error)
     }
   }
 
@@ -422,10 +458,20 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                               >
                                 <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
                                   <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                                    <div 
-                                      className="w-3 h-3 rounded-full"
-                                      style={{ backgroundColor: circle.color }}
-                                    />
+                                    {circle.icon.startsWith('data:image') ? (
+                                      <img 
+                                        src={circle.icon} 
+                                        alt={circle.name}
+                                        className="w-2 h-2 rounded-full m-0.5 object-cover"
+                                      />
+                                    ) : circle.icon === 'users' ? (
+                                      <Users className="h-2 w-2 text-white m-0.5" />
+                                    ) : (
+                                      <div 
+                                        className="w-2 h-2 rounded-full m-0.5"
+                                        style={{ backgroundColor: circle.color }}
+                                      />
+                                    )}
                                   </div>
                                 </div>
                               </button>
@@ -459,25 +505,46 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                       </div>
                     </div>
 
-                    {/* Create Circle Modal */}
+                    {/* Create Circle Dialog */}
                     {showCreateCircle && (
                       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-[90vw]">
                           <h3 className="text-lg font-semibold mb-4">Create New Circle</h3>
-                          <Input
-                            placeholder="Circle name"
-                            value={newCircleName}
-                            onChange={(e) => setNewCircleName(e.target.value)}
-                            className="mb-4"
-                          />
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              onClick={() => {
-                                setShowCreateCircle(false)
-                                setNewCircleName('')
-                              }}
-                            >
+                          <div className="space-y-4">
+                            <Input
+                              placeholder="Circle name"
+                              value={newCircleName}
+                              onChange={(e) => setNewCircleName(e.target.value)}
+                            />
+                            <Input
+                              placeholder="Description (optional)"
+                              value={newCircleDescription}
+                              onChange={(e) => setNewCircleDescription(e.target.value)}
+                            />
+                            <div>
+                              <label className="text-sm font-medium mb-2 block">Icon Image (optional)</label>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => setNewCircleIcon(e.target.files?.[0] || null)}
+                                className="w-full p-2 border rounded-md"
+                              />
+                              {newCircleIcon && (
+                                <p className="text-xs text-gray-500 mt-1">Selected: {newCircleIcon.name}</p>
+                              )}
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium mb-2 block">Color</label>
+                              <input
+                                type="color"
+                                value={newCircleColor}
+                                onChange={(e) => setNewCircleColor(e.target.value)}
+                                className="w-full h-10 rounded border"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex gap-2 mt-6">
+                            <Button variant="outline" onClick={() => setShowCreateCircle(false)}>
                               Cancel
                             </Button>
                             <Button onClick={handleCreateCircle}>
@@ -807,3 +874,4 @@ function CircleInvitationsSection({ onInvitationHandled }: CircleInvitationsSect
     </div>
   )
 }
+// Adds description and image upload fields to the create circle dialog and updates the handleCreateCircle function to include these fields.
