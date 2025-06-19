@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@supabase/supabase-js'
@@ -12,7 +11,7 @@ export async function GET(request: NextRequest) {
   try {
     console.log('API: Circles request received')
     console.log('API: Checking cookies for auth token')
-    
+
     const cookieStore = request.cookies
     console.log('API: Cookie store available')
 
@@ -52,13 +51,16 @@ export async function GET(request: NextRequest) {
       include: {
         creator: {
           select: {
+            id: true,
             firstName: true,
             lastName: true,
             profileImageUrl: true
           }
         },
         memberships: {
-          where: { status: 'active' },
+          where: {
+            status: 'active'
+          },
           include: {
             user: {
               select: {
@@ -66,7 +68,9 @@ export async function GET(request: NextRequest) {
                 firstName: true,
                 lastName: true,
                 profileImageUrl: true,
-                role: true
+                role: true,
+                bio: true,
+                availabilityStatus: true
               }
             }
           }
@@ -74,10 +78,12 @@ export async function GET(request: NextRequest) {
         _count: {
           select: {
             memberships: {
-              where: { status: 'active' }
+              where: {
+                status: 'active'
+              }
             }
           }
-        }
+        },
       },
       orderBy: [
         { isDefault: 'desc' },
@@ -95,7 +101,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     console.log('API: Create circle request received')
-    
+
     const cookieStore = request.cookies
     const accessToken = cookieStore.get('sb-access-token')?.value
 
