@@ -1,7 +1,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
 import { createClient } from '@supabase/supabase-js'
+
+const prisma = new PrismaClient()
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,8 +16,7 @@ export async function GET(request: NextRequest) {
     console.log('API: Checking cookies for auth token')
     
     const cookieStore = request.cookies
-    const allCookies = Array.from(cookieStore.entries()).map(([name]) => name)
-    console.log('API: Available cookies:', allCookies)
+    console.log('API: Cookie store available')
 
     // Try to get the access token from cookies
     const accessToken = cookieStore.get('sb-access-token')?.value
