@@ -887,8 +887,7 @@ export default function CircleView({ student }: CircleViewProps) {
                                   </h3>
                                   <Badge
                                     variant="outline"
-                               ```text
-className="text-xs mt-1 bg-purple-50 text-purple-700 border-purple-200"
+                                    className="text-xs mt-1 bg-purple-50 text-purple-700 border-purple-200"
                                   >
                                     institution
                                   </Badge>
