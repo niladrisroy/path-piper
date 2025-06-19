@@ -494,8 +494,7 @@ export default function CircleView({ student }: CircleViewProps) {
           
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>My Connections</CardTitle>
+              <div className="flex justify-end items-center">
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm">
                     <Filter className="h-4 w-4 mr-2" />
