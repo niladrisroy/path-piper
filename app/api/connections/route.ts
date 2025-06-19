@@ -87,10 +87,9 @@ export async function GET(request: NextRequest) {
         connectedAt: connection.connectedAt,
         user: {
           id: otherUser.id,
-          name: `${otherUser.firstName} ${otherUser.lastName}`,
           firstName: otherUser.firstName,
           lastName: otherUser.lastName,
-          avatar: otherUser.profileImageUrl,
+          profileImageUrl: otherUser.profileImageUrl,
           role: otherUser.role,
           bio: otherUser.bio,
           location: otherUser.location,

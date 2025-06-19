@@ -32,10 +32,9 @@ interface Connection {
   id: string
   user: {
     id: string
-    name: string
     firstName: string
     lastName: string
-    avatar?: string
+    profileImageUrl?: string
     role: string
   }
 }
@@ -147,9 +146,28 @@ export default function CircleManagementDialog({
         <div className="space-y-4">
           {/* Current members */}
           <div>
-            <h4 className="text-sm font-medium mb-2">Current Members ({circle._count.memberships})</h4>
+            <h4 className="text-sm font-medium mb-2">
+              Current Members ({(circle.memberships?.length || 0) + 1})
+            </h4>
             <div className="flex flex-wrap gap-2">
-              {circle.memberships.slice(0, 6).map((membership) => (
+              {/* Show creator first */}
+              <div className="flex items-center gap-1 text-xs">
+                <Avatar className="h-6 w-6">
+                  <AvatarImage src={circle.creator?.profileImageUrl} />
+                  <AvatarFallback className="text-xs">
+                    {circle.creator?.firstName?.[0]}{circle.creator?.lastName?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="truncate max-w-16">
+                  {circle.creator?.firstName} 
+                </span>
+                <Badge variant="secondary" className="text-xs px-1 py-0">
+                  Creator
+                </Badge>
+              </div>
+              
+              {/* Show other members */}
+              {circle.memberships?.slice(0, 5).map((membership) => (
                 <div key={membership.user.id} className="flex items-center gap-1 text-xs">
                   <Avatar className="h-6 w-6">
                     <AvatarImage src={membership.user.profileImageUrl} />
@@ -162,9 +180,9 @@ export default function CircleManagementDialog({
                   </span>
                 </div>
               ))}
-              {circle._count.memberships > 6 && (
+              {(circle.memberships?.length || 0) > 5 && (
                 <span className="text-xs text-gray-500">
-                  +{circle._count.memberships - 6} more
+                  +{(circle.memberships?.length || 0) - 5} more
                 </span>
               )}
             </div>
@@ -188,13 +206,15 @@ export default function CircleManagementDialog({
                     onClick={() => toggleConnection(connection.user.id)}
                   >
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={connection.user.avatar} />
+                      <AvatarImage src={connection.user.profileImageUrl} />
                       <AvatarFallback className="text-xs">
                         {connection.user.firstName[0]}{connection.user.lastName[0]}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{connection.user.name}</p>
+                      <p className="text-sm font-medium truncate">
+                        {connection.user.firstName} {connection.user.lastName}
+                      </p>
                       <Badge variant="outline" className="text-xs">
                         {connection.user.role}
                       </Badge>
