@@ -433,35 +433,27 @@ export default function CircleView({ student }: CircleViewProps) {
   return (
     <div className="p-6 space-y-6">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">My Circle</h2>
+        <div className="flex items-center justify-center gap-4 flex-wrap">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">My Circle</h2>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge variant="outline" className="flex items-center gap-1 px-3 py-1 text-blue-600 border-blue-200 bg-blue-50">
+              <Users className="h-3.5 w-3.5" />
+              <span className="font-medium">{totalConnections}</span>
+              <span className="text-xs text-gray-500">Total</span>
+            </Badge>
+            <Badge variant="outline" className="flex items-center gap-1 px-3 py-1 text-green-600 border-green-200 bg-green-50">
+              <GraduationCap className="h-3.5 w-3.5" />
+              <span className="font-medium">{mentorConnections}</span>
+              <span className="text-xs text-gray-500">Mentors</span>
+            </Badge>
+            <Badge variant="outline" className="flex items-center gap-1 px-3 py-1 text-purple-600 border-purple-200 bg-purple-50">
+              <Building className="h-3.5 w-3.5" />
+              <span className="font-medium">{institutionConnections}</span>
+              <span className="text-xs text-gray-500">Institutions</span>
+            </Badge>
+          </div>
+        </div>
         <p className="text-gray-600 dark:text-gray-400">Connect with mentors, peers, and institutions</p>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Users className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold">{totalConnections}</div>
-            <div className="text-sm text-gray-600">Total Connections</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 text-center">
-            <GraduationCap className="h-8 w-8 text-green-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold">{mentorConnections}</div>
-            <div className="text-sm text-gray-600">Mentors</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Building className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold">{institutionConnections}</div>
-            <div className="text-sm text-gray-600">Institutions</div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Navigation Tabs */}
