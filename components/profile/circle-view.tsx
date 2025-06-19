@@ -516,16 +516,21 @@ export default function CircleView({ student }: CircleViewProps) {
             {/* Connections Section - Takes 8 columns on large screens */}
             <div className="lg:col-span-8">
               <Card>
-            <CardContent>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
+                My Connections
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
               <Tabs defaultValue="all" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-4 mb-6">
                   <TabsTrigger value="all">All ({totalConnections})</TabsTrigger>
                   <TabsTrigger value="mentors">Mentors ({mentorConnections})</TabsTrigger>
                   <TabsTrigger value="peers">Peers ({connections.filter(c => c.user.role === 'student').length})</TabsTrigger>
                   <TabsTrigger value="institutions">Institutions ({institutionConnections})</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="all" className="mt-4">
+                <TabsContent value="all" className="mt-0">
                   {connections.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
                       <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
@@ -603,7 +608,7 @@ export default function CircleView({ student }: CircleViewProps) {
                   )}
                 </TabsContent>
 
-                <TabsContent value="mentors" className="mt-4">
+                <TabsContent value="mentors" className="mt-0">
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                     {connections
                       .filter(c => c.user.role === 'mentor')
@@ -676,7 +681,7 @@ export default function CircleView({ student }: CircleViewProps) {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="peers" className="mt-4">
+                <TabsContent value="peers" className="mt-0">
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                     {connections
                       .filter(c => c.user.role === 'student')
@@ -748,7 +753,7 @@ export default function CircleView({ student }: CircleViewProps) {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="institutions" className="mt-4">
+                <TabsContent value="institutions" className="mt-0">
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                     {connections
                       .filter(c => c.user.role === 'institution')
