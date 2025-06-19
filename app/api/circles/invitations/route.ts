@@ -10,13 +10,14 @@ const supabase = createClient(
 
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
+    const cookieStore = request.cookies
+    const accessToken = cookieStore.get('sb-access-token')?.value
+
+    if (!accessToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const token = authHeader.split(' ')[1]
-    const { data: { user }, error } = await supabase.auth.getUser(token)
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken)
 
     if (error || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -89,13 +90,14 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
+    const cookieStore = request.cookies
+    const accessToken = cookieStore.get('sb-access-token')?.value
+
+    if (!accessToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const token = authHeader.split(' ')[1]
-    const { data: { user }, error } = await supabase.auth.getUser(token)
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken)
 
     if (error || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

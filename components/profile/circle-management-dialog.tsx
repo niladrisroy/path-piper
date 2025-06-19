@@ -100,9 +100,9 @@ export default function CircleManagementDialog({
         fetch('/api/circles/invitations', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('sb-access-token')}`
+            'Content-Type': 'application/json'
           },
+          credentials: 'include',
           body: JSON.stringify({
             circleId: circle.id,
             inviteeId: connectionId,
@@ -111,12 +111,20 @@ export default function CircleManagementDialog({
         })
       )
 
-      await Promise.all(promises)
+      const responses = await Promise.all(promises)
       
-      setSelectedConnections([])
-      setInviteMessage('')
-      onCircleUpdated()
-      onOpenChange(false)
+      // Check if all requests were successful
+      const allSuccessful = responses.every(response => response.ok)
+      
+      if (allSuccessful) {
+        setSelectedConnections([])
+        setInviteMessage('')
+        onCircleUpdated()
+        onOpenChange(false)
+      } else {
+        console.error('Some invitations failed to send')
+        // You might want to show an error message to the user here
+      }
     } catch (error) {
       console.error('Error sending invitations:', error)
     } finally {

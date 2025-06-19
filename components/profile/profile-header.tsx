@@ -128,9 +128,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
     const fetchCircles = async () => {
       try {
         const response = await fetch('/api/circles', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('sb-access-token')}`
-          }
+          credentials: 'include'
         })
         if (response.ok) {
           const data = await response.json()
@@ -198,9 +196,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
     // Refresh circles after invitations are sent
     try {
       const response = await fetch('/api/circles', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('sb-access-token')}`
-        }
+        credentials: 'include'
       })
       if (response.ok) {
         const data = await response.json()
