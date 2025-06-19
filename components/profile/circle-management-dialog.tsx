@@ -66,16 +66,20 @@ export default function CircleManagementDialog({
   const fetchConnections = async () => {
     try {
       const response = await fetch('/api/connections', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('sb-access-token')}`
-        }
+        credentials: 'include'
       })
       
       if (response.ok) {
         const data = await response.json()
         
+        // For Friends circle, show all connections and no invite functionality
+        if (circle?.id === 'friends') {
+          setConnections([])
+          return
+        }
+        
         // Filter out users who are already in this circle
-        const currentMemberIds = circle?.memberships.map(m => m.user.id) || []
+        const currentMemberIds = circle?.memberships?.map(m => m.user.id) || []
         const availableConnections = data.filter((conn: Connection) => 
           !currentMemberIds.includes(conn.user.id)
         )
@@ -147,91 +151,118 @@ export default function CircleManagementDialog({
           {/* Current members */}
           <div>
             <h4 className="text-sm font-medium mb-2">
-              Current Members ({(circle.memberships?.length || 0) + 1})
+              {circle.id === 'friends' ? 'All Connections' : 'Current Members'} ({circle._count?.memberships || 0})
             </h4>
-            <div className="flex flex-wrap gap-2">
-              {/* Show creator first */}
-              <div className="flex items-center gap-1 text-xs">
-                <Avatar className="h-6 w-6">
-                  <AvatarImage src={circle.creator?.profileImageUrl} />
-                  <AvatarFallback className="text-xs">
-                    {circle.creator?.firstName?.[0]}{circle.creator?.lastName?.[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="truncate max-w-16">
-                  {circle.creator?.firstName} 
-                </span>
-                <Badge variant="secondary" className="text-xs px-1 py-0">
-                  Creator
-                </Badge>
-              </div>
-              
-              {/* Show other members */}
-              {circle.memberships?.slice(0, 5).map((membership) => (
-                <div key={membership.user.id} className="flex items-center gap-1 text-xs">
-                  <Avatar className="h-6 w-6">
-                    <AvatarImage src={membership.user.profileImageUrl} />
-                    <AvatarFallback className="text-xs">
-                      {membership.user.firstName[0]}{membership.user.lastName[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="truncate max-w-16">
-                    {membership.user.firstName}
-                  </span>
-                </div>
-              ))}
-              {(circle.memberships?.length || 0) > 5 && (
-                <span className="text-xs text-gray-500">
-                  +{(circle.memberships?.length || 0) - 5} more
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Available connections to invite */}
-          <div>
-            <h4 className="text-sm font-medium mb-2">Invite Connections</h4>
-            <div className="max-h-40 overflow-y-auto space-y-2">
-              {connections.length === 0 ? (
-                <p className="text-sm text-gray-500">No available connections to invite</p>
-              ) : (
-                connections.map((connection) => (
-                  <div 
-                    key={connection.id}
-                    className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
-                      selectedConnections.includes(connection.user.id)
-                        ? 'bg-blue-50 border border-blue-200'
-                        : 'hover:bg-gray-50'
-                    }`}
-                    onClick={() => toggleConnection(connection.user.id)}
-                  >
+            <div className="max-h-48 overflow-y-auto space-y-2">
+              {circle.id === 'friends' ? (
+                // Show all connections for Friends circle
+                circle.memberships?.map((membership) => (
+                  <div key={membership.user.id} className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-700">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={connection.user.profileImageUrl} />
+                      <AvatarImage src={membership.user.profileImageUrl} />
                       <AvatarFallback className="text-xs">
-                        {connection.user.firstName[0]}{connection.user.lastName[0]}
+                        {membership.user.firstName[0]}{membership.user.lastName[0]}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">
-                        {connection.user.firstName} {connection.user.lastName}
+                        {membership.user.firstName} {membership.user.lastName}
                       </p>
                       <Badge variant="outline" className="text-xs">
-                        {connection.user.role}
+                        {membership.user.role}
                       </Badge>
                     </div>
-                    {selectedConnections.includes(connection.user.id) && (
-                      <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs">✓</span>
-                      </div>
-                    )}
                   </div>
                 ))
+              ) : (
+                // Show creator and members for custom circles
+                <div className="flex flex-wrap gap-2">
+                  {/* Show creator first */}
+                  <div className="flex items-center gap-1 text-xs">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={circle.creator?.profileImageUrl} />
+                      <AvatarFallback className="text-xs">
+                        {circle.creator?.firstName?.[0]}{circle.creator?.lastName?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="truncate max-w-16">
+                      {circle.creator?.firstName} 
+                    </span>
+                    <Badge variant="secondary" className="text-xs px-1 py-0">
+                      Creator
+                    </Badge>
+                  </div>
+                  
+                  {/* Show other members */}
+                  {circle.memberships?.slice(0, 5).map((membership) => (
+                    <div key={membership.user.id} className="flex items-center gap-1 text-xs">
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={membership.user.profileImageUrl} />
+                        <AvatarFallback className="text-xs">
+                          {membership.user.firstName[0]}{membership.user.lastName[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="truncate max-w-16">
+                        {membership.user.firstName}
+                      </span>
+                    </div>
+                  ))}
+                  {(circle.memberships?.length || 0) > 5 && (
+                    <span className="text-xs text-gray-500">
+                      +{(circle.memberships?.length || 0) - 5} more
+                    </span>
+                  )}
+                </div>
               )}
             </div>
           </div>
 
-          {/* Invitation message */}
-          {selectedConnections.length > 0 && (
+          {/* Available connections to invite - Only for custom circles */}
+          {circle.id !== 'friends' && (
+            <div>
+              <h4 className="text-sm font-medium mb-2">Invite Connections</h4>
+              <div className="max-h-40 overflow-y-auto space-y-2">
+                {connections.length === 0 ? (
+                  <p className="text-sm text-gray-500">No available connections to invite</p>
+                ) : (
+                  connections.map((connection) => (
+                    <div 
+                      key={connection.id}
+                      className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
+                        selectedConnections.includes(connection.user.id)
+                          ? 'bg-blue-50 border border-blue-200'
+                          : 'hover:bg-gray-50'
+                      }`}
+                      onClick={() => toggleConnection(connection.user.id)}
+                    >
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={connection.user.profileImageUrl} />
+                        <AvatarFallback className="text-xs">
+                          {connection.user.firstName[0]}{connection.user.lastName[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {connection.user.firstName} {connection.user.lastName}
+                        </p>
+                        <Badge variant="outline" className="text-xs">
+                          {connection.user.role}
+                        </Badge>
+                      </div>
+                      {selectedConnections.includes(connection.user.id) && (
+                        <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs">✓</span>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Invitation message - Only for custom circles */}
+          {circle.id !== 'friends' && selectedConnections.length > 0 && (
             <div>
               <label className="text-sm font-medium mb-2 block">Invitation Message</label>
               <Input
@@ -246,16 +277,18 @@ export default function CircleManagementDialog({
           {/* Action buttons */}
           <div className="flex gap-2 pt-2">
             <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
-              Cancel
+              {circle.id === 'friends' ? 'Close' : 'Cancel'}
             </Button>
-            <Button 
-              onClick={handleSendInvitations}
-              disabled={selectedConnections.length === 0 || loading}
-              className="flex-1"
-            >
-              <Send className="h-4 w-4 mr-2" />
-              Send Invites ({selectedConnections.length})
-            </Button>
+            {circle.id !== 'friends' && (
+              <Button 
+                onClick={handleSendInvitations}
+                disabled={selectedConnections.length === 0 || loading}
+                className="flex-1"
+              >
+                <Send className="h-4 w-4 mr-2" />
+                Send Invites ({selectedConnections.length})
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>

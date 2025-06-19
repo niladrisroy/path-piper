@@ -32,6 +32,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
   const [newCircleName, setNewCircleName] = useState('')
   const [selectedCircle, setSelectedCircle] = useState<any>(null)
   const [showCircleManagement, setShowCircleManagement] = useState(false)
+  const [connections, setConnections] = useState<any[]>([])
 
   // Use passed student data or fallback to mock data
   const studentProp = student || {
@@ -122,27 +123,44 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
     }
   }, [isOwnProfile, studentProp.id, connectionCounts])
 
-  // Fetch user's circles
+  // Fetch user's circles and connections
   useEffect(() => {
     const fetchCircles = async () => {
-    try {
-      const response = await fetch('/api/circles', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('sb-access-token')}`
+      try {
+        const response = await fetch('/api/circles', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('sb-access-token')}`
+          }
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setCircles(data)
+        } else {
+          console.error('Error fetching circles:', response.status)
         }
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setCircles(data)
-      } else {
-        console.error('Error fetching circles:', response.status)
+      } catch (error) {
+        console.error('Error fetching circles:', error)
       }
-    } catch (error) {
-      console.error('Error fetching circles:', error)
     }
-  }
 
-    fetchCircles()
+    const fetchConnections = async () => {
+      try {
+        const response = await fetch('/api/connections', {
+          credentials: 'include'
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setConnections(data)
+        }
+      } catch (error) {
+        console.error('Error fetching connections:', error)
+      }
+    }
+
+    if (isOwnProfile) {
+      fetchCircles()
+      fetchConnections()
+    }
   }, [isOwnProfile])
 
   const handleCreateCircle = async () => {
@@ -176,8 +194,21 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
     setShowCircleManagement(true)
   }
 
-  const handleCircleUpdated = () => {
-    fetchCircles() // Refresh circles after invitations are sent
+  const handleCircleUpdated = async () => {
+    // Refresh circles after invitations are sent
+    try {
+      const response = await fetch('/api/circles', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('sb-access-token')}`
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setCircles(data)
+      }
+    } catch (error) {
+      console.error('Error refreshing circles:', error)
+    }
   }
 
   // Mock circle members (would come from API in real app)
@@ -341,41 +372,69 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
 
                     <div className="relative">
                       <div className="flex overflow-x-auto pb-2 hide-scrollbar gap-4">
-                        {/* Default Friends Circle */}
-                        <div className="flex flex-col items-center min-w-[72px]">
-                          <div className="relative mb-1">
-                            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-400 to-purple-500 p-[3px]">
-                              <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
-                                <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
-                                  <Users className="h-6 w-6 text-pink-500 dark:text-pink-400" />
+                        {/* Default Friends Circle - Only show for own profile */}
+                        {isOwnProfile && (
+                          <div className="flex flex-col items-center min-w-[72px]">
+                            <div className="relative mb-1">
+                              <button
+                                onClick={() => handleCircleClick({
+                                  id: 'friends',
+                                  name: 'Friends',
+                                  color: '#ec4899',
+                                  icon: 'users',
+                                  memberships: connections?.map(conn => ({
+                                    user: conn.user
+                                  })) || [],
+                                  _count: {
+                                    memberships: actualConnectionCounts?.total || 0
+                                  },
+                                  creator: studentProp.profile,
+                                  isDefault: true
+                                })}
+                                className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-400 to-purple-500 p-[3px] hover:from-pink-500 hover:to-purple-600 transition-all duration-200"
+                              >
+                                <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
+                                  <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                                    <Users className="h-6 w-6 text-pink-500 dark:text-pink-400" />
+                                  </div>
                                 </div>
-                              </div>
+                              </button>
                             </div>
+                            <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
+                              Friends ({actualConnectionCounts?.total || 0})
+                            </span>
                           </div>
-                          <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
-                            Friends
-                          </span>
-                        </div>
+                        )}
 
                         {/* Dynamic Circles from Database */}
                         {circles.map((circle) => (
-                    <div 
-                      key={circle.id}
-                      className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                      onClick={() => handleCircleClick(circle)}
-                    >
-                      <div 
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: circle.color }}
-                      ></div>
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">{circle.name}</span>
-                      <div className="flex items-center gap-1 ml-auto">
-                        <Users className="w-3 h-3 text-gray-400" />
-                        <span className="text-xs text-gray-500">{circle._count?.memberships || 0}</span>
-                        <UserPlus className="w-3 h-3 text-gray-400 ml-1" />
-                      </div>
-                    </div>
-                  ))}
+                          <div 
+                            key={circle.id}
+                            className="flex flex-col items-center min-w-[72px]"
+                          >
+                            <div className="relative mb-1">
+                              <button
+                                onClick={() => handleCircleClick(circle)}
+                                className="w-16 h-16 rounded-full p-[3px] hover:opacity-80 transition-all duration-200"
+                                style={{ 
+                                  background: `linear-gradient(135deg, ${circle.color}, ${circle.color}dd)`
+                                }}
+                              >
+                                <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
+                                  <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                                    <div 
+                                      className="w-3 h-3 rounded-full"
+                                      style={{ backgroundColor: circle.color }}
+                                    />
+                                  </div>
+                                </div>
+                              </button>
+                            </div>
+                            <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
+                              {circle.name} ({circle._count?.memberships || 0})
+                            </span>
+                          </div>
+                        ))}
 
                         {/* Add New Circle Button - Only show for own profile */}
                         {isOwnProfile && (
@@ -386,7 +445,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                                 className="w-16 h-16 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 p-[3px] hover:from-pathpiper-teal hover:to-pathpiper-blue transition-all duration-200"
                               >
                                 <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
-                                  <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                                  <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
                                     <Plus className="h-6 w-6 text-gray-500 dark:text-gray-400" />
                                   </div>
                                 </div>
@@ -616,13 +675,12 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
           </div>
         </div>
       </div>
-      {showCircleManagement && selectedCircle && (
-        <CircleManagementDialog
-          circle={selectedCircle}
-          onClose={() => setShowCircleManagement(false)}
-          onCircleUpdated={handleCircleUpdated}
-        />
-      )}
+      <CircleManagementDialog
+        circle={selectedCircle}
+        open={showCircleManagement}
+        onOpenChange={setShowCircleManagement}
+        onCircleUpdated={handleCircleUpdated}
+      />
     </div>
   )
 }
