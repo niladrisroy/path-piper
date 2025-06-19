@@ -175,15 +175,6 @@ export default function ProfileHeader({
     setShowCircleManagement(true)
   }
 
-  // Mock circle members (would come from API in real app)
-  const circleMembers = [
-    { id: 1, name: "Emma W.", image: "/diverse-students-studying.png", type: "student" },
-    { id: 2, name: "Noah T.", image: "/placeholder.svg?key=hwap2", type: "student" },
-    { id: 3, name: "Olivia R.", image: "/placeholder.svg?key=oez43", type: "student" },
-    { id: 4, name: "Ms. Chen", image: "/diverse-classroom-teacher.png", type: "mentor" },
-    { id: 5, name: "Riverdale High", image: "/university-classroom.png", type: "institution" },
-  ]
-
   const handleAddCircle = () => {
     setShowCreateCircle(true)
   }
@@ -519,9 +510,7 @@ export default function ProfileHeader({
     </div>
   )
 }
-```
 
-```typescript
 // Circle Invitations Section Component
 interface CircleInvitationsSectionProps {
   onInvitationHandled: () => void
@@ -637,12 +626,10 @@ function CircleInvitationsSection({ onInvitationHandled }: CircleInvitationsSect
     </div>
   )
 }
-```
 
-```typescript
 import CircleInvitationsSection from "./circle-invitations-section"
 
-interface ProfileHeaderProps {
+interface ProfileHeaderProps2 {
   student: any
   currentUser?: any
   connectionCounts?: {
@@ -654,7 +641,7 @@ interface ProfileHeaderProps {
   isViewMode?: boolean
 }
 
-export default function ProfileHeader({ student, currentUser, connectionCounts, isViewMode = false }: ProfileHeaderProps) {
+export default function ProfileHeader({ student, currentUser, connectionCounts, isViewMode = false }: ProfileHeaderProps2) {
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [actualConnectionCounts, setActualConnectionCounts] = useState(connectionCounts)
@@ -838,18 +825,9 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
     }
   }
 
-  // Mock circle members (would come from API in real app)
-  const circleMembers = [
-    { id: 1, name: "Emma W.", image: "/diverse-students-studying.png", type: "student" },
-    { id: 2, name: "Noah T.", image: "/placeholder.svg?key=hwap2", type: "student" },
-    { id: 3, name: "Olivia R.", image: "/placeholder.svg?key=oez43", type: "student" },
-    { id: 4, name: "Ms. Chen", image: "/diverse-classroom-teacher.png", type: "mentor" },
-    { id: 5, name: "Riverdale High", image: "/university-classroom.png", type: "institution" },
-  ]
-
-    const handleAddCircle = () => {
-        setShowCreateCircle(true)
-    }
+  const handleAddCircle = () => {
+    setShowCreateCircle(true)
+  }
 
   return (
     <div>
