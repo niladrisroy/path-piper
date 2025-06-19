@@ -7,9 +7,640 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Settings, Plus, Users, MessageSquare, Share2, Calendar, MapPin, Briefcase, GraduationCap, Mail, Phone, Globe, Instagram, Twitter, Linkedin, Github, Youtube, Facebook, UserPlus, BadgeCheck, Edit, MessageCircle, UserIcon, FolderKanban, Award, BrainIcon, UserCheck, UserX } from "lucide-react"
+import { Settings, Plus, Users, MessageSquare, Share2, Calendar, MapPin, Briefcase, GraduationCap, Mail, Phone, Globe, Instagram, Twitter, Linkedin, Github, Youtube, Facebook, UserPlus, BadgeCheck, Edit, MessageCircle, UserIcon, FolderKanban, Award, BrainIcon, UserCheck, UserX, Upload, X } from "lucide-react"
 import CircleManagementDialog from "./circle-management-dialog"
+
+interface Circle {
+  id: string
+  name: string
+  description?: string
+  color: string
+  icon: string
+  isDefault: boolean
+  creator?: {
+    firstName: string
+    lastName: string
+    profileImageUrl?: string
+  }
+  memberships?: Array<{
+    user: {
+      id: string
+      firstName: string
+      lastName: string
+      profileImageUrl?: string
+      role: string
+    }
+  }>
+  _count?: {
+    memberships: number
+  }
+}
+
+interface ProfileHeaderProps {
+  profile: {
+    id: string
+    firstName: string
+    lastName: string
+    role: string
+    profileImageUrl?: string
+    bio?: string
+    location?: string
+    website?: string
+    email?: string
+    phone?: string
+    instagram?: string
+    twitter?: string
+    linkedin?: string
+    github?: string
+    youtube?: string
+    facebook?: string
+    student?: {
+      educationLevel?: string
+      birthMonth?: string
+      birthYear?: string
+    }
+  }
+  isOwnProfile: boolean
+  connectionStatus?: 'none' | 'pending' | 'connected' | 'blocked'
+  onConnect?: () => void
+  onMessage?: () => void
+}
+
+export default function ProfileHeader({ 
+  profile, 
+  isOwnProfile, 
+  connectionStatus = 'none',
+  onConnect,
+  onMessage 
+}: ProfileHeaderProps) {
+  const router = useRouter()
+  const [showCreateCircle, setShowCreateCircle] = useState(false)
+  const [circles, setCircles] = useState<Circle[]>([])
+  const [selectedCircle, setSelectedCircle] = useState<Circle | null>(null)
+  const [showCircleManagement, setShowCircleManagement] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  // Create circle form state
+  const [newCircleName, setNewCircleName] = useState('')
+  const [newCircleDescription, setNewCircleDescription] = useState('')
+  const [newCircleColor, setNewCircleColor] = useState('#3B82F6')
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+
+  const fetchCircles = async () => {
+    try {
+      const response = await fetch('/api/circles', {
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setCircles(data)
+      }
+    } catch (error) {
+      console.error('Error fetching circles:', error)
+    }
+  }
+
+  useEffect(() => {
+    if (isOwnProfile) {
+      fetchCircles()
+    }
+  }, [isOwnProfile])
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setUploadedImage(file)
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const removeImage = () => {
+    setUploadedImage(null)
+    setImagePreview(null)
+  }
+
+  const handleCreateCircle = async () => {
+    if (!newCircleName.trim()) return
+
+    setLoading(true)
+    try {
+      let iconValue = 'users' // default icon
+
+      // If image is uploaded, we'll store it as base64 or upload to a service
+      // For now, we'll store the base64 data URL in the icon field
+      if (uploadedImage && imagePreview) {
+        iconValue = imagePreview
+      }
+
+      const response = await fetch('/api/circles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: newCircleName.trim(),
+          description: newCircleDescription.trim() || null,
+          color: newCircleColor,
+          icon: iconValue
+        })
+      })
+
+      if (response.ok) {
+        await fetchCircles()
+        setShowCreateCircle(false)
+        setNewCircleName('')
+        setNewCircleDescription('')
+        setNewCircleColor('#3B82F6')
+        setUploadedImage(null)
+        setImagePreview(null)
+      }
+    } catch (error) {
+      console.error('Error creating circle:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCircleManagement = (circle: Circle) => {
+    setSelectedCircle(circle)
+    setShowCircleManagement(true)
+  }
+
+  // Mock circle members (would come from API in real app)
+  const circleMembers = [
+    { id: 1, name: "Emma W.", image: "/diverse-students-studying.png", type: "student" },
+    { id: 2, name: "Noah T.", image: "/placeholder.svg?key=hwap2", type: "student" },
+    { id: 3, name: "Olivia R.", image: "/placeholder.svg?key=oez43", type: "student" },
+    { id: 4, name: "Ms. Chen", image: "/diverse-classroom-teacher.png", type: "mentor" },
+    { id: 5, name: "Riverdale High", image: "/university-classroom.png", type: "institution" },
+  ]
+
+  const handleAddCircle = () => {
+    setShowCreateCircle(true)
+  }
+
+  return (
+    <div>
+      <div className="relative">
+        {/* Customizable banner */}
+        <div className={`h-48 w-full bg-gradient-to-r from-pathpiper-teal to-pathpiper-blue`}></div>
+
+        {/* Profile information overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
+            {/* Profile image */}
+            <div className="relative">
+              <Avatar className="h-32 w-32 border-4 border-white shadow-lg">
+                <AvatarImage src={profile.profileImageUrl} />
+                <AvatarFallback className="text-3xl bg-white text-pathpiper-teal">
+                  {profile.firstName[0]}{profile.lastName[0]}
+                </AvatarFallback>
+              </Avatar>
+              {profile.role === 'mentor' && (
+                <BadgeCheck className="absolute -bottom-2 -right-2 h-8 w-8 text-blue-500 bg-white rounded-full p-1" />
+              )}
+            </div>
+
+            {/* Profile info */}
+            <div className="flex-1 text-white">
+              <h1 className="text-3xl font-bold">{profile.firstName} {profile.lastName}</h1>
+              <p className="text-lg opacity-90 capitalize">{profile.role}</p>
+              {profile.bio && <p className="text-base opacity-80 mt-1">{profile.bio}</p>}
+              <div className="flex items-center gap-4 mt-2 text-sm">
+                {profile.location && (
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-4 w-4" />
+                    <span>{profile.location}</span>
+                  </div>
+                )}
+                {profile.student?.educationLevel && (
+                  <div className="flex items-center gap-1">
+                    <GraduationCap className="h-4 w-4" />
+                    <span className="capitalize">{profile.student.educationLevel}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex gap-2 mt-4 sm:mt-0">
+              {isOwnProfile ? (
+                <>
+                  <Button 
+                    variant="secondary" 
+                    onClick={() => router.push('/student/profile/edit')}
+                    className="bg-white/20 hover:bg-white/30 text-white border-white/20"
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Profile
+                  </Button>
+                  <Button 
+                    variant="secondary"
+                    className="bg-white/20 hover:bg-white/30 text-white border-white/20"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  {connectionStatus === 'none' && (
+                    <Button onClick={onConnect} className="bg-white text-pathpiper-teal hover:bg-gray-100">
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Connect
+                    </Button>
+                  )}
+                  {connectionStatus === 'pending' && (
+                    <Button disabled className="bg-yellow-500 text-white">
+                      <UserCheck className="h-4 w-4 mr-2" />
+                      Pending
+                    </Button>
+                  )}
+                  {connectionStatus === 'connected' && (
+                    <Button onClick={onMessage} className="bg-white text-pathpiper-teal hover:bg-gray-100">
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Message
+                    </Button>
+                  )}
+                  <Button variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-white/20">
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Contact and social links bar */}
+      {(profile.email || profile.phone || profile.website || profile.instagram || profile.twitter || profile.linkedin || profile.github || profile.youtube || profile.facebook) && (
+        <div className="bg-gray-50 dark:bg-gray-800 border-b px-6 py-3">
+          <div className="flex flex-wrap items-center gap-4 text-sm">
+            {profile.email && (
+              <a href={`mailto:${profile.email}`} className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-pathpiper-teal">
+                <Mail className="h-4 w-4" />
+                <span className="hidden sm:inline">{profile.email}</span>
+              </a>
+            )}
+            {profile.phone && (
+              <a href={`tel:${profile.phone}`} className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-pathpiper-teal">
+                <Phone className="h-4 w-4" />
+                <span className="hidden sm:inline">{profile.phone}</span>
+              </a>
+            )}
+            {profile.website && (
+              <a href={profile.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-pathpiper-teal">
+                <Globe className="h-4 w-4" />
+                <span className="hidden sm:inline">Website</span>
+              </a>
+            )}
+            {profile.instagram && (
+              <a href={`https://instagram.com/${profile.instagram}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-pathpiper-teal">
+                <Instagram className="h-4 w-4" />
+              </a>
+            )}
+            {profile.twitter && (
+              <a href={`https://twitter.com/${profile.twitter}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-pathpiper-teal">
+                <Twitter className="h-4 w-4" />
+              </a>
+            )}
+            {profile.linkedin && (
+              <a href={`https://linkedin.com/in/${profile.linkedin}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-pathpiper-teal">
+                <Linkedin className="h-4 w-4" />
+              </a>
+            )}
+            {profile.github && (
+              <a href={`https://github.com/${profile.github}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-pathpiper-teal">
+                <Github className="h-4 w-4" />
+              </a>
+            )}
+            {profile.youtube && (
+              <a href={`https://youtube.com/@${profile.youtube}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-pathpiper-teal">
+                <Youtube className="h-4 w-4" />
+              </a>
+            )}
+            {profile.facebook && (
+              <a href={`https://facebook.com/${profile.facebook}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-pathpiper-teal">
+                <Facebook className="h-4 w-4" />
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Circles section - only show for own profile */}
+      {isOwnProfile && (
+        <div className="bg-white dark:bg-gray-900 border-b px-6 py-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">My Circles</h3>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleAddCircle}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Create Circle
+            </Button>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            {circles.map((circle) => (
+              <div
+                key={circle.id}
+                className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-full cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                onClick={() => handleCircleManagement(circle)}
+              >
+                {/* Use uploaded image if available, otherwise fallback to icon */}
+                {circle.icon && circle.icon.startsWith('data:image') ? (
+                  <div className="w-6 h-6 rounded-full overflow-hidden">
+                    <Image
+                      src={circle.icon}
+                      alt={circle.name}
+                      width={24}
+                      height={24}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div 
+                    className="w-6 h-6 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: circle.color }}
+                  >
+                    <Users className="w-3 h-3 text-white" />
+                  </div>
+                )}
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {circle.name}
+                </span>
+                <Badge variant="secondary" className="text-xs">
+                  {circle._count?.memberships || 0}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Create Circle Dialog */}
+      <Dialog open={showCreateCircle} onOpenChange={setShowCreateCircle}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create New Circle</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Circle Name</label>
+              <Input
+                value={newCircleName}
+                onChange={(e) => setNewCircleName(e.target.value)}
+                placeholder="Enter circle name"
+                maxLength={50}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Description (Optional)</label>
+              <Textarea
+                value={newCircleDescription}
+                onChange={(e) => setNewCircleDescription(e.target.value)}
+                placeholder="Describe your circle..."
+                rows={3}
+                maxLength={200}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Circle Avatar (Optional)</label>
+              <div className="space-y-3">
+                {imagePreview ? (
+                  <div className="relative inline-block">
+                    <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200">
+                      <Image
+                        src={imagePreview}
+                        alt="Circle avatar preview"
+                        width={80}
+                        height={80}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={removeImage}
+                      className="absolute -top-2 -right-2 w-6 h-6 p-0 rounded-full"
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-12 h-12 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: newCircleColor }}
+                    >
+                      <Users className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        id="circle-image-upload"
+                      />
+                      <label
+                        htmlFor="circle-image-upload"
+                        className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 cursor-pointer"
+                      >
+                        <Upload className="w-4 h-4" />
+                        Upload Image
+                      </label>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Circle Color</label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="color"
+                  value={newCircleColor}
+                  onChange={(e) => setNewCircleColor(e.target.value)}
+                  className="w-12 h-8 rounded border cursor-pointer"
+                />
+                <div className="flex gap-2">
+                  {['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'].map(color => (
+                    <button
+                      key={color}
+                      onClick={() => setNewCircleColor(color)}
+                      className={`w-6 h-6 rounded-full border-2 ${newCircleColor === color ? 'border-gray-400' : 'border-gray-200'}`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button variant="outline" onClick={() => setShowCreateCircle(false)} className="flex-1">
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleCreateCircle}
+                disabled={!newCircleName.trim() || loading}
+                className="flex-1"
+              >
+                Create Circle
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Circle Management Dialog */}
+      <CircleManagementDialog
+        circle={selectedCircle}
+        open={showCircleManagement}
+        onOpenChange={setShowCircleManagement}
+        onCircleUpdated={fetchCircles}
+      />
+    </div>
+  )
+}
+```
+
+```typescript
+// Circle Invitations Section Component
+interface CircleInvitationsSectionProps {
+  onInvitationHandled: () => void
+}
+
+function CircleInvitationsSection({ onInvitationHandled }: CircleInvitationsSectionProps) {
+  const [invitations, setInvitations] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    fetchInvitations()
+  }, [])
+
+  const fetchInvitations = async () => {
+    try {
+      const response = await fetch('/api/circles/invitations?type=received', {
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Only show pending invitations
+        setInvitations(data.filter((inv: any) => inv.status === 'pending'))
+      }
+    } catch (error) {
+      console.error('Error fetching invitations:', error)
+    }
+  }
+
+  const handleInvitation = async (invitationId: string, action: 'accept' | 'decline') => {
+    setLoading(true)
+    try {
+      const response = await fetch(`/api/circles/invitations/${invitationId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ action })
+      })
+
+      if (response.ok) {
+        // Remove the invitation from the list
+        setInvitations(prev => prev.filter(inv => inv.id !== invitationId))
+        onInvitationHandled()
+      }
+    } catch (error) {
+      console.error('Error handling invitation:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (invitations.length === 0) {
+    return null
+  }
+
+  return (
+    <div className="flex flex-col">
+      <h3 className="text-lg font-semibold mb-4">Circle Requests</h3>
+      <div className="space-y-3 max-w-xs">
+        {invitations.map((invitation) => (
+          <div key={invitation.id} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border">
+            <div className="flex items-center gap-2 mb-2">
+              <div 
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs"
+                style={{ backgroundColor: invitation.circle.color }}
+              >
+                {invitation.circle.icon === 'users' ? (
+                  <Users className="h-4 w-4" />
+                ) : (
+                  invitation.circle.icon
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{invitation.circle.name}</p>
+                <p className="text-xs text-gray-500">
+                  from {invitation.inviter.firstName} {invitation.inviter.lastName}
+                </p>
+              </div>
+            </div>
+
+            {invitation.message && (
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-3 italic">
+                "{invitation.message}"
+              </p>
+            )}
+
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={() => handleInvitation(invitation.id, 'accept')}
+                disabled={loading}
+                className="flex-1 h-7 text-xs"
+              >
+                <UserCheck className="h-3 w-3 mr-1" />
+                Accept
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleInvitation(invitation.id, 'decline')}
+                disabled={loading}
+                className="flex-1 h-7 text-xs"
+              >
+                <UserX className="h-3 w-3 mr-1" />
+                Decline
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+```
+
+```typescript
+import CircleInvitationsSection from "./circle-invitations-section"
 
 interface ProfileHeaderProps {
   student: any
@@ -234,576 +865,4 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                 {/* Left column - Profile details with profile pic */}
                 <div className="md:col-span-3">
                   <div className="flex flex-row gap-4 mb-4">
-                    {/* Profile image */}
-                    <div className="relative z-10 flex-shrink-0">
-                      <div className="rounded-full border-4 border-white dark:border-gray-800 overflow-hidden h-20 w-20 sm:h-28 sm:w-28 shadow-md">
-                        <Image
-                          src={profileImage || "/placeholder.svg"}
-                          alt={displayName}
-                          width={112}
-                          height={112}
-                          className="object-cover"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Name and tagline */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h1 className="text-xl sm:text-3xl font-bold truncate">{displayName}</h1>
-                        {true && <BadgeCheck className="h-6 w-6 text-pathpiper-teal" />}
-                      </div>
-                      {tagline && (
-                        <p className="text-gray-600 dark:text-gray-300 mt-1 text-sm sm:text-base truncate">
-                          {tagline}
-                        </p>
-                      )}
-                      <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
-                        {gradeLevel} • {schoolName}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Quick Stats - Horizontal display with icons and pastel backgrounds */}
-                  <div className="flex flex-wrap gap-3 text-xs font-medium mt-4">
-                    <div className="flex items-center gap-1.5 bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 text-pink-600 dark:text-pink-300 px-3 py-1.5 rounded-full">
-                      <Users className="h-3.5 w-3.5 text-pink-500" data-tooltip="Total connections in their circle" />
-                      <span data-tooltip="Total connections in their circle">
-                        {actualConnectionCounts?.total || 0} in {isOwnProfile ? 'My' : 'Their'} Circle
-                      </span>
-                      <div className="ml-1.5 flex items-center gap-1 border-l border-pink-200 dark:border-pink-800/30 pl-1.5">
-                        <div className="flex items-center" data-tooltip="Students in their circle">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="h-3 w-3 text-pink-500"
-                            data-tooltip="Students"
-                          >
-                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="9" cy="7" r="4"></circle>
-                            <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                          </svg>
-                          <span className="text-[10px] ml-0.5" data-tooltip="Students in their circle">
-                            {actualConnectionCounts?.students || 0}
-                          </span>
-                        </div>
-                        <div className="flex items-center" data-tooltip="Mentors guiding them">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="h-3 w-3 text-pink-500"
-                            data-tooltip="Mentors"
-                          >
-                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                          </svg>
-                          <span className="text-[10px] ml-0.5" data-tooltip="Mentors guiding them">
-                            {actualConnectionCounts?.mentors || 0}
-                          </span>
-                        </div>
-                        <div className="flex items-center" data-tooltip="Institutions connected with them">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="h-3 w-3 text-pink-500"
-                            data-tooltip="Institutions"
-                          >
-                            <rect x="4" y="9" width="16" height="12"></rect>
-                            <path d="m12 3-8 6h16l-8-6z"></path>
-                            <path d="M8 21v-4"></path>
-                            <path d="M16 21v-4"></path>
-                            <path d="M12 21v-4"></path>
-                          </svg>
-                          <span className="text-[10px] ml-0.5" data-tooltip="Institutions connected with them">
-                            {actualConnectionCounts?.institutions || 0}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1.5 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 text-blue-600 dark:text-blue-300 px-3 py-1.5 rounded-full">
-                      <FolderKanban
-                        className="h-3.5 w-3.5 text-blue-500"
-                        data-tooltip={`Projects ${isOwnProfile ? "you've" : "they've"} created or contributed to`}
-                      />
-                      <span data-tooltip={`Projects ${isOwnProfile ? "you've" : "they've"} created or contributed to`}>
-                        Projects: {studentProp?.projects?.length || 0}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 text-amber-600 dark:text-amber-300 px-3 py-1.5 rounded-full">
-                      <Award className="h-3.5 w-3.5 text-amber-500" data-tooltip={`Badges ${isOwnProfile ? "you've" : "they've"} earned`} />
-                      <span data-tooltip={`Badges ${isOwnProfile ? "you've" : "they've"} earned`}>
-                        Badges: {studentProp?.customBadges?.length || 0}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 bg-gradient-to-r from-teal-50 to-green-50 dark:from-teal-900/20 dark:to-green-900/20 text-teal-600 dark:text-teal-300 px-3 py-1.5 rounded-full">
-                      <BrainIcon className="h-3.5 w-3.5 text-teal-500" data-tooltip={`Skills ${isOwnProfile ? "you've" : "they've"} developed`} />
-                      <span data-tooltip={`Skills ${isOwnProfile ? "you've" : "they've"} developed`}>
-                        Skills: {studentProp?.skills?.length || 0}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Circle preview - Friends circle with add button */}
-                  <div className="mt-4">
-                    <div className="flex justify-between items-center mb-3">
-                      <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">My Circles</h3>
-                    </div>
-
-                    <div className="relative">
-                      <div className="flex overflow-x-auto pb-2 hide-scrollbar gap-4">
-                        {/* Default Friends Circle - Only show for own profile */}
-                        {isOwnProfile && (
-                          <div className="flex flex-col items-center min-w-[72px]">
-                            <div className="relative mb-1">
-                              <button
-                                onClick={() => handleCircleClick({
-                                  id: 'friends',
-                                  name: 'Friends',
-                                  color: '#ec4899',
-                                  icon: 'users',
-                                  memberships: connections?.map(conn => ({
-                                    user: conn.user
-                                  })) || [],
-                                  _count: {
-                                    memberships: actualConnectionCounts?.total || 0
-                                  },
-                                  creator: studentProp.profile,
-                                  isDefault: true
-                                })}
-                                className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-400 to-purple-500 p-[3px] hover:from-pink-500 hover:to-purple-600 transition-all duration-200"
-                              >
-                                <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
-                                  <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                                    <Users className="h-6 w-6 text-pink-500 dark:text-pink-400" />
-                                  </div>
-                                </div>
-                              </button>
-                            </div>
-                            <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
-                              Friends ({actualConnectionCounts?.total || 0})
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Dynamic Circles from Database */}
-                        {circles.map((circle) => (
-                          <div 
-                            key={circle.id}
-                            className="flex flex-col items-center min-w-[72px]"
-                          >
-                            <div className="relative mb-1">
-                              <button
-                                onClick={() => handleCircleClick(circle)}
-                                className="w-16 h-16 rounded-full p-[3px] hover:opacity-80 transition-all duration-200"
-                                style={{ 
-                                  background: `linear-gradient(135deg, ${circle.color}, ${circle.color}dd)`
-                                }}
-                              >
-                                <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
-                                  <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                                    <div 
-                                      className="w-3 h-3 rounded-full"
-                                      style={{ backgroundColor: circle.color }}
-                                    />
-                                  </div>
-                                </div>
-                              </button>
-                            </div>
-                            <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
-                              {circle.name} ({circle._count?.memberships || 0})
-                            </span>
-                          </div>
-                        ))}
-
-                        {/* Add New Circle Button - Only show for own profile */}
-                        {isOwnProfile && (
-                          <div className="flex flex-col items-center min-w-[72px]">
-                            <div className="relative mb-1">
-                              <button
-                                onClick={() => setShowCreateCircle(true)}
-                                className="w-16 h-16 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 p-[3px] hover:from-pathpiper-teal hover:to-pathpiper-blue transition-all duration-200"
-                              >
-                                <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
-                                  <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                                    <Plus className="h-6 w-6 text-gray-500 dark:text-gray-400" />
-                                  </div>
-                                </div>
-                              </button>
-                            </div>
-                            <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
-                              Add Circle
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Create Circle Modal */}
-                    {showCreateCircle && (
-                      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-                          <h3 className="text-lg font-semibold mb-4">Create New Circle</h3>
-                          <Input
-                            placeholder="Circle name"
-                            value={newCircleName}
-                            onChange={(e) => setNewCircleName(e.target.value)}
-                            className="mb-4"
-                          />
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              onClick={() => {
-                                setShowCreateCircle(false)
-                                setNewCircleName('')
-                              }}
-                            >
-                              Cancel
-                            </Button>
-                            <Button onClick={handleCreateCircle}>
-                              Create Circle
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Right column - Profile highlights */}
-                <div className="md:col-span-2 md:border-l md:border-gray-200 md:dark:border-gray-700 md:pl-6">
-                  {/* Circle Invitations Section - Only show for own profile */}
-                  {isOwnProfile && (
-                    <div className="mb-6">
-                      <CircleInvitationsSection onInvitationHandled={handleCircleUpdated} />
-                    </div>
-                  )}
-
-                  {/* Top Skills section - Dynamic from Database with sorting by proficiency */}
-                  <div>
-                    <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Top Skills</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {student?.skills && student.skills.length > 0 ? (
-                        student.skills
-                          .sort((a: any, b: any) => (b.proficiencyLevel || 0) - (a.proficiencyLevel || 0))
-                          .slice(0, 5)
-                          .map((skill: any, i: number) => (
-                          <div
-                            key={skill.id || i}
-                            className={`px-3 py-1 rounded-full text-xs ${
-                              i % 4 === 0
-                                ? "bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300"
-                                : i % 4 === 1
-                                  ? "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300"
-                                  : i % 4 === 2
-                                    ? "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300"
-                                    : "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300"
-                            }`}
-                          >
-                            {skill.name}
-                          </div>
-                        ))
-                      ) : (
-                        <span className="text-xs text-gray-500 dark:text-gray-400">No skills added yet</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Recent Achievement section */}
-                  <div className="mt-3">
-                    <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Recent Achievement</h3>
-                    <div className="bg-sky-50 dark:bg-sky-900/20 p-2 rounded-lg flex items-center gap-3">
-                      <div className="bg-yellow-100 dark:bg-yellow-900/40 h-8 w-8 rounded-full flex items-center justify-center">
-                        <Award className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-medium">Science Fair Winner</h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Awarded 2 weeks ago</p>
-                      </div>
-                    </div>
-                  </div>
-
-
-
-                  {/* Recent Badges section */}
-                  <div className="mt-3">
-                    <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Recent Badges</h3>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="flex flex-col items-center">
-                        <div className="bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 h-12 w-12 rounded-full flex items-center justify-center">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 024 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="h-6 w-6 text-blue-600 dark:text-blue-400"
-                          >
-                            <path d="M12 2v20"></path>
-                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                          </svg>
-                        </div>
-                        <span className="text-[10px] text-center mt-1 text-gray-600 dark:text-gray-400">Math Whiz</span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <div className="bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 h-12 w-12 rounded-full flex items-center justify-center">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="h-6 w-6 text-purple-600 dark:text-purple-400"
-                          >
-                            <path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"></path>
-                          </svg>
-                        </div>
-                        <span className="text-[10px] text-center mt-1 text-gray-600 dark:text-gray-400">
-                          Coding Pro
-                        </span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <div className="bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 h-12 w-12 rounded-full flex items-center justify-center">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="h-6 w-6 text-amber-600 dark:text-amber-400"
-                          >
-                            <path d="M12 17.8 5.8 21 7 14.1 2 9.3l7-1L12 2l3 6.3 7 1-5 4.8 1.2 6.9-6.2-3.2Z"></path>
-                          </svg>
-                        </div>
-                        <span className="text-[10px] text-center mt-1 text-gray-600 dark:text-gray-400">
-                          Top Achiever
-                        </span>
-                      </div>
-                    </div>
-                    <div className="mt-2 text-center">
-                      <a
-                        href="#"
-                        className="text-[10px] text-pink-500 hover:text-pink-600 dark:text-pink-400 dark:hover:text-pink-300 font-medium"
-                      >
-                        View All Badges
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="mt-6">
-                    {/* Add/Edit Profile button */}
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      {isOwnProfile ? (
-                        <Button 
-                          size="lg" 
-                          className="bg-pathpiper-teal hover:bg-pathpiper-teal/90"
-                          onClick={() => router.push('/student/profile/edit')}
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit Profile
-                        </Button>
-                      ) : (
-                        <>
-                          <Button size="lg" className="bg-pathpiper-teal hover:bg-pathpiper-teal/90">
-                            <MessageCircle className="h-4 w-4 mr-2" />
-                            Message
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="lg"
-                            onClick={async () => {
-                              try {
-                                const response = await fetch('/api/connections/request', {
-                                  method: 'POST',
-                                  headers: {
-                                    'Content-Type': 'application/json',
-                                  },
-                                  credentials: 'include',
-                                  body: JSON.stringify({
-                                    receiverId: studentProp.id,
-                                    message: `Hi! I'd like to connect with you on PathPiper.`
-                                  }),
-                                })
-
-                                if (response.ok) {
-                                  alert('Connection request sent successfully!')
-                                } else {
-                                  const error = await response.json()
-                                  alert(`Failed to send connection request: ${error.error || 'Unknown error'}`)
-                                }
-                              } catch (error) {
-                                console.error('Error sending connection request:', error)
-                                alert('Failed to send connection request')
-                              }
-                            }}
-                          >
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            Connect
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <CircleManagementDialog
-        circle={selectedCircle}
-        open={showCircleManagement}
-        onOpenChange={setShowCircleManagement}
-        onCircleUpdated={handleCircleUpdated}
-      />
-    </div>
-  )
-}
-
-// Circle Invitations Section Component
-interface CircleInvitationsSectionProps {
-  onInvitationHandled: () => void
-}
-
-function CircleInvitationsSection({ onInvitationHandled }: CircleInvitationsSectionProps) {
-  const [invitations, setInvitations] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    fetchInvitations()
-  }, [])
-
-  const fetchInvitations = async () => {
-    try {
-      const response = await fetch('/api/circles/invitations?type=received', {
-        credentials: 'include'
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        // Only show pending invitations
-        setInvitations(data.filter((inv: any) => inv.status === 'pending'))
-      }
-    } catch (error) {
-      console.error('Error fetching invitations:', error)
-    }
-  }
-
-  const handleInvitation = async (invitationId: string, action: 'accept' | 'decline') => {
-    setLoading(true)
-    try {
-      const response = await fetch(`/api/circles/invitations/${invitationId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({ action })
-      })
-
-      if (response.ok) {
-        // Remove the invitation from the list
-        setInvitations(prev => prev.filter(inv => inv.id !== invitationId))
-        onInvitationHandled()
-      }
-    } catch (error) {
-      console.error('Error handling invitation:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (invitations.length === 0) {
-    return null
-  }
-
-  return (
-    <div className="flex flex-col">
-      <h3 className="text-lg font-semibold mb-4">Circle Requests</h3>
-      <div className="space-y-3 max-w-xs">
-        {invitations.map((invitation) => (
-          <div key={invitation.id} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border">
-            <div className="flex items-center gap-2 mb-2">
-              <div 
-                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs"
-                style={{ backgroundColor: invitation.circle.color }}
-              >
-                {invitation.circle.icon === 'users' ? (
-                  <Users className="h-4 w-4" />
-                ) : (
-                  invitation.circle.icon
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{invitation.circle.name}</p>
-                <p className="text-xs text-gray-500">
-                  from {invitation.inviter.firstName} {invitation.inviter.lastName}
-                </p>
-              </div>
-            </div>
-
-            {invitation.message && (
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-3 italic">
-                "{invitation.message}"
-              </p>
-            )}
-
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                onClick={() => handleInvitation(invitation.id, 'accept')}
-                disabled={loading}
-                className="flex-1 h-7 text-xs"
-              >
-                <UserCheck className="h-3 w-3 mr-1" />
-                Accept
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleInvitation(invitation.id, 'decline')}
-                disabled={loading}
-                className="flex-1 h-7 text-xs"
-              >
-                <UserX className="h-3 w-3 mr-1" />
-                Decline
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
+                    {/*
