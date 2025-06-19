@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Settings, Plus, Users, MessageSquare, Share2, Calendar, MapPin, Briefcase, GraduationCap, Mail, Phone, Globe, Instagram, Twitter, Linkedin, Github, Youtube, Facebook, UserPlus, BadgeCheck, Edit, MessageCircle, UserIcon, FolderKanban, Award, BrainIcon, UserCheck, UserX } from "lucide-react"
+import { Settings, Plus, Users, MessageSquare, Share2, Calendar, MapPin, Briefcase, GraduationCap, Mail, Phone, Globe, Instagram, Twitter, Linkedin, Github, Youtube, Facebook, UserPlus, BadgeCheck, Edit, MessageCircle, UserIcon, FolderKanban, Award, BrainIcon, UserCheck, UserX, Crown, Shield, Star, GraduationCap as GraduationCapIcon, Building } from "lucide-react"
 import CircleManagementDialog from "./circle-management-dialog"
 
 interface ProfileHeaderProps {
@@ -220,6 +220,35 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
         setShowCreateCircle(true)
     }
 
+    const getIconComponent = (iconName: string) => {
+    // Check if iconName is a URL (uploaded image)
+    if (iconName.startsWith('/uploads/') || iconName.startsWith('http')) {
+      return (
+        <img 
+          src={iconName} 
+          alt="Circle icon" 
+          className="h-3 w-3 rounded-full object-cover"
+        />
+      );
+    }
+
+    // Default icon components for backward compatibility
+    switch (iconName) {
+      case "crown":
+        return <Crown className="h-3 w-3" />;
+      case "shield":
+        return <Shield className="h-3 w-3" />;
+      case "star":
+        return <Star className="h-3 w-3" />;
+      case "graduation-cap":
+        return <GraduationCapIcon className="h-3 w-3" />;
+      case "building":
+        return <Building className="h-3 w-3" />;
+      default:
+        return <Users className="h-3 w-3" />;
+    }
+  };
+
   return (
     <div>
       <div className="relative">
@@ -422,10 +451,24 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                               >
                                 <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
                                   <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                                    <div 
-                                      className="w-3 h-3 rounded-full"
-                                      style={{ backgroundColor: circle.color }}
-                                    />
+                                    <div
+                          className={`h-6 w-6 rounded-full flex items-center justify-center text-white text-xs shadow-sm overflow-hidden`}
+                          style={{ 
+                            backgroundColor: circle.icon.startsWith('/uploads/') || circle.icon.startsWith('http') 
+                              ? 'transparent' 
+                              : circle.color 
+                          }}
+                        >
+                          {circle.icon.startsWith('/uploads/') || circle.icon.startsWith('http') ? (
+                            <img 
+                              src={circle.icon} 
+                              alt={`${circle.name} icon`} 
+                              className="h-6 w-6 rounded-full object-cover"
+                            />
+                          ) : (
+                            getIconComponent(circle.icon)
+                          )}
+                        </div>
                                   </div>
                                 </div>
                               </button>
