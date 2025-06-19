@@ -184,18 +184,10 @@ export default function CircleManagementDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Avatar className="w-5 h-5">
-              {circle.icon.startsWith('http') ? (
-                <AvatarImage src={circle.icon} />
-              ) : (
-                <AvatarFallback 
-                  className="text-xs"
-                  style={{ backgroundColor: circle.color }}
-                >
-                  <div className="w-3 h-3 rounded-full bg-white"></div>
-                </AvatarFallback>
-              )}
-            </Avatar>
+            <div 
+              className="w-4 h-4 rounded-full"
+              style={{ backgroundColor: circle.color }}
+            />
             Invite to {circle.name}
           </DialogTitle>
         </DialogHeader>

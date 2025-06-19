@@ -181,45 +181,7 @@ export default function StudentProfile({ studentId, currentUser, studentData, is
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
-      <ProfileHeader 
-        profileData={{
-          id: student.id,
-          firstName: student.profile.firstName,
-          lastName: student.profile.lastName,
-          bio: student.profile.bio,
-          location: student.profile.location,
-          profileImageUrl: student.profile.profileImageUrl,
-          tagline: student.profile.tagline,
-          email: student.profile.email,
-          phone: student.profile.phone,
-          coverImageUrl: student.profile.coverImageUrl,
-          role: student.profile.role,
-          verificationStatus: student.profile.verificationStatus,
-          userInterests: student.interests?.map(interest => ({
-            interest: {
-              id: interest.id,
-              name: interest.name,
-              category: {
-                name: interest.category
-              }
-            }
-          })) || [],
-          userSkills: student.skills?.map(skill => ({
-            skill: {
-              id: skill.id,
-              name: skill.name
-            },
-            proficiencyLevel: skill.proficiencyLevel
-          })) || [],
-          socialLinks: student.socialLinks || [],
-          careerGoals: student.careerGoals || [],
-          customBadges: student.customBadges || [],
-          student: {
-            educationHistory: student.educationHistory || []
-          }
-        }}
-        isOwnProfile={!isViewMode}
-      />
+      <ProfileHeader student={student} currentUser={currentUser} connectionCounts={connectionCounts} isViewMode={isViewMode} />
 
       <HorizontalNavigation tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
 
