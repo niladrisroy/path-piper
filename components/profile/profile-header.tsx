@@ -33,7 +33,12 @@ import {
   MapPinIcon,
   Building,
   GraduationCap,
-  Plus
+  Plus,
+  BadgeCheck,
+  Edit,
+  UserPlus,
+  FolderKanban,
+  BrainIcon
 } from "lucide-react"
 
 interface ProfileHeaderProps {
