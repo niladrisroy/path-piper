@@ -173,14 +173,14 @@ export default function AboutSection({ student: studentProp, currentUser, isView
                   <div key={connection.id} className="flex flex-col items-center">
                     <div className={`h-12 w-12 rounded-full overflow-hidden mb-1 ring-2 ${getRoleColor(connection.user.role)}`}>
                       <Avatar className="h-12 w-12">
-                        <AvatarImage src={connection.user.avatar} alt={connection.user.name} />
+                        <AvatarImage src={connection.user.profileImageUrl || connection.user.avatar} alt={connection.user.name} />
                         <AvatarFallback>
-                          {connection.user.firstName[0]}{connection.user.lastName[0]}
+                          {connection.user.firstName?.[0]}{connection.user.lastName?.[0]}
                         </AvatarFallback>
                       </Avatar>
                     </div>
                     <span className="text-xs text-gray-600 dark:text-gray-400 text-center">
-                      {connection.user.firstName} {connection.user.lastName[0]}.
+                      {connection.user.firstName} {connection.user.lastName?.[0]}.
                     </span>
                   </div>
                 ))}
