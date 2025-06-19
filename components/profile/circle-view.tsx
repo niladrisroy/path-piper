@@ -564,7 +564,7 @@ export default function CircleView({ student }: CircleViewProps) {
                 <CardHeader className="pb-4"></CardHeader>
                 <CardContent className="pt-0">
                   <Tabs defaultValue="all" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4 mb-6 mt-1">
+                    <TabsList className="grid w-full grid-cols-4 mb-6">
                       <TabsTrigger value="all">
                         All ({totalConnections})
                       </TabsTrigger>
@@ -887,7 +887,8 @@ export default function CircleView({ student }: CircleViewProps) {
                                   </h3>
                                   <Badge
                                     variant="outline"
-                                    className="text-xs mt-1 bg-purple-50 text-purple-700 border-purple-200"
+                               ```text
+className="text-xs mt-1 bg-purple-50 text-purple-700 border-purple-200"
                                   >
                                     institution
                                   </Badge>
