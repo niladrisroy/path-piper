@@ -460,34 +460,47 @@ export default function CircleView({ student }: CircleViewProps) {
         <p className="text-gray-600 dark:text-gray-400">Connect with mentors, peers, and institutions</p>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="flex space-x-4 border-b">
-        <button
-          onClick={() => setActiveView('connections')}
-          className={`px-4 py-2 border-b-2 transition-colors ${
-            activeView === 'connections'
-              ? 'border-blue-500 text-blue-600'
-              : 'border-transparent text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          My Connections
-        </button>
-        <button
-          onClick={() => setActiveView('requests')}
-          className={`px-4 py-2 border-b-2 transition-colors flex items-center space-x-2 ${
-            activeView === 'requests'
-              ? 'border-blue-500 text-blue-600'
-              : 'border-transparent text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          <Inbox className="h-4 w-4" />
-          <span>Requests</span>
-          {pendingRequests > 0 && (
-            <Badge variant="destructive" className="ml-1">
-              {pendingRequests}
-            </Badge>
-          )}
-        </button>
+      {/* Navigation Tabs with Action Buttons */}
+      <div className="flex justify-between items-center border-b">
+        <div className="flex space-x-4">
+          <button
+            onClick={() => setActiveView('connections')}
+            className={`px-4 py-2 border-b-2 transition-colors ${
+              activeView === 'connections'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            My Connections
+          </button>
+          <button
+            onClick={() => setActiveView('requests')}
+            className={`px-4 py-2 border-b-2 transition-colors flex items-center space-x-2 ${
+              activeView === 'requests'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <Inbox className="h-4 w-4" />
+            <span>Requests</span>
+            {pendingRequests > 0 && (
+              <Badge variant="destructive" className="ml-1">
+                {pendingRequests}
+              </Badge>
+            )}
+          </button>
+        </div>
+        
+        {/* Action Buttons - Only show for connections view */}
+        {activeView === 'connections' && (
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm">
+              <Filter className="h-4 w-4 mr-2" />
+              Filter
+            </Button>
+            <AddConnectionDialog onConnectionRequestSent={handleConnectionRequestSent} />
+          </div>
+        )}
       </div>
 
       {/* Content based on active view */}
@@ -503,17 +516,6 @@ export default function CircleView({ student }: CircleViewProps) {
             {/* Connections Section - Takes 8 columns on large screens */}
             <div className="lg:col-span-8">
               <Card>
-            <CardHeader>
-              <div className="flex justify-end items-center">
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filter
-                  </Button>
-                  <AddConnectionDialog onConnectionRequestSent={handleConnectionRequestSent} />
-                </div>
-              </div>
-            </CardHeader>
             <CardContent>
               <Tabs defaultValue="all" className="w-full">
                 <TabsList className="grid w-full grid-cols-4">
