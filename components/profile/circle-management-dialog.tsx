@@ -184,18 +184,10 @@ export default function CircleManagementDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {circle.icon && circle.icon.startsWith('data:image/') ? (
-              <img 
-                src={circle.icon} 
-                alt={`${circle.name} avatar`}
-                className="w-6 h-6 rounded-full object-cover"
-              />
-            ) : (
-              <div 
-                className="w-4 h-4 rounded-full"
-                style={{ backgroundColor: circle.color }}
-              />
-            )}
+            <div 
+              className="w-4 h-4 rounded-full"
+              style={{ backgroundColor: circle.color }}
+            />
             Invite to {circle.name}
           </DialogTitle>
         </DialogHeader>

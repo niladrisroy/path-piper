@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@supabase/supabase-js'
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest) {
   try {
     console.log('API: Circles request received')
     console.log('API: Checking cookies for auth token')
-
+    
     const cookieStore = request.cookies
     console.log('API: Cookie store available')
 
@@ -94,7 +95,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     console.log('API: Create circle request received')
-
+    
     const cookieStore = request.cookies
     const accessToken = cookieStore.get('sb-access-token')?.value
 
@@ -120,11 +121,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (name.trim().length > 50) {
-      return NextResponse.json({ error: 'Circle name must be 50 characters or less' }, { status: 400 })
-    }
-
-    if (description && description.trim().length > 200) {
-      return NextResponse.json({ error: 'Circle description must be 200 characters or less' }, { status: 400 })
+      return NextResponse.json({ error: 'Circle name too long' }, { status: 400 })
     }
 
     const circle = await prisma.circleBadge.create({
