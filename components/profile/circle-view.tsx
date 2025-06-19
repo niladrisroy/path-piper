@@ -517,9 +517,6 @@ export default function CircleView({ student }: CircleViewProps) {
             <div className="lg:col-span-8">
               <Card>
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
-                My Connections
-              </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <Tabs defaultValue="all" className="w-full">
