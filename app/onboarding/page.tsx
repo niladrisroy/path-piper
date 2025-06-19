@@ -47,6 +47,7 @@ export default function Onboarding() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [isCheckingProfile, setIsCheckingProfile] = useState(true)
 
   // Fetch user data on component mount using session cookie
   useEffect(() => {
@@ -98,15 +99,22 @@ export default function Onboarding() {
                 // Only redirect to profile if ALL THREE sections have data
                 if (hasBasicInfo && hasInterests && hasEducation) {
                   console.log('✅ All three sections complete, redirecting to profile');
+                  setIsCheckingProfile(false)
                   router.push("/student/profile")
                   return
                 } else {
                   console.log('❌ One or more sections incomplete, staying on onboarding');
+                  setIsCheckingProfile(false)
                 }
+              } else {
+                setIsCheckingProfile(false)
               }
             } catch (error) {
               console.error('Error checking profile completeness:', error);
+              setIsCheckingProfile(false)
             }
+          } else {
+            setIsCheckingProfile(false)
           }
 
           if (data.user) {
@@ -167,6 +175,23 @@ export default function Onboarding() {
     fetchUserData()
   }, [router])
 
+  // Show loading while checking profile completeness
+  if (loading || isCheckingProfile) {
+    return (
+      <main className="min-h-screen flex flex-col bg-slate-50">
+        <InternalNavbar />
+        <div className="pt-16 md:pt-14 w-full flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500 mx-auto mb-4"></div>
+            <p className="text-slate-600">
+              {isCheckingProfile ? "Checking your profile..." : "Loading your profile..."}
+            </p>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
   const handleNext = () => {
     setStep(step + 1)
     window.scrollTo(0, 0)
@@ -217,19 +242,7 @@ export default function Onboarding() {
     }
   }
 
-  if (loading) {
-    return (
-      <main className="min-h-screen flex flex-col bg-slate-50">
-        <InternalNavbar />
-        <div className="pt-16 md:pt-14 w-full flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500 mx-auto mb-4"></div>
-            <p className="text-slate-600">Loading your profile...</p>
-          </div>
-        </div>
-      </main>
-    )
-  }
+  
 
   const handlePersonalInfoComplete = async (data) => {
     console.log('Personal info completed:', data);
