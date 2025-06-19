@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { 
   Users, 
   MapPin, 
@@ -353,7 +354,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                     </div>
                   </div>
 
-                  {/* Circle preview - Instagram-style story highlights with horizontal scroll */}
+                  {/* Circle preview - Friends circle with add button */}
                   <div className="mt-4">
                     <div className="flex justify-between items-center mb-3">
                       <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">My Circles</h3>
@@ -361,7 +362,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
 
                     <div className="relative">
                       <div className="flex overflow-x-auto pb-2 hide-scrollbar gap-4">
-                        {/* Friend Circle */}
+                        {/* Default Friends Circle */}
                         <div className="flex flex-col items-center min-w-[72px]">
                           <div className="relative mb-1">
                             <div className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-400 to-purple-500 p-[3px]">
@@ -377,189 +378,75 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                           </span>
                         </div>
 
-                        {/* Study Circle */}
-                        <div className="flex flex-col items-center min-w-[72px]">
-                          <div className="relative mb-1">
-                            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-400 to-cyan-500 p-[3px]">
-                              <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
-                                <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="24"
-                                    height="24"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="h-6 w-6 text-blue-500 dark:text-blue-400"
-                                  >
-                                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
-                                  </svg>
+                        {/* Dynamic Circles from Database */}
+                        {circles.map((circle) => (
+                          <div key={circle.id} className="flex flex-col items-center min-w-[72px]">
+                            <div className="relative mb-1">
+                              <div className={`w-16 h-16 rounded-full bg-gradient-to-r p-[3px]`} style={{ background: `linear-gradient(135deg, ${circle.color}, ${circle.color}88)` }}>
+                                <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
+                                  <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                                    <Users className="h-6 w-6" style={{ color: circle.color }} />
+                                  </div>
                                 </div>
                               </div>
                             </div>
+                            <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
+                              {circle.name}
+                            </span>
                           </div>
-                          <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
-                            Study
-                          </span>
-                        </div>
+                        ))}
 
-                        {/* Gaming Circle */}
-                        <div className="flex flex-col items-center min-w-[72px]">
-                          <div className="relative mb-1">
-                            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 p-[3px]">
-                              <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
-                                <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="24"
-                                    height="24"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="h-6 w-6 text-green-500 dark:text-green-400"
-                                  >
-                                    <path d="M6 11h4a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1H6a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1z"></path>
-                                    <path d="M17 11h4a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1z"></path>
-                                    <path d="M6 20h4a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H6a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1z"></path>
-                                    <path d="M17 20h4a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1z"></path>
-                                  </svg>
+                        {/* Add New Circle Button - Only show for own profile */}
+                        {isOwnProfile && (
+                          <div className="flex flex-col items-center min-w-[72px]">
+                            <div className="relative mb-1">
+                              <button
+                                onClick={() => setShowCreateCircle(true)}
+                                className="w-16 h-16 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 p-[3px] hover:from-pathpiper-teal hover:to-pathpiper-blue transition-all duration-200"
+                              >
+                                <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
+                                  <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                                    <Plus className="h-6 w-6 text-gray-500 dark:text-gray-400" />
+                                  </div>
                                 </div>
-                              </div>
+                              </button>
                             </div>
+                            <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
+                              Add Circle
+                            </span>
                           </div>
-                          <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
-                            Gaming
-                          </span>
-                        </div>
-
-                        {/* Trekking Circle */}
-                        <div className="flex flex-col items-center min-w-[72px]">
-                          <div className="relative mb-1">
-                            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 p-[3px]">
-                              <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
-                                <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="24"
-                                    height="24"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="h-6 w-6 text-amber-500 dark:text-amber-400"
-                                  >
-                                    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
-                                  </svg>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
-                            Trekking
-                          </span>
-                        </div>
-
-                        {/* Social Circle */}
-                        <div className="flex flex-col items-center min-w-[72px]">
-                          <div className="relative mb-1">
-                            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-400 to-indigo-500 p-[3px]">
-                              <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
-                                <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="24"
-                                    height="24"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="h-6 w-6 text-purple-500 dark:text-purple-400"
-                                  >
-                                    <path d="M17 6.1H3"></path>
-                                    <path d="M21 12.1H3"></path>
-                                    <path d="M15.1 18H3"></path>
-                                  </svg>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
-                            Social
-                          </span>
-                        </div>
-
-                        {/* Coaching Circle */}
-                        <div className="flex flex-col items-center min-w-[72px]">
-                          <div className="relative mb-1">
-                            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-teal-400 to-cyan-500 p-[3px]">
-                              <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
-                                <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="24"
-                                    height="24"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="h-6 w-6 text-teal-500 dark:text-teal-400"
-                                  >
-                                    <path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"></path>
-                                  </svg>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
-                            Coaching
-                          </span>
-                        </div>
-
-                        {/* Basketball Circle */}
-                        <div className="flex flex-col items-center min-w-[72px]">
-                          <div className="relative mb-1">
-                            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-red-400 to-rose-500 p-[3px]">
-                              <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
-                                <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="24"
-                                    height="24"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="h-6 w-6 text-red-500 dark:text-red-400"
-                                  >
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <path d="M4.93 4.93 19.07 19.07"></path>
-                                    <path d="M14.83 9.17 9.17 14.83"></path>
-                                    <path d="M14.83 14.83 9.17 9.17"></path>
-                                  </svg>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
-                            Basketball
-                          </span>
-                        </div>
+                        )}
                       </div>
                     </div>
+
+                    {/* Create Circle Modal */}
+                    {showCreateCircle && (
+                      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+                          <h3 className="text-lg font-semibold mb-4">Create New Circle</h3>
+                          <Input
+                            placeholder="Circle name"
+                            value={newCircleName}
+                            onChange={(e) => setNewCircleName(e.target.value)}
+                            className="mb-4"
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setShowCreateCircle(false)
+                                setNewCircleName('')
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                            <Button onClick={handleCreateCircle}>
+                              Create Circle
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

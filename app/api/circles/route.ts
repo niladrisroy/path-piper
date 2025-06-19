@@ -10,17 +10,30 @@ const supabase = createClient(
 
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
+    console.log('API: Circles request received')
+    console.log('API: Checking cookies for auth token')
+    
+    const cookieStore = request.cookies
+    const allCookies = Array.from(cookieStore.entries()).map(([name]) => name)
+    console.log('API: Available cookies:', allCookies)
+
+    // Try to get the access token from cookies
+    const accessToken = cookieStore.get('sb-access-token')?.value
+
+    if (!accessToken) {
+      console.log('API: No access token found in cookies')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const token = authHeader.split(' ')[1]
-    const { data: { user }, error } = await supabase.auth.getUser(token)
+    console.log('API: Token found, verifying with Supabase')
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken)
 
     if (error || !user) {
+      console.log('API: Token verification failed:', error?.message)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    console.log('API: Authenticated user found:', user.id)
 
     // Get user's circle badges with member counts
     const circles = await prisma.circleBadge.findMany({
@@ -82,17 +95,24 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
+    console.log('API: Create circle request received')
+    
+    const cookieStore = request.cookies
+    const accessToken = cookieStore.get('sb-access-token')?.value
+
+    if (!accessToken) {
+      console.log('API: No access token found in cookies')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const token = authHeader.split(' ')[1]
-    const { data: { user }, error } = await supabase.auth.getUser(token)
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken)
 
     if (error || !user) {
+      console.log('API: Token verification failed:', error?.message)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    console.log('API: Authenticated user found:', user.id)
 
     const body = await request.json()
     const { name, description, color, icon } = body
