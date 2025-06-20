@@ -370,10 +370,36 @@ export default function CircleManagementDialog({
           {circle.id === 'friends' && (
             <div>
               <h4 className="text-sm font-medium mb-3">
-                All Connections ({filteredConnections.length})
+                All Connections ({filteredConnections.length + 1})
               </h4>
               <div className="max-h-60 overflow-y-auto">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {/* Show current user first */}
+                  {circle.creator && (
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-blue-200 bg-blue-50">
+                      <Avatar className="h-10 w-10 flex-shrink-0">
+                        <AvatarImage src={circle.creator.profileImageUrl} />
+                        <AvatarFallback className="text-xs">
+                          {circle.creator.firstName[0]}{circle.creator.lastName[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {circle.creator.firstName} {circle.creator.lastName}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs">
+                            student
+                          </Badge>
+                          <Badge variant="secondary" className="text-xs">
+                            You
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
                   {filteredConnections.length === 0 ? (
                     <p className="text-sm text-gray-500 col-span-2">
                       {searchQuery ? 'No connections found matching your search' : 'No connections available'}
