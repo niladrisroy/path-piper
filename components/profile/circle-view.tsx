@@ -259,7 +259,7 @@ function CircleBadgesSection() {
                                 </div>
                               )}
                             </div>
-                            <div>
+                            <div className="flex-1">
                               <div className="flex items-center gap-2">
                                 <h3 className="font-semibold text-gray-900 dark:text-white">
                                   {selectedCircle.name}
