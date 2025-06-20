@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Settings, Plus, Users, MessageSquare, Share2, Calendar, MapPin, Briefcase, GraduationCap, Mail, Phone, Globe, Instagram, Twitter, Linkedin, Github, Youtube, Facebook, UserPlus, BadgeCheck, Edit, MessageCircle, UserIcon, FolderKanban, Award, BrainIcon, UserCheck, UserX } from "lucide-react"
 import CircleManagementDialog from "./circle-management-dialog"
-import CreateCircleDialog from "./create-circle-dialog"
 
 interface ProfileHeaderProps {
   student: any
@@ -222,20 +221,6 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
     const handleAddCircle = () => {
         setShowCreateCircle(true)
     }
-
-    const handleCircleCreated = (newCircle: any) => {
-        setCircles([...circles, newCircle]);
-    };
-
-  const getIconComponent = (icon: string) => {
-    switch (icon) {
-      case 'users':
-        return <Users className="h-4 w-4 text-white" />;
-      // Add more cases for other icons as needed
-      default:
-        return <Users className="h-4 w-4 text-white" />; // Default icon
-    }
-  };
 
   return (
     <div>
@@ -477,7 +462,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                     </div>
 
                     {/* Create Circle Modal */}
-                    {/*showCreateCircle && (
+                    {showCreateCircle && (
                       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
                           <h3 className="text-lg font-semibold mb-4">Create New Circle</h3>
@@ -503,7 +488,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                           </div>
                         </div>
                       </div>
-                    )*/}
+                    )}
                   </div>
                 </div>
 
@@ -704,11 +689,6 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
         open={showCircleManagement}
         onOpenChange={setShowCircleManagement}
         onCircleUpdated={handleCircleUpdated}
-      />
-      <CreateCircleDialog
-        open={showCreateCircle}
-        onOpenChange={setShowCreateCircle}
-        onCircleCreated={handleCircleCreated}
       />
     </div>
   )
