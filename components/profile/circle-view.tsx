@@ -60,6 +60,7 @@ interface Circle {
   icon: string;
   isDefault: boolean;
   creator: {
+    id: string;
     firstName: string;
     lastName: string;
     profileImageUrl?: string;
@@ -85,6 +86,7 @@ function CircleBadgesSection() {
   const [circles, setCircles] = useState<Circle[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedCircle, setExpandedCircle] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   useEffect(() => {
     const fetchCircles = async () => {
@@ -233,98 +235,153 @@ function CircleBadgesSection() {
 
                   return (
                     <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-8 h-8 rounded-full flex items-center justify-center text-white"
-                            style={{ backgroundColor: selectedCircle.color }}
-                          >
-                            <div className="scale-75">
-                              {getIconComponent(selectedCircle.icon)}
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-white"
+                              style={{ backgroundColor: selectedCircle.color }}
+                            >
+                              <div className="scale-75">
+                                {getIconComponent(selectedCircle.icon)}
+                              </div>
                             </div>
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-semibold text-gray-900 dark:text-white">
-                                {selectedCircle.name}
-                              </h3>
-                              {selectedCircle.isDefault && (
-                                <Badge variant="outline" className="text-xs">
-                                  Default
-                                </Badge>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-semibold text-gray-900 dark:text-white">
+                                  {selectedCircle.name}
+                                </h3>
+                                {selectedCircle.isDefault && (
+                                  <Badge variant="outline" className="text-xs">
+                                    Default
+                                  </Badge>
+                                )}
+                              </div>
+                              {selectedCircle.description && (
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                  {selectedCircle.description}
+                                </p>
                               )}
                             </div>
-                            {selectedCircle.description && (
-                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                {selectedCircle.description}
-                              </p>
-                            )}
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setExpandedCircle(null);
+                              setSearchQuery("");
+                            }}
+                          >
+                            ✕
+                          </Button>
+                        </div>
+
+                        {/* Search Bar */}
+                        <div className="mb-3">
+                          <div className="relative">
+                            <input
+                              type="text"
+                              placeholder="Search members..."
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                              <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                              </svg>
+                            </div>
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setExpandedCircle(null)}
-                        >
-                          ✕
-                        </Button>
-                      </div>
 
-                      {/* Circle Members */}
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
-                          Circle Members ({selectedCircle._count.memberships})
-                        </h4>
-                        {selectedCircle.memberships.length === 0 ? (
-                          <p className="text-sm text-gray-500 text-center py-3">
-                            No members yet
-                          </p>
-                        ) : (
-                          <div className="grid grid-cols-1 gap-2">
-                            {selectedCircle.memberships.map((membership) => (
-                              <div
-                                key={membership.user.id}
-                                className="flex items-center gap-2 p-2 bg-white dark:bg-gray-700 rounded-lg"
-                              >
-                                <div className="relative">
-                                  <Avatar className="h-6 w-6">
-                                    <AvatarImage
-                                      src={membership.user.profileImageUrl}
-                                      alt={`${membership.user.firstName} ${membership.user.lastName}`}
-                                    />
-                                    <AvatarFallback className="text-xs">
-                                      {membership.user.firstName?.[0]}
-                                      {membership.user.lastName?.[0]}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  {membership.user.status && (
-                                    <div
-                                      className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-white ${getStatusColor(membership.user.status)}`}
-                                    />
-                                  )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
-                                    {membership.user.firstName}{" "}
-                                    {membership.user.lastName}
-                                  </p>
-                                  <Badge variant="outline" className="text-xs">
-                                    {membership.user.role}
-                                  </Badge>
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-5 w-5 p-0"
-                                >
-                                  <MessageCircle className="h-2.5 w-2.5" />
-                                </Button>
+                        {/* Circle Members */}
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                            Circle Members ({Math.max(1, selectedCircle._count.memberships + 1)})
+                          </h4>
+                          {(() => {
+                            // Combine creator and members, then filter by search query
+                            const allMembers = [
+                              // Add creator as first member
+                              {
+                                user: {
+                                  id: selectedCircle.creator.id,
+                                  firstName: selectedCircle.creator.firstName,
+                                  lastName: selectedCircle.creator.lastName,
+                                  profileImageUrl: selectedCircle.creator.profileImageUrl,
+                                  role: "creator",
+                                  status: "online"
+                                }
+                              },
+                              // Add other members
+                              ...selectedCircle.memberships
+                            ];
+
+                            // Filter members based on search query
+                            const filteredMembers = allMembers.filter(membership =>
+                              searchQuery === "" || 
+                              `${membership.user.firstName} ${membership.user.lastName}`
+                                .toLowerCase()
+                                .includes(searchQuery.toLowerCase())
+                            );
+
+                            if (filteredMembers.length === 0) {
+                              return (
+                                <p className="text-sm text-gray-500 text-center py-3">
+                                  {searchQuery ? "No members found matching your search" : "No members yet"}
+                                </p>
+                              );
+                            }
+
+                            return (
+                              <div className="grid grid-cols-1 gap-2">
+                                {filteredMembers.map((membership, index) => (
+                                  <div
+                                    key={`${membership.user.id}-${index}`}
+                                    className="flex items-center gap-2 p-2 bg-white dark:bg-gray-700 rounded-lg"
+                                  >
+                                    <div className="relative">
+                                      <Avatar className="h-6 w-6">
+                                        <AvatarImage
+                                          src={membership.user.profileImageUrl}
+                                          alt={`${membership.user.firstName} ${membership.user.lastName}`}
+                                        />
+                                        <AvatarFallback className="text-xs">
+                                          {membership.user.firstName?.[0]}
+                                          {membership.user.lastName?.[0]}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      {membership.user.status && (
+                                        <div
+                                          className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-white ${getStatusColor(membership.user.status)}`}
+                                        />
+                                      )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
+                                        {membership.user.firstName}{" "}
+                                        {membership.user.lastName}
+                                        {membership.user.role === "creator" && (
+                                          <span className="text-blue-500 ml-1">(Creator)</span>
+                                        )}
+                                      </p>
+                                      <Badge variant="outline" className="text-xs">
+                                        {membership.user.role === "creator" ? "creator" : membership.user.role}
+                                      </Badge>
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-5 w-5 p-0"
+                                    >
+                                      <MessageCircle className="h-2.5 w-2.5" />
+                                    </Button>
+                                  </div>
+                                ))}
                               </div>
-                            ))}
-                          </div>
-                        )}
+                            );
+                          })()}
+                        </div>
                       </div>
-                    </div>
                   );
                 })()}
               </div>
