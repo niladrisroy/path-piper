@@ -30,6 +30,10 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
   const [circles, setCircles] = useState<any[]>([])
   const [showCreateCircle, setShowCreateCircle] = useState(false)
   const [newCircleName, setNewCircleName] = useState('')
+  const [newCircleColor, setNewCircleColor] = useState('#3B82F6')
+  const [newCircleDescription, setNewCircleDescription] = useState('')
+  const [newCircleImageFile, setNewCircleImageFile] = useState<File | null>(null)
+  const [newCircleImageUrl, setNewCircleImageUrl] = useState('')
   const [selectedCircle, setSelectedCircle] = useState<any>(null)
   const [showCircleManagement, setShowCircleManagement] = useState(false)
   const [connections, setConnections] = useState<any[]>([])
@@ -162,28 +166,59 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
   }, [isOwnProfile])
 
   const handleCreateCircle = async () => {
-    if (newCircleName.trim() !== '') {
-      try {
-        const response = await fetch('/api/circles', {
+    if (!newCircleName.trim()) return
+
+    try {
+      let iconPath = 'users' // default icon
+
+      // Upload image if provided
+      if (newCircleImageFile) {
+        const formData = new FormData()
+        formData.append('image', newCircleImageFile)
+        formData.append('type', 'circle-icon')
+
+        const uploadResponse = await fetch('/api/upload/circle-icon', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
           credentials: 'include',
-          body: JSON.stringify({ name: newCircleName })
+          body: formData
         })
 
-        if (response.ok) {
-          const newCircle = await response.json()
-          setCircles([...circles, newCircle])
-          setShowCreateCircle(false)
-          setNewCircleName('')
-        } else {
-          console.error('Error creating circle:', response.status)
+        if (uploadResponse.ok) {
+          const uploadResult = await uploadResponse.json()
+          iconPath = uploadResult.path
         }
-      } catch (error) {
-        console.error('Error creating circle:', error)
       }
+
+      const response = await fetch('/api/circles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: newCircleName.trim(),
+          description: newCircleDescription.trim() || null,
+          color: newCircleColor,
+          icon: iconPath
+        })
+      })
+
+      if (response.ok) {
+        // Reset form
+        setNewCircleName('')
+        setNewCircleDescription('')
+        setNewCircleColor('#3B82F6')
+        setNewCircleImageFile(null)
+        setNewCircleImageUrl('')
+        setShowCreateCircle(false)
+
+        // Refresh circles
+        await fetchCircles()
+      } else {
+        console.error('Failed to create circle')
+      }
+    } catch (error) {
+      console.error('Error creating circle:', error)
     }
   }
 
@@ -221,6 +256,32 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
     const handleAddCircle = () => {
         setShowCreateCircle(true)
     }
+
+  const colorOptions = ['#3B82F6', '#8B5CF6', '#EC4899', '#10B981', '#F59E0B'];
+
+  const handleImageUpload = (e: any) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNewCircleImageFile(file);
+      setNewCircleImageUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const fetchCircles = async () => {
+    try {
+      const response = await fetch('/api/circles', {
+        credentials: 'include'
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setCircles(data)
+      } else {
+        console.error('Error fetching circles:', response.status)
+      }
+    } catch (error) {
+      console.error('Error fetching circles:', error)
+    }
+  }
 
   return (
     <div>
@@ -424,10 +485,18 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                               >
                                 <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
                                   <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                                  {circle.icon && circle.icon.startsWith('/uploads/') ? (
+                                    <img
+                                      src={circle.icon}
+                                      alt={circle.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
                                     <div 
                                       className="w-3 h-3 rounded-full"
                                       style={{ backgroundColor: circle.color }}
                                     />
+                                  )}
                                   </div>
                                 </div>
                               </button>
@@ -463,31 +532,95 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
 
                     {/* Create Circle Modal */}
                     {showCreateCircle && (
-                      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-                          <h3 className="text-lg font-semibold mb-4">Create New Circle</h3>
-                          <Input
-                            placeholder="Circle name"
-                            value={newCircleName}
-                            onChange={(e) => setNewCircleName(e.target.value)}
-                            className="mb-4"
-                          />
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              onClick={() => {
-                                setShowCreateCircle(false)
-                                setNewCircleName('')
-                              }}
-                            >
-                              Cancel
-                            </Button>
-                            <Button onClick={handleCreateCircle}>
-                              Create Circle
-                            </Button>
+                      <Dialog open={showCreateCircle} onOpenChange={setShowCreateCircle}>
+                        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+                          <DialogHeader>
+                            <DialogTitle>Create New Circle Badge</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div>
+                              <label className="text-sm font-medium">Circle Name</label>
+                              <Input
+                                value={newCircleName}
+                                onChange={(e) => setNewCircleName(e.target.value)}
+                                placeholder="Enter circle name"
+                                maxLength={50}
+                              />
+                            </div>
+
+                            <div>
+                              <label className="text-sm font-medium">Description (Optional)</label>
+                              <Input
+                                value={newCircleDescription}
+                                onChange={(e) => setNewCircleDescription(e.target.value)}
+                                placeholder="Enter circle description"
+                                maxLength={200}
+                              />
+                            </div>
+
+                            <div>
+                              <label className="text-sm font-medium">Circle Icon</label>
+                              <div className="space-y-3">
+                                <div className="flex items-center gap-3">
+                                  <Input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageUpload}
+                                    className="flex-1"
+                                  />
+                                  {newCircleImageUrl && (
+                                    <div className="flex items-center gap-2">
+                                      <img
+                                        src={newCircleImageUrl}
+                                        alt="Circle icon preview"
+                                        className="w-8 h-8 rounded-full object-cover"
+                                      />
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                          setNewCircleImageUrl('')
+                                          setNewCircleImageFile(null)
+                                        }}
+                                      >
+                                        Remove
+                                      </Button>
+                                    </div>
+                                  )}
+                                </div>
+                                <p className="text-xs text-gray-500">
+                                  Upload a custom icon or leave empty to use default icon
+                                </p>
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="text-sm font-medium">Color</label>
+                              <div className="flex gap-2 mt-2">
+                                {colorOptions.map((colorOption) => (
+                                  <button
+                                    key={colorOption}
+                                    className={`w-8 h-8 rounded-full border-2 ${
+                                      newCircleColor === colorOption ? 'border-gray-800' : 'border-gray-300'
+                                    }`}
+                                    style={{ backgroundColor: colorOption }}
+                                    onClick={() => setNewCircleColor(colorOption)}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="flex gap-2 pt-2">
+                              <Button variant="outline" onClick={() => setShowCreateCircle(false)} className="flex-1">
+                                Cancel
+                              </Button>
+                              <Button onClick={handleCreateCircle} disabled={!newCircleName.trim()} className="flex-1">
+                                Create Circle
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                      </div>
+                        </DialogContent>
+                      </Dialog>
                     )}
                   </div>
                 </div>
@@ -574,7 +707,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                       <div className="flex flex-col items-center">
                         <div className="bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 h-12 w-12 rounded-full flex items-center justify-center">
                           <svg
-                            xmlns="http://www.w3.org/2000/svg"
+xmlns="http://www.w3.org/2000/svg"
                             width="24"
                             height="24"
                             viewBox="0 0 24 24"

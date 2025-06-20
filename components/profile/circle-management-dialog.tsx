@@ -223,10 +223,16 @@ export default function CircleManagementDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <div 
-              className="w-8 h-8 rounded-full flex items-center justify-center"
+              className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden"
               style={{ backgroundColor: circle.color }}
             >
-              {circle.icon === 'users' ? (
+              {circle.icon && circle.icon.startsWith('/uploads/') ? (
+                <img
+                  src={circle.icon}
+                  alt={circle.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : circle.icon === 'users' ? (
                 <Users className="h-4 w-4 text-white" />
               ) : (
                 <div className="w-2 h-2 bg-white rounded-full" />
