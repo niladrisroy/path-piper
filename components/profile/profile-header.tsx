@@ -484,19 +484,19 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                                 }}
                               >
                                 <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
-                                  <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                                  {circle.icon && circle.icon.startsWith('/uploads/') ? (
-                                    <img
-                                      src={circle.icon}
-                                      alt={circle.name}
-                                      className="w-full h-full object-cover"
-                                    />
-                                  ) : (
-                                    <div 
-                                      className="w-3 h-3 rounded-full"
-                                      style={{ backgroundColor: circle.color }}
-                                    />
-                                  )}
+                                  <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                                    {circle.icon && circle.icon.startsWith('/uploads/') ? (
+                                      <img
+                                        src={circle.icon}
+                                        alt={circle.name}
+                                        className="w-full h-full object-cover rounded-full"
+                                      />
+                                    ) : (
+                                      <div 
+                                        className="w-3 h-3 rounded-full"
+                                        style={{ backgroundColor: circle.color }}
+                                      />
+                                    )}
                                   </div>
                                 </div>
                               </button>

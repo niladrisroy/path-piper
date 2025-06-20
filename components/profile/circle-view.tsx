@@ -200,7 +200,7 @@ function CircleBadgesSection() {
                         <img
                           src={circle.icon}
                           alt={circle.name}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover rounded-full"
                         />
                       ) : (
                         <div className="scale-75">
@@ -251,7 +251,7 @@ function CircleBadgesSection() {
                                 <img
                                   src={selectedCircle.icon}
                                   alt={selectedCircle.name}
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full object-cover rounded-full"
                                 />
                               ) : (
                                 <div className="scale-75">
