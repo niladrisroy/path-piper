@@ -201,13 +201,11 @@ function CircleBadgesSection() {
                       </div>
                     </div>
                     {/* Member count indicator */}
-                    {circle._count.memberships > 0 && (
-                      <div className="absolute -top-0.5 -right-0.5 bg-gray-900 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                        <span className="text-xs leading-none">
-                          {circle._count.memberships}
-                        </span>
-                      </div>
-                    )}
+                    <div className="absolute -top-0.5 -right-0.5 bg-gray-900 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                      <span className="text-xs leading-none">
+                        {circle._count.memberships + 1}
+                      </span>
+                    </div>
                     {/* Default badge indicator */}
                     {circle.isDefault && (
                       <div className="absolute -bottom-0.5 -right-0.5 bg-blue-500 text-white rounded-full w-3 h-3 flex items-center justify-center">
@@ -283,9 +281,9 @@ function CircleBadgesSection() {
                               placeholder="Search members..."
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
-                              className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              className="w-full px-3 py-2 pl-10 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
                             />
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                               <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                               </svg>
@@ -296,7 +294,7 @@ function CircleBadgesSection() {
                         {/* Circle Members */}
                         <div>
                           <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
-                            Circle Members ({Math.max(1, selectedCircle._count.memberships + 1)})
+                            Circle Members ({selectedCircle._count.memberships + 1})
                           </h4>
                           {(() => {
                             // Combine creator and members, then filter by search query
