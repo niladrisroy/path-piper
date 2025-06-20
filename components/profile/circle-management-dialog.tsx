@@ -240,6 +240,11 @@ export default function CircleManagementDialog({
             </div>
             {circle.id === 'friends' ? 'All Connections' : `Invite to ${circle.name}`}
           </DialogTitle>
+          {circle.description && circle.id !== 'friends' && (
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              {circle.description}
+            </p>
+          )}
         </DialogHeader>
 
         <div className="space-y-4">
