@@ -223,13 +223,26 @@ export default function CircleManagementDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <div 
-              className="w-8 h-8 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: circle.color }}
+              className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden"
+              style={{ backgroundColor: circle.icon?.startsWith('/') ? 'transparent' : circle.color }}
             >
-              {circle.icon === 'users' ? (
-                <Users className="h-4 w-4 text-white" />
+              {circle.icon?.startsWith('/') ? (
+                <img
+                  src={circle.icon}
+                  alt={circle.name}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
               ) : (
-                <div className="w-2 h-2 bg-white rounded-full" />
+                <div 
+                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: circle.color }}
+                >
+                  {circle.icon === 'users' ? (
+                    <Users className="h-4 w-4 text-white" />
+                  ) : (
+                    <div className="w-2 h-2 bg-white rounded-full" />
+                  )}
+                </div>
               )}
             </div>
             {circle.id === 'friends' ? 'All Connections' : `Invite to ${circle.name}`}

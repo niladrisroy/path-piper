@@ -193,12 +193,23 @@ function CircleBadgesSection() {
                   {/* Circle Badge */}
                   <div className="relative mb-2">
                     <div
-                      className="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg group-hover:shadow-xl transition-all duration-200 group-hover:scale-105"
-                      style={{ backgroundColor: circle.color }}
+                      className="w-12 h-12 rounded-full flex items-center justify-center shadow-sm border-2 border-white group-hover:shadow-md transition-all duration-200 overflow-hidden"
+                      style={{ backgroundColor: circle.icon?.startsWith('/') ? 'transparent' : circle.color }}
                     >
-                      <div className="scale-75">
-                        {getIconComponent(circle.icon)}
-                      </div>
+                      {circle.icon?.startsWith('/') ? (
+                        <img
+                          src={circle.icon}
+                          alt={circle.name}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div 
+                          className="w-12 h-12 rounded-full flex items-center justify-center"
+                          style={{ backgroundColor: circle.color }}
+                        >
+                          {getIconComponent(circle.icon)}
+                        </div>
+                      )}
                     </div>
                     {/* Member count indicator */}
                     <div className="absolute -top-0.5 -right-0.5 bg-gray-900 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
@@ -871,7 +882,8 @@ export default function CircleView({ student }: CircleViewProps) {
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-6 w-6 p-0"
+                               ```text
+className="h-6 w-6 p-0"
                                     title="Message"
                                   >
                                     <MessageCircle className="h-3 w-3" />

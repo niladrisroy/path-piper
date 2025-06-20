@@ -130,13 +130,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Circle name too long' }, { status: 400 })
     }
 
+    if (description && description.trim().length > 200) {
+      return NextResponse.json({ error: 'Description too long' }, { status: 400 })
+    }
+
     const circle = await prisma.circleBadge.create({
       data: {
         creatorId: user.id,
         name: name.trim(),
         description: description?.trim() || null,
         color: color || '#3B82F6',
-        icon: icon || 'users',
+        icon: icon || 'users', // This will now be either an image URL or 'users'
         isDefault: false
       },
       include: {
