@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -26,6 +27,12 @@ interface Circle {
   }>
   _count: {
     memberships: number
+  }
+  creator?: {
+    id: string
+    firstName: string
+    lastName: string
+    profileImageUrl?: string
   }
 }
 
@@ -83,18 +90,13 @@ export default function CircleManagementDialog({
 
         // For Friends circle, show all connections and no invite functionality
         if (circle?.id === 'friends') {
-          setConnections([])
+          setConnections(data)
           setExistingInvitations([])
           return
         }
 
-        // Filter out users who are already in this circle
-        const currentMemberIds = circle?.memberships?.map(m => m.user.id) || []
-        const availableConnections = data.filter((conn: Connection) => 
-          !currentMemberIds.includes(conn.user.id)
-        )
-
-        setConnections(availableConnections)
+        // For custom circles, show all connections (we'll handle status display in UI)
+        setConnections(data)
 
         // Fetch existing invitations for this circle
         if (circle?.id) {
@@ -167,10 +169,22 @@ export default function CircleManagementDialog({
     return existingInvitations.find(inv => inv.inviteeId === userId)?.status || null
   }
 
+  const isAlreadyMember = (userId: string) => {
+    if (!circle) return false
+    
+    // Check if user is the creator
+    if (circle.creator?.id === userId) return true
+    
+    // Check if user is in memberships
+    return circle.memberships?.some(membership => membership.user.id === userId) || false
+  }
+
   const toggleConnection = (connectionId: string) => {
-    // Don't allow selection if there's already an invitation
+    // Don't allow selection if there's already an invitation or if they're already a member
     const status = getInvitationStatus(connectionId)
-    if (status && status !== 'declined') return
+    const isMember = isAlreadyMember(connectionId)
+    
+    if ((status && status !== 'declined') || isMember) return
 
     setSelectedConnections(prev =>
       prev.includes(connectionId)
@@ -178,6 +192,28 @@ export default function CircleManagementDialog({
         : [...prev, connectionId]
     )
   }
+
+  const getStatusDisplay = (userId: string) => {
+    if (isAlreadyMember(userId)) {
+      return { text: 'Already Member', variant: 'secondary' as const }
+    }
+    
+    const invitationStatus = getInvitationStatus(userId)
+    if (invitationStatus === 'pending') {
+      return { text: 'Request Pending', variant: 'outline' as const }
+    }
+    if (invitationStatus === 'accepted') {
+      return { text: 'Accepted', variant: 'default' as const }
+    }
+    
+    return null
+  }
+
+  // Filter connections based on search query
+  const filteredConnections = connections.filter(connection => {
+    const fullName = `${connection.user.firstName} ${connection.user.lastName}`.toLowerCase()
+    return fullName.includes(searchQuery.toLowerCase())
+  })
 
   if (!circle) return null
 
@@ -187,128 +223,174 @@ export default function CircleManagementDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <div 
-              className="w-8 h-8 rounded-full"
+              className="w-8 h-8 rounded-full flex items-center justify-center"
               style={{ backgroundColor: circle.color }}
-            />
-            Invite to {circle.name}
+            >
+              {circle.icon === 'users' ? (
+                <Users className="h-4 w-4 text-white" />
+              ) : (
+                <div className="w-2 h-2 bg-white rounded-full" />
+              )}
+            </div>
+            {circle.id === 'friends' ? 'All Connections' : `Invite to ${circle.name}`}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Current members */}
+          {/* Current members summary */}
           <div>
             <h4 className="text-sm font-medium mb-2">
               {circle.id === 'friends' ? 'All Connections' : 'Current Members'} ({(circle._count?.memberships || 0) + (circle.creator ? 1 : 0)})
             </h4>
-            <div className="max-h-48 overflow-y-auto space-y-2">
-              {circle.id === 'friends' ? (
-                // Show all connections for Friends circle
-                circle.memberships?.map((membership) => (
-                  <div key={membership.user.id} className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-700">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={membership.user.profileImageUrl} />
-                      <AvatarFallback className="text-xs">
-                        {membership.user.firstName[0]}{membership.user.lastName[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {membership.user.firstName} {membership.user.lastName}
-                      </p>
-                      <Badge variant="outline" className="text-xs">
-                        {membership.user.role}
-                      </Badge>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                // Show creator and members for custom circles
-                <div className="flex flex-wrap gap-2">
-                  {/* Show creator first */}
-                  <div className="flex items-center gap-1 text-xs">
-                    <Avatar className="h-6 w-6">
-                      <AvatarImage src={circle.creator?.profileImageUrl} />
-                      <AvatarFallback className="text-xs">
-                        {circle.creator?.firstName?.[0]}{circle.creator?.lastName?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="truncate max-w-16">
-                      {circle.creator?.firstName} 
-                    </span>
-                    <Badge variant="secondary" className="text-xs px-1 py-0">
-                      Creator
-                    </Badge>
-                  </div>
-
-                  {/* Show other members */}
-                  {circle.memberships?.slice(0, 5).map((membership) => (
-                    <div key={membership.user.id} className="flex items-center gap-1 text-xs">
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage src={membership.user.profileImageUrl} />
-                        <AvatarFallback className="text-xs">
-                          {membership.user.firstName[0]}{membership.user.lastName[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="truncate max-w-16">
-                        {membership.user.firstName}
-                      </span>
-                    </div>
-                  ))}
-                  {(circle.memberships?.length || 0) > 5 && (
-                    <span className="text-xs text-gray-500">
-                      +{(circle.memberships?.length || 0) - 5} more
-                    </span>
-                  )}
+            <div className="flex flex-wrap gap-2">
+              {/* Show creator first for custom circles */}
+              {circle.id !== 'friends' && circle.creator && (
+                <div className="flex items-center gap-1 text-xs bg-gray-100 dark:bg-gray-700 rounded-full px-2 py-1">
+                  <Avatar className="h-5 w-5">
+                    <AvatarImage src={circle.creator.profileImageUrl} />
+                    <AvatarFallback className="text-xs">
+                      {circle.creator.firstName?.[0]}{circle.creator.lastName?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="truncate max-w-16">
+                    {circle.creator.firstName} 
+                  </span>
+                  <Badge variant="secondary" className="text-xs px-1 py-0">
+                    Creator
+                  </Badge>
                 </div>
+              )}
+
+              {/* Show other members */}
+              {circle.memberships?.slice(0, circle.id === 'friends' ? 8 : 5).map((membership) => (
+                <div key={membership.user.id} className="flex items-center gap-1 text-xs bg-gray-100 dark:bg-gray-700 rounded-full px-2 py-1">
+                  <Avatar className="h-5 w-5">
+                    <AvatarImage src={membership.user.profileImageUrl} />
+                    <AvatarFallback className="text-xs">
+                      {membership.user.firstName[0]}{membership.user.lastName[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="truncate max-w-16">
+                    {membership.user.firstName}
+                  </span>
+                </div>
+              ))}
+              
+              {(circle.memberships?.length || 0) > (circle.id === 'friends' ? 8 : 5) && (
+                <span className="text-xs text-gray-500 bg-gray-100 dark:bg-gray-700 rounded-full px-2 py-1">
+                  +{(circle.memberships?.length || 0) - (circle.id === 'friends' ? 8 : 5)} more
+                </span>
               )}
             </div>
           </div>
-           {/* Search Bar */}
+
+          <Separator />
+
+          {/* Search Bar */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
               <Search className="h-4 w-4 text-gray-400" />
             </div>
             <Input
-              placeholder="Search connections..."
+              placeholder={circle.id === 'friends' ? "Search connections..." : "Search connections to invite..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
             />
           </div>
 
-          {/* Available connections to invite - Only for custom circles */}
+          {/* Connections list - Only for custom circles */}
           {circle.id !== 'friends' && (
             <div>
-              <h4 className="text-sm font-medium mb-2">Invite Connections</h4>
-              <div className="max-h-40 overflow-y-auto space-y-2">
-                {connections.length === 0 ? (
-                  <p className="text-sm text-gray-500">No available connections to invite</p>
-                ) : (
-                  connections.filter(connection => {
-                      const fullName = `${connection.user.firstName} ${connection.user.lastName}`.toLowerCase();
-                      return fullName.includes(searchQuery.toLowerCase());
-                    }).map((connection) => {
-                    const invitationStatus = getInvitationStatus(connection.user.id)
-                    const canInvite = !invitationStatus || invitationStatus === 'declined'
+              <h4 className="text-sm font-medium mb-3">
+                All Connections ({filteredConnections.length})
+              </h4>
+              <div className="max-h-60 overflow-y-auto">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {filteredConnections.length === 0 ? (
+                    <p className="text-sm text-gray-500 col-span-2">
+                      {searchQuery ? 'No connections found matching your search' : 'No connections available'}
+                    </p>
+                  ) : (
+                    filteredConnections.map((connection) => {
+                      const statusDisplay = getStatusDisplay(connection.user.id)
+                      const canInvite = !statusDisplay
 
-                    return (
+                      return (
+                        <div 
+                          key={connection.id}
+                          className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                            canInvite 
+                              ? selectedConnections.includes(connection.user.id)
+                                ? 'bg-blue-50 border-blue-200 cursor-pointer'
+                                : 'hover:bg-gray-50 cursor-pointer border-gray-200'
+                              : 'bg-gray-50 border-gray-200'
+                          }`}
+                          onClick={() => canInvite && toggleConnection(connection.user.id)}
+                        >
+                          <Avatar className="h-10 w-10 flex-shrink-0">
+                            <AvatarImage src={connection.user.profileImageUrl} />
+                            <AvatarFallback className="text-xs">
+                              {connection.user.firstName[0]}{connection.user.lastName[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              {connection.user.firstName} {connection.user.lastName}
+                            </p>
+                            <Badge variant="outline" className="text-xs">
+                              {connection.user.role}
+                            </Badge>
+                          </div>
+                          
+                          <div className="flex-shrink-0">
+                            {statusDisplay ? (
+                              <Badge variant={statusDisplay.variant} className="text-xs">
+                                {statusDisplay.text}
+                              </Badge>
+                            ) : selectedConnections.includes(connection.user.id) ? (
+                              <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                                <span className="text-white text-xs">✓</span>
+                              </div>
+                            ) : (
+                              <div className="w-6 h-6 border-2 border-gray-300 rounded-full" />
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Show filtered connections for Friends circle */}
+          {circle.id === 'friends' && (
+            <div>
+              <h4 className="text-sm font-medium mb-3">
+                All Connections ({filteredConnections.length})
+              </h4>
+              <div className="max-h-60 overflow-y-auto">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {filteredConnections.length === 0 ? (
+                    <p className="text-sm text-gray-500 col-span-2">
+                      {searchQuery ? 'No connections found matching your search' : 'No connections available'}
+                    </p>
+                  ) : (
+                    filteredConnections.map((connection) => (
                       <div 
                         key={connection.id}
-                        className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
-                          canInvite 
-                            ? selectedConnections.includes(connection.user.id)
-                              ? 'bg-blue-50 border border-blue-200 cursor-pointer'
-                              : 'hover:bg-gray-50 cursor-pointer'
-                            : 'bg-gray-50 opacity-75'
-                        }`}
-                        onClick={() => canInvite && toggleConnection(connection.user.id)}
+                        className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-gray-50"
                       >
-                        <Avatar className="h-8 w-8">
+                        <Avatar className="h-10 w-10 flex-shrink-0">
                           <AvatarImage src={connection.user.profileImageUrl} />
                           <AvatarFallback className="text-xs">
                             {connection.user.firstName[0]}{connection.user.lastName[0]}
                           </AvatarFallback>
                         </Avatar>
+                        
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">
                             {connection.user.firstName} {connection.user.lastName}
@@ -317,22 +399,10 @@ export default function CircleManagementDialog({
                             {connection.user.role}
                           </Badge>
                         </div>
-                        {invitationStatus && invitationStatus !== 'declined' ? (
-                          <Badge 
-                            variant={invitationStatus === 'pending' ? 'secondary' : 'default'}
-                            className="text-xs"
-                          >
-                            {invitationStatus === 'pending' ? 'Pending' : 'Accepted'}
-                          </Badge>
-                        ) : selectedConnections.includes(connection.user.id) ? (
-                          <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                            <span className="text-white text-xs">✓</span>
-                          </div>
-                        ) : null}
                       </div>
-                    )
-                  })
-                )}
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -353,7 +423,7 @@ export default function CircleManagementDialog({
           {/* Action buttons */}
           <div className="flex gap-2 pt-2">
             <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
-              {circle.id === 'friends' ? 'Close' : 'Cancel'}
+              Close
             </Button>
             {circle.id !== 'friends' && (
               <Button 
@@ -361,7 +431,11 @@ export default function CircleManagementDialog({
                 disabled={selectedConnections.length === 0 || loading}
                 className="flex-1"
               >
-                <Send className="h-4 w-4 mr-2" />
+                {loading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4 mr-2" />
+                )}
                 Send Invites ({selectedConnections.length})
               </Button>
             )}
