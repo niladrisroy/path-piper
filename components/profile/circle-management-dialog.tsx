@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -7,7 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Users, UserPlus, Send } from "lucide-react"
+import { Users, UserPlus, Mail, Plus, X, Send, Loader2, Search } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Separator } from "@/components/ui/separator"
 
 interface Circle {
   id: string
@@ -63,6 +64,7 @@ export default function CircleManagementDialog({
   const [inviteMessage, setInviteMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [existingInvitations, setExistingInvitations] = useState<ExistingInvitation[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     if (open && circle) {
@@ -75,25 +77,25 @@ export default function CircleManagementDialog({
       const response = await fetch('/api/connections', {
         credentials: 'include'
       })
-      
+
       if (response.ok) {
         const data = await response.json()
-        
+
         // For Friends circle, show all connections and no invite functionality
         if (circle?.id === 'friends') {
           setConnections([])
           setExistingInvitations([])
           return
         }
-        
+
         // Filter out users who are already in this circle
         const currentMemberIds = circle?.memberships?.map(m => m.user.id) || []
         const availableConnections = data.filter((conn: Connection) => 
           !currentMemberIds.includes(conn.user.id)
         )
-        
+
         setConnections(availableConnections)
-        
+
         // Fetch existing invitations for this circle
         if (circle?.id) {
           await fetchExistingInvitations()
@@ -109,7 +111,7 @@ export default function CircleManagementDialog({
       const response = await fetch(`/api/circles/invitations?type=sent&circleId=${circle?.id}`, {
         credentials: 'include'
       })
-      
+
       if (response.ok) {
         const invitations = await response.json()
         setExistingInvitations(invitations)
@@ -140,10 +142,10 @@ export default function CircleManagementDialog({
       )
 
       const responses = await Promise.all(promises)
-      
+
       // Check if all requests were successful
       const allSuccessful = responses.every(response => response.ok)
-      
+
       if (allSuccessful) {
         setSelectedConnections([])
         setInviteMessage('')
@@ -169,7 +171,7 @@ export default function CircleManagementDialog({
     // Don't allow selection if there's already an invitation
     const status = getInvitationStatus(connectionId)
     if (status && status !== 'declined') return
-    
+
     setSelectedConnections(prev =>
       prev.includes(connectionId)
         ? prev.filter(id => id !== connectionId)
@@ -181,11 +183,11 @@ export default function CircleManagementDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-3">
             <div 
-              className="w-4 h-4 rounded-full"
+              className="w-8 h-8 rounded-full"
               style={{ backgroundColor: circle.color }}
             />
             Invite to {circle.name}
@@ -196,7 +198,7 @@ export default function CircleManagementDialog({
           {/* Current members */}
           <div>
             <h4 className="text-sm font-medium mb-2">
-              {circle.id === 'friends' ? 'All Connections' : 'Current Members'} ({circle._count?.memberships || 0})
+              {circle.id === 'friends' ? 'All Connections' : 'Current Members'} ({(circle._count?.memberships || 0) + (circle.creator ? 1 : 0)})
             </h4>
             <div className="max-h-48 overflow-y-auto space-y-2">
               {circle.id === 'friends' ? (
@@ -237,7 +239,7 @@ export default function CircleManagementDialog({
                       Creator
                     </Badge>
                   </div>
-                  
+
                   {/* Show other members */}
                   {circle.memberships?.slice(0, 5).map((membership) => (
                     <div key={membership.user.id} className="flex items-center gap-1 text-xs">
@@ -261,6 +263,18 @@ export default function CircleManagementDialog({
               )}
             </div>
           </div>
+           {/* Search Bar */}
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <Search className="h-4 w-4 text-gray-400" />
+            </div>
+            <Input
+              placeholder="Search connections..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
 
           {/* Available connections to invite - Only for custom circles */}
           {circle.id !== 'friends' && (
@@ -270,10 +284,13 @@ export default function CircleManagementDialog({
                 {connections.length === 0 ? (
                   <p className="text-sm text-gray-500">No available connections to invite</p>
                 ) : (
-                  connections.map((connection) => {
+                  connections.filter(connection => {
+                      const fullName = `${connection.user.firstName} ${connection.user.lastName}`.toLowerCase();
+                      return fullName.includes(searchQuery.toLowerCase());
+                    }).map((connection) => {
                     const invitationStatus = getInvitationStatus(connection.user.id)
                     const canInvite = !invitationStatus || invitationStatus === 'declined'
-                    
+
                     return (
                       <div 
                         key={connection.id}

@@ -187,6 +187,8 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
     }
   }
 
+  const [searchQuery, setSearchQuery] = useState('')
+
   const handleCircleClick = (circle: any) => {
     setSelectedCircle(circle)
     setShowCircleManagement(true)
@@ -401,7 +403,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                               </button>
                             </div>
                             <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
-                              Friends ({actualConnectionCounts?.total || 0})
+                              Friends ({(actualConnectionCounts?.total || 0) + 1})
                             </span>
                           </div>
                         )}
@@ -431,7 +433,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                               </button>
                             </div>
                             <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
-                              {circle.name} ({circle._count?.memberships || 0})
+                              {circle.name} ({(circle._count?.memberships || 0) + 1})
                             </span>
                           </div>
                         ))}
