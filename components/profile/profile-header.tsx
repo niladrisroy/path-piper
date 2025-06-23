@@ -332,7 +332,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                           alt={displayName}
                           width={112}
                           height={112}
-                          className="object-cover"
+                          className="w-full h-full object-cover"
                         />
                       </div>
                     </div>
