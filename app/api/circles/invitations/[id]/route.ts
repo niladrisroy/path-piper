@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@supabase/supabase-js'
@@ -8,7 +7,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export async function PATCH(
+export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
@@ -27,16 +26,19 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { action } = body // 'accept' or 'decline'
+    const { action } = body
 
     if (!action || !['accept', 'decline'].includes(action)) {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
     }
 
-    // Find invitation
+    // Await params before using
+    const { id } = await params
+
+    // Find the invitation
     const invitation = await prisma.circleInvitation.findFirst({
       where: {
-        id: params.id,
+        id: id,
         inviteeId: user.id,
         status: 'pending'
       }
@@ -57,14 +59,14 @@ export async function PATCH(
           }
         }),
         prisma.circleInvitation.update({
-          where: { id: params.id },
+          where: { id: id },
           data: { status: 'accepted' }
         })
       ])
     } else {
-      // Just update invitation status
+      // Decline invitation
       await prisma.circleInvitation.update({
-        where: { id: params.id },
+        where: { id: id },
         data: { status: 'declined' }
       })
     }
