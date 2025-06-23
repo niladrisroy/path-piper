@@ -693,7 +693,17 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
 
                   {/* Recent Achievement section */}
                   <div className="mt-3">
-                    <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Recent Achievement</h3>
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400">Recent Achievement</h3>
+                      {isOwnProfile && (
+                        <button
+                          onClick={() => router.push('/student/profile/edit?section=achievements')}
+                          className="text-xs text-pathpiper-teal hover:text-pathpiper-teal/80 font-medium transition-colors"
+                        >
+                          + Add
+                        </button>
+                      )}
+                    </div>
                     {achievementLoading ? (
                       <div className="bg-sky-50 dark:bg-sky-900/20 p-2 rounded-lg">
                         <div className="animate-pulse flex items-center gap-3">
