@@ -923,7 +923,6 @@ export default function CircleView({ student }: CircleViewProps) {
                                     <Badge
                                       variant="outline"
                                       className="text-xs mt-1"
-                               ```cpp
                                     >
                                       {connection.user.role}
                                     </Badge>
