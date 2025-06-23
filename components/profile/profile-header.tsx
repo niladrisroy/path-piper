@@ -512,7 +512,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                               >
                                 <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
                                   <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
-                                    {circle.icon && circle.icon.startsWith('/uploads/') ? (
+                                    {circle.icon && (circle.icon.startsWith('data:image') || circle.icon.startsWith('/uploads/')) ? (
                                       <img
                                         src={circle.icon}
                                         alt={circle.name}

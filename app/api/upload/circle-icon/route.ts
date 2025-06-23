@@ -1,7 +1,4 @@
-
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -42,29 +39,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File too large. Maximum size is 5MB.' }, { status: 400 })
     }
 
+    // Convert file to base64
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
+    const base64 = buffer.toString('base64')
+    const dataUrl = `data:${file.type};base64,${base64}`
 
-    // Generate unique filename
-    const timestamp = Date.now()
-    const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-    const filename = `${user.id}_${timestamp}_${originalName}`
-    
-    // Ensure upload directory exists
-    const uploadDir = join(process.cwd(), 'public', 'uploads', 'circles')
-    await mkdir(uploadDir, { recursive: true })
-    
-    // Write file
-    const filePath = join(uploadDir, filename)
-    await writeFile(filePath, buffer)
-    
-    // Return the public path
-    const publicPath = `/uploads/circles/${filename}`
-    
     return NextResponse.json({ 
       success: true, 
-      path: publicPath,
-      filename: filename
+      path: dataUrl,
+      type: 'base64'
     })
 
   } catch (error) {

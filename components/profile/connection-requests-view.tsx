@@ -148,7 +148,18 @@ export default function ConnectionRequestsView() {
   }
 
   const getIconComponent = (iconName: string) => {
-    // Check if it's an uploaded image (path starts with /uploads/)
+    // Check if it's a base64 image (starts with data:image)
+    if (iconName?.startsWith('data:image')) {
+      return (
+        <img 
+          src={iconName} 
+          alt="Circle icon" 
+          className="h-4 w-4 object-cover rounded"
+        />
+      )
+    }
+
+    // Check if it's an uploaded image (legacy path format)
     if (iconName?.startsWith('/uploads/')) {
       return (
         <img 
