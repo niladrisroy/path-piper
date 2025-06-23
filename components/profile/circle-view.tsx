@@ -162,11 +162,13 @@ function CircleBadgesSection() {
     <Card>
       <CardHeader>
         <div className="flex justify-between items-center">
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-blue-600" />
-            My Circles
+          <div className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-blue-600" />
+              My Circles
+            </CardTitle>
             <Badge variant="secondary" className="ml-2">{circles.length} circles</Badge>
-          </CardTitle>
+          </div>
           <Button 
             variant="outline" 
             size="sm" 
