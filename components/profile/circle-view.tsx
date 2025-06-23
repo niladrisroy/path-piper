@@ -317,7 +317,7 @@ function CircleBadgesSection({ onCircleSelect }: { onCircleSelect: (circle: Circ
               ))}
             </div>
 
-            
+
           </div>
         )}
       </CardContent>
@@ -431,6 +431,23 @@ export default function CircleView({ student }: CircleViewProps) {
   );
   const [selectedCircle, setSelectedCircle] = useState<Circle | null>(null);
   const [showCircleMembers, setShowCircleMembers] = useState(false);
+
+    const getIconComponent = (iconName: string) => {
+    switch (iconName) {
+      case "crown":
+        return <Crown className="h-4 w-4" />;
+      case "shield":
+        return <Shield className="h-4 w-4" />;
+      case "star":
+        return <Star className="h-4 w-4" />;
+      case "graduation-cap":
+        return <GraduationCap className="h-4 w-4" />;
+      case "building":
+        return <Building className="h-4 w-4" />;
+      default:
+        return <Users className="h-4 w-4" />;
+    }
+  };
 
   // Use real student data
   const studentName = student?.profile
