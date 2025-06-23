@@ -339,9 +339,22 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
 
                     {/* Name and tagline */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h1 className="text-xl sm:text-3xl font-bold truncate">{displayName}</h1>
-                        {true && <BadgeCheck className="h-6 w-6 text-pathpiper-teal" />}
+                      <div className="flex items-center gap-2 justify-between">
+                        <div className="flex items-center gap-2">
+                          <h1 className="text-xl sm:text-3xl font-bold truncate">{displayName}</h1>
+                          {true && <BadgeCheck className="h-6 w-6 text-pathpiper-teal" />}
+                        </div>
+                        {/* Edit Profile button moved here */}
+                        {isOwnProfile && (
+                          <Button 
+                            size="sm" 
+                            className="bg-pathpiper-teal hover:bg-pathpiper-teal/90 shrink-0"
+                            onClick={() => router.push('/student/profile/edit')}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Profile
+                          </Button>
+                        )}
                       </div>
                       {tagline && (
                         <p className="text-gray-600 dark:text-gray-300 mt-1 text-sm sm:text-base truncate">
@@ -460,101 +473,104 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                       <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">My Circles</h3>
                     </div>
 
-                    <div className="relative">
-                      <div className="flex overflow-x-auto pb-2 hide-scrollbar gap-4">
-                        {/* Default Friends Circle - Only show for own profile */}
-                        {isOwnProfile && (
-                          <div className="flex flex-col items-center min-w-[72px]">
-                            <div className="relative mb-1">
-                              <button
-                                onClick={() => handleCircleClick({
-                                  id: 'friends',
-                                  name: 'Friends',
-                                  color: '#ec4899',
-                                  icon: 'users',
-                                  memberships: connections?.map(conn => ({
-                                    user: conn.user
-                                  })) || [],
-                                  _count: {
-                                    memberships: actualConnectionCounts?.total || 0
-                                  },
-                                  creator: studentProp.profile,
-                                  isDefault: true
-                                })}
-                                className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-400 to-purple-500 p-[3px] hover:from-pink-500 hover:to-purple-600 transition-all duration-200"
-                              >
-                                <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
-                                  <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                                    <Users className="h-6 w-6 text-pink-500 dark:text-pink-400" />
+                    <div className="relative flex items-center">
+                      {/* Scrollable circles container */}
+                      <div className="flex-1 overflow-hidden">
+                        <div className="flex overflow-x-auto pb-2 hide-scrollbar gap-4 pr-4">
+                          {/* Default Friends Circle - Only show for own profile */}
+                          {isOwnProfile && (
+                            <div className="flex flex-col items-center min-w-[72px] shrink-0">
+                              <div className="relative mb-1">
+                                <button
+                                  onClick={() => handleCircleClick({
+                                    id: 'friends',
+                                    name: 'Friends',
+                                    color: '#ec4899',
+                                    icon: 'users',
+                                    memberships: connections?.map(conn => ({
+                                      user: conn.user
+                                    })) || [],
+                                    _count: {
+                                      memberships: actualConnectionCounts?.total || 0
+                                    },
+                                    creator: studentProp.profile,
+                                    isDefault: true
+                                  })}
+                                  className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-400 to-purple-500 p-[3px] hover:from-pink-500 hover:to-purple-600 transition-all duration-200"
+                                >
+                                  <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
+                                    <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                                      <Users className="h-6 w-6 text-pink-500 dark:text-pink-400" />
+                                    </div>
                                   </div>
-                                </div>
-                              </button>
+                                </button>
+                              </div>
+                              <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
+                                Friends ({(actualConnectionCounts?.total || 0) + 1})
+                              </span>
                             </div>
-                            <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
-                              Friends ({(actualConnectionCounts?.total || 0) + 1})
-                            </span>
-                          </div>
-                        )}
+                          )}
 
-                        {/* Dynamic Circles from Database */}
-                        {circles.map((circle) => (
-                          <div 
-                            key={circle.id}
-                            className="flex flex-col items-center min-w-[72px]"
-                          >
-                            <div className="relative mb-1">
-                              <button
-                                onClick={() => handleCircleClick(circle)}
-                                className="w-16 h-16 rounded-full p-[3px] hover:opacity-80 transition-all duration-200"
-                                style={{ 
-                                  background: `linear-gradient(135deg, ${circle.color}, ${circle.color}dd)`
-                                }}
-                              >
-                                <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
-                                  <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
-                                    {circle.icon && (circle.icon.startsWith('data:image') || circle.icon.startsWith('/uploads/')) ? (
-                                      <img
-                                        src={circle.icon}
-                                        alt={circle.name}
-                                        className="w-full h-full object-cover rounded-full"
-                                      />
-                                    ) : (
-                                      <div 
-                                        className="w-3 h-3 rounded-full"
-                                        style={{ backgroundColor: circle.color }}
-                                      />
-                                    )}
+                          {/* Dynamic Circles from Database */}
+                          {circles.map((circle) => (
+                            <div 
+                              key={circle.id}
+                              className="flex flex-col items-center min-w-[72px] shrink-0"
+                            >
+                              <div className="relative mb-1">
+                                <button
+                                  onClick={() => handleCircleClick(circle)}
+                                  className="w-16 h-16 rounded-full p-[3px] hover:opacity-80 transition-all duration-200"
+                                  style={{ 
+                                    background: `linear-gradient(135deg, ${circle.color}, ${circle.color}dd)`
+                                  }}
+                                >
+                                  <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
+                                    <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                                      {circle.icon && (circle.icon.startsWith('data:image') || circle.icon.startsWith('/uploads/')) ? (
+                                        <img
+                                          src={circle.icon}
+                                          alt={circle.name}
+                                          className="w-full h-full object-cover rounded-full"
+                                        />
+                                      ) : (
+                                        <div 
+                                          className="w-3 h-3 rounded-full"
+                                          style={{ backgroundColor: circle.color }}
+                                        />
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                              </button>
+                                </button>
+                              </div>
+                              <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
+                                {circle.name} ({(circle._count?.memberships || 0) + 1})
+                              </span>
                             </div>
-                            <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
-                              {circle.name} ({(circle._count?.memberships || 0) + 1})
-                            </span>
-                          </div>
-                        ))}
-
-                        {/* Add New Circle Button - Only show for own profile */}
-                        {isOwnProfile && (
-                          <div className="flex flex-col items-center min-w-[72px]">
-                            <div className="relative mb-1">
-                              <button
-                                onClick={() => setShowCreateCircle(true)}
-                                className="w-16 h-16 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 p-[3px] hover:from-pathpiper-teal hover:to-pathpiper-blue transition-all duration-200"
-                              >
-                                <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
-                                  <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                                    <Plus className="h-6 w-6 text-gray-500 dark:text-gray-400" />
-                                  </div>
-                                </div>
-                              </button>
-                            </div>
-                            <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
-                              Add Circle
-                            </span>
-                          </div>
-                        )}
+                          ))}
+                        </div>
                       </div>
+
+                      {/* Fixed Add New Circle Button - Only show for own profile */}
+                      {isOwnProfile && (
+                        <div className="flex flex-col items-center min-w-[72px] shrink-0 ml-2">
+                          <div className="relative mb-1">
+                            <button
+                              onClick={() => setShowCreateCircle(true)}
+                              className="w-16 h-16 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 p-[3px] hover:from-pathpiper-teal hover:to-pathpiper-blue transition-all duration-200"
+                            >
+                              <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
+                                <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                                  <Plus className="h-6 w-6 text-gray-500 dark:text-gray-400" />
+                                </div>
+                              </div>
+                            </button>
+                          </div>
+                          <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
+                            Add Circle
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Create Circle Modal */}
@@ -818,60 +834,49 @@ xmlns="http://www.w3.org/2000/svg"
                     </div>
                   </div>
 
-                  <div className="mt-6">
-                    {/* Add/Edit Profile button */}
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      {isOwnProfile ? (
-                        <Button 
-                          size="lg" 
-                          className="bg-pathpiper-teal hover:bg-pathpiper-teal/90"
-                          onClick={() => router.push('/student/profile/edit')}
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit Profile
+                  {!isOwnProfile && (
+                    <div className="mt-6">
+                      {/* Action buttons for viewing other profiles */}
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <Button size="lg" className="bg-pathpiper-teal hover:bg-pathpiper-teal/90">
+                          <MessageCircle className="h-4 w-4 mr-2" />
+                          Message
                         </Button>
-                      ) : (
-                        <>
-                          <Button size="lg" className="bg-pathpiper-teal hover:bg-pathpiper-teal/90">
-                            <MessageCircle className="h-4 w-4 mr-2" />
-                            Message
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="lg"
-                            onClick={async () => {
-                              try {
-                                const response = await fetch('/api/connections/request', {
-                                  method: 'POST',
-                                  headers: {
-                                    'Content-Type': 'application/json',
-                                  },
-                                  credentials: 'include',
-                                  body: JSON.stringify({
-                                    receiverId: studentProp.id,
-                                    message: `Hi! I'd like to connect with you on PathPiper.`
-                                  }),
-                                })
+                        <Button 
+                          variant="outline" 
+                          size="lg"
+                          onClick={async () => {
+                            try {
+                              const response = await fetch('/api/connections/request', {
+                                method: 'POST',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                },
+                                credentials: 'include',
+                                body: JSON.stringify({
+                                  receiverId: studentProp.id,
+                                  message: `Hi! I'd like to connect with you on PathPiper.`
+                                }),
+                              })
 
-                                if (response.ok) {
-                                  alert('Connection request sent successfully!')
-                                } else {
-                                  const error = await response.json()
-                                  alert(`Failed to send connection request: ${error.error || 'Unknown error'}`)
-                                }
-                              } catch (error) {
-                                console.error('Error sending connection request:', error)
-                                alert('Failed to send connection request')
+                              if (response.ok) {
+                                alert('Connection request sent successfully!')
+                              } else {
+                                const error = await response.json()
+                                alert(`Failed to send connection request: ${error.error || 'Unknown error'}`)
                               }
-                            }}
-                          >
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            Connect
-                          </Button>
-                        </>
-                      )}
+                            } catch (error) {
+                              console.error('Error sending connection request:', error)
+                              alert('Failed to send connection request')
+                            }
+                          }}
+                        >
+                          <UserPlus className="h-4 w-4 mr-2" />
+                          Connect
+                        </Button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
