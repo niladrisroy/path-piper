@@ -260,7 +260,7 @@ function CircleBadgesSection({ onCircleSelect }: { onCircleSelect: (circle: Circ
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="py-6">
         {circles.length === 0 ? (
           <div className="text-center py-6 text-gray-500">
             <Users className="h-10 w-10 mx-auto mb-2 text-gray-300" />
@@ -270,11 +270,11 @@ function CircleBadgesSection({ onCircleSelect }: { onCircleSelect: (circle: Circ
         ) : (
           <div className="space-y-3">
             {/* Compact Circular Grid Layout - Optimized for side panel */}
-            <div className={`flex ${circles.length > 9 ? 'overflow-x-auto' : ''} space-x-3`}>
+            <div className={`flex ${circles.length > 9 ? 'overflow-x-auto hide-scrollbar' : ''} space-x-3 py-3 px-1 min-h-[80px]`}>
               {circles.map((circle) => (
                 <div
                   key={circle.id}
-                  className="flex flex-col items-center group cursor-pointer"
+                  className="flex flex-col items-center group cursor-pointer flex-shrink-0"
                   onClick={() => onCircleSelect(circle)}
                 >
                   {/* Circle Badge */}
@@ -316,8 +316,6 @@ function CircleBadgesSection({ onCircleSelect }: { onCircleSelect: (circle: Circ
                 </div>
               ))}
             </div>
-
-
           </div>
         )}
       </CardContent>
