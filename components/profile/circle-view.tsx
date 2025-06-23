@@ -270,7 +270,7 @@ function CircleBadgesSection({ onCircleSelect }: { onCircleSelect: (circle: Circ
         ) : (
           <div className="space-y-3">
             {/* Compact Circular Grid Layout - Optimized for side panel */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+            <div className={`flex ${circles.length > 9 ? 'overflow-x-auto' : ''} space-x-3`}>
               {circles.map((circle) => (
                 <div
                   key={circle.id}
