@@ -23,6 +23,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useNotifications } from "@/hooks/use-notifications";
 
 interface SearchUser {
   id: string;
@@ -47,6 +48,7 @@ export function InternalNavbar() {
   const [user, setUser] = useState<any>(null);
   const [connections, setConnections] = useState<any[]>([]);
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
+  const { totalCount: notificationCount, loading: notificationsLoading } = useNotifications();
 
   const handleLogout = async () => {
     try {
@@ -421,15 +423,17 @@ export function InternalNavbar() {
                 </Link>
               ))}
 
-              <button className="relative">
+              <Link href="/notifications" className="relative">
                 <Bell
                   size={24}
                   className="text-slate-700 hover:text-teal-500 transition-colors"
                 />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                  3
-                </span>
-              </button>
+                {notificationCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                    {notificationCount}
+                  </span>
+                )}
+              </Link>
 
               <Button
                 onClick={handleLogout}
@@ -523,13 +527,15 @@ export function InternalNavbar() {
               <span className="text-xs mt-1">{item.name}</span>
             </Link>
           ))}
-          <button className="relative flex flex-col items-center p-2 text-gray-500 hover:text-teal-500">
+          <Link href="/notifications" className="relative flex flex-col items-center p-2 text-gray-500 hover:text-teal-500">
             <Bell size={20} />
-            <span className="absolute -top-1 right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-              3
-            </span>
+            {notificationCount > 0 && (
+              <span className="absolute -top-1 right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                {notificationCount}
+              </span>
+            )}
             <span className="text-xs mt-1">Alerts</span>
-          </button>
+          </Link>
         </div>
       </div>
     </>
