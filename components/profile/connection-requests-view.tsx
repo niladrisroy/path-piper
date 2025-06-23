@@ -43,17 +43,39 @@ interface ConnectionRequest {
   }
 }
 
+interface CircleInvitation {
+  id: string
+  status: string
+  message?: string
+  createdAt: string
+  circle: {
+    id: string
+    name: string
+    color: string
+    icon: string
+  }
+  inviter: {
+    id: string
+    firstName: string
+    lastName: string
+    profileImageUrl?: string
+    role: string
+  }
+}
+
 export default function ConnectionRequestsView() {
   const [receivedRequests, setReceivedRequests] = useState<ConnectionRequest[]>([])
   const [sentRequests, setSentRequests] = useState<ConnectionRequest[]>([])
+  const [circleInvitations, setCircleInvitations] = useState<CircleInvitation[]>([])
   const [loading, setLoading] = useState(true)
   const [processingRequest, setProcessingRequest] = useState<string | null>(null)
 
   const fetchConnectionRequests = async () => {
     try {
-      const [receivedResponse, sentResponse] = await Promise.all([
+      const [receivedResponse, sentResponse, circleInvitationsResponse] = await Promise.all([
         fetch('/api/connections/requests?type=received'),
-        fetch('/api/connections/requests?type=sent')
+        fetch('/api/connections/requests?type=sent'),
+        fetch('/api/circles/invitations?type=received')
       ])
 
       if (receivedResponse.ok) {
@@ -64,6 +86,11 @@ export default function ConnectionRequestsView() {
       if (sentResponse.ok) {
         const sent = await sentResponse.json()
         setSentRequests(sent)
+      }
+
+      if (circleInvitationsResponse.ok) {
+        const invitations = await circleInvitationsResponse.json()
+        setCircleInvitations(invitations)
       }
     } catch (error) {
       console.error('Error fetching connection requests:', error)
@@ -120,6 +147,65 @@ export default function ConnectionRequestsView() {
     }
   }
 
+  const getIconComponent = (iconName: string) => {
+    // Check if it's an uploaded image (path starts with /uploads/)
+    if (iconName?.startsWith('/uploads/')) {
+      return (
+        <img 
+          src={iconName} 
+          alt="Circle icon" 
+          className="h-4 w-4 object-cover rounded"
+        />
+      )
+    }
+
+    // Otherwise render as lucide icon
+    switch (iconName) {
+      case 'crown':
+        return <Crown className="h-4 w-4" />
+      case 'shield':
+        return <Shield className="h-4 w-4" />
+      case 'star':
+        return <Star className="h-4 w-4" />
+      case 'graduation-cap':
+        return <GraduationCap className="h-4 w-4" />
+      case 'building':
+        return <Building className="h-4 w-4" />
+      case 'message-circle':
+        return <MessageCircle className="h-4 w-4" />
+      case 'user-plus':
+        return <UserPlus className="h-4 w-4" />
+      default:
+        return <Users className="h-4 w-4" />
+    }
+  }
+
+  const handleInvitationResponse = async (invitationId: string, action: 'accept' | 'decline') => {
+    setProcessingRequest(invitationId)
+    try {
+      const response = await fetch(`/api/circles/invitations/${invitationId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action }),
+      })
+
+      if (response.ok) {
+        // Refresh the invitations
+        fetchConnectionRequests()
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Failed to process invitation')
+      }
+    } catch (error) {
+      console.error('Error processing invitation:', error)
+      alert('Failed to process invitation')
+    } finally {
+      setProcessingRequest(null)
+    }
+  }
+
   if (loading) {
     return (
       <div className="p-6">
@@ -148,9 +234,12 @@ export default function ConnectionRequestsView() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="received" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="received">
-                Received ({receivedRequests.filter(r => r.status === 'pending').length})
+                Connections ({receivedRequests.filter(r => r.status === 'pending').length})
+              </TabsTrigger>
+              <TabsTrigger value="circles">
+                Circle Requests ({circleInvitations.filter(inv => inv.status === 'pending').length})
               </TabsTrigger>
               <TabsTrigger value="sent">
                 Sent ({sentRequests.length})
@@ -215,6 +304,70 @@ export default function ConnectionRequestsView() {
                                 size="sm"
                                 onClick={() => handleRequestResponse(request.id, 'accept')}
                                 disabled={processingRequest === request.id}
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="circles" className="mt-4">
+              <div className="space-y-3">
+                {circleInvitations.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                    <p>No circle requests received</p>
+                  </div>
+                ) : (
+                  circleInvitations.map((invitation) => (
+                    <Card key={invitation.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            {/* Circle Badge */}
+                            <div 
+                              className="w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-sm"
+                              style={{ backgroundColor: invitation.circle.color }}
+                            >
+                              {getIconComponent(invitation.circle.icon)}
+                            </div>
+
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2">
+                                <h3 className="font-medium">{invitation.circle.name}</h3>
+                                <Badge variant="outline" className={`text-xs ${getStatusColor(invitation.status)}`}>
+                                  {invitation.status}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-gray-600">
+                                from {invitation.inviter.firstName} {invitation.inviter.lastName}
+                              </p>
+                              {invitation.message && (
+                                <p className="text-sm text-gray-500 italic mt-1">"{invitation.message}"</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {invitation.status === 'pending' && (
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleInvitationResponse(invitation.id, 'decline')}
+                                disabled={processingRequest === invitation.id}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleInvitationResponse(invitation.id, 'accept')}
+                                disabled={processingRequest === invitation.id}
                               >
                                 <Check className="h-4 w-4" />
                               </Button>
