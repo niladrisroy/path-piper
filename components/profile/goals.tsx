@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Edit, Target, Clock, Calendar, CheckCircle2 } from "lucide-react";
+import { Plus, Target, Clock, Calendar, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface Goal {
@@ -46,7 +46,7 @@ const Goals: React.FC<GoalsProps> = ({ student, currentUser }) => {
     }
   };
 
-  const handleEdit = () => {
+  const handleManage = () => {
     router.push("/student/profile/edit?section=goals");
   };
 
@@ -57,8 +57,8 @@ const Goals: React.FC<GoalsProps> = ({ student, currentUser }) => {
           <h2 className="text-2xl font-semibold">Goals</h2>
           {isOwnProfile && (
             <Button variant="outline" size="sm">
-              <Edit className="h-4 w-4 mr-2" />
-              Edit
+              <Plus className="h-4 w-4 mr-2" />
+              Manage
             </Button>
           )}
         </div>
@@ -78,9 +78,9 @@ const Goals: React.FC<GoalsProps> = ({ student, currentUser }) => {
             <p className="text-gray-600 dark:text-gray-400">Track your aspirations and achievements</p>
           </div>
           {isOwnProfile && (
-            <Button variant="outline" size="sm" onClick={handleEdit}>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit
+            <Button variant="outline" size="sm" onClick={handleManage}>
+              <Plus className="h-4 w-4 mr-2" />
+              Manage
             </Button>
           )}
         </div>
@@ -98,7 +98,7 @@ const Goals: React.FC<GoalsProps> = ({ student, currentUser }) => {
               }
             </p>
             {isOwnProfile && (
-              <Button className="mt-4 bg-pathpiper-teal hover:bg-pathpiper-teal/90" onClick={handleEdit}>
+              <Button className="mt-4 bg-pathpiper-teal hover:bg-pathpiper-teal/90" onClick={handleManage}>
                 Add Your First Goal
               </Button>
             )}
@@ -116,9 +116,9 @@ const Goals: React.FC<GoalsProps> = ({ student, currentUser }) => {
           <p className="text-gray-600 dark:text-gray-400">Track your aspirations and achievements</p>
         </div>
         {isOwnProfile && (
-          <Button variant="outline" size="sm" onClick={handleEdit}>
-            <Edit className="h-4 w-4 mr-2" />
-            Edit
+          <Button variant="outline" size="sm" onClick={handleManage}>
+            <Plus className="h-4 w-4 mr-2" />
+            Manage
           </Button>
         )}
       </div>
@@ -184,14 +184,7 @@ const Goals: React.FC<GoalsProps> = ({ student, currentUser }) => {
         ))}
       </div>
 
-      {isOwnProfile && (
-        <div className="text-center pt-4">
-          <Button variant="outline" size="sm" onClick={handleEdit}>
-            <Target className="h-4 w-4 mr-2" />
-            Add More Goals
-          </Button>
-        </div>
-      )}
+      
     </div>
   );
 };
