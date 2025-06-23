@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Settings, Plus, Users, MessageSquare, Share2, Calendar, MapPin, Briefcase, GraduationCap, Mail, Phone, Globe, Instagram, Twitter, Linkedin, Github, Youtube, Facebook, UserPlus, BadgeCheck, Edit, MessageCircle, UserIcon, FolderKanban, Award, BrainIcon, UserCheck, UserX } from "lucide-react"
+import { format } from "date-fns"
 import CircleManagementDialog from "./circle-management-dialog"
 
 interface ProfileHeaderProps {
@@ -127,7 +128,11 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
     }
   }, [isOwnProfile, studentProp.id, connectionCounts])
 
-  // Fetch user's circles and connections
+  // State for recent achievement
+  const [recentAchievement, setRecentAchievement] = useState<any>(null)
+  const [achievementLoading, setAchievementLoading] = useState(true)
+
+  // Fetch user's circles, connections, and achievements
   useEffect(() => {
     const fetchCircles = async () => {
       try {
@@ -159,9 +164,31 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
       }
     }
 
+    const fetchRecentAchievement = async () => {
+      try {
+        const response = await fetch('/api/achievements', {
+          credentials: 'include'
+        })
+        if (response.ok) {
+          const data = await response.json()
+          // Get the most recent achievement (they're already sorted by date desc in the API)
+          if (data.achievements && data.achievements.length > 0) {
+            setRecentAchievement(data.achievements[0])
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching achievements:', error)
+      } finally {
+        setAchievementLoading(false)
+      }
+    }
+
     if (isOwnProfile) {
       fetchCircles()
       fetchConnections()
+      fetchRecentAchievement()
+    } else {
+      setAchievementLoading(false)
     }
   }, [isOwnProfile])
 
@@ -667,15 +694,39 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                   {/* Recent Achievement section */}
                   <div className="mt-3">
                     <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Recent Achievement</h3>
-                    <div className="bg-sky-50 dark:bg-sky-900/20 p-2 rounded-lg flex items-center gap-3">
-                      <div className="bg-yellow-100 dark:bg-yellow-900/40 h-8 w-8 rounded-full flex items-center justify-center">
-                        <Award className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                    {achievementLoading ? (
+                      <div className="bg-sky-50 dark:bg-sky-900/20 p-2 rounded-lg">
+                        <div className="animate-pulse flex items-center gap-3">
+                          <div className="bg-gray-200 dark:bg-gray-700 h-8 w-8 rounded-full"></div>
+                          <div className="flex-1">
+                            <div className="bg-gray-200 dark:bg-gray-700 h-3 w-20 rounded mb-1"></div>
+                            <div className="bg-gray-200 dark:bg-gray-700 h-2 w-16 rounded"></div>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="text-xs font-medium">Science Fair Winner</h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Awarded 2 weeks ago</p>
+                    ) : recentAchievement ? (
+                      <div className="bg-sky-50 dark:bg-sky-900/20 p-2 rounded-lg flex items-center gap-3">
+                        <div className="bg-yellow-100 dark:bg-yellow-900/40 h-8 w-8 rounded-full flex items-center justify-center">
+                          <Award className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-medium">{recentAchievement.name}</h4>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Awarded {format(new Date(recentAchievement.dateOfAchievement), 'MMM dd, yyyy')}
+                          </p>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="bg-gray-50 dark:bg-gray-800/50 p-2 rounded-lg flex items-center gap-3">
+                        <div className="bg-gray-100 dark:bg-gray-700 h-8 w-8 rounded-full flex items-center justify-center">
+                          <Award className="h-4 w-4 text-gray-400" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400">No achievements yet</h4>
+                          <p className="text-xs text-gray-400 dark:text-gray-500">Start adding your accomplishments</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
 
