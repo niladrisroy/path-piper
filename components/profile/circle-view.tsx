@@ -85,11 +85,9 @@ interface Circle {
 }
 
 // Circle Badges Section Component
-function CircleBadgesSection() {
+function CircleBadgesSection({ onCircleSelect }: { onCircleSelect: (circle: Circle) => void }) {
   const [circles, setCircles] = useState<Circle[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedCircle, setExpandedCircle] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>("");
   const [showCreateCircle, setShowCreateCircle] = useState(false);
   const [newCircleName, setNewCircleName] = useState('');
   const [newCircleColor, setNewCircleColor] = useState('#3B82F6');
@@ -277,11 +275,7 @@ function CircleBadgesSection() {
                 <div
                   key={circle.id}
                   className="flex flex-col items-center group cursor-pointer"
-                  onClick={() =>
-                    setExpandedCircle(
-                      expandedCircle === circle.id ? null : circle.id,
-                    )
-                  }
+                  onClick={() => onCircleSelect(circle)}
                 >
                   {/* Circle Badge */}
                   <div className="relative mb-2">
@@ -323,176 +317,7 @@ function CircleBadgesSection() {
               ))}
             </div>
 
-            {/* Expanded Circle Details */}
-            {expandedCircle && (
-              <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border">
-                {(() => {
-                  const selectedCircle = circles.find(
-                    (c) => c.id === expandedCircle,
-                  );
-                  if (!selectedCircle) return null;
-
-                  return (
-                    <div>
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-8 h-8 rounded-full flex items-center justify-center text-white overflow-hidden"
-                              style={{ backgroundColor: selectedCircle.color }}
-                            >
-                              {selectedCircle.icon && (selectedCircle.icon.startsWith('data:image') || selectedCircle.icon.startsWith('/uploads/')) ? (
-                                <img
-                                  src={selectedCircle.icon}
-                                  alt={selectedCircle.name}
-                                  className="w-full h-full object-cover rounded-full"
-                                />
-                              ) : (
-                                <div className="scale-75">
-                                  {getIconComponent(selectedCircle.icon)}
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <h3 className="font-semibold text-gray-900 dark:text-white">
-                                  {selectedCircle.name}
-                                </h3>
-                                {selectedCircle.isDefault && (
-                                  <Badge variant="outline" className="text-xs">
-                                    Default
-                                  </Badge>
-                                )}
-                              </div>
-                              {selectedCircle.description && (
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                  {selectedCircle.description}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setExpandedCircle(null);
-                              setSearchQuery("");
-                            }}
-                          >
-                            ✕
-                          </Button>
-                        </div>
-
-                        {/* Search Bar */}
-                        <div className="mb-3">
-                          <div className="relative">
-                            <input
-                              type="text"
-                              placeholder="Search members..."
-                              value={searchQuery}
-                              onChange={(e) => setSearchQuery(e.target.value)}
-                              className="w-full px-3 py-2 pl-10 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
-                            />
-                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                              <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                              </svg>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Circle Members */}
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
-                            Circle Members ({selectedCircle._count.memberships + 1})
-                          </h4>
-                          {(() => {
-                            // Combine creator and members, then filter by search query
-                            const allMembers = [
-                              // Add creator as first member
-                              {
-                                user: {
-                                  id: selectedCircle.creator.id,
-                                  firstName: selectedCircle.creator.firstName,
-                                  lastName: selectedCircle.creator.lastName,
-                                  profileImageUrl: selectedCircle.creator.profileImageUrl,
-                                  role: "creator",
-                                  status: "online"
-                                }
-                              },
-                              // Add other members
-                              ...selectedCircle.memberships
-                            ];
-
-                            // Filter members based on search query
-                            const filteredMembers = allMembers.filter(membership =>
-                              searchQuery === "" || 
-                              `${membership.user.firstName} ${membership.user.lastName}`
-                                .toLowerCase()
-                                .includes(searchQuery.toLowerCase())
-                            );
-
-                            if (filteredMembers.length === 0) {
-                              return (
-                                <p className="text-sm text-gray-500 text-center py-3">
-                                  {searchQuery ? "No members found matching your search" : "No members yet"}
-                                </p>
-                              );
-                            }
-
-                            return (
-                              <div className="grid grid-cols-1 gap-2">
-                                {filteredMembers.map((membership, index) => (
-                                  <div
-                                    key={`${membership.user.id}-${index}`}
-                                    className="flex items-center gap-2 p-2 bg-white dark:bg-gray-700 rounded-lg"
-                                  >
-                                    <div className="relative">
-                                      <Avatar className="h-6 w-6">
-                                        <AvatarImage
-                                          src={membership.user.profileImageUrl}
-                                          alt={`${membership.user.firstName} ${membership.user.lastName}`}
-                                        />
-                                        <AvatarFallback className="text-xs">
-                                          {membership.user.firstName?.[0]}
-                                          {membership.user.lastName?.[0]}
-                                        </AvatarFallback>
-                                      </Avatar>
-                                      {membership.user.status && (
-                                        <div
-                                          className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-white ${getStatusColor(membership.user.status)}`}
-                                        />
-                                      )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
-                                        {membership.user.firstName}{" "}
-                                        {membership.user.lastName}
-                                        {membership.user.role === "creator" && (
-                                          <span className="text-blue-500 ml-1">(Creator)</span>
-                                        )}
-                                      </p>
-                                      <Badge variant="outline" className="text-xs">
-                                        {membership.user.role === "creator" ? "creator" : membership.user.role}
-                                      </Badge>
-                                    </div>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-5 w-5 p-0"
-                                    >
-                                      <MessageCircle className="h-2.5 w-2.5" />
-                                    </Button>
-                                  </div>
-                                ))}
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      </div>
-                  );
-                })()}
-              </div>
-            )}
+            
           </div>
         )}
       </CardContent>
@@ -604,6 +429,8 @@ export default function CircleView({ student }: CircleViewProps) {
   const [activeView, setActiveView] = useState<"connections" | "requests">(
     "connections",
   );
+  const [selectedCircle, setSelectedCircle] = useState<Circle | null>(null);
+  const [showCircleMembers, setShowCircleMembers] = useState(false);
 
   // Use real student data
   const studentName = student?.profile
@@ -701,6 +528,17 @@ export default function CircleView({ student }: CircleViewProps) {
       // Revert the UI update if there's an error
       fetchConnections();
     }
+  };
+
+  const handleCircleSelect = (circle: Circle) => {
+    setSelectedCircle(circle);
+    setShowCircleMembers(true);
+    setActiveView("connections");
+  };
+
+  const handleCloseCircleMembers = () => {
+    setSelectedCircle(null);
+    setShowCircleMembers(false);
   };
 
   if (loading) {
@@ -812,13 +650,54 @@ export default function CircleView({ student }: CircleViewProps) {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Circle Badges Section - Takes 4 columns on large screens */}
             <div className="lg:col-span-4">
-              <CircleBadgesSection />
+              <CircleBadgesSection onCircleSelect={handleCircleSelect} />
             </div>
 
             {/* Connections Section - Takes 8 columns on large screens */}
             <div className="lg:col-span-8">
               <Card>
-                <CardHeader className="pb-4"></CardHeader>
+                <CardHeader className="pb-4">
+                  {showCircleMembers && selectedCircle && (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-white overflow-hidden"
+                          style={{ backgroundColor: selectedCircle.color }}
+                        >
+                          {selectedCircle.icon && (selectedCircle.icon.startsWith('data:image') || selectedCircle.icon.startsWith('/uploads/')) ? (
+                            <img
+                              src={selectedCircle.icon}
+                              alt={selectedCircle.name}
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          ) : (
+                            <div className="scale-75">
+                              {getIconComponent(selectedCircle.icon)}
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                            {selectedCircle.name} Members
+                          </h3>
+                          {selectedCircle.description && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {selectedCircle.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCloseCircleMembers}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        ✕
+                      </Button>
+                    </div>
+                  )}
+                </CardHeader>
                 <CardContent className="pt-0">
                   <Tabs defaultValue="all" className="w-full">
                     <TabsList className="grid w-full grid-cols-4 mb-6">
@@ -843,6 +722,117 @@ export default function CircleView({ student }: CircleViewProps) {
 
                     <TabsContent value="all" className="mt-0">
                       {(() => {
+                        if (showCircleMembers && selectedCircle) {
+                          // Show circle members
+                          const allMembers = [
+                            // Add creator as first member
+                            {
+                              user: {
+                                id: selectedCircle.creator.id,
+                                firstName: selectedCircle.creator.firstName,
+                                lastName: selectedCircle.creator.lastName,
+                                profileImageUrl: selectedCircle.creator.profileImageUrl,
+                                role: "creator",
+                                status: "online",
+                                name: `${selectedCircle.creator.firstName} ${selectedCircle.creator.lastName}`,
+                                bio: "",
+                                lastInteraction: "Circle Creator"
+                              }
+                            },
+                            // Add other members
+                            ...selectedCircle.memberships.map(membership => ({
+                              user: {
+                                ...membership.user,
+                                name: `${membership.user.firstName} ${membership.user.lastName}`,
+                                lastInteraction: "Circle Member"
+                              }
+                            }))
+                          ];
+
+                          if (allMembers.length === 0) {
+                            return (
+                              <div className="text-center py-8 text-gray-500">
+                                <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                                <p>No members in this circle yet</p>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                              {allMembers.map((member, index) => (
+                                <div
+                                  key={`${member.user.id}-${index}`}
+                                  className="relative bg-white dark:bg-gray-800 border rounded-xl p-3 hover:shadow-md transition-all duration-200 cursor-pointer group"
+                                >
+                                  <div className="flex flex-col items-center text-center space-y-2 pb-6">
+                                    <div className="relative">
+                                      <Avatar className="h-12 w-12">
+                                        <AvatarImage
+                                          src={member.user.profileImageUrl}
+                                          alt={member.user.name}
+                                        />
+                                        <AvatarFallback className="text-sm">
+                                          {member.user.firstName?.[0]}
+                                          {member.user.lastName?.[0]}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <div
+                                        className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${getStatusColor(member.user.status || "offline")}`}
+                                      />
+                                    </div>
+
+                                    <div className="w-full">
+                                      <h3 className="font-medium text-xs truncate">
+                                        {member.user.name}
+                                        {member.user.role === "creator" && (
+                                          <span className="text-blue-500 text-xs ml-1">(Creator)</span>
+                                        )}
+                                      </h3>
+                                      <Badge
+                                        variant="outline"
+                                        className="text-xs mt-1"
+                                      >
+                                        {member.user.role === "creator" ? "creator" : member.user.role}
+                                      </Badge>
+                                    </div>
+
+                                    {member.user.bio && (
+                                      <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 px-1">
+                                        {member.user.bio}
+                                      </p>
+                                    )}
+
+                                    <div className="flex items-center justify-center space-x-1 w-full mt-3">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0"
+                                        title="Message"
+                                      >
+                                        <MessageCircle className="h-3 w-3" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0"
+                                        title="Schedule"
+                                      >
+                                        <Calendar className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
+
+                                  <div className="absolute bottom-1 left-1 right-1 text-xs text-gray-400 text-center truncate border-t border-gray-100 pt-1">
+                                    {member.user.lastInteraction}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        }
+
+                        // Show regular connections
                         const filteredConnections = connections;
 
                         if (filteredConnections.length === 0) {
@@ -945,6 +935,99 @@ export default function CircleView({ student }: CircleViewProps) {
 
                     <TabsContent value="mentors" className="mt-0">
                       {(() => {
+                        if (showCircleMembers && selectedCircle) {
+                          // Show only mentors from circle
+                          const mentorMembers = selectedCircle.memberships.filter(
+                            membership => membership.user.role === "mentor"
+                          ).map(membership => ({
+                            user: {
+                              ...membership.user,
+                              name: `${membership.user.firstName} ${membership.user.lastName}`,
+                              lastInteraction: "Circle Member"
+                            }
+                          }));
+
+                          if (mentorMembers.length === 0) {
+                            return (
+                              <div className="text-center py-8 text-gray-500">
+                                <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                                <p>No mentors in this circle yet</p>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                              {mentorMembers.map((member, index) => (
+                                <div
+                                  key={`${member.user.id}-${index}`}
+                                  className="relative bg-white dark:bg-gray-800 border rounded-xl p-3 hover:shadow-md transition-all duration-200 cursor-pointer group"
+                                >
+                                  <div className="flex flex-col items-center text-center space-y-2 pb-6">
+                                    <div className="relative">
+                                      <Avatar className="h-12 w-12">
+                                        <AvatarImage
+                                          src={member.user.profileImageUrl}
+                                          alt={member.user.name}
+                                        />
+                                        <AvatarFallback className="text-sm">
+                                          {member.user.firstName?.[0]}
+                                          {member.user.lastName?.[0]}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <div
+                                        className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${getStatusColor(member.user.status || "offline")}`}
+                                      />
+                                      <Star className="absolute -top-1 -left-1 h-4 w-4 text-yellow-500 bg-white rounded-full p-0.5" />
+                                    </div>
+
+                                    <div className="w-full">
+                                      <h3 className="font-medium text-xs truncate">
+                                        {member.user.name}
+                                      </h3>
+                                      <Badge
+                                        variant="outline"
+                                        className="text-xs mt-1 bg-green-50 text-green-700 border-green-200"
+                                      >
+                                        mentor
+                                      </Badge>
+                                    </div>
+
+                                    {member.user.bio && (
+                                      <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 px-1">
+                                        {member.user.bio}
+                                      </p>
+                                    )}
+
+                                    <div className="flex items-center justify-center space-x-1 w-full mt-3">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0"
+                                        title="Message"
+                                      >
+                                        <MessageCircle className="h-3 w-3" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0"
+                                        title="Schedule"
+                                      >
+                                        <Calendar className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
+
+                                  <div className="absolute bottom-1 left-1 right-1 text-xs text-gray-400 text-center truncate border-t border-gray-100 pt-1">
+                                    {member.user.lastInteraction}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        }
+
                         const filteredConnections = connections.filter(
                           (c) => c.user.role === "mentor",
                         );
@@ -1050,6 +1133,98 @@ export default function CircleView({ student }: CircleViewProps) {
 
                     <TabsContent value="peers" className="mt-0">
                       {(() => {
+                        if (showCircleMembers && selectedCircle) {
+                          // Show only students from circle
+                          const peerMembers = selectedCircle.memberships.filter(
+                            membership => membership.user.role === "student"
+                          ).map(membership => ({
+                            user: {
+                              ...membership.user,
+                              name: `${membership.user.firstName} ${membership.user.lastName}`,
+                              lastInteraction: "Circle Member"
+                            }
+                          }));
+
+                          if (peerMembers.length === 0) {
+                            return (
+                              <div className="text-center py-8 text-gray-500">
+                                <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                                <p>No peers in this circle yet</p>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                              {peerMembers.map((member, index) => (
+                                <div
+                                  key={`${member.user.id}-${index}`}
+                                  className="relative bg-white dark:bg-gray-800 border rounded-xl p-3 hover:shadow-md transition-all duration-200 cursor-pointer group"
+                                >
+                                  <div className="flex flex-col items-center text-center space-y-2 pb-6">
+                                    <div className="relative">
+                                      <Avatar className="h-12 w-12">
+                                        <AvatarImage
+                                          src={member.user.profileImageUrl}
+                                          alt={member.user.name}
+                                        />
+                                        <AvatarFallback className="text-sm">
+                                          {member.user.firstName?.[0]}
+                                          {member.user.lastName?.[0]}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <div
+                                        className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${getStatusColor(member.user.status || "offline")}`}
+                                      />
+                                    </div>
+
+                                    <div className="w-full">
+                                      <h3 className="font-medium text-xs truncate">
+                                        {member.user.name}
+                                      </h3>
+                                      <Badge
+                                        variant="outline"
+                                        className="text-xs mt-1 bg-blue-50 text-blue-700 border-blue-200"
+                                      >
+                                        peer
+                                      </Badge>
+                                    </div>
+
+                                    {member.user.bio && (
+                                      <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 px-1">
+                                        {member.user.bio}
+                                      </p>
+                                    )}
+
+                                    <div className="flex items-center justify-center space-x-1 w-full mt-3">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0"
+                                        title="Message"
+                                      >
+                                        <MessageCircle className="h-3 w-3" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0"
+                                        title="Schedule"
+                                      >
+                                        <Calendar className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
+
+                                  <div className="absolute bottom-1 left-1 right-1 text-xs text-gray-400 text-center truncate border-t border-gray-100 pt-1">
+                                    {member.user.lastInteraction}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        }
+
                         const filteredConnections = connections.filter(
                           (c) => c.user.role === "student",
                         );
@@ -1154,6 +1329,99 @@ export default function CircleView({ student }: CircleViewProps) {
 
                     <TabsContent value="institutions" className="mt-0">
                       {(() => {
+                        if (showCircleMembers && selectedCircle) {
+                          // Show only institutions from circle
+                          const institutionMembers = selectedCircle.memberships.filter(
+                            membership => membership.user.role === "institution"
+                          ).map(membership => ({
+                            user: {
+                              ...membership.user,
+                              name: `${membership.user.firstName} ${membership.user.lastName}`,
+                              lastInteraction: "Circle Member"
+                            }
+                          }));
+
+                          if (institutionMembers.length === 0) {
+                            return (
+                              <div className="text-center py-8 text-gray-500">
+                                <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                                <p>No institutions in this circle yet</p>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                              {institutionMembers.map((member, index) => (
+                                <div
+                                  key={`${member.user.id}-${index}`}
+                                  className="relative bg-white dark:bg-gray-800 border rounded-xl p-3 hover:shadow-md transition-all duration-200 cursor-pointer group"
+                                >
+                                  <div className="flex flex-col items-center text-center space-y-2 pb-6">
+                                    <div className="relative">
+                                      <Avatar className="h-12 w-12">
+                                        <AvatarImage
+                                          src={member.user.profileImageUrl}
+                                          alt={member.user.name}
+                                        />
+                                        <AvatarFallback className="text-sm">
+                                          {member.user.firstName?.[0]}
+                                          {member.user.lastName?.[0]}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <div
+                                        className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${getStatusColor(member.user.status || "offline")}`}
+                                      />
+                                      <Building className="absolute -top-1 -left-1 h-4 w-4 text-purple-600 bg-white rounded-full p-0.5" />
+                                    </div>
+
+                                    <div className="w-full">
+                                      <h3 className="font-medium text-xs truncate">
+                                        {member.user.name}
+                                      </h3>
+                                      <Badge
+                                        variant="outline"
+                                        className="text-xs mt-1 bg-purple-50 text-purple-700 border-purple-200"
+                                      >
+                                        institution
+                                      </Badge>
+                                    </div>
+
+                                    {member.user.bio && (
+                                      <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 px-1">
+                                        {member.user.bio}
+                                      </p>
+                                    )}
+
+                                    <div className="flex items-center justify-center space-x-1 w-full mt-3">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0"
+                                        title="Message"
+                                      >
+                                        <MessageCircle className="h-3 w-3" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0"
+                                        title="Schedule"
+                                      >
+                                        <Calendar className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
+
+                                  <div className="absolute bottom-1 left-1 right-1 text-xs text-gray-400 text-center truncate border-t border-gray-100 pt-1">
+                                    {member.user.lastInteraction}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        }
+
                         const filteredConnections = connections.filter(
                           (c) => c.user.role === "institution",
                         );
