@@ -719,21 +719,46 @@ export default function CircleView({ student }: CircleViewProps) {
                   <Tabs defaultValue="all" className="w-full">
                     <TabsList className="grid w-full grid-cols-4 mb-6">
                       <TabsTrigger value="all">
-                        All ({totalConnections})
+                        All ({(() => {
+                          if (showCircleMembers && selectedCircle) {
+                            // Count all members in the selected circle (including creator)
+                            return selectedCircle.memberships.length + 1;
+                          }
+                          return totalConnections;
+                        })()})
                       </TabsTrigger>
                       <TabsTrigger value="mentors">
-                        Mentors ({mentorConnections})
+                        Mentors ({(() => {
+                          if (showCircleMembers && selectedCircle) {
+                            // Count only mentors in the selected circle
+                            return selectedCircle.memberships.filter(
+                              (membership: any) => membership.user.role === "mentor"
+                            ).length;
+                          }
+                          return mentorConnections;
+                        })()})
                       </TabsTrigger>
                       <TabsTrigger value="peers">
-                        Peers (
-                        {
-                          connections.filter((c) => c.user.role === "student")
-                            .length
-                        }
-                        )
+                        Peers ({(() => {
+                          if (showCircleMembers && selectedCircle) {
+                            // Count only students in the selected circle
+                            return selectedCircle.memberships.filter(
+                              (membership: any) => membership.user.role === "student"
+                            ).length;
+                          }
+                          return connections.filter((c) => c.user.role === "student").length;
+                        })()})
                       </TabsTrigger>
                       <TabsTrigger value="institutions">
-                        Institutions ({institutionConnections})
+                        Institutions ({(() => {
+                          if (showCircleMembers && selectedCircle) {
+                            // Count only institutions in the selected circle
+                            return selectedCircle.memberships.filter(
+                              (membership: any) => membership.user.role === "institution"
+                            ).length;
+                          }
+                          return institutionConnections;
+                        })()})
                       </TabsTrigger>
                     </TabsList>
 
