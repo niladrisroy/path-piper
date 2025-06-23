@@ -64,60 +64,60 @@ export default function AchievementTimeline({ userId, isOwnProfile = false }: Ac
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 p-6">
       {achievements.length === 0 ? (
-        <div className="text-center">
-          <div className="mb-4">
+        <div className="text-center py-12">
+          <div className="mb-6">
             <div className="w-16 h-16 mx-auto bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
               <Trophy className="w-8 h-8 text-gray-400" />
             </div>
           </div>
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
             {isOwnProfile ? "No Achievements Added Yet" : "No Achievements to Show"}
           </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
+          <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
             {isOwnProfile 
               ? "Start showcasing your accomplishments and milestones."
               : "This user hasn't added any achievements yet."
             }
           </p>
           {isOwnProfile && (
-            <Button onClick={handleManageAchievements} variant="outline">
+            <Button onClick={handleManageAchievements} variant="outline" className="px-6 py-2">
               <Plus className="w-4 h-4 mr-2" />
               Add Achievement
             </Button>
           )}
         </div>
       ) : (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between py-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               Achievement Timeline
             </h3>
             {isOwnProfile && (
-              <Button onClick={handleManageAchievements} variant="outline" size="sm">
-                <Plus className="w-4 h-4 mr-1" />
+              <Button onClick={handleManageAchievements} variant="outline" size="sm" className="px-4 py-2">
+                <Plus className="w-4 h-4 mr-2" />
                 Manage
               </Button>
             )}
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6 pb-6">
             {achievements.map((achievement, index) => (
               <Card key={achievement.id} className="relative">
                 {index !== achievements.length - 1 && (
                   <div className="absolute left-6 top-16 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
                 )}
-                <CardContent className="pt-6">
+                <CardContent className="pt-6 pb-6">
                   <div className="flex items-start gap-4">
                     <div className="w-8 h-8 bg-pathpiper-teal rounded-full flex items-center justify-center flex-shrink-0 relative z-10">
                       <Trophy className="w-4 h-4 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                         {achievement.name}
                       </h4>
-                      <p className="text-gray-600 dark:text-gray-400 mb-3">
+                      <p className="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
                         {achievement.description}
                       </p>
                       <div className="flex items-center gap-2 text-sm text-gray-500">
