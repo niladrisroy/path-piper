@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS user_achievements (
   name TEXT NOT NULL,
   description TEXT NOT NULL,
   date_of_achievement DATE NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
 -- Create index for better performance
