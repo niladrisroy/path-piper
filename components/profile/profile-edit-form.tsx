@@ -29,6 +29,7 @@ import SocialContactForm from "./forms/social-contact-form"
 import EducationHistoryForm from "./forms/education-history-form"
 import MoodBoardMediaForm from "./forms/mood-board-media-form"
 import PrivacySettingsForm from "./forms/privacy-settings-form"
+import AchievementsForm from "./forms/achievements-form"
 
 interface ProfileEditFormProps {
   userId: string
@@ -197,6 +198,12 @@ export default function ProfileEditForm({ userId, initialSection }: ProfileEditF
       label: "Privacy & Settings",
       icon: <Shield className="h-4 w-4" />,
       component: <PrivacySettingsForm data={profileData} onChange={handleFormChange} />
+    },
+        {
+      id: "achievements",
+      label: "Achievements",
+      icon: <ImageIcon className="h-4 w-4" />,
+      component: <AchievementsForm data={profileData} onChange={handleFormChange} />
     }
   ]
 
@@ -254,6 +261,8 @@ export default function ProfileEditForm({ userId, initialSection }: ProfileEditF
       case "media":
         return !!(data.moodBoard && data.moodBoard.length > 0)
       case "privacy":
+        return true // Always considered complete
+          case "achievements":
         return true // Always considered complete
       default:
         return false

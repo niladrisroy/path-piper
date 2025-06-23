@@ -40,7 +40,7 @@ export default function StudentProfile({ studentId, currentUser, studentData, is
       if (response.ok) {
         const data = await response.json()
         setConnections(data)
-        
+
         // Calculate connection counts by role
         const counts = {
           total: data.length,
@@ -58,7 +58,7 @@ export default function StudentProfile({ studentId, currentUser, studentData, is
   useEffect(() => {
     if (studentData) {
       fetchConnections()
-      
+
       // Transform the real data to match our component's expected structure
       const transformedStudent = {
         id: studentData.id,
@@ -192,7 +192,7 @@ export default function StudentProfile({ studentId, currentUser, studentData, is
           {activeTab === "suggested" && !isViewMode && <SuggestedConnections student={student} />}
           {activeTab === "skills" && <SkillsCanvas userId={student.id} skills={student.skills} isViewMode={isViewMode} />}
           {activeTab === "projects" && <ProjectsShowcase student={student} isViewMode={isViewMode} />}
-          {activeTab === "achievements" && <AchievementTimeline student={student} isViewMode={isViewMode} />}
+          {activeTab === "achievements" && <AchievementTimeline userId={student.id} isOwnProfile={!isViewMode} />}
           {activeTab === "circle" && <CircleView student={student} isViewMode={isViewMode} />}
           {activeTab === "goals" && <Goals student={student} currentUser={currentUser} isViewMode={isViewMode} />}
         </div>

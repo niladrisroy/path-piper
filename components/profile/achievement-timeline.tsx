@@ -1,209 +1,139 @@
 "use client"
 
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { TrophyIcon, AwardIcon, BadgeIcon as CertificateIcon, MedalIcon, StarIcon } from "lucide-react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { CalendarIcon, Trophy, Clock, Plus } from "lucide-react"
+import { format } from "date-fns"
 
-// Mock achievements data
-const achievementsData = [
-  {
-    id: 1,
-    title: "First Place - Regional Science Fair",
-    date: "May 2023",
-    description: "Won first place for the project 'Machine Learning Applications in Climate Prediction'",
-    category: "competition",
-    icon: TrophyIcon,
-    color: "text-yellow-500",
-  },
-  {
-    id: 2,
-    title: "Advanced Python Certification",
-    date: "March 2023",
-    description: "Completed advanced Python programming certification with distinction",
-    category: "certification",
-    icon: CertificateIcon,
-    color: "text-blue-500",
-  },
-  {
-    id: 3,
-    title: "Student of the Month",
-    date: "February 2023",
-    description: "Recognized for outstanding academic performance and leadership",
-    category: "award",
-    icon: AwardIcon,
-    color: "text-purple-500",
-  },
-  {
-    id: 4,
-    title: "Math Olympiad Finalist",
-    date: "December 2022",
-    description: "Selected as one of the top 10 finalists in the National Math Olympiad",
-    category: "competition",
-    icon: MedalIcon,
-    color: "text-green-500",
-  },
-  {
-    id: 5,
-    title: "Perfect Attendance",
-    date: "November 2022",
-    description: "Maintained perfect attendance for the entire semester",
-    category: "recognition",
-    icon: StarIcon,
-    color: "text-red-500",
-  },
-]
+interface Achievement {
+  id: number
+  name: string
+  description: string
+  dateOfAchievement: string
+  createdAt: string
+}
 
-export default function AchievementTimeline({ student }: { student: any }) {
-  // Check if there are any achievements
-  if (!student.achievements || student.achievements.length === 0) {
+interface AchievementTimelineProps {
+  userId?: string
+  isOwnProfile?: boolean
+}
+
+export default function AchievementTimeline({ userId, isOwnProfile = false }: AchievementTimelineProps) {
+  const [achievements, setAchievements] = useState<Achievement[]>([])
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
+
+  useEffect(() => {
+    fetchAchievements()
+  }, [])
+
+  const fetchAchievements = async () => {
+    try {
+      const response = await fetch('/api/achievements', {
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setAchievements(data.achievements || [])
+      } else {
+        console.error('Failed to fetch achievements')
+      }
+    } catch (error) {
+      console.error('Error fetching achievements:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleManageAchievements = () => {
+    router.push('/student/profile/edit?section=achievements')
+  }
+
+  if (loading) {
     return (
-      <div className="p-6 space-y-6">
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Achievement Timeline</h2>
-          <p className="text-gray-600 dark:text-gray-400">A journey through my accomplishments</p>
-        </div>
-
-        <div className="text-center py-12">
-          <div className="max-w-md mx-auto">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Achievements Coming Soon</h3>
-            <p className="text-gray-500 dark:text-gray-400">
-              This section will showcase achievements and milestones. Database tables for achievements are not yet implemented.
-            </p>
-          </div>
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pathpiper-teal"></div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Achievement Timeline</h2>
-        <p className="text-gray-600 dark:text-gray-400">A journey through my accomplishments</p>
-      </div>
-
-      <div className="relative">
-        {/*selectedAchievement !== null && (
-          <motion.div
-            className="absolute inset-0 bg-white dark:bg-gray-800 z-10 rounded-xl p-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <button
-              onClick={() => setSelectedAchievement(null)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-              ✕
-            </button>
-
-            {/* Achievement detail view }
-            {(() => {
-              const achievement = achievementsData.find((a) => a.id === selectedAchievement)
-              if (!achievement) return null
-
-              const Icon = achievement.icon
-
-              return (
-                <div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className={`p-3 rounded-full ${achievement.color} bg-opacity-20`}>
-                      <Icon className={`h-6 w-6 ${achievement.color}`} />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-bold">{achievement.title}</h3>
-                      <p className="text-gray-500 dark:text-gray-400">{achievement.date}</p>
-                    </div>
-                  </div>
-
-                  <p className="text-gray-700 dark:text-gray-300 mb-6">{achievement.description}</p>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                      <h4 className="font-semibold mb-2">Skills Demonstrated</h4>
-                      <div className="flex flex-wrap gap-2">
-                        <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 rounded text-xs">
-                          Problem Solving
-                        </span>
-                        <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 rounded text-xs">
-                          Critical Thinking
-                        </span>
-                        <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-100 rounded text-xs">
-                          Data Analysis
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                      <h4 className="font-semibold mb-2">Verified By</h4>
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-600"></div>
-                        <div>
-                          <p className="font-medium">Dr. Sarah Johnson</p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">Science Department Head</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
-                    <h4 className="font-semibold mb-3">Supporting Evidence</h4>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="aspect-video bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-                      <div className="aspect-video bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-                      <div className="aspect-video bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-                    </div>
-                  </div>
-                </div>
-              )
-            })()}
-          </motion.div>
-        )*/}
-
-        <div className="relative pl-8 border-l-2 border-gray-200 dark:border-gray-700">
-          {achievementsData.map((achievement, index) => {
-            const Icon = achievement.icon
-
-            return (
-              <motion.div
-                key={achievement.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="mb-8 relative"
-              >
-                <div
-                  className={`absolute -left-[41px] p-2 rounded-full bg-white dark:bg-gray-800 border-4 border-gray-200 dark:border-gray-700`}
-                >
-                  <Icon className={`h-5 w-5 ${achievement.color}`} />
-                </div>
-
-                <div
-                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                  //onClick={() => setSelectedAchievement(achievement.id)}
-                >
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-bold text-lg">{achievement.title}</h3>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">{achievement.date}</span>
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-300 mt-2">{achievement.description}</p>
-
-                  <div className="mt-3 flex justify-between items-center">
-                    <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
-                      {achievement.category.charAt(0).toUpperCase() + achievement.category.slice(1)}
-                    </span>
-                    <button className="text-sm text-pathpiper-teal hover:underline">View Details</button>
-                  </div>
-                </div>
-              </motion.div>
-            )
-          })}
+    <div className="space-y-6">
+      {achievements.length === 0 ? (
+        <div className="text-center">
+          <div className="mb-4">
+            <div className="w-16 h-16 mx-auto bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+              <Trophy className="w-8 h-8 text-gray-400" />
+            </div>
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            {isOwnProfile ? "No Achievements Added Yet" : "No Achievements to Show"}
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            {isOwnProfile 
+              ? "Start showcasing your accomplishments and milestones."
+              : "This user hasn't added any achievements yet."
+            }
+          </p>
+          {isOwnProfile && (
+            <Button onClick={handleManageAchievements} variant="outline">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Achievement
+            </Button>
+          )}
         </div>
-      </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Achievement Timeline
+            </h3>
+            {isOwnProfile && (
+              <Button onClick={handleManageAchievements} variant="outline" size="sm">
+                <Plus className="w-4 h-4 mr-1" />
+                Manage
+              </Button>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            {achievements.map((achievement, index) => (
+              <Card key={achievement.id} className="relative">
+                {index !== achievements.length - 1 && (
+                  <div className="absolute left-6 top-16 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
+                )}
+                <CardContent className="pt-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-8 h-8 bg-pathpiper-teal rounded-full flex items-center justify-center flex-shrink-0 relative z-10">
+                      <Trophy className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                        {achievement.name}
+                      </h4>
+                      <p className="text-gray-600 dark:text-gray-400 mb-3">
+                        {achievement.description}
+                      </p>
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <CalendarIcon className="w-4 h-4" />
+                        <span>
+                          {format(new Date(achievement.dateOfAchievement), 'MMM dd, yyyy')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

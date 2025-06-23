@@ -90,6 +90,10 @@ model Profile {
   circleMemberships   CircleMembership[] @relation("CircleMemberships")
   sentCircleInvitations CircleInvitation[] @relation("SentCircleInvitations")
   receivedCircleInvitations CircleInvitation[] @relation("ReceivedCircleInvitations")
+  goals                 Goal[]
+  achievements          UserAchievement[]
+  feedPosts             FeedPost[]
+  
 
   @@map("profiles")
 }
@@ -500,5 +504,21 @@ model Goal {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("goals")
+}
+
+model UserAchievement {
+  id                Int      @id @default(autoincrement())
+  userId            String   @map("user_id") @db.Uuid
+  name              String
+  description       String
+  dateOfAchievement DateTime @map("date_of_achievement") @db.Date
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_achievements")
 }
