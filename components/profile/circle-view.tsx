@@ -29,7 +29,10 @@ import {
   Shield,
   Eye,
   Settings,
+  Plus,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import AddConnectionDialog from "./add-connection-dialog";
 import ConnectionRequestsView from "./connection-requests-view";
 
@@ -87,6 +90,12 @@ function CircleBadgesSection() {
   const [loading, setLoading] = useState(true);
   const [expandedCircle, setExpandedCircle] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [showCreateCircle, setShowCreateCircle] = useState(false);
+  const [newCircleName, setNewCircleName] = useState('');
+  const [newCircleColor, setNewCircleColor] = useState('#3B82F6');
+  const [newCircleDescription, setNewCircleDescription] = useState('');
+  const [newCircleImageFile, setNewCircleImageFile] = useState<File | null>(null);
+  const [newCircleImageUrl, setNewCircleImageUrl] = useState('');
 
   useEffect(() => {
     const fetchCircles = async () => {
@@ -122,6 +131,77 @@ function CircleBadgesSection() {
         return <Users className="h-4 w-4" />;
     }
   };
+
+  const handleCreateCircle = async () => {
+    if (!newCircleName.trim()) return
+
+    try {
+      let iconPath = 'users' // default icon
+
+      // Upload image if provided
+      if (newCircleImageFile) {
+        const formData = new FormData()
+        formData.append('image', newCircleImageFile)
+        formData.append('type', 'circle-icon')
+
+        const uploadResponse = await fetch('/api/upload/circle-icon', {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        })
+
+        if (uploadResponse.ok) {
+          const uploadResult = await uploadResponse.json()
+          iconPath = uploadResult.path
+        }
+      }
+
+      const response = await fetch('/api/circles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: newCircleName.trim(),
+          description: newCircleDescription.trim() || null,
+          color: newCircleColor,
+          icon: iconPath
+        })
+      })
+
+      if (response.ok) {
+        // Reset form
+        setNewCircleName('')
+        setNewCircleDescription('')
+        setNewCircleColor('#3B82F6')
+        setNewCircleImageFile(null)
+        setNewCircleImageUrl('')
+        setShowCreateCircle(false)
+
+        // Refresh circles
+        const fetchResponse = await fetch("/api/circles");
+        if (fetchResponse.ok) {
+          const data = await fetchResponse.json();
+          setCircles(data);
+        }
+      } else {
+        console.error('Failed to create circle')
+      }
+    } catch (error) {
+      console.error('Error creating circle:', error)
+    }
+  }
+
+  const handleImageUpload = (e: any) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNewCircleImageFile(file);
+      setNewCircleImageUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const colorOptions = ['#3B82F6', '#8B5CF6', '#EC4899', '#10B981', '#F59E0B'];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -174,11 +254,7 @@ function CircleBadgesSection() {
             size="sm" 
             className="h-8 w-8 p-0"
             title="Create new circle"
-            onClick={() => {
-              // This should trigger the same circle creation functionality as in profile header
-              // For now, we'll add a placeholder - you'll need to implement the actual dialog
-              console.log('Create new circle');
-            }}
+            onClick={() => setShowCreateCircle(true)}
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -213,7 +289,7 @@ function CircleBadgesSection() {
                       className="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg group-hover:shadow-xl transition-all duration-200 group-hover:scale-105 overflow-hidden"
                       style={{ backgroundColor: circle.color }}
                     >
-                      {circle.icon && circle.icon.startsWith('/uploads/') ? (
+                      {circle.icon && (circle.icon.startsWith('data:image') || circle.icon.startsWith('/uploads/')) ? (
                         <img
                           src={circle.icon}
                           alt={circle.name}
@@ -264,7 +340,7 @@ function CircleBadgesSection() {
                               className="w-8 h-8 rounded-full flex items-center justify-center text-white overflow-hidden"
                               style={{ backgroundColor: selectedCircle.color }}
                             >
-                              {selectedCircle.icon && selectedCircle.icon.startsWith('/uploads/') ? (
+                              {selectedCircle.icon && (selectedCircle.icon.startsWith('data:image') || selectedCircle.icon.startsWith('/uploads/')) ? (
                                 <img
                                   src={selectedCircle.icon}
                                   alt={selectedCircle.name}
@@ -420,6 +496,99 @@ function CircleBadgesSection() {
           </div>
         )}
       </CardContent>
+
+      {/* Create Circle Dialog */}
+      {showCreateCircle && (
+        <Dialog open={showCreateCircle} onOpenChange={setShowCreateCircle}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+            <DialogHeader>
+              <DialogTitle>Create New Circle Badge</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Circle Name</label>
+                <Input
+                  value={newCircleName}
+                  onChange={(e) => setNewCircleName(e.target.value)}
+                  placeholder="Enter circle name"
+                  maxLength={50}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium">Description (Optional)</label>
+                <Input
+                  value={newCircleDescription}
+                  onChange={(e) => setNewCircleDescription(e.target.value)}
+                  placeholder="Enter circle description"
+                  maxLength={200}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium">Circle Icon</label>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="flex-1"
+                    />
+                    {newCircleImageUrl && (
+                      <div className="flex items-center gap-2">
+                        <img
+                          src={newCircleImageUrl}
+                          alt="Circle icon preview"
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setNewCircleImageUrl('')
+                            setNewCircleImageFile(null)
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Upload a custom icon or leave empty to use default icon
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium">Color</label>
+                <div className="flex gap-2 mt-2">
+                  {colorOptions.map((colorOption) => (
+                    <button
+                      key={colorOption}
+                      className={`w-8 h-8 rounded-full border-2 ${
+                        newCircleColor === colorOption ? 'border-gray-800' : 'border-gray-300'
+                      }`}
+                      style={{ backgroundColor: colorOption }}
+                      onClick={() => setNewCircleColor(colorOption)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" onClick={() => setShowCreateCircle(false)} className="flex-1">
+                  Cancel
+                </Button>
+                <Button onClick={handleCreateCircle} disabled={!newCircleName.trim()} className="flex-1">
+                  Create Circle
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </Card>
   );
 }
