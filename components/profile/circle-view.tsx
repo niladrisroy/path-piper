@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -164,9 +165,24 @@ function CircleBadgesSection() {
         <div className="flex justify-between items-center">
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5 text-blue-600" />
-            My Circle Badges
+            My Circles
+            <Badge variant="secondary" className="ml-2">{circles.length} circles</Badge>
           </CardTitle>
-          <Badge variant="secondary">{circles.length} circles</Badge>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-8 w-8 p-0"
+            title="Create new circle"
+            onClick={() => {
+              // This should trigger the same circle creation functionality as in profile header
+              // For now, we'll add a placeholder - you'll need to implement the actual dialog
+              console.log('Create new circle');
+            }}
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
