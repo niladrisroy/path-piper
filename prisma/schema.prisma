@@ -92,7 +92,6 @@ model Profile {
   receivedCircleInvitations CircleInvitation[] @relation("ReceivedCircleInvitations")
   goals                 Goal[]
   achievements          UserAchievement[]
-  feedPosts             FeedPost[]
   
 
   @@map("profiles")
