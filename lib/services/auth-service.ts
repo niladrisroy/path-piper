@@ -138,7 +138,19 @@ export async function registerMentor(data: UserRegistrationData) {
   }
 }
 
-export async function registerInstitution(data: UserRegistrationData) {
+export interface InstitutionRegistrationData extends UserRegistrationData {
+  institutionData: {
+    institutionName: string;
+    institutionTypeId: number | null;
+    category: string;
+    website: string;
+    logoUrl: string;
+    coverImageUrl: string;
+    description: string;
+  };
+}
+
+export async function registerInstitution(data: InstitutionRegistrationData) {
   try {
     // Step 1: Use Supabase for auth only - create user in Supabase Auth
     const { data: authData, error: authError } =
@@ -165,15 +177,21 @@ export async function registerInstitution(data: UserRegistrationData) {
         firstName: data.firstName,
         lastName: data.lastName,
         role: "institution",
+        bio: data.institutionData.description || null,
       },
     });
 
-    // Create institution profile
+    // Create institution profile with all required fields
     await prisma.institutionProfile.create({
       data: {
         id: profile.id,
-        institutionName: data.firstName + " " + data.lastName, // Temporary, update during onboarding
+        institutionName: data.institutionData.institutionName,
+        institutionTypeId: data.institutionData.institutionTypeId,
+        website: data.institutionData.website || null,
+        logoUrl: data.institutionData.logoUrl || null,
+        coverImageUrl: data.institutionData.coverImageUrl || null,
         verified: false,
+        onboardingCompleted: false,
       },
     });
 

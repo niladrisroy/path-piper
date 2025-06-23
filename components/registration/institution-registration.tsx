@@ -6,10 +6,10 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Eye, EyeOff, Upload } from "lucide-react"
+import { Eye, EyeOff } from "lucide-react"
 
 interface InstitutionRegistrationProps {
   onComplete: () => void
@@ -24,7 +24,8 @@ export default function InstitutionRegistration({ onComplete }: InstitutionRegis
 
   const [formData, setFormData] = useState({
     institutionName: "",
-    institutionType: "",
+    category: "",
+    institutionTypeId: "",
     contactFirstName: "",
     contactLastName: "",
     contactTitle: "",
@@ -68,43 +69,63 @@ export default function InstitutionRegistration({ onComplete }: InstitutionRegis
       <p className="text-slate-600 mb-6 text-center">Connect your organization with students and mentors</p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="institutionName">
-            Institution Name
-            <RequiredIndicator />
-          </Label>
-          <Input
-            id="institutionName"
-            name="institutionName"
-            placeholder="Enter your institution's name"
-            value={formData.institutionName}
-            onChange={handleChange}
-            required
-            className="rounded-lg border-slate-300"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="institutionName">
+              Institution Name
+              <RequiredIndicator />
+            </Label>
+            <Input
+              id="institutionName"
+              name="institutionName"
+              placeholder="Enter institution name"
+              value={formData.institutionName}
+              onChange={handleChange}
+              required
+              className="rounded-lg border-slate-300"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="category">
+              Category
+              <RequiredIndicator />
+            </Label>
+            <Select value={formData.category} onValueChange={(value) => handleSelectChange("category", value)}>
+              <SelectTrigger className="rounded-lg border-slate-300">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="educational">Educational</SelectItem>
+                <SelectItem value="training">Training</SelectItem>
+                <SelectItem value="research">Research</SelectItem>
+                <SelectItem value="vocational">Vocational</SelectItem>
+                <SelectItem value="arts">Arts & Performance</SelectItem>
+                <SelectItem value="sports">Sports</SelectItem>
+                <SelectItem value="technology">Technology</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="institutionType">
-            Institution Type
+          <Label htmlFor="institutionTypeId">
+            Institution Type ID
             <RequiredIndicator />
           </Label>
-          <Select
-            value={formData.institutionType}
-            onValueChange={(value) => handleSelectChange("institutionType", value)}
-            required
-          >
+          <Select value={formData.institutionTypeId} onValueChange={(value) => handleSelectChange("institutionTypeId", value)}>
             <SelectTrigger className="rounded-lg border-slate-300">
               <SelectValue placeholder="Select institution type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="high_school">High School</SelectItem>
-              <SelectItem value="college">College/University</SelectItem>
-              <SelectItem value="community_college">Community College</SelectItem>
-              <SelectItem value="vocational">Vocational/Trade School</SelectItem>
-              <SelectItem value="nonprofit">Nonprofit Organization</SelectItem>
-              <SelectItem value="government">Government Agency</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
+              <SelectItem value="1">University</SelectItem>
+              <SelectItem value="2">College</SelectItem>
+              <SelectItem value="3">School</SelectItem>
+              <SelectItem value="4">Training Center</SelectItem>
+              <SelectItem value="5">Institute</SelectItem>
+              <SelectItem value="6">Academy</SelectItem>
+              <SelectItem value="7">Other</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -253,7 +274,7 @@ export default function InstitutionRegistration({ onComplete }: InstitutionRegis
           <Label>Institution Logo</Label>
           <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center">
             <div className="flex flex-col items-center">
-              <Upload className="h-8 w-8 text-slate-400 mb-2" />
+              <Eye className="h-8 w-8 text-slate-400 mb-2" />
               <p className="text-sm text-slate-600 mb-1">Drag and drop your logo here, or click to browse</p>
               <p className="text-xs text-slate-500">PNG, JPG or SVG (max. 2MB)</p>
               <Button type="button" variant="outline" className="mt-4 rounded-lg border-slate-300">
