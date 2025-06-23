@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
@@ -7,7 +6,19 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Check, X, Clock, Users } from "lucide-react"
+import {
+  Users,
+  UserPlus,
+  X,
+  Check,
+  Clock,
+  MessageCircle,
+  Crown,
+  Shield,
+  Star,
+  GraduationCap,
+  Building,
+} from "lucide-react"
 
 interface ConnectionRequest {
   id: string
