@@ -343,10 +343,18 @@ export default function ConnectionRequestsView() {
                           <div className="flex items-center space-x-3">
                             {/* Circle Badge */}
                             <div 
-                              className="w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-sm"
+                              className="w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-sm overflow-hidden"
                               style={{ backgroundColor: invitation.circle.color }}
                             >
-                              {getIconComponent(invitation.circle.icon)}
+                              {invitation.circle.icon && (invitation.circle.icon.startsWith('data:image') || invitation.circle.icon.startsWith('/uploads/')) ? (
+                                <img
+                                  src={invitation.circle.icon}
+                                  alt={invitation.circle.name}
+                                  className="w-full h-full object-cover rounded-full"
+                                />
+                              ) : (
+                                getIconComponent(invitation.circle.icon)
+                              )}
                             </div>
 
                             <div className="flex-1">
