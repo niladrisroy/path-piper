@@ -266,8 +266,8 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
               Add a new achievement to your profile
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <CardContent className="pb-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <Label htmlFor="name">Achievement Name *</Label>
                 <Input
@@ -343,40 +343,47 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                 />
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <Label htmlFor="achievementImage">Achievement Icon</Label>
-                <div className="space-y-3">
-                  <div className="flex flex-col gap-3">
-                    <Input
-                      id="achievementImage"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      disabled={uploadingImage}
-                      className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pathpiper-teal file:text-white hover:file:bg-pathpiper-teal/80"
-                    />
+                <div className="space-y-4">
+                  <div className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                    <div className="flex flex-col gap-3">
+                      <Input
+                        id="achievementImage"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={uploadingImage}
+                        className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pathpiper-teal file:text-white hover:file:bg-pathpiper-teal/80"
+                      />
+                      <p className="text-xs text-gray-500">
+                        Upload an icon for your achievement (JPG, PNG up to 5MB)
+                      </p>
+                    </div>
+                    
                     {uploadingImage && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <div className="flex items-center gap-2 text-sm text-gray-600 p-3 mt-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-pathpiper-teal"></div>
                         <span>Uploading image...</span>
                       </div>
                     )}
+                    
+                    {formData.achievementImageIcon && (
+                      <div className="flex items-center gap-3 p-3 mt-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                        <Image className="h-4 w-4 text-green-600" />
+                        <span className="text-sm text-green-600 font-medium">Image uploaded successfully</span>
+                        <img 
+                          src={formData.achievementImageIcon} 
+                          alt="Achievement icon" 
+                          className="h-10 w-10 object-cover rounded-lg border border-green-200"
+                        />
+                      </div>
+                    )}
                   </div>
-                  {formData.achievementImageIcon && (
-                    <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                      <Image className="h-4 w-4 text-green-600" />
-                      <span className="text-sm text-green-600 font-medium">Image uploaded successfully</span>
-                      <img 
-                        src={formData.achievementImageIcon} 
-                        alt="Achievement icon" 
-                        className="h-10 w-10 object-cover rounded-lg border border-green-200"
-                      />
-                    </div>
-                  )}
                 </div>
               </div>
 
-              <div className="flex gap-2 mt-6">
+              <div className="flex gap-2 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting ? 'Adding...' : 'Add Achievement'}
                 </Button>
