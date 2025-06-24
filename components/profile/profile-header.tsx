@@ -137,8 +137,8 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
     }
   }, [isOwnProfile, studentProp.id, connectionCounts])
 
-  // State for recent achievement
-  const [recentAchievement, setRecentAchievement] = useState<Achievement | null>(null)
+  // State for recent achievements
+  const [recentAchievements, setRecentAchievements] = useState<Achievement[]>([])
   const [achievementLoading, setAchievementLoading] = useState(true)
 
   // Fetch user's circles, connections, and achievements
@@ -173,16 +173,16 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
       }
     }
 
-    const fetchRecentAchievement = async () => {
+    const fetchRecentAchievements = async () => {
       try {
         const response = await fetch('/api/achievements', {
           credentials: 'include'
         })
         if (response.ok) {
           const data = await response.json()
-          // Get the most recent achievement (they're already sorted by date desc in the API)
+          // Get the recent achievements (they're already sorted by date desc in the API)
           if (data.achievements && data.achievements.length > 0) {
-            setRecentAchievement(data.achievements[0])
+            setRecentAchievements(data.achievements)
           }
         }
       } catch (error) {
@@ -195,7 +195,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
     if (isOwnProfile) {
       fetchCircles()
       fetchConnections()
-      fetchRecentAchievement()
+      fetchRecentAchievements()
     } else {
       setAchievementLoading(false)
     }
@@ -747,10 +747,10 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                     </div>
                   </div>
 
-                  {/* Recent Achievement section */}
+                  {/* Recent Achievements section */}
                   <div className="mt-3">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400">Recent Achievement</h3>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400">Recent Achievements</h3>
                       {isOwnProfile && (
                         <button
                           onClick={() => router.push('/student/profile/edit?section=achievements')}
@@ -761,41 +761,77 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                       )}
                     </div>
                     {achievementLoading ? (
-                      <div className="bg-sky-50 dark:bg-sky-900/20 p-2 rounded-lg">
-                        <div className="animate-pulse flex items-center gap-3">
-                          <div className="bg-gray-200 dark:bg-gray-700 h-8 w-8 rounded-full"></div>
-                          <div className="flex-1">
-                            <div className="bg-gray-200 dark:bg-gray-700 h-3 w-20 rounded mb-1"></div>
-                            <div className="bg-gray-200 dark:bg-gray-700 h-2 w-16 rounded"></div>
-                          </div>
+                      <div className="bg-sky-50 dark:bg-sky-900/20 p-3 rounded-lg">
+                        <div className="flex gap-3 overflow-x-auto pb-2">
+                          {[...Array(3)].map((_, i) => (
+                            <div key={i} className="flex flex-col items-center min-w-[60px] shrink-0">
+                              <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-12 w-12 rounded-full mb-1"></div>
+                              <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-2 w-8 rounded"></div>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    ) : recentAchievement ? (
-                      <div className="bg-sky-50 dark:bg-sky-900/20 p-2 rounded-lg flex items-center gap-3">
-                        <div className="bg-yellow-100 dark:bg-yellow-900/40 h-8 w-8 rounded-full flex items-center justify-center">
-                          {recentAchievement.achievementImageIcon ? (
-                            <Image
-                              src={recentAchievement.achievementImageIcon}
-                              alt={recentAchievement.name}
-                              width={32}
-                              height={32}
-                              className="rounded-full"
-                            />
-                          ) : (
-                            <Award className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                          )}
+                    ) : recentAchievements && recentAchievements.length > 0 ? (
+                      <div className="bg-sky-50 dark:bg-sky-900/20 p-3 rounded-lg">
+                        <div className="flex gap-3 overflow-x-auto pb-2 hide-scrollbar">
+                          {recentAchievements.slice(0, 5).map((achievement, index) => (
+                            <div 
+                              key={achievement.id} 
+                              className="flex flex-col items-center min-w-[60px] shrink-0 group cursor-pointer"
+                              title={`${achievement.name} - Awarded ${format(new Date(achievement.dateOfAchievement), 'MMM dd, yyyy')}`}
+                            >
+                              <div 
+                                className={`h-12 w-12 rounded-full flex items-center justify-center mb-1 transition-transform group-hover:scale-105 ${
+                                  index % 4 === 0
+                                    ? "bg-gradient-to-r from-yellow-100 to-amber-100 dark:from-yellow-900/40 dark:to-amber-900/40"
+                                    : index % 4 === 1
+                                      ? "bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/40 dark:to-cyan-900/40"
+                                      : index % 4 === 2
+                                        ? "bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40"
+                                        : "bg-gradient-to-r from-green-100 to-teal-100 dark:from-green-900/40 dark:to-teal-900/40"
+                                }`}
+                              >
+                                {achievement.achievementImageIcon ? (
+                                  <img
+                                    src={achievement.achievementImageIcon}
+                                    alt={achievement.name}
+                                    className="h-8 w-8 rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <Award 
+                                    className={`h-6 w-6 ${
+                                      index % 4 === 0
+                                        ? "text-yellow-600 dark:text-yellow-400"
+                                        : index % 4 === 1
+                                          ? "text-blue-600 dark:text-blue-400"
+                                          : index % 4 === 2
+                                            ? "text-purple-600 dark:text-purple-400"
+                                            : "text-green-600 dark:text-green-400"
+                                    }`}
+                                  />
+                                )}
+                              </div>
+                              <span className="text-[10px] text-center text-gray-600 dark:text-gray-400 font-medium truncate w-full">
+                                {achievement.name.length > 8 ? `${achievement.name.substring(0, 8)}...` : achievement.name}
+                              </span>
+                            </div>
+                          ))}
                         </div>
-                        <div>
-                          <h4 className="text-xs font-medium">{recentAchievement.name}</h4>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Awarded {format(new Date(recentAchievement.dateOfAchievement), 'MMM dd, yyyy')}
-                          </p>
-                        </div>
+                        {recentAchievements.length > 5 && (
+                          <div className="mt-2 text-center">
+                            <button
+                              onClick={() => router.push('/student/profile?tab=achievements')}
+                              className="text-[10px] text-pathpiper-teal hover:text-pathpiper-teal/80 font-medium transition-colors"
+                            >
+                              View All ({recentAchievements.length})
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ) : (
-                      <div className="bg-gray-50 dark:bg-gray-800/50 p-2 rounded-lg flex items-center gap-3">
-                        <div className="bg-gray-100 dark:bg-gray-700 h-8 w-8 rounded-full flex items-center justify-center">
-                          <Award className="h-4 w-4 text-gray-400" />
+                      <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg flex items-center gap-3">
+                        <div className="bg-gray-100 dark:bg-gray-700 h-12 w-12 rounded-full flex items-center justify-center">
+                          <Award className="h-6 w-6 text-gray-400" />
                         </div>
                         <div>
                           <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400">No achievements yet</h4>
