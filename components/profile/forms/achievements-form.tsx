@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { CalendarIcon, Plus, Trash2, Trophy } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { CalendarIcon, Plus, Trash2, Trophy, Upload, Image } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
 
@@ -18,6 +19,19 @@ interface Achievement {
   description: string
   dateOfAchievement: string
   createdAt: string
+  achievementTypeId?: number
+  achievementImageIcon?: string
+}
+
+interface AchievementCategory {
+  id: number
+  name: string
+}
+
+interface AchievementType {
+  id: number
+  name: string
+  categoryId: number
 }
 
 interface AchievementsFormProps {
@@ -26,18 +40,34 @@ interface AchievementsFormProps {
 
 export default function AchievementsForm({ userId }: AchievementsFormProps) {
   const [achievements, setAchievements] = useState<Achievement[]>([])
+  const [categories, setCategories] = useState<AchievementCategory[]>([])
+  const [types, setTypes] = useState<AchievementType[]>([])
   const [loading, setLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    dateOfAchievement: ''
+    dateOfAchievement: '',
+    categoryId: '',
+    achievementTypeId: '',
+    achievementImageIcon: ''
   })
 
   useEffect(() => {
     fetchAchievements()
+    fetchCategories()
   }, [])
+
+  useEffect(() => {
+    if (formData.categoryId) {
+      fetchTypes(formData.categoryId)
+    } else {
+      setTypes([])
+      setFormData(prev => ({ ...prev, achievementTypeId: '' }))
+    }
+  }, [formData.categoryId])
 
   const fetchAchievements = async () => {
     try {
@@ -58,11 +88,75 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
     }
   }
 
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/achievement-categories', {
+        credentials: 'include'
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setCategories(data.categories || [])
+      } else {
+        console.error('Failed to fetch achievement categories')
+      }
+    } catch (error) {
+      console.error('Error fetching achievement categories:', error)
+    }
+  }
+
+  const fetchTypes = async (categoryId: string) => {
+    try {
+      const response = await fetch(`/api/achievement-types?categoryId=${categoryId}`, {
+        credentials: 'include'
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setTypes(data.types || [])
+      } else {
+        console.error('Failed to fetch achievement types')
+      }
+    } catch (error) {
+      console.error('Error fetching achievement types:', error)
+    }
+  }
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setUploadingImage(true)
+    try {
+      const formDataUpload = new FormData()
+      formDataUpload.append('file', file)
+
+      const response = await fetch('/api/upload/achievement-icon', {
+        method: 'POST',
+        body: formDataUpload,
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setFormData(prev => ({ ...prev, achievementImageIcon: data.url }))
+        toast.success('Image uploaded successfully!')
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Failed to upload image')
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      toast.error('Failed to upload image')
+    } finally {
+      setUploadingImage(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.name.trim() || !formData.description.trim() || !formData.dateOfAchievement) {
-      toast.error('All fields are required')
+    if (!formData.name.trim() || !formData.description.trim() || !formData.dateOfAchievement || !formData.achievementTypeId) {
+      toast.error('Name, description, date, and achievement type are required')
       return
     }
 
@@ -75,12 +169,25 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          name: formData.name,
+          description: formData.description,
+          dateOfAchievement: formData.dateOfAchievement,
+          achievementTypeId: formData.achievementTypeId,
+          achievementImageIcon: formData.achievementImageIcon
+        })
       })
 
       if (response.ok) {
         toast.success('Achievement added successfully!')
-        setFormData({ name: '', description: '', dateOfAchievement: '' })
+        setFormData({ 
+          name: '', 
+          description: '', 
+          dateOfAchievement: '', 
+          categoryId: '', 
+          achievementTypeId: '', 
+          achievementImageIcon: '' 
+        })
         setShowAddForm(false)
         await fetchAchievements()
       } else {
@@ -184,6 +291,47 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                 />
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="category">Category *</Label>
+                  <Select
+                    value={formData.categoryId}
+                    onValueChange={(value) => setFormData({ ...formData, categoryId: value, achievementTypeId: '' })}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="type">Achievement Type *</Label>
+                  <Select
+                    value={formData.achievementTypeId}
+                    onValueChange={(value) => setFormData({ ...formData, achievementTypeId: value })}
+                    disabled={!formData.categoryId}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder={formData.categoryId ? "Select achievement type" : "Select category first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {types.map((type) => (
+                        <SelectItem key={type.id} value={type.id.toString()}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div>
                 <Label htmlFor="dateOfAchievement">Date of Achievement *</Label>
                 <Input
@@ -193,6 +341,39 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                   onChange={(e) => setFormData({ ...formData, dateOfAchievement: e.target.value })}
                   required
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="achievementImage">Achievement Icon</Label>
+                <div className="mt-2 space-y-2">
+                  <div className="flex items-center gap-4">
+                    <Input
+                      id="achievementImage"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={uploadingImage}
+                      className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pathpiper-teal file:text-white hover:file:bg-pathpiper-teal/80"
+                    />
+                    {uploadingImage && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-pathpiper-teal"></div>
+                        Uploading...
+                      </div>
+                    )}
+                  </div>
+                  {formData.achievementImageIcon && (
+                    <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <Image className="h-4 w-4 text-green-600" />
+                      <span className="text-sm text-green-600">Image uploaded successfully</span>
+                      <img 
+                        src={formData.achievementImageIcon} 
+                        alt="Achievement icon" 
+                        className="h-8 w-8 object-cover rounded"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-2">
@@ -241,7 +422,15 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <Trophy className="h-5 w-5 text-pathpiper-teal" />
+                      {achievement.achievementImageIcon ? (
+                        <img 
+                          src={achievement.achievementImageIcon} 
+                          alt={achievement.name}
+                          className="h-5 w-5 object-cover rounded"
+                        />
+                      ) : (
+                        <Trophy className="h-5 w-5 text-pathpiper-teal" />
+                      )}
                       <h4 className="text-lg font-semibold">{achievement.name}</h4>
                     </div>
                     <p className="text-gray-600 dark:text-gray-400 mb-3">

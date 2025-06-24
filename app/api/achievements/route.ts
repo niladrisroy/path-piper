@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@supabase/supabase-js'
@@ -78,13 +77,13 @@ export async function POST(request: NextRequest) {
 
     const userId = authData.user.id
     const body = await request.json()
-    const { name, description, dateOfAchievement } = body
+    const { name, description, dateOfAchievement, achievementTypeId, achievementImageIcon } = body
 
-    // Validate required fields
-    if (!name || !description || !dateOfAchievement) {
-      return NextResponse.json({ 
-        error: 'Name, description, and date of achievement are required' 
-      }, { status: 400 })
+    if (!name || !description || !dateOfAchievement || !achievementTypeId) {
+      return NextResponse.json(
+        { error: 'Name, description, date, and achievement type are required' },
+        { status: 400 }
+      )
     }
 
     // Create new achievement
@@ -93,7 +92,9 @@ export async function POST(request: NextRequest) {
         userId,
         name,
         description,
-        dateOfAchievement: new Date(dateOfAchievement)
+        dateOfAchievement: new Date(dateOfAchievement),
+        achievementTypeId: parseInt(achievementTypeId),
+        achievementImageIcon: achievementImageIcon || null
       }
     })
 
