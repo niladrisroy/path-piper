@@ -508,16 +508,46 @@ model Goal {
   @@map("goals")
 }
 
-model UserAchievement {
-  id                Int      @id @default(autoincrement())
-  userId            String   @map("user_id") @db.Uuid
-  name              String
-  description       String
-  dateOfAchievement DateTime @map("date_of_achievement") @db.Date
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+model AchievementCategory {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
-  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  types AchievementType[]
+
+  @@map("achievement_categories")
+}
+
+model AchievementType {
+  id          Int      @id @default(autoincrement())
+  categoryId  Int      @map("category_id")
+  name        String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  category           AchievementCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  userAchievements   UserAchievement[]
+
+  @@unique([categoryId, name])
+  @@map("achievement_types")
+}
+
+model UserAchievement {
+  id                     Int      @id @default(autoincrement())
+  userId                 String   @map("user_id") @db.Uuid
+  name                   String
+  description            String
+  dateOfAchievement      DateTime @map("date_of_achievement") @db.Date
+  achievementTypeId      Int?     @map("achievement_type_id")
+  achievementImageIcon   String?  @map("achievement_image_icon")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  user           Profile          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementType AchievementType? @relation(fields: [achievementTypeId], references: [id])
 
   @@map("user_achievements")
 }
