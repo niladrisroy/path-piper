@@ -73,15 +73,15 @@ export default function InterestsStep({
         }
         const categories = await interestsResponse.json()
         console.log('✅ Interest categories loaded:', categories.length, 'categories')
-        setInterestCategories(categories)
-        setFilteredCategories(categories)
 
-        // Load user's existing interests if not provided as initial data
+        // Load user's existing interests first to filter custom interests
+        let userSelectedInterests = []
         if (initialData.length === 0) {
           const userInterestsResponse = await fetch('/api/user/interests')
           if (userInterestsResponse.ok) {
             const { interests } = await userInterestsResponse.json()
             console.log('✅ User existing interests loaded:', interests.length, 'interests:', interests)
+            userSelectedInterests = interests
             setSelectedInterests(interests)
           } else {
             console.log('❌ Failed to load user interests:', userInterestsResponse.status)
@@ -93,8 +93,32 @@ export default function InterestsStep({
             initialData.includes(interest.name)
           )
           console.log('✅ Matched initial interests for age group', user.ageGroup, ':', matchedInterests.length, 'out of', initialData.length)
+          userSelectedInterests = matchedInterests
           setSelectedInterests(matchedInterests)
         }
+
+        // Filter custom interests to show only those selected by the user
+        const filteredCategories = categories.map(category => {
+          if (category.name === 'Custom') {
+            // Only show custom interests that the user has actually selected
+            const userSelectedCustomInterests = category.interests.filter(interest =>
+              userSelectedInterests.some(selectedInterest => selectedInterest.id === interest.id)
+            )
+            return {
+              ...category,
+              interests: userSelectedCustomInterests
+            }
+          }
+          return category
+        }).filter(category => 
+          // Remove Custom category entirely if user has no custom interests selected
+          category.name !== 'Custom' || category.interests.length > 0
+        )
+
+        console.log('✅ Filtered categories (Custom interests filtered to user-selected only):', filteredCategories.length, 'categories')
+        setInterestCategories(filteredCategories)
+        setFilteredCategories(filteredCategories)
+
       } catch (error) {
         console.error('Error fetching user data and interests:', error)
         toast.error('Failed to load interests. Please try again.')
@@ -139,20 +163,49 @@ export default function InterestsStep({
 
   useEffect(() => {
     if (searchTerm.trim() === "") {
-      setFilteredCategories(interestCategories)
+      // When no search term, show all categories but filter custom interests
+      const categoriesWithFilteredCustom = interestCategories.map(category => {
+        if (category.name === 'Custom') {
+          // For custom category, only show interests that are selected by the user
+          const userSelectedCustomInterests = category.interests.filter(interest =>
+            selectedInterests.some(selectedInterest => selectedInterest.id === interest.id)
+          )
+          return {
+            ...category,
+            interests: userSelectedCustomInterests
+          }
+        }
+        return category
+      }).filter(category => 
+        // Remove Custom category entirely if no custom interests are selected
+        category.name !== 'Custom' || category.interests.length > 0
+      )
+      
+      setFilteredCategories(categoriesWithFilteredCustom)
       return
     }
 
     const term = searchTerm.toLowerCase()
     const filtered = interestCategories
-      .map((category) => ({
-        name: category.name,
-        interests: category.interests.filter((interest) => interest.name.toLowerCase().includes(term)),
-      }))
+      .map((category) => {
+        let filteredInterests = category.interests.filter((interest) => interest.name.toLowerCase().includes(term))
+        
+        // For custom category, also filter to only show user-selected interests
+        if (category.name === 'Custom') {
+          filteredInterests = filteredInterests.filter(interest =>
+            selectedInterests.some(selectedInterest => selectedInterest.id === interest.id)
+          )
+        }
+        
+        return {
+          name: category.name,
+          interests: filteredInterests,
+        }
+      })
       .filter((category) => category.interests.length > 0)
 
     setFilteredCategories(filtered)
-  }, [searchTerm, interestCategories])
+  }, [searchTerm, interestCategories, selectedInterests])
 
   const toggleInterest = (interest: Interest) => {
     const isSelected = selectedInterests.some(i => i.id === interest.id)
@@ -188,6 +241,33 @@ export default function InterestsStep({
     }
 
     setSelectedInterests([...selectedInterests, customInterestObj])
+    
+    // Add the custom interest to the Custom category in interestCategories if it doesn't exist
+    setInterestCategories(prevCategories => {
+      const updatedCategories = prevCategories.map(category => {
+        if (category.name === 'Custom') {
+          // Add the new custom interest if it's not already there
+          if (!category.interests.some(interest => interest.name === trimmedInterest)) {
+            return {
+              ...category,
+              interests: [...category.interests, customInterestObj]
+            }
+          }
+        }
+        return category
+      })
+      
+      // If no Custom category exists, create one
+      if (!updatedCategories.some(cat => cat.name === 'Custom')) {
+        updatedCategories.push({
+          name: 'Custom',
+          interests: [customInterestObj]
+        })
+      }
+      
+      return updatedCategories
+    })
+    
     setCustomInterest("")
   }
 
