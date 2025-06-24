@@ -352,7 +352,7 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
                          field.value === "middle_school" ? "Middle School (11-12 years)" :
                          field.value === "high_school" ? "High School (13-17 years)" :
                          field.value === "young_adult" ? "Young Adult (18+ years)" :
-                         "Automatically calculated") : "Automatically calculated"
+                         field.value) : "Calculating..."
                       }
                       disabled
                       className="bg-slate-50 border-slate-200 cursor-not-allowed"

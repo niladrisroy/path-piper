@@ -102,6 +102,36 @@ export default function SkillsStep({
             const errorText = await skillsResponse.text()
             console.error('Failed to fetch skills:', skillsResponse.status, errorText)
           }
+
+          // Fetch existing user skills to preselect them
+          try {
+            const userSkillsResponse = await fetch('/api/user/skills')
+            if (userSkillsResponse.ok) {
+              const userSkillsData = await userSkillsResponse.json()
+              console.log('✅ Fetched existing user skills:', userSkillsData.skills)
+              
+              // Convert the existing skills to the format expected by the component
+              const existingSkills = userSkillsData.skills.map((userSkill: any) => ({
+                name: userSkill.skill.name,
+                level: userSkill.proficiencyLevel,
+                id: userSkill.skill.id
+              }))
+              
+              setSkills(existingSkills)
+              setOriginalSkills(existingSkills)
+              console.log('✅ Preselected existing skills in onboarding:', existingSkills)
+            } else {
+              console.log('ℹ️ No existing skills found or error fetching them')
+              // Start with empty skills if no existing skills
+              setSkills(initialData || [])
+              setOriginalSkills(initialData || [])
+            }
+          } catch (error) {
+            console.error('Error fetching existing skills:', error)
+            // Start with empty skills on error
+            setSkills(initialData || [])
+            setOriginalSkills(initialData || [])
+          }
         } else {
           console.error('Failed to fetch user data:', userResponse.status)
           // Fallback to young_adult age group for onboarding
@@ -118,13 +148,16 @@ export default function SkillsStep({
             const errorText = await skillsResponse.text()
             console.error('Failed to fetch skills:', skillsResponse.status, errorText)
           }
-        }
 
-        // For onboarding, start with empty skills
-        setSkills(initialData || [])
-        setOriginalSkills(initialData || [])
+          // Start with empty skills for fallback
+          setSkills(initialData || [])
+          setOriginalSkills(initialData || [])
+        }
       } catch (error) {
         console.error('Error fetching data:', error)
+        // Start with empty skills on error
+        setSkills(initialData || [])
+        setOriginalSkills(initialData || [])
       } finally {
         setLoading(false)
       }
