@@ -427,30 +427,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                             {actualConnectionCounts?.mentors || 0}
                           </span>
                         </div>
-                        <div className="flex items-center" data-tooltip="Institutions connected with them">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="h-3 w-3 text-pink-500"
-                            data-tooltip="Institutions"
-                          >
-                            <rect x="4" y="9" width="16" height="12"></rect>
-                            <path d="m12 3-8 6h16l-8-6z"></path>
-                            <path d="M8 21v-4"></path>
-                            <path d="M16 21v-4"></path>
-                            <path d="M12 21v-4"></path>
-                          </svg>
-                          <span className="text-[10px] ml-0.5" data-tooltip="Institutions connected with them">
-                            {actualConnectionCounts?.institutions || 0}
-                          </span>
-                        </div>
+                        
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 text-blue-600 dark:text-blue-300 px-3 py-1.5 rounded-full">
