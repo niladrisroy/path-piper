@@ -486,10 +486,14 @@ export default function Onboarding() {
                     }
                   }}
                   onNext={handleNext}
-                  onSkip={handleNext}
+                  onSkip={() => {
+                    console.log('🔄 Skipping interests step');
+                    setUserData({ ...userData, interests: [] });
+                    handleNext();
+                  }}
                   ageGroup={userData.ageGroup}
                 />
-              )}
+              )}</FormControl>
 
               {step === 3 && (
                 <SkillsStep
@@ -503,7 +507,11 @@ export default function Onboarding() {
                     console.log('✅ Skills data updated in local state');
                   }}
                   onNext={handleNext}
-                  onSkip={handleNext}
+                  onSkip={() => {
+                    console.log('🔄 Skipping skills step');
+                    setUserData({ ...userData, skills: [] });
+                    handleNext();
+                  }}
                   ageGroup={userData.ageGroup}
                 />
               )}
@@ -527,7 +535,11 @@ export default function Onboarding() {
                     }
                   }}
                   onNext={handleNext}
-                  onSkip={handleNext}
+                  onSkip={() => {
+                    console.log('🔄 Skipping education step');
+                    setUserData({ ...userData, educationHistory: [] });
+                    handleNext();
+                  }}
                   ageGroup={userData.ageGroup}
                 />
               )}
@@ -572,7 +584,14 @@ export default function Onboarding() {
                     }
                   }}
                   onNext={handleSubmit}
-                  onSkip={handleSubmit}
+                  onSkip={() => {
+                    console.log('🔄 Skipping goals step');
+                    setUserData({ ...userData, goals: [] });
+                    // Complete onboarding even when skipping goals
+                    console.log('Goals skipped - completing onboarding');
+                    toast.success('Onboarding completed successfully!');
+                    setStep(6); // Move to completion step
+                  }}
                 />
               )}
 

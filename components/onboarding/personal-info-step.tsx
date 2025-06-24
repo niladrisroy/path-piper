@@ -352,16 +352,19 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
                          field.value === "middle_school" ? "Middle School (11-12 years)" :
                          field.value === "high_school" ? "High School (13-17 years)" :
                          field.value === "young_adult" ? "Young Adult (18+ years)" :
-                         "Calculated from birth date") : "Calculated from birth date"
+                         "Automatically calculated") : "Automatically calculated"
                       }
                       disabled
                       className="bg-slate-50 border-slate-200 cursor-not-allowed"
                     />
                   </FormControl>
+                  <FormDescription>
+                    Age group is automatically calculated from your birth date
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            /></FormControl>
 
             <FormField
               control={form.control}
