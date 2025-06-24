@@ -117,6 +117,13 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
     console.log("📊 Initial data received:", initialData);
 
     if (initialData) {
+      // Calculate age group immediately if birth data is available
+      let calculatedAgeGroup = initialData.ageGroup || "";
+      if (initialData.birthMonth && initialData.birthYear && !calculatedAgeGroup) {
+        calculatedAgeGroup = calculateAgeGroup(initialData.birthMonth, initialData.birthYear);
+        console.log("🧮 Calculated age group from birth data:", calculatedAgeGroup);
+      }
+
       // Create form data with proper defaults
       const initialFormData = {
         firstName: initialData.firstName || "",
@@ -126,7 +133,7 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
         educationLevel: initialData.educationLevel || "",
         birthMonth: initialData.birthMonth || "",
         birthYear: initialData.birthYear || "",
-        ageGroup: initialData.ageGroup || "",
+        ageGroup: calculatedAgeGroup,
         profileImage: initialData.profileImage || null
       };
 
@@ -141,7 +148,8 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
       console.log("🎯 Education Level:", initialData.educationLevel);
       console.log("🎯 Birth Month:", initialData.birthMonth);
       console.log("🎯 Birth Year:", initialData.birthYear);
-      console.log("🎯 Age Group:", initialData.ageGroup);
+      console.log("🎯 Age Group (original):", initialData.ageGroup);
+      console.log("🎯 Age Group (calculated):", calculatedAgeGroup);
       console.log("🎯 Profile Image:", initialData.profileImage);
       console.log("🎯 =================================");
 
@@ -359,12 +367,10 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
                   <FormControl>
                     <Input 
                       value={field.value ? 
-                        (field.value === "early_childhood" ? "Early Childhood (Under 5)" :
-                         field.value === "elementary" ? "Elementary (5-10 years)" :
-                         field.value === "middle_school" ? "Middle School (11-12 years)" :
-                         field.value === "high_school" ? "High School (13-17 years)" :
-                         field.value === "young_adult" ? "Young Adult (18+ years)" :
-                         field.value) : "Calculating..."
+                        getAgeGroupDisplayName(field.value as AgeGroup) : 
+                        (watchedBirthMonth && watchedBirthYear ? 
+                          getAgeGroupDisplayName(calculateAgeGroup(watchedBirthMonth, watchedBirthYear) as AgeGroup) : 
+                          "Not calculated yet")
                       }
                       disabled
                       className="bg-slate-50 border-slate-200 cursor-not-allowed"
