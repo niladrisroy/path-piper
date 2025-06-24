@@ -1,7 +1,4 @@
-The code is modified to auto-calculate the age group in the onboarding completion process based on the provided birth data.
-```
 
-```replit_final_file
 "use client"
 
 import { useState, useEffect } from "react"
