@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useRef } from "react"
@@ -66,10 +65,10 @@ export default function LoginPage() {
       if (response.ok && data.success) {
         toast.success('Login successful!')
         invalidateUserCache();
-        
+
         // Show redirecting state
         setIsRedirecting(true)
-        
+
         // Small delay to ensure smooth transition
         setTimeout(() => {
           // Redirect based on user role and onboarding status
@@ -107,6 +106,12 @@ export default function LoginPage() {
     }
   }
 
+  // Suppress hydration warnings for browser extension attributes
+  useEffect(() => {
+    // This runs only on client side to suppress hydration mismatches
+    // caused by browser extensions adding attributes like fdprocessedid
+  }, [])
+
   return (
     <main className="min-h-screen flex flex-col bg-white">
       {/* Loading overlay when redirecting */}
@@ -134,7 +139,7 @@ export default function LoginPage() {
         </Link>
         <div>
           <Link href="/signup">
-            <Button variant="ghost" className="text-teal-500 hover:text-teal-600 hover:bg-teal-50">
+            <Button variant="ghost" className="text-teal-500 hover:text-teal-600 hover:bg-teal-50" suppressHydrationWarning>
               Sign Up
             </Button>
           </Link>
@@ -286,6 +291,7 @@ export default function LoginPage() {
                       required
                       disabled={loading || isRedirecting}
                       className="rounded-lg border-slate-300"
+                      suppressHydrationWarning
                     />
                   </div>
                   <div className="space-y-2">
@@ -299,12 +305,14 @@ export default function LoginPage() {
                       required
                       disabled={loading || isRedirecting}
                       className="rounded-lg border-slate-300"
+                      suppressHydrationWarning
                     />
                   </div>
                   <Button 
                     type="submit" 
                     className="w-full bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full py-6"
                     disabled={loading || isRedirecting}
+                    suppressHydrationWarning
                   >
                     {loading ? "Signing in..." : isRedirecting ? "Redirecting..." : "Sign in"}
                   </Button>
