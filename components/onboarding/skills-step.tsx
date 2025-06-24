@@ -60,6 +60,7 @@ export default function SkillsStep({
           const skillsResponse = await fetch(`/api/skills?ageGroup=${actualAgeGroup}`)
           if (skillsResponse.ok) {
             const skillsData = await skillsResponse.json()
+            console.log('✅ Fetched skill categories:', skillsData.categories)
             setSkillCategories(skillsData.categories || [])
           } else {
             const errorText = await skillsResponse.text()
@@ -67,14 +68,15 @@ export default function SkillsStep({
           }
         } else {
           console.error('Failed to fetch user data:', userResponse.status)
-          // Fallback to middle_school age group since that's the user's actual age group
-          const fallbackAgeGroup = "middle_school"
+          // Fallback to young_adult age group for onboarding
+          const fallbackAgeGroup = "young_adult"
           setUserAgeGroup(fallbackAgeGroup)
           console.log('🔍 Using fallback age group for skills:', fallbackAgeGroup)
 
           const skillsResponse = await fetch(`/api/skills?ageGroup=${fallbackAgeGroup}`)
           if (skillsResponse.ok) {
             const skillsData = await skillsResponse.json()
+            console.log('✅ Fetched skill categories (fallback):', skillsData.categories)
             setSkillCategories(skillsData.categories || [])
           } else {
             const errorText = await skillsResponse.text()
@@ -82,26 +84,9 @@ export default function SkillsStep({
           }
         }
 
-        // Fetch user's current skills
-        const userSkillsResponse = await fetch('/api/user/skills')
-        if (userSkillsResponse.ok) {
-          const userSkillsData = await userSkillsResponse.json()
-          // Transform user skills to match component format
-          const userSkills = userSkillsData.skills?.map((userSkill: any) => ({
-            name: userSkill.skills.name,
-            level: userSkill.proficiency_level,
-            id: userSkill.skill_id
-          })) || []
-
-          console.log('✅ Loaded user skills:', userSkills)
-          setSkills(userSkills)
-          setOriginalSkills(userSkills)
-
-          // Update the initial data for parent component
-          if (userSkills.length > 0) {
-            onComplete(userSkills)
-          }
-        }
+        // For onboarding, start with empty skills
+        setSkills(initialData || [])
+        setOriginalSkills(initialData || [])
       } catch (error) {
         console.error('Error fetching data:', error)
       } finally {
@@ -110,9 +95,11 @@ export default function SkillsStep({
     }
 
     fetchData()
-  }, []) // Remove ageGroup dependency to prevent multiple API calls
+  }, [])
 
-  // Update age group reference in other effects
+  const [filteredCategories, setFilteredCategories] = useState(skillCategories)
+
+  // Update filtered categories when search term or skill categories change
   useEffect(() => {
     if (searchTerm.trim() === "") {
       setFilteredCategories(skillCategories)
@@ -123,14 +110,20 @@ export default function SkillsStep({
     const filtered = skillCategories
       .map((category) => ({
         name: category.name,
-        skills: category.skills.filter((skill) => skill.toLowerCase().includes(term)),
+        skills: category.skills.filter((skill) => {
+          const skillName = typeof skill === 'object' ? skill.name : skill
+          return skillName.toLowerCase().includes(term)
+        }),
       }))
       .filter((category) => category.skills.length > 0)
 
     setFilteredCategories(filtered)
   }, [searchTerm, skillCategories])
 
-  const [filteredCategories, setFilteredCategories] = useState(skillCategories)
+  // Initialize filtered categories when skill categories are loaded
+  useEffect(() => {
+    setFilteredCategories(skillCategories)
+  }, [skillCategories])
 
   // Track dirty state
   useEffect(() => {
@@ -241,41 +234,25 @@ export default function SkillsStep({
       setSaving(true)
       console.log("💾 Saving skills during onboarding...", skills)
 
-      // Always save skills during onboarding, regardless of dirty state
-      // since this is the first time user is setting up their profile
+      // Always save skills during onboarding
       if (skills.length > 0) {
-        // Filter out skills without IDs (custom skills) and handle them separately
-        const skillsWithIds = skills.filter(skill => skill.id)
-        const customSkills = skills.filter(skill => !skill.id)
-
-        console.log("📊 Skills breakdown:", {
-          total: skills.length,
-          withIds: skillsWithIds.length,
-          custom: customSkills.length
+        // Send all skills (including custom ones) to the API
+        // The API will handle creating custom skills in the database
+        const response = await fetch('/api/user/skills', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ skills }),
         })
 
-        // Save skills that have IDs from the predefined categories
-        if (skillsWithIds.length > 0) {
-          const response = await fetch('/api/user/skills', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ skills: skillsWithIds }),
-          })
-
-          if (!response.ok) {
-            const errorData = await response.json()
-            console.error('Failed to save skills:', errorData)
-            throw new Error(errorData.error || 'Failed to save skills')
-          }
-
-          console.log("✅ Skills saved successfully during onboarding")
+        if (!response.ok) {
+          const errorData = await response.json()
+          console.error('Failed to save skills:', errorData)
+          throw new Error(errorData.error || 'Failed to save skills')
         }
 
-        if (customSkills.length > 0) {
-          console.log("ℹ️ Custom skills will be created in database:", customSkills.map(s => s.name))
-        }
+        console.log("✅ All skills (including custom) saved successfully during onboarding")
         
         setIsDirty(false)
         setOriginalSkills([...skills])

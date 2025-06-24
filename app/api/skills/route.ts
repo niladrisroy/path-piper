@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     // Fetch skill categories and skills for the age group using Prisma
     const skillCategories = await prisma.skillCategory.findMany({
       where: {
-        ageGroup: ageGroup as any
+        ageGroup: mappedAgeGroup as any
       },
       include: {
         skills: {
@@ -50,10 +50,36 @@ export async function GET(request: NextRequest) {
       ]
     })
 
-    console.log('✅ Found', skillCategories.length, 'skill categories for age group:', ageGroup)
+    console.log('✅ Found', skillCategories.length, 'skill categories for age group:', mappedAgeGroup)
+
+    // If no categories found for this age group, try with a fallback
+    let finalCategories = skillCategories
+    if (skillCategories.length === 0) {
+      console.log('⚠️ No categories found for', mappedAgeGroup, ', trying young_adult as fallback')
+      finalCategories = await prisma.skillCategory.findMany({
+        where: {
+          ageGroup: 'young_adult' as any
+        },
+        include: {
+          skills: {
+            select: {
+              id: true,
+              name: true
+            },
+            orderBy: {
+              name: 'asc'
+            }
+          }
+        },
+        orderBy: [
+          { name: 'asc' }
+        ]
+      })
+      console.log('✅ Found', finalCategories.length, 'fallback categories')
+    }
 
     // Transform the data to match the expected format
-    const transformedCategories = skillCategories.map(category => ({
+    const transformedCategories = finalCategories.map(category => ({
       name: category.name,
       skills: category.skills.map(skill => ({
         id: skill.id,
