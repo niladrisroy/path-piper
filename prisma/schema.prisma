@@ -512,7 +512,6 @@ model AchievementCategory {
   id          Int      @id @default(autoincrement())
   name        String   @unique
   createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
 
   types AchievementType[]
 
