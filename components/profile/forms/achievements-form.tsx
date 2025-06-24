@@ -345,53 +345,49 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
 
               <div className="space-y-3">
                 <Label htmlFor="achievementImage" className="text-sm font-medium">Achievement Icon</Label>
-                <div className="w-full">
-                  <div className="p-8 pt-12 pb-16 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800/50 transition-colors hover:border-pathpiper-teal/50">
-                    <div className="space-y-4">
-                      <div className="text-center">
-                        <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Upload Achievement Icon
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            JPG, PNG up to 5MB
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <Input
-                        id="achievementImage"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        disabled={uploadingImage}
-                        className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-pathpiper-teal file:text-white hover:file:bg-pathpiper-teal/80 file:transition-colors cursor-pointer"
-                      />
-                    </div>
-                    
-                    {uploadingImage && (
-                      <div className="flex items-center justify-center gap-2 text-sm text-pathpiper-teal p-4 mt-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-pathpiper-teal"></div>
-                        <span className="font-medium">Uploading image...</span>
-                      </div>
-                    )}
-                    
-                    {formData.achievementImageIcon && (
-                      <div className="flex items-center gap-3 p-4 mt-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                        <div className="flex items-center gap-2 flex-1">
-                          <Image className="h-4 w-4 text-green-600" />
-                          <span className="text-sm text-green-600 font-medium">Image uploaded successfully</span>
-                        </div>
-                        <img 
-                          src={formData.achievementImageIcon} 
-                          alt="Achievement icon preview" 
-                          className="h-12 w-12 object-cover rounded-lg border-2 border-green-200 shadow-sm"
-                        />
-                      </div>
-                    )}
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <Input
+                      id="achievementImage"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={uploadingImage}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('achievementImage')?.click()}
+                      disabled={uploadingImage}
+                      className="flex items-center gap-2"
+                    >
+                      {uploadingImage ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-pathpiper-teal"></div>
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-4 w-4" />
+                          Upload Image
+                        </>
+                      )}
+                    </Button>
                   </div>
+                  
+                  {formData.achievementImageIcon && (
+                    <div className="flex items-center gap-2">
+                      <img 
+                        src={formData.achievementImageIcon} 
+                        alt="Achievement icon preview" 
+                        className="h-8 w-8 object-cover rounded border"
+                      />
+                      <span className="text-sm text-green-600 font-medium">Uploaded</span>
+                    </div>
+                  )}
                 </div>
+                <p className="text-xs text-gray-500">JPG, PNG up to 5MB (optional)</p>
               </div>
 
               <div className="flex gap-2 pt-6 border-t border-gray-200 dark:border-gray-700">
