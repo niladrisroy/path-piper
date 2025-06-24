@@ -120,9 +120,32 @@ export default function SkillsStep({
           }
         }
 
-        // For onboarding, start with empty skills
-        setSkills(initialData || [])
-        setOriginalSkills(initialData || [])
+        // Fetch existing user skills for onboarding
+        try {
+          const userSkillsResponse = await fetch('/api/user/skills')
+          if (userSkillsResponse.ok) {
+            const userSkillsData = await userSkillsResponse.json()
+            // Transform user skills to match component format
+            const existingSkills = userSkillsData.skills?.map((userSkill: any) => ({
+              name: userSkill.skills.name,
+              level: userSkill.proficiency_level,
+              id: userSkill.skill_id,
+              category: userSkill.skills.skill_categories?.name || "Other"
+            })) || []
+
+            console.log('✅ Loaded existing user skills for onboarding:', existingSkills)
+            setSkills(existingSkills)
+            setOriginalSkills(existingSkills)
+          } else {
+            console.log('ℹ️ No existing skills found, starting with empty skills')
+            setSkills(initialData || [])
+            setOriginalSkills(initialData || [])
+          }
+        } catch (error) {
+          console.error('Error fetching existing skills:', error)
+          setSkills(initialData || [])
+          setOriginalSkills(initialData || [])
+        }
       } catch (error) {
         console.error('Error fetching data:', error)
       } finally {
