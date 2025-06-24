@@ -14,6 +14,7 @@ interface Achievement {
   description: string
   dateOfAchievement: string
   createdAt: string
+  achievementImageIcon?: string
 }
 
 interface AchievementTimelineProps {
@@ -106,12 +107,20 @@ export default function AchievementTimeline({ userId, isOwnProfile = false }: Ac
             {achievements.map((achievement, index) => (
               <Card key={achievement.id} className="relative">
                 {index !== achievements.length - 1 && (
-                  <div className="absolute left-6 top-16 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="absolute left-6 top-16 bottom-[-24px] w-0.5 bg-gray-200 dark:bg-gray-700"></div>
                 )}
                 <CardContent className="pt-6 pb-6">
                   <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-pathpiper-teal rounded-full flex items-center justify-center flex-shrink-0 relative z-10">
-                      <Trophy className="w-4 h-4 text-white" />
+                    <div className="w-8 h-8 bg-pathpiper-teal rounded-full flex items-center justify-center flex-shrink-0 relative z-10 overflow-hidden">
+                      {achievement.achievementImageIcon ? (
+                        <img 
+                          src={achievement.achievementImageIcon} 
+                          alt={achievement.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Trophy className="w-4 h-4 text-white" />
+                      )}
                     </div>
                     <div className="flex-1">
                       <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">

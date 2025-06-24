@@ -24,6 +24,15 @@ interface ProfileHeaderProps {
   isViewMode?: boolean
 }
 
+interface Achievement {
+  id: number
+  name: string
+  description: string
+  dateOfAchievement: string
+  createdAt: string
+  achievementImageIcon?: string
+}
+
 export default function ProfileHeader({ student, currentUser, connectionCounts, isViewMode = false }: ProfileHeaderProps) {
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
@@ -129,7 +138,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
   }, [isOwnProfile, studentProp.id, connectionCounts])
 
   // State for recent achievement
-  const [recentAchievement, setRecentAchievement] = useState<any>(null)
+  const [recentAchievement, setRecentAchievement] = useState<Achievement | null>(null)
   const [achievementLoading, setAchievementLoading] = useState(true)
 
   // Fetch user's circles, connections, and achievements
@@ -478,7 +487,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                       {(() => {
                         const totalCircles = (isOwnProfile ? 1 : 0) + circles.length; // Friends circle + custom circles
                         const needsScrolling = totalCircles > 4; // Adjust threshold as needed
-                        
+
                         return (
                           <>
                             {/* Scrollable circles container */}
@@ -764,7 +773,17 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                     ) : recentAchievement ? (
                       <div className="bg-sky-50 dark:bg-sky-900/20 p-2 rounded-lg flex items-center gap-3">
                         <div className="bg-yellow-100 dark:bg-yellow-900/40 h-8 w-8 rounded-full flex items-center justify-center">
-                          <Award className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                          {recentAchievement.achievementImageIcon ? (
+                            <Image
+                              src={recentAchievement.achievementImageIcon}
+                              alt={recentAchievement.name}
+                              width={32}
+                              height={32}
+                              className="rounded-full"
+                            />
+                          ) : (
+                            <Award className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                          )}
                         </div>
                         <div>
                           <h4 className="text-xs font-medium">{recentAchievement.name}</h4>
