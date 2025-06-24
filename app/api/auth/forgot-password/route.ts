@@ -1,8 +1,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import { sendEmail } from '@/lib/email';
 import { prisma } from '@/lib/prisma';
+
+// Initialize Supabase client with service role key for admin operations
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,19 +25,27 @@ export async function POST(request: NextRequest) {
 
     console.log('Processing password reset for email:', email);
 
-    // Check if user exists in our database
-    const userProfile = await prisma.profile.findFirst({
-      where: { 
-        OR: [
-          { email: email },
-          { id: { in: await getUserIdsByEmail(email) } }
-        ]
+    // Check if user exists in Supabase Auth
+    const { data: authUsers, error: listError } = await supabase.auth.admin.listUsers();
+    
+    let userExists = false;
+    let userProfile = null;
+
+    if (!listError && authUsers?.users) {
+      const authUser = authUsers.users.find(user => user.email === email);
+      if (authUser) {
+        userExists = true;
+        // Get the user's profile for the name
+        userProfile = await prisma.profile.findUnique({
+          where: { id: authUser.id }
+        });
+        console.log('User found in Supabase Auth');
       }
-    });
+    }
 
     // Always return success to prevent email enumeration attacks
     // But only send email if user actually exists
-    if (userProfile) {
+    if (userExists) {
       console.log('User found, sending reset email');
       
       // Generate password reset link using Supabase
@@ -49,12 +62,16 @@ export async function POST(request: NextRequest) {
         // Send our custom email
         const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?email=${encodeURIComponent(email)}`;
         
-        await sendEmail('password-reset', email, {
-          userName: userProfile.firstName || 'User',
+        const emailResult = await sendEmail('password-reset', email, {
+          userName: userProfile?.firstName || 'User',
           resetLink: resetLink
         });
         
-        console.log('Reset email sent successfully');
+        if (emailResult.success) {
+          console.log('Reset email sent successfully');
+        } else {
+          console.error('Failed to send reset email:', emailResult.error);
+        }
       }
     } else {
       console.log('User not found, but returning success for security');
@@ -71,25 +88,5 @@ export async function POST(request: NextRequest) {
       { error: 'An error occurred while processing your request' },
       { status: 500 }
     );
-  }
-}
-
-// Helper function to get user IDs by email from Supabase auth
-async function getUserIdsByEmail(email: string): Promise<string[]> {
-  try {
-    // This is a workaround since we can't directly query Supabase auth users
-    // We'll try to get user info if they exist
-    const { data, error } = await supabase.auth.admin.listUsers();
-    
-    if (error || !data?.users) {
-      return [];
-    }
-    
-    return data.users
-      .filter(user => user.email === email)
-      .map(user => user.id);
-  } catch (error) {
-    console.error('Error getting user IDs by email:', error);
-    return [];
   }
 }

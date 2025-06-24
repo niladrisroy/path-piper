@@ -39,6 +39,19 @@ export async function sendEmail(
   }
 ) {
   try {
+    console.log(`Attempting to send ${template} email to ${to}`);
+    
+    // Check if we're in development mode without proper API key
+    if (!RESEND_API_KEY && isDevelopment) {
+      console.log('Development mode: Mocking email send');
+      return mockSendEmail();
+    }
+
+    if (!RESEND_API_KEY) {
+      console.error('RESEND_API_KEY is not configured');
+      return { success: false, error: 'Email service not configured' };
+    }
+
     let subject = '';
     let html = '';
 
@@ -108,6 +121,8 @@ export async function sendEmail(
         break;
     }
 
+    console.log(`Sending email with subject: ${subject}`);
+
     const result = await resend.emails.send({
       from: 'PathPiper <noreply@pathpiper.com>',
       to: [to],
@@ -115,6 +130,7 @@ export async function sendEmail(
       html
     });
 
+    console.log('Email sent successfully:', result);
     return { success: true, data: result };
   } catch (error) {
     console.error('Email sending failed:', error);
