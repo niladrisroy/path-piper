@@ -204,7 +204,7 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
       onComplete(data);
     }
     // Navigation will be handled by the parent component after successful submission
-  }
+  };
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
