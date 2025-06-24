@@ -46,7 +46,17 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [isUpdating, setIsUpdating] = useState(false)
   const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    dateOfAchievement: '',
+    categoryId: '',
+    achievementTypeId: '',
+    achievementImageIcon: ''
+  })
+  const [editFormData, setEditFormData] = useState({
     name: '',
     description: '',
     dateOfAchievement: '',
@@ -223,6 +233,114 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
     } catch (error) {
       console.error('Error deleting achievement:', error)
       toast.error('Failed to delete achievement')
+    }
+  }
+
+  const handleEdit = (achievement: Achievement) => {
+    setEditingId(achievement.id)
+    setEditFormData({
+      name: achievement.name,
+      description: achievement.description,
+      dateOfAchievement: achievement.dateOfAchievement.split('T')[0],
+      categoryId: getCategoryIdFromTypeId(achievement.achievementTypeId),
+      achievementTypeId: achievement.achievementTypeId?.toString() || '',
+      achievementImageIcon: achievement.achievementImageIcon || ''
+    })
+  }
+
+  const getCategoryIdFromTypeId = (typeId?: number) => {
+    if (!typeId) return ''
+    const type = types.find(t => t.id === typeId)
+    return type ? type.categoryId.toString() : ''
+  }
+
+  const handleCancelEdit = () => {
+    setEditingId(null)
+    setEditFormData({
+      name: '',
+      description: '',
+      dateOfAchievement: '',
+      categoryId: '',
+      achievementTypeId: '',
+      achievementImageIcon: ''
+    })
+  }
+
+  const handleEditImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setUploadingImage(true)
+    try {
+      const formDataUpload = new FormData()
+      formDataUpload.append('file', file)
+
+      const response = await fetch('/api/upload/achievement-icon', {
+        method: 'POST',
+        body: formDataUpload,
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setEditFormData(prev => ({ ...prev, achievementImageIcon: data.url }))
+        toast.success('Image uploaded successfully!')
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Failed to upload image')
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      toast.error('Failed to upload image')
+    } finally {
+      setUploadingImage(false)
+    }
+  }
+
+  const handleUpdate = async () => {
+    if (!editFormData.name.trim() || !editFormData.description.trim() || !editFormData.dateOfAchievement || !editFormData.achievementTypeId) {
+      toast.error('Name, description, date, and achievement type are required')
+      return
+    }
+
+    setIsUpdating(true)
+
+    try {
+      const response = await fetch(`/api/achievements?id=${editingId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: editFormData.name,
+          description: editFormData.description,
+          dateOfAchievement: editFormData.dateOfAchievement,
+          achievementTypeId: editFormData.achievementTypeId,
+          achievementImageIcon: editFormData.achievementImageIcon
+        })
+      })
+
+      if (response.ok) {
+        toast.success('Achievement updated successfully!')
+        setEditingId(null)
+        setEditFormData({ 
+          name: '', 
+          description: '', 
+          dateOfAchievement: '', 
+          categoryId: '', 
+          achievementTypeId: '', 
+          achievementImageIcon: '' 
+        })
+        await fetchAchievements()
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Failed to update achievement')
+      }
+    } catch (error) {
+      console.error('Error updating achievement:', error)
+      toast.error('Failed to update achievement')
+    } finally {
+      setIsUpdating(false)
     }
   }
 
@@ -433,39 +551,195 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
           achievements.map((achievement) => (
             <Card key={achievement.id}>
               <CardContent className="pt-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      {achievement.achievementImageIcon ? (
-                        <img 
-                          src={achievement.achievementImageIcon} 
-                          alt={achievement.name}
-                          className="h-5 w-5 object-cover rounded"
-                        />
-                      ) : (
-                        <Trophy className="h-5 w-5 text-pathpiper-teal" />
-                      )}
-                      <h4 className="text-lg font-semibold">{achievement.name}</h4>
+                {editingId === achievement.id ? (
+                  // Edit form
+                  <div className="space-y-6">
+                    <div>
+                      <Label htmlFor={`edit-name-${achievement.id}`}>Achievement Name *</Label>
+                      <Input
+                        id={`edit-name-${achievement.id}`}
+                        value={editFormData.name}
+                        onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                        placeholder="e.g., First Place in Science Fair"
+                        required
+                      />
                     </div>
-                    <p className="text-gray-600 dark:text-gray-400 mb-3">
-                      {achievement.description}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <CalendarIcon className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm text-gray-500">
-                        {format(new Date(achievement.dateOfAchievement), 'MMM dd, yyyy')}
-                      </span>
+
+                    <div>
+                      <Label htmlFor={`edit-description-${achievement.id}`}>Description *</Label>
+                      <Textarea
+                        id={`edit-description-${achievement.id}`}
+                        value={editFormData.description}
+                        onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                        placeholder="Describe your achievement..."
+                        rows={3}
+                        required
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor={`edit-category-${achievement.id}`}>Category *</Label>
+                        <Select
+                          value={editFormData.categoryId}
+                          onValueChange={(value) => {
+                            setEditFormData({ ...editFormData, categoryId: value, achievementTypeId: '' })
+                            fetchTypes(value)
+                          }}
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="Select a category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories.map((category) => (
+                              <SelectItem key={category.id} value={category.id.toString()}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor={`edit-type-${achievement.id}`}>Achievement Type *</Label>
+                        <Select
+                          value={editFormData.achievementTypeId}
+                          onValueChange={(value) => setEditFormData({ ...editFormData, achievementTypeId: value })}
+                          disabled={!editFormData.categoryId}
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder={editFormData.categoryId ? "Select achievement type" : "Select category first"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {types.map((type) => (
+                              <SelectItem key={type.id} value={type.id.toString()}>
+                                {type.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor={`edit-date-${achievement.id}`}>Date of Achievement *</Label>
+                      <Input
+                        id={`edit-date-${achievement.id}`}
+                        type="date"
+                        value={editFormData.dateOfAchievement}
+                        onChange={(e) => setEditFormData({ ...editFormData, dateOfAchievement: e.target.value })}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label htmlFor={`edit-image-${achievement.id}`} className="text-sm font-medium">Achievement Icon</Label>
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <Input
+                            id={`edit-image-${achievement.id}`}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleEditImageUpload}
+                            disabled={uploadingImage}
+                            className="hidden"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => document.getElementById(`edit-image-${achievement.id}`)?.click()}
+                            disabled={uploadingImage}
+                            className="flex items-center gap-2"
+                          >
+                            {uploadingImage ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-pathpiper-teal"></div>
+                                Uploading...
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="h-4 w-4" />
+                                Upload Image
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                        
+                        {editFormData.achievementImageIcon && (
+                          <div className="flex items-center gap-2">
+                            <img 
+                              src={editFormData.achievementImageIcon} 
+                              alt="Achievement icon preview" 
+                              className="h-8 w-8 object-cover rounded border"
+                            />
+                            <span className="text-sm text-green-600 font-medium">Uploaded</span>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500">JPG, PNG up to 5MB (optional)</p>
+                    </div>
+
+                    <div className="flex gap-2 pt-6 border-t border-gray-200 dark:border-gray-700">
+                      <Button onClick={handleUpdate} disabled={isUpdating}>
+                        {isUpdating ? 'Updating...' : 'Confirm Update'}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={handleCancelEdit}
+                        disabled={isUpdating}
+                      >
+                        Cancel
+                      </Button>
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(achievement.id)}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                ) : (
+                  // Display view
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        {achievement.achievementImageIcon ? (
+                          <img 
+                            src={achievement.achievementImageIcon} 
+                            alt={achievement.name}
+                            className="h-5 w-5 object-cover rounded"
+                          />
+                        ) : (
+                          <Trophy className="h-5 w-5 text-pathpiper-teal" />
+                        )}
+                        <h4 className="text-lg font-semibold">{achievement.name}</h4>
+                      </div>
+                      <p className="text-gray-600 dark:text-gray-400 mb-3">
+                        {achievement.description}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <CalendarIcon className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm text-gray-500">
+                          {format(new Date(achievement.dateOfAchievement), 'MMM dd, yyyy')}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(achievement)}
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(achievement.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))

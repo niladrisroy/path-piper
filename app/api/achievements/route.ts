@@ -105,6 +105,82 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PUT(request: NextRequest) {
+  try {
+    // Get the authorization header
+    const authHeader = request.headers.get('authorization')
+    let token = authHeader?.replace('Bearer ', '')
+
+    if (!token) {
+      // Try to get token from cookies as fallback
+      const authCookie = request.cookies.get('sb-access-token')?.value ||
+                        request.cookies.get('sb-refresh-token')?.value
+
+      if (authCookie) {
+        token = authCookie
+      }
+    }
+
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Verify the user
+    const { data: authData, error: authError } = await supabase.auth.getUser(token)
+
+    if (authError || !authData.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const userId = authData.user.id
+    const { searchParams } = new URL(request.url)
+    const achievementId = searchParams.get('id')
+
+    if (!achievementId) {
+      return NextResponse.json({ error: 'Achievement ID is required' }, { status: 400 })
+    }
+
+    const body = await request.json()
+    const { name, description, dateOfAchievement, achievementTypeId, achievementImageIcon } = body
+
+    if (!name || !description || !dateOfAchievement || !achievementTypeId) {
+      return NextResponse.json(
+        { error: 'Name, description, date, and achievement type are required' },
+        { status: 400 }
+      )
+    }
+
+    // Verify the achievement belongs to the user before updating
+    const existingAchievement = await prisma.userAchievement.findFirst({
+      where: { 
+        id: parseInt(achievementId),
+        userId: userId 
+      }
+    })
+
+    if (!existingAchievement) {
+      return NextResponse.json({ error: 'Achievement not found' }, { status: 404 })
+    }
+
+    // Update the achievement
+    const updatedAchievement = await prisma.userAchievement.update({
+      where: { id: parseInt(achievementId) },
+      data: {
+        name,
+        description,
+        dateOfAchievement: new Date(dateOfAchievement),
+        achievementTypeId: parseInt(achievementTypeId),
+        achievementImageIcon: achievementImageIcon || null
+      }
+    })
+
+    return NextResponse.json({ achievement: updatedAchievement })
+  } catch (error) {
+    console.error('Error updating achievement:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   try {
     // Get the authorization header
