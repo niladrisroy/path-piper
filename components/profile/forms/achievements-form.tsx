@@ -346,7 +346,7 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
               <div className="space-y-3">
                 <Label htmlFor="achievementImage" className="text-sm font-medium">Achievement Icon</Label>
                 <div className="w-full">
-                  <div className="p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800/50 transition-colors hover:border-pathpiper-teal/50">
+                  <div className="p-8 py-12 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800/50 transition-colors hover:border-pathpiper-teal/50">
                     <div className="space-y-4">
                       <div className="text-center">
                         <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
