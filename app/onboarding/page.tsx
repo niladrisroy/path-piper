@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -246,7 +245,7 @@ export default function Onboarding() {
     }
   }
 
-
+  
 
   const handlePersonalInfoComplete = async (data) => {
     console.log('Personal info completed:', data);
@@ -398,46 +397,73 @@ export default function Onboarding() {
             </div>
 
             <div className="p-6 md:p-8">
-
+              
 {step === 1 && (
                 <PersonalInfoStep
-                  initialData={userData}
-                  onComplete={async (personalData) => {
-                    console.log('👤 Personal info step completed with data:', personalData);
+                  initialData={{
+                    firstName: userData.firstName,
+                    lastName: userData.lastName,
+                    bio: userData.bio,
+                    location: userData.location,
+                    educationLevel: userData.educationLevel,
+                    birthMonth: userData.birthMonth,
+                    birthYear: userData.birthYear,
+                    ageGroup: userData.ageGroup,
+                    profileImage: null
+                  }}
+                  onComplete={async (data) => {
+                    console.log('📝 Personal info step completed with data:', data);
 
                     try {
-                      // Auto-calculate age group if birth data is provided
-                      let finalPersonalData = { ...personalData };
-                      if (personalData.birthMonth && personalData.birthYear) {
-                        const { calculateAgeInYears, getAgeGroupFromAge } = await import('@/lib/utils');
-                        const ageInYears = calculateAgeInYears(personalData.birthMonth, personalData.birthYear);
-                        finalPersonalData.ageGroup = getAgeGroupFromAge(ageInYears);
-                        console.log('🔍 Auto-calculated age group:', { ageInYears, ageGroup: finalPersonalData.ageGroup });
-                      }
-
-                      const response = await fetch('/api/profile/personal-info', {
-                        method: 'POST',
+                      // Save personal info data to database immediately
+                      const personalInfoResponse = await fetch("/api/auth/user", {
+                        method: "PUT",
                         headers: {
-                          'Content-Type': 'application/json',
+                          "Content-Type": "application/json",
                         },
-                        body: JSON.stringify(finalPersonalData),
+                        credentials: 'include',
+                        body: JSON.stringify({
+                          profile: {
+                            firstName: data.firstName,
+                            lastName: data.lastName,
+                            bio: data.bio,
+                            location: data.location,
+                          },
+                          studentProfile: {
+                            educationLevel: data.educationLevel,
+                            age_group: data.ageGroup,
+                            birthMonth: data.birthMonth,
+                            birthYear: data.birthYear
+                          }
+                        }),
                       });
 
-                      if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error || 'Failed to save personal information');
+                      if (personalInfoResponse.ok) {
+                        console.log('✅ Personal info saved successfully');
+                        toast.success('Personal information saved');
+                        setUserData(prev => ({
+                          ...prev,
+                          firstName: data.firstName,
+                          lastName: data.lastName,
+                          bio: data.bio,
+                          location: data.location,
+                          educationLevel: data.educationLevel,
+                          birthMonth: data.birthMonth,
+                          birthYear: data.birthYear,
+                          ageGroup: data.ageGroup
+                        }));
+                        setStep(2);
+                      } else {
+                        const error = await personalInfoResponse.json();
+                        console.error('❌ Failed to save personal info:', error);
+                        toast.error('Failed to save personal information: ' + (error.message || 'Unknown error'));
                       }
-
-                      const result = await response.json();
-                      console.log('✅ Personal info saved successfully:', result);
-
-                      setUserData({ ...userData, ...finalPersonalData });
-                      handleNext();
                     } catch (error) {
                       console.error('❌ Error saving personal info:', error);
                       toast.error('Failed to save personal information');
                     }
                   }}
+                  onNext={handleNext}
                 />
               )}
 
@@ -446,7 +472,7 @@ export default function Onboarding() {
                   initialData={userData.interests || []}
                   onComplete={async (interests) => {
                     console.log('🎯 Interests step completed with data:', interests);
-
+                    
                     // Save interests data immediately (matching edit profile behavior)
                     try {
                       // Interests data is saved within the InterestsStep component itself
@@ -470,7 +496,7 @@ export default function Onboarding() {
                   initialData={userData.skills || []}
                   onComplete={(skills) => {
                     console.log('🛠️ Skills step completed with data:', skills);
-
+                    
                     // Skills are now saved within the SkillsStep component itself
                     // Just update local state
                     setUserData({ ...userData, skills });
@@ -487,7 +513,7 @@ export default function Onboarding() {
                   initialData={userData.educationHistory || []}
                   onComplete={async (educationHistory) => {
                     console.log('📚 Education step completed with data:', educationHistory);
-
+                    
                     // Save education data immediately (matching edit profile behavior)
                     try {
                       // Education data is saved within the EducationStep component itself

@@ -10,8 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Label } from "@/components/ui/label"
-import { cn, calculateAgeInYears, getAgeGroupFromAge } from "@/lib/utils"
 
 // Define the PersonalInfo schema with Zod
 const personalInfoSchema = z.object({
@@ -159,7 +157,7 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
       const originalValue = originalData[key as keyof PersonalInfo];
       return currentValue !== originalValue;
     });
-
+    
     setIsDirty(hasChanges);
   }, [watchedValues, originalData, form]);
 
@@ -191,7 +189,7 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
   const onSubmit = async (data: PersonalInfo) => {
     console.log("Form submitted with data:", data);
     console.log("🔍 Personal Info dirty bit:", isDirty);
-
+    
     if (isDirty) {
       console.log("💾 Personal info has changes, saving to database...");
       // Save to database
@@ -336,82 +334,91 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
             />
           </div>
 
-          {/* Age Group Display (auto-calculated) */}
-          <div className="grid grid-cols-1 gap-6">
-            <div className="space-y-2">
-              <Label>Age Group</Label>
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
-                <div className="text-sm text-slate-600">
-                  {form.watch("birthMonth") && form.watch("birthYear") ? (
-                    (() => {
-                      const ageInYears = calculateAgeInYears(form.watch("birthMonth"), form.watch("birthYear"))
-                      const ageGroup = getAgeGroupFromAge(ageInYears)
-                      const ageGroupLabels = {
-                        "early_childhood": "Early Childhood (Under 5)",
-                        "elementary": "Elementary (5-10 years)",
-                        "middle_school": "Middle School (11-13 years)",
-                        "high_school": "High School (14-18 years)",
-                        "young_adult": "Young Adult (18+)"
-                      }
-                      // Set the age group in the form
-                      form.setValue("ageGroup", ageGroup)
-                      return (
-                        <div>
-                          <span className="font-medium">Age: {ageInYears} years</span>
-                          <br />
-                          <span className="text-teal-600 font-medium">{ageGroupLabels[ageGroup as keyof typeof ageGroupLabels]}</span>
-                        </div>
-                      )
-                    })()
-                  ) : (
-                    <span className="text-slate-400">Select your birth month and year to see your age group</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="ageGroup"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Age Group</FormLabel>
+                  <div className="relative">
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || ""}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-white border-slate-200 hover:border-slate-300 focus:border-teal-500 focus:ring-teal-500">
+                          <SelectValue placeholder="Choose your age group" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-lg">
+                        <SelectGroup>
+                          <SelectItem value="early_childhood" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Early Childhood (Under 5)
+                          </SelectItem>
+                          <SelectItem value="elementary" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Elementary (5-10 years)
+                          </SelectItem>
+                          <SelectItem value="middle_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Middle School (11-12 years)
+                          </SelectItem>
+                          <SelectItem value="high_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            High School (13-17 years)
+                          </SelectItem>
+                          <SelectItem value="young_adult" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Young Adult (18+ years)
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <FormField
-            control={form.control}
-            name="educationLevel"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Education Level</FormLabel>
-                <div className="relative">
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="bg-white border-slate-200 hover:border-slate-300 focus:border-teal-500 focus:ring-teal-500">
-                        <SelectValue placeholder="Choose your education level" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-lg">
-                      <SelectGroup>
-                        <SelectItem value="pre_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
-                          Pre-School
-                        </SelectItem>
-                        <SelectItem value="school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
-                          School
-                        </SelectItem>
-                        <SelectItem value="high_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
-                          High School
-                        </SelectItem>
-                        <SelectItem value="undergraduate" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
-                          Undergraduate
-                        </SelectItem>
-                        <SelectItem value="graduate" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
-                          Graduate
-                        </SelectItem>
-                        <SelectItem value="post_graduate" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
-                          Post Graduate
-                        </SelectItem>
-                        <SelectItem value="phd" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
-                          PhD
-                        </SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
+            <FormField
+              control={form.control}
+              name="educationLevel"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Education Level</FormLabel>
+                  <div className="relative">
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-white border-slate-200 hover:border-slate-300 focus:border-teal-500 focus:ring-teal-500">
+                          <SelectValue placeholder="Choose your education level" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-lg">
+                        <SelectGroup>
+                          <SelectItem value="pre_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Pre-School
+                          </SelectItem>
+                          <SelectItem value="school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            School
+                          </SelectItem>
+                          <SelectItem value="high_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            High School
+                          </SelectItem>
+                          <SelectItem value="undergraduate" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Undergraduate
+                          </SelectItem>
+                          <SelectItem value="graduate" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Graduate
+                          </SelectItem>
+                          <SelectItem value="post_graduate" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Post Graduate
+                          </SelectItem>
+                          <SelectItem value="phd" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            PhD
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <FormMessage />
                 </FormItem>

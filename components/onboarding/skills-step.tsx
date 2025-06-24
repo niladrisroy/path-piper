@@ -48,48 +48,40 @@ export default function SkillsStep({
       try {
         setLoading(true)
 
-        let determinedAgeGroup = ageGroup // Default from props
-
-        // First fetch user data to get actual age group or calculate it
+        // First fetch user data to get actual age group
         const userResponse = await fetch('/api/auth/user')
         if (userResponse.ok) {
           const userData = await userResponse.json()
-          console.log('🔍 User data for age group determination:', userData.user)
-          
-          // Try to get age group from profile
-          let actualAgeGroup = userData.user?.studentProfile?.age_group
-          
-          // If no age group set, calculate it from birth date
-          if (!actualAgeGroup && userData.user?.studentProfile?.birthMonth && userData.user?.studentProfile?.birthYear) {
-            const { calculateAgeInYears, getAgeGroupFromAge } = await import('@/lib/utils')
-            const ageInYears = calculateAgeInYears(
-              userData.user.studentProfile.birthMonth, 
-              userData.user.studentProfile.birthYear
-            )
-            actualAgeGroup = getAgeGroupFromAge(ageInYears)
-            console.log('🔍 Calculated age group from birth date:', { ageInYears, actualAgeGroup })
+          const actualAgeGroup = userData.user?.studentProfile?.age_group || ageGroup
+          setUserAgeGroup(actualAgeGroup)
+          console.log('🔍 Using user age group for skills:', actualAgeGroup)
+
+          // Fetch skill categories for the user's actual age group
+          const skillsResponse = await fetch(`/api/skills?ageGroup=${actualAgeGroup}`)
+          if (skillsResponse.ok) {
+            const skillsData = await skillsResponse.json()
+            console.log('✅ Fetched skill categories:', skillsData.categories)
+            setSkillCategories(skillsData.categories || [])
+          } else {
+            const errorText = await skillsResponse.text()
+            console.error('Failed to fetch skills:', skillsResponse.status, errorText)
           }
-          
-          determinedAgeGroup = actualAgeGroup || "young_adult"
-          setUserAgeGroup(determinedAgeGroup)
-          console.log('🔍 Using determined age group for skills:', determinedAgeGroup)
         } else {
           console.error('Failed to fetch user data:', userResponse.status)
-          // Use fallback
-          determinedAgeGroup = "young_adult"
-          setUserAgeGroup(determinedAgeGroup)
-          console.log('🔍 Using fallback age group for skills:', determinedAgeGroup)
-        }
+          // Fallback to young_adult age group for onboarding
+          const fallbackAgeGroup = "young_adult"
+          setUserAgeGroup(fallbackAgeGroup)
+          console.log('🔍 Using fallback age group for skills:', fallbackAgeGroup)
 
-        // Fetch skill categories for the determined age group
-        const skillsResponse = await fetch(`/api/skills?ageGroup=${determinedAgeGroup}`)
-        if (skillsResponse.ok) {
-          const skillsData = await skillsResponse.json()
-          console.log('✅ Fetched skill categories:', skillsData.categories)
-          setSkillCategories(skillsData.categories || [])
-        } else {
-          const errorText = await skillsResponse.text()
-          console.error('Failed to fetch skills:', skillsResponse.status, errorText)
+          const skillsResponse = await fetch(`/api/skills?ageGroup=${fallbackAgeGroup}`)
+          if (skillsResponse.ok) {
+            const skillsData = await skillsResponse.json()
+            console.log('✅ Fetched skill categories (fallback):', skillsData.categories)
+            setSkillCategories(skillsData.categories || [])
+          } else {
+            const errorText = await skillsResponse.text()
+            console.error('Failed to fetch skills:', skillsResponse.status, errorText)
+          }
         }
 
         // For onboarding, start with empty skills

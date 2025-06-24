@@ -509,41 +509,32 @@ export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInf
             />
           </div>
 
-          {/* Age Group Display (auto-calculated) */}
-          <div className="grid grid-cols-1 gap-6">
-            <div className="space-y-2">
-              <Label>Age Group</Label>
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
-                <div className="text-sm text-slate-600">
-                  {form.watch("birthMonth") && form.watch("birthYear") ? (
-                    (() => {
-                      const { calculateAgeInYears, getAgeGroupFromAge } = require('@/lib/utils')
-                      const ageInYears = calculateAgeInYears(form.watch("birthMonth"), form.watch("birthYear"))
-                      const ageGroup = getAgeGroupFromAge(ageInYears)
-                      const ageGroupLabels = {
-                        "early_childhood": "Early Childhood (Under 5)",
-                        "elementary": "Elementary (5-10 years)",
-                        "middle_school": "Middle School (11-13 years)",
-                        "high_school": "High School (14-18 years)",
-                        "young_adult": "Young Adult (18+)"
-                      }
-                      // Set the age group in the form
-                      form.setValue("ageGroup", ageGroup)
-                      return (
-                        <div>
-                          <span className="font-medium">Age: {ageInYears} years</span>
-                          <br />
-                          <span className="text-teal-600 font-medium">{ageGroupLabels[ageGroup as keyof typeof ageGroupLabels]}</span>
-                        </div>
-                      )
-                    })()
-                  ) : (
-                    <span className="text-slate-400">Select your birth month and year to see your age group</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>Item value="middle_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="ageGroup"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Age Group</FormLabel>
+                  <div className="relative">
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || ""}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-white border-slate-200 hover:border-slate-300 focus:border-teal-500 focus:ring-teal-500">
+                          <SelectValue placeholder="Choose your age group" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-lg">
+                        <SelectGroup>
+                          <SelectItem value="early_childhood" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Early Childhood (Under 5)
+                          </SelectItem>
+                          <SelectItem value="elementary" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
+                            Elementary (5-10 years)
+                          </SelectItem>
+                          <SelectItem value="middle_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
                             Middle School (11-12 years)
                           </SelectItem>
                           <SelectItem value="high_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
