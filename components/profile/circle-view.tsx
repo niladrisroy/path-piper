@@ -269,12 +269,12 @@ function CircleBadgesSection({ onCircleSelect }: { onCircleSelect: (circle: Circ
           </div>
         ) : (
           <div className="space-y-3">
-            {/* Compact Circular Grid Layout - Optimized for side panel */}
-            <div className={`flex ${circles.length > 9 ? 'overflow-x-auto hide-scrollbar' : ''} space-x-3 py-3 px-1 min-h-[80px]`}>
+            {/* 3-Column Grid Layout for all circles */}
+            <div className="grid grid-cols-3 gap-4 py-3">
               {circles.map((circle) => (
                 <div
                   key={circle.id}
-                  className="flex flex-col items-center group cursor-pointer flex-shrink-0"
+                  className="flex flex-col items-center group cursor-pointer"
                   onClick={() => onCircleSelect(circle)}
                 >
                   {/* Circle Badge */}
