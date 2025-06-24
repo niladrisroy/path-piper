@@ -239,46 +239,59 @@ export default function SkillsStep({
 
     try {
       setSaving(true)
+      console.log("💾 Saving skills during onboarding...", skills)
 
-      console.log("🔍 Skills dirty bit:", isDirty)
-
-      if (isDirty) {
-        console.log("💾 Skills have changes, saving to database...")
+      // Always save skills during onboarding, regardless of dirty state
+      // since this is the first time user is setting up their profile
+      if (skills.length > 0) {
         // Filter out skills without IDs (custom skills) and handle them separately
         const skillsWithIds = skills.filter(skill => skill.id)
         const customSkills = skills.filter(skill => !skill.id)
 
-        // For now, we'll only save skills that have IDs from the predefined categories
-        // TODO: Handle custom skills by creating them in the database first
-        const skillsToSave = skillsWithIds
+        console.log("📊 Skills breakdown:", {
+          total: skills.length,
+          withIds: skillsWithIds.length,
+          custom: customSkills.length
+        })
 
-        if (skillsToSave.length > 0) {
+        // Save skills that have IDs from the predefined categories
+        if (skillsWithIds.length > 0) {
           const response = await fetch('/api/user/skills', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ skills: skillsToSave }),
+            body: JSON.stringify({ skills: skillsWithIds }),
           })
 
           if (!response.ok) {
-            console.error('Failed to save skills')
-            // You might want to show an error message to the user here
-            return
+            const errorData = await response.json()
+            console.error('Failed to save skills:', errorData)
+            throw new Error(errorData.error || 'Failed to save skills')
           }
+
+          console.log("✅ Skills saved successfully during onboarding")
+        }
+
+        if (customSkills.length > 0) {
+          console.log("⚠️ Custom skills detected but not saved:", customSkills.map(s => s.name))
         }
         
         setIsDirty(false)
         setOriginalSkills([...skills])
       } else {
-        console.log("✅ Skills unchanged, skipping database save")
+        console.log("ℹ️ No skills to save")
       }
 
       onComplete(skills)
       onNext()
     } catch (error) {
       console.error('Error saving skills:', error)
-      // You might want to show an error message to the user here
+      // Show error to user but don't prevent navigation
+      alert('Failed to save skills. Please try again later.')
+      // Still allow user to continue onboarding
+      onComplete(skills)
+      onNext()
     } finally {
       setSaving(false)
     }

@@ -494,20 +494,13 @@ export default function Onboarding() {
               {step === 3 && (
                 <SkillsStep
                   initialData={userData.skills || []}
-                  onComplete={async (skills) => {
+                  onComplete={(skills) => {
                     console.log('🛠️ Skills step completed with data:', skills);
                     
-                    // Save skills data immediately (matching edit profile behavior)
-                    try {
-                      // Skills data is saved within the SkillsStep component itself
-                      // Just update local state and proceed
-                      setUserData({ ...userData, skills });
-                      console.log('✅ Skills data updated in local state');
-                      handleNext();
-                    } catch (error) {
-                      console.error('❌ Error in skills step completion:', error);
-                      toast.error('Failed to save skills data');
-                    }
+                    // Skills are now saved within the SkillsStep component itself
+                    // Just update local state
+                    setUserData({ ...userData, skills });
+                    console.log('✅ Skills data updated in local state');
                   }}
                   onNext={handleNext}
                   onSkip={handleNext}
