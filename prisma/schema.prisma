@@ -522,9 +522,7 @@ model AchievementType {
   id          Int      @id @default(autoincrement())
   categoryId  Int      @map("category_id")
   name        String
-  description String?
   createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
 
   category           AchievementCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   userAchievements   UserAchievement[]
