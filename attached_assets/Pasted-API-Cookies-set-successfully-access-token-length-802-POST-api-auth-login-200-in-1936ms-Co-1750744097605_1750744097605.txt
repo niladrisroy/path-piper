@@ -1,0 +1,67 @@
+API: Cookies set successfully - access token length: 802
+ POST /api/auth/login 200 in 1936ms
+ ○ Compiling /onboarding ...
+ ⨯ ./components/onboarding/personal-info-step.tsx
+Error:   × Unexpected token `div`. Expected jsx identifier
+     ╭─[/home/runner/workspace/components/onboarding/personal-info-step.tsx:210:1]
+ 207 │   };
+ 208 │ 
+ 209 │   return (
+ 210 │     <div className="space-y-6 max-w-2xl mx-auto">
+     ·      ───
+ 211 │       <div className="text-center mb-8">
+ 212 │         <h2 className="text-2xl font-bold">Tell us about yourself</h2>
+ 213 │         <p className="text-muted-foreground mt-2">
+     ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/onboarding/personal-info-step.tsx
+./app/onboarding/page.tsx
+ ⨯ ./components/onboarding/personal-info-step.tsx
+Error:   × Unexpected token `div`. Expected jsx identifier
+     ╭─[/home/runner/workspace/components/onboarding/personal-info-step.tsx:210:1]
+ 207 │   };
+ 208 │ 
+ 209 │   return (
+ 210 │     <div className="space-y-6 max-w-2xl mx-auto">
+     ·      ───
+ 211 │       <div className="text-center mb-8">
+ 212 │         <h2 className="text-2xl font-bold">Tell us about yourself</h2>
+ 213 │         <p className="text-muted-foreground mt-2">
+     ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/onboarding/personal-info-step.tsx
+./app/onboarding/page.tsx
+ GET /onboarding 500 in 7535ms
+ GET / 500 in 847ms
+ GET / 500 in 26ms
+ GET /onboarding 500 in 14ms
+ GET /onboarding 500 in 15ms
+ GET /onboarding 500 in 17ms
+ GET / 500 in 12ms
+ ⨯ ./components/onboarding/personal-info-step.tsx
+Error:   × Unexpected token `div`. Expected jsx identifier
+     ╭─[/home/runner/workspace/components/onboarding/personal-info-step.tsx:210:1]
+ 207 │   };
+ 208 │ 
+ 209 │   return (
+ 210 │     <div className="space-y-6 max-w-2xl mx-auto">
+     ·      ───
+ 211 │       <div className="text-center mb-8">
+ 212 │         <h2 className="text-2xl font-bold">Tell us about yourself</h2>
+ 213 │         <p className="text-muted-foreground mt-2">
+     ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/onboarding/personal-info-step.tsx
+./app/onboarding/page.tsx
