@@ -343,10 +343,10 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                 />
               </div>
 
-              <div>
+              <div className="space-y-3">
                 <Label htmlFor="achievementImage">Achievement Icon</Label>
-                <div className="mt-2 space-y-2">
-                  <div className="flex items-center gap-4">
+                <div className="space-y-3">
+                  <div className="flex flex-col gap-3">
                     <Input
                       id="achievementImage"
                       type="file"
@@ -356,27 +356,27 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                       className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pathpiper-teal file:text-white hover:file:bg-pathpiper-teal/80"
                     />
                     {uploadingImage && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-2 text-sm text-gray-600 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-pathpiper-teal"></div>
-                        Uploading...
+                        <span>Uploading image...</span>
                       </div>
                     )}
                   </div>
                   {formData.achievementImageIcon && (
-                    <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                       <Image className="h-4 w-4 text-green-600" />
-                      <span className="text-sm text-green-600">Image uploaded successfully</span>
+                      <span className="text-sm text-green-600 font-medium">Image uploaded successfully</span>
                       <img 
                         src={formData.achievementImageIcon} 
                         alt="Achievement icon" 
-                        className="h-8 w-8 object-cover rounded"
+                        className="h-10 w-10 object-cover rounded-lg border border-green-200"
                       />
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-6">
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting ? 'Adding...' : 'Add Achievement'}
                 </Button>

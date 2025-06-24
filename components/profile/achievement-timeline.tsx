@@ -106,9 +106,6 @@ export default function AchievementTimeline({ userId, isOwnProfile = false }: Ac
           <div className="space-y-6 pb-6">
             {achievements.map((achievement, index) => (
               <Card key={achievement.id} className="relative">
-                {index !== achievements.length - 1 && (
-                  <div className="absolute left-6 top-16 bottom-[-24px] w-0.5 bg-gray-200 dark:bg-gray-700"></div>
-                )}
                 <CardContent className="pt-6 pb-6">
                   <div className="flex items-start gap-4">
                     <div className="w-8 h-8 bg-pathpiper-teal rounded-full flex items-center justify-center flex-shrink-0 relative z-10 overflow-hidden">
