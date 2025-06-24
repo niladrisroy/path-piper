@@ -364,7 +364,7 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
                   <FormMessage />
                 </FormItem>
               )}
-            /></FormControl>
+            />
 
             <FormField
               control={form.control}

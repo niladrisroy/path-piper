@@ -493,7 +493,7 @@ export default function Onboarding() {
                   }}
                   ageGroup={userData.ageGroup}
                 />
-              )}</FormControl>
+              )}
 
               {step === 3 && (
                 <SkillsStep
