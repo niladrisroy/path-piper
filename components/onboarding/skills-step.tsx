@@ -42,22 +42,58 @@ export default function SkillsStep({
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
+  // Function to calculate age group from birth data
+  const calculateAgeGroupFromBirth = (birthMonth: string, birthYear: string): string => {
+    if (!birthMonth || !birthYear) return "young_adult";
+
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
+
+    const birthYearNum = parseInt(birthYear);
+    const birthMonthNum = parseInt(birthMonth);
+
+    let ageInYears = currentYear - birthYearNum;
+    if (currentMonth < birthMonthNum) {
+      ageInYears--;
+    }
+
+    if (ageInYears < 5) {
+      return "early_childhood";
+    } else if (ageInYears < 11) {
+      return "elementary";
+    } else if (ageInYears < 13) {
+      return "middle_school";
+    } else if (ageInYears < 18) {
+      return "high_school";
+    } else {
+      return "young_adult";
+    }
+  };
+
   // Fetch skills and user data on component mount
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true)
 
-        // First fetch user data to get actual age group
+        // First fetch user data to get birth date and calculate age group
         const userResponse = await fetch('/api/auth/user')
         if (userResponse.ok) {
           const userData = await userResponse.json()
-          const actualAgeGroup = userData.user?.studentProfile?.age_group || ageGroup
-          setUserAgeGroup(actualAgeGroup)
-          console.log('🔍 Using user age group for skills:', actualAgeGroup)
+          
+          // Calculate age group from birth data
+          const birthMonth = userData.user?.studentProfile?.birthMonth
+          const birthYear = userData.user?.studentProfile?.birthYear
+          const calculatedAgeGroup = calculateAgeGroupFromBirth(birthMonth, birthYear)
+          
+          console.log('🔍 Birth data:', { birthMonth, birthYear })
+          console.log('🔍 Calculated age group:', calculatedAgeGroup)
+          
+          setUserAgeGroup(calculatedAgeGroup)
 
-          // Fetch skill categories for the user's actual age group
-          const skillsResponse = await fetch(`/api/skills?ageGroup=${actualAgeGroup}`)
+          // Fetch skill categories for the calculated age group
+          const skillsResponse = await fetch(`/api/skills?ageGroup=${calculatedAgeGroup}`)
           if (skillsResponse.ok) {
             const skillsData = await skillsResponse.json()
             console.log('✅ Fetched skill categories:', skillsData.categories)

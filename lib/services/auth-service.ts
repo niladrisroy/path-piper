@@ -54,11 +54,42 @@ export async function registerStudent(data: UserRegistrationData) {
       },
     });
 
+    // Calculate age group from birth data
+    const calculateAgeGroup = (birthMonth: string, birthYear: string): string => {
+      if (!birthMonth || !birthYear) return "young_adult";
+
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear();
+      const currentMonth = currentDate.getMonth() + 1;
+
+      const birthYearNum = parseInt(birthYear);
+      const birthMonthNum = parseInt(birthMonth);
+
+      let ageInYears = currentYear - birthYearNum;
+      if (currentMonth < birthMonthNum) {
+        ageInYears--;
+      }
+
+      if (ageInYears < 5) {
+        return "early_childhood";
+      } else if (ageInYears < 11) {
+        return "elementary";
+      } else if (ageInYears < 13) {
+        return "middle_school";
+      } else if (ageInYears < 18) {
+        return "high_school";
+      } else {
+        return "young_adult";
+      }
+    };
+
+    const calculatedAgeGroup = calculateAgeGroup(data.birthMonth || "", data.birthYear || "");
+
     // Create student profile
     await prisma.studentProfile.create({
       data: {
         id: profile.id,
-        age_group: "young_adult", // You may want to determine this based on age
+        age_group: calculatedAgeGroup,
         educationLevel: "undergraduate", // Default value, can be updated later
         birthMonth: data.birthMonth || null,
         birthYear: data.birthYear || null,

@@ -38,7 +38,7 @@ interface PersonalInfoStepProps {
 
 // Function to calculate age group based on birth month and year
 const calculateAgeGroup = (birthMonth: string, birthYear: string): string => {
-  if (!birthMonth || !birthYear) return "";
+  if (!birthMonth || !birthYear) return "young_adult";
 
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
@@ -47,17 +47,20 @@ const calculateAgeGroup = (birthMonth: string, birthYear: string): string => {
   const birthYearNum = parseInt(birthYear);
   const birthMonthNum = parseInt(birthMonth);
 
-  // Calculate age in months
-  let ageInMonths = (currentYear - birthYearNum) * 12 + (currentMonth - birthMonthNum);
+  // Calculate age in years
+  let ageInYears = currentYear - birthYearNum;
+  if (currentMonth < birthMonthNum) {
+    ageInYears--; // Haven't had birthday this year yet
+  }
 
-  // Determine age group based on age in months
-  if (ageInMonths < 60) { // Under 5 years
+  // Determine age group based on age in years
+  if (ageInYears < 5) {
     return "early_childhood";
-  } else if (ageInMonths < 132) { // 5-10 years
+  } else if (ageInYears < 11) { // 5-10 years
     return "elementary";
-  } else if (ageInMonths < 156) { // 11-12 years
+  } else if (ageInYears < 13) { // 11-12 years
     return "middle_school";
-  } else if (ageInMonths < 216) { // 13-17 years
+  } else if (ageInYears < 18) { // 13-17 years
     return "high_school";
   } else { // 18+ years
     return "young_adult";
@@ -341,37 +344,20 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Age Group</FormLabel>
-                  <div className="relative">
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value || ""}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="bg-white border-slate-200 hover:border-slate-300 focus:border-teal-500 focus:ring-teal-500">
-                          <SelectValue placeholder="Choose your age group" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-lg">
-                        <SelectGroup>
-                          <SelectItem value="early_childhood" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
-                            Early Childhood (Under 5)
-                          </SelectItem>
-                          <SelectItem value="elementary" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
-                            Elementary (5-10 years)
-                          </SelectItem>
-                          <SelectItem value="middle_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
-                            Middle School (11-12 years)
-                          </SelectItem>
-                          <SelectItem value="high_school" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
-                            High School (13-17 years)
-                          </SelectItem>
-                          <SelectItem value="young_adult" className="hover:bg-slate-50 focus:bg-teal-50 focus:text-teal-700">
-                            Young Adult (18+ years)
-                          </SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <FormControl>
+                    <Input 
+                      value={field.value ? 
+                        (field.value === "early_childhood" ? "Early Childhood (Under 5)" :
+                         field.value === "elementary" ? "Elementary (5-10 years)" :
+                         field.value === "middle_school" ? "Middle School (11-12 years)" :
+                         field.value === "high_school" ? "High School (13-17 years)" :
+                         field.value === "young_adult" ? "Young Adult (18+ years)" :
+                         "Calculated from birth date") : "Calculated from birth date"
+                      }
+                      disabled
+                      className="bg-slate-50 border-slate-200 cursor-not-allowed"
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

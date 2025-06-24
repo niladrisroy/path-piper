@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserProfile, updateUserProfile, updateStudentProfile } from '@/lib/db/profile'
 import { prisma } from '@/lib/prisma'
@@ -8,17 +7,17 @@ import { cookies } from 'next/headers'
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies()
-    
+
     // Get the access token from cookies
     const accessToken = cookieStore.get('sb-access-token')?.value
-    
+
     if (!accessToken) {
       return NextResponse.json({ error: 'Unauthorized - no access token' }, { status: 401 })
     }
 
     // Verify the token with Supabase
     const { data: { user }, error } = await supabase.auth.getUser(accessToken)
-    
+
     if (error || !user) {
       return NextResponse.json({ error: 'Unauthorized - invalid token' }, { status: 401 })
     }
@@ -50,7 +49,7 @@ export async function GET(request: NextRequest) {
         }
       }
     })
-    
+
     if (!profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
@@ -97,10 +96,10 @@ export async function GET(request: NextRequest) {
     }
 
     const response = NextResponse.json(formattedProfile)
-    
+
     // Add cache headers to reduce unnecessary requests
     response.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=300')
-    
+
     return response
   } catch (error) {
     console.error('Error fetching profile:', error)
@@ -114,23 +113,23 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const cookieStore = await cookies()
-    
+
     // Get the access token from cookies
     const accessToken = cookieStore.get('sb-access-token')?.value
-    
+
     if (!accessToken) {
       return NextResponse.json({ error: 'Unauthorized - no access token' }, { status: 401 })
     }
 
     // Verify the token with Supabase
     const { data: { user }, error } = await supabase.auth.getUser(accessToken)
-    
+
     if (error || !user) {
       return NextResponse.json({ error: 'Unauthorized - invalid token' }, { status: 401 })
     }
 
     const body = await request.json()
-    
+
     // Separate profile data from student-specific data
     const {
       educationLevel,
@@ -149,9 +148,49 @@ export async function PUT(request: NextRequest) {
     // Update student profile if student-specific data is provided
     if (updatedProfile.role === 'student' && 
         (educationLevel || ageGroup || birthMonth || birthYear || personalityType || learningStyle || favoriteQuote)) {
+      
+      // Calculate age group from birth data if available
+      const calculateAgeGroup = (birthMonth: string, birthYear: string): string => {
+        if (!birthMonth || !birthYear) return "young_adult";
+
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1;
+
+        const birthYearNum = parseInt(birthYear);
+        const birthMonthNum = parseInt(birthMonth);
+
+        let ageInYears = currentYear - birthYearNum;
+        if (currentMonth < birthMonthNum) {
+          ageInYears--;
+        }
+
+        if (ageInYears < 5) {
+          return "early_childhood";
+        } else if (ageInYears < 11) {
+          return "elementary";
+        } else if (ageInYears < 13) {
+          return "middle_school";
+        } else if (ageInYears < 18) {
+          return "high_school";
+        } else {
+          return "young_adult";
+        }
+      };
+
+      // Get existing student profile to access birth data
+      const existingStudentProfile = await prisma.student.findUnique({
+        where: { id: user.id },
+        select: { birthMonth: true, birthYear: true }
+      });
+
+      const calculatedAgeGroup = existingStudentProfile 
+        ? calculateAgeGroup(existingStudentProfile.birthMonth || "", existingStudentProfile.birthYear || "")
+        : "young_adult";
+
       await updateStudentProfile(user.id, {
         educationLevel,
-        age_group: ageGroup, // Note: using age_group as per database schema
+        age_group: calculatedAgeGroup, // Note: using age_group as per database schema
         birthMonth,
         birthYear,
         personalityType,
