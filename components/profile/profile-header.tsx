@@ -738,109 +738,106 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                       )}
                     </div>
                     {achievementLoading ? (
-                      <div className="bg-sky-50 dark:bg-sky-900/20 p-3 rounded-lg">
-                        <div className="flex gap-3 overflow-x-auto pb-2">
-                          {[...Array(3)].map((_, i) => (
-                            <div key={i} className="flex flex-col items-center min-w-[60px] shrink-0">
-                              <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-12 w-12 rounded-full mb-1"></div>
-                              <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-2 w-8 rounded"></div>
-                            </div>
-                          ))}
-                        </div>
+                      <div className="flex gap-2 overflow-x-auto pb-2">
+                        {[...Array(3)].map((_, i) => (
+                          <div key={i} className="min-w-[220px] shrink-0">
+                            <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-16 w-full rounded-lg"></div>
+                          </div>
+                        ))}
                       </div>
                     ) : recentAchievements && recentAchievements.length > 0 ? (
-                      <div className="bg-sky-50 dark:bg-sky-900/20 p-3 rounded-lg">
-                        <div className="flex gap-3 overflow-x-auto pb-2 hide-scrollbar">
-                          {recentAchievements.slice(0, 5).map((achievement, index) => (
+                      <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
+                        {recentAchievements.slice(0, 5).map((achievement, index) => (
+                          <div 
+                            key={achievement.id} 
+                            className="min-w-[220px] shrink-0 group cursor-pointer"
+                            title={`${achievement.name} - Awarded ${format(new Date(achievement.dateOfAchievement), 'MMM dd, yyyy')}`}
+                          >
                             <div 
-                              key={achievement.id} 
-                              className="min-w-[180px] shrink-0 group cursor-pointer"
-                              title={`${achievement.name} - Awarded ${format(new Date(achievement.dateOfAchievement), 'MMM dd, yyyy')}`}
+                              className={`p-3 rounded-lg transition-transform group-hover:scale-105 border h-16 ${
+                                index % 4 === 0
+                                  ? "bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border-yellow-200 dark:border-yellow-800"
+                                  : index % 4 === 1
+                                    ? "bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border-blue-200 dark:border-blue-800"
+                                    : index % 4 === 2
+                                      ? "bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border-purple-200 dark:border-purple-800"
+                                      : "bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 border-green-200 dark:border-green-800"
+                              }`}
                             >
-                              <div 
-                                className={`p-3 rounded-lg transition-transform group-hover:scale-105 border ${
-                                  index % 4 === 0
-                                    ? "bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border-yellow-200 dark:border-yellow-800"
-                                    : index % 4 === 1
-                                      ? "bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border-blue-200 dark:border-blue-800"
-                                      : index % 4 === 2
-                                        ? "bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border-purple-200 dark:border-purple-800"
-                                        : "bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 border-green-200 dark:border-green-800"
-                                }`}
-                              >
-                                <div className="flex items-start gap-3">
-                                  <div className="flex-shrink-0">
-                                    {achievement.achievementImageIcon ? (
-                                      <img
-                                        src={achievement.achievementImageIcon}
-                                        alt={achievement.name}
-                                        className="h-8 w-8 rounded object-cover"
-                                      />
-                                    ) : (
-                                      <div 
-                                        className={`h-8 w-8 rounded flex items-center justify-center ${
+                              <div className="flex items-center gap-3 h-full">
+                                <div className="flex-shrink-0">
+                                  {achievement.achievementImageIcon ? (
+                                    <img
+                                      src={achievement.achievementImageIcon}
+                                      alt={achievement.name}
+                                      className="h-8 w-8 rounded object-cover"
+                                    />
+                                  ) : (
+                                    <div 
+                                      className={`h-8 w-8 rounded flex items-center justify-center ${
+                                        index % 4 === 0
+                                          ? "bg-yellow-100 dark:bg-yellow-900/40"
+                                          : index % 4 === 1
+                                            ? "bg-blue-100 dark:bg-blue-900/40"
+                                            : index % 4 === 2
+                                              ? "bg-purple-100 dark:bg-purple-900/40"
+                                              : "bg-green-100 dark:bg-green-900/40"
+                                      }`}
+                                    >
+                                      <Award 
+                                        className={`h-4 w-4 ${
                                           index % 4 === 0
-                                            ? "bg-yellow-100 dark:bg-yellow-900/40"
+                                            ? "text-yellow-600 dark:text-yellow-400"
                                             : index % 4 === 1
-                                              ? "bg-blue-100 dark:bg-blue-900/40"
+                                              ? "text-blue-600 dark:text-blue-400"
                                               : index % 4 === 2
-                                                ? "bg-purple-100 dark:bg-purple-900/40"
-                                                : "bg-green-100 dark:bg-green-900/40"
+                                                ? "text-purple-600 dark:text-purple-400"
+                                                : "text-green-600 dark:text-green-400"
                                         }`}
-                                      >
-                                        <Award 
-                                          className={`h-4 w-4 ${
-                                            index % 4 === 0
-                                              ? "text-yellow-600 dark:text-yellow-400"
-                                              : index % 4 === 1
-                                                ? "text-blue-600 dark:text-blue-400"
-                                                : index % 4 === 2
-                                                  ? "text-purple-600 dark:text-purple-400"
-                                                  : "text-green-600 dark:text-green-400"
-                                          }`}
-                                        />
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="flex-1 min-w-0">
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between">
                                     <h5 className="text-xs font-semibold text-gray-900 dark:text-white truncate">
                                       {achievement.name}
                                     </h5>
-                                    <p className="text-[10px] text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
-                                      {achievement.description || "Achievement earned"}
-                                    </p>
-                                    <div className="flex items-center gap-1 mt-2">
+                                    <div className="flex items-center gap-1 ml-2">
                                       <Calendar className="h-3 w-3 text-gray-400" />
-                                      <span className="text-[10px] text-gray-500">
-                                        {format(new Date(achievement.dateOfAchievement), 'MMM dd, yyyy')}
+                                      <span className="text-[10px] text-gray-500 whitespace-nowrap">
+                                        {format(new Date(achievement.dateOfAchievement), 'MMM dd')}
                                       </span>
                                     </div>
                                   </div>
+                                  <p className="text-[10px] text-gray-600 dark:text-gray-400 mt-1 truncate">
+                                    {achievement.description || "Achievement earned"}
+                                  </p>
                                 </div>
                               </div>
                             </div>
-                          ))}
-                        </div>
-                        {recentAchievements.length > 5 && (
-                          <div className="mt-2 text-center">
-                            <button
-                              onClick={() => router.push('/student/profile?tab=achievements')}
-                              className="text-[10px] text-pathpiper-teal hover:text-pathpiper-teal/80 font-medium transition-colors"
-                            >
-                              View All ({recentAchievements.length})
-                            </button>
                           </div>
-                        )}
+                        ))}
                       </div>
                     ) : (
-                      <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg flex items-center gap-3">
-                        <div className="bg-gray-100 dark:bg-gray-700 h-12 w-12 rounded-full flex items-center justify-center">
-                          <Award className="h-6 w-6 text-gray-400" />
+                      <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg flex items-center gap-3 h-16">
+                        <div className="bg-gray-100 dark:bg-gray-700 h-8 w-8 rounded flex items-center justify-center">
+                          <Award className="h-4 w-4 text-gray-400" />
                         </div>
                         <div>
                           <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400">No achievements yet</h4>
                           <p className="text-xs text-gray-400 dark:text-gray-500">Start adding your accomplishments</p>
                         </div>
+                      </div>
+                    )}
+                    {recentAchievements && recentAchievements.length > 5 && (
+                      <div className="mt-2 text-center">
+                        <button
+                          onClick={() => router.push('/student/profile?tab=achievements')}
+                          className="text-[10px] text-pathpiper-teal hover:text-pathpiper-teal/80 font-medium transition-colors"
+                        >
+                          View All ({recentAchievements.length})
+                        </button>
                       </div>
                     )}
                   </div>
