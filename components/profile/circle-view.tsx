@@ -715,7 +715,7 @@ export default function CircleView({ student }: CircleViewProps) {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <Tabs defaultValue="all" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4 mb-6">
+                    <TabsList className="grid w-full grid-cols-3 mb-6">
                       <TabsTrigger value="all">
                         All ({(() => {
                           if (showCircleMembers && selectedCircle) {
@@ -745,17 +745,6 @@ export default function CircleView({ student }: CircleViewProps) {
                             ).length;
                           }
                           return connections.filter((c) => c.user.role === "student").length;
-                        })()})
-                      </TabsTrigger>
-                      <TabsTrigger value="institutions">
-                        Institutions ({(() => {
-                          if (showCircleMembers && selectedCircle) {
-                            // Count only institutions in the selected circle
-                            return selectedCircle.memberships.filter(
-                              (membership: any) => membership.user.role === "institution"
-                            ).length;
-                          }
-                          return institutionConnections;
                         })()})
                       </TabsTrigger>
                     </TabsList>
@@ -932,7 +921,7 @@ export default function CircleView({ student }: CircleViewProps) {
                                     </p>
                                   )}
 
-                                  <div className="flex items-center justify-center space-x-1 w-full mt-3">
+                                  <div className="flex items-center justify-center spacex-1 w-full mt-3">
                                     <Button
                                       variant="ghost"
                                       size="sm"
@@ -1317,204 +1306,6 @@ export default function CircleView({ student }: CircleViewProps) {
                                       className="text-xs mt-1 bg-blue-50 text-blue-700 border-blue-200"
                                     >
                                       peer
-                                    </Badge>
-                                  </div>
-
-                                  {connection.user.bio && (
-                                    <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 px-1">
-                                      {connection.user.bio}
-                                    </p>
-                                  )}
-
-                                  <div className="flex items-center justify-center space-x-1 w-full mt-3">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 w-6 p-0"
-                                      title="Message"
-                                    >
-                                      <MessageCircle className="h-3 w-3" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 w-6 p-0"
-                                      title="Schedule"
-                                    >
-                                      <Calendar className="h-3 w-3" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() =>
-                                        removeConnection(connection.id)
-                                      }
-                                      className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                      title="Remove"
-                                    >
-                                      <UserMinus className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                </div>
-
-                                <div className="absolute bottom-1 left-1 right-1 text-xs text-gray-400 text-center truncate border-t border-gray-100 pt-1">
-                                  {connection.user.lastInteraction}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })()}
-                    </TabsContent>
-
-                    <TabsContent value="institutions" className="mt-0">
-                      {(() => {
-                        if (showCircleMembers && selectedCircle) {
-                          // Show only institutions from circle
-                          const institutionMembers = selectedCircle.memberships.filter(
-                            membership => membership.user.role === "institution"
-                          ).map(membership => ({
-                            user: {
-                              ...membership.user,
-                              name: `${membership.user.firstName} ${membership.user.lastName}`,
-                              lastInteraction: "Circle Member"
-                            }
-                          }));
-
-                          if (institutionMembers.length === 0) {
-                            return (
-                              <div className="text-center py-8 text-gray-500">
-                                <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                                <p>No institutions in this circle yet</p>
-                              </div>
-                            );
-                          }
-
-                          return (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                              {institutionMembers.map((member, index) => (
-                                <div
-                                  key={`${member.user.id}-${index}`}
-                                  className="relative bg-white dark:bg-gray-800 border rounded-xl p-3 hover:shadow-md transition-all duration-200 cursor-pointer group"
-                                >
-                                  <div className="flex flex-col items-center text-center space-y-2 pb-6">
-                                    <div className="relative">
-                                      <Avatar className="h-12 w-12">
-                                        <AvatarImage
-                                          src={member.user.profileImageUrl}
-                                          alt={member.user.name}
-                                        />
-                                        <AvatarFallback className="text-sm">
-                                          {member.user.firstName?.[0]}
-                                          {member.user.lastName?.[0]}
-                                        </AvatarFallback>
-                                      </Avatar>
-                                      <div
-                                        className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${getStatusColor(member.user.status || "offline")}`}
-                                      />
-                                      <Building className="absolute -top-1 -left-1 h-4 w-4 text-purple-600 bg-white rounded-full p-0.5" />
-                                    </div>
-
-                                    <div className="w-full">
-                                      <h3 className="font-medium text-xs truncate">
-                                        {member.user.name}
-                                      </h3>
-                                      <Badge
-                                        variant="outline"
-                                        className="text-xs mt-1 bg-purple-50 text-purple-700 border-purple-200"
-                                      >
-                                        institution
-                                      </Badge>
-                                    </div>
-
-                                    {member.user.bio && (
-                                      <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 px-1">
-                                        {member.user.bio}
-                                      </p>
-                                    )}
-
-                                    <div className="flex items-center justify-center space-x-1 w-full mt-3">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 w-6 p-0"
-                                        title="Message"
-                                      >
-                                        <MessageCircle className="h-3 w-3" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 w-6 p-0"
-                                        title="Schedule"
-                                      >
-                                        <Calendar className="h-3 w-3" />
-                                      </Button>
-                                    </div>
-                                  </div>
-
-                                  <div className="absolute bottom-1 left-1 right-1 text-xs text-gray-400 text-center truncate border-t border-gray-100 pt-1">
-                                    {member.user.lastInteraction}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          );
-                        }
-
-                        const filteredConnections = connections.filter(
-                          (c) => c.user.role === "institution",
-                        );
-
-                        if (filteredConnections.length === 0) {
-                          return (
-                            <div className="text-center py-8 text-gray-500">
-                              <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                              <p>No institutions yet</p>
-                              <p className="text-sm">
-                                Connect with institutions for opportunities!
-                              </p>
-                            </div>
-                          );
-                        }
-
-                        return (
-                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                            {filteredConnections.map((connection) => (
-                              <div
-                                key={connection.id}
-                                className="relative bg-white dark:bg-gray-800 border rounded-xl p-3 hover:shadow-md transition-all duration-200 cursor-pointer group"
-                              >
-                                <div className="flex flex-col items-center text-center space-y-2 pb-6">
-                                  <div className="relative">
-                                    <Avatar className="h-12 w-12">
-                                      <AvatarImage
-                                        src={
-                                          connection.user.profileImageUrl ||
-                                          connection.user.avatar
-                                        }
-                                        alt={connection.user.name}
-                                      />
-                                      <AvatarFallback className="text-sm">
-                                        {connection.user.firstName?.[0]}
-                                        {connection.user.lastName?.[0]}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <div
-                                      className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${getStatusColor(connection.user.status)}`}
-                                    />
-                                    <Building className="absolute -top-1 -left-1 h-4 w-4 text-purple-600 bg-white rounded-full p-0.5" />
-                                  </div>
-
-                                  <div className="w-full">
-                                    <h3 className="font-medium text-xs truncate">
-                                      {connection.user.name}
-                                    </h3>
-                                    <Badge
-                                      variant="outline"
-                                      className="text-xs mt-1 bg-purple-50 text-purple-700 border-purple-200"
-                                    >
-                                      institution
                                     </Badge>
                                   </div>
 
