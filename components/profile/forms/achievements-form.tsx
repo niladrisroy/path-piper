@@ -236,22 +236,57 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
     }
   }
 
-  const handleEdit = (achievement: Achievement) => {
+  const handleEdit = async (achievement: Achievement) => {
     setEditingId(achievement.id)
+    
+    // First, get the category ID for this achievement type
+    const categoryId = await getCategoryIdFromTypeId(achievement.achievementTypeId)
+    
     setEditFormData({
       name: achievement.name,
       description: achievement.description,
       dateOfAchievement: achievement.dateOfAchievement.split('T')[0],
-      categoryId: getCategoryIdFromTypeId(achievement.achievementTypeId),
+      categoryId: categoryId,
       achievementTypeId: achievement.achievementTypeId?.toString() || '',
       achievementImageIcon: achievement.achievementImageIcon || ''
     })
+    
+    // Fetch types for the category if we have one
+    if (categoryId) {
+      await fetchTypes(categoryId)
+    }
   }
 
-  const getCategoryIdFromTypeId = (typeId?: number) => {
+  const getCategoryIdFromTypeId = async (typeId?: number): Promise<string> => {
     if (!typeId) return ''
-    const type = types.find(t => t.id === typeId)
-    return type ? type.categoryId.toString() : ''
+    
+    // First check if we already have the type in our current types array
+    const existingType = types.find(t => t.id === typeId)
+    if (existingType) {
+      return existingType.categoryId.toString()
+    }
+    
+    // If not found, we need to fetch it from the API
+    try {
+      // Get all categories first to find which one contains this type
+      for (const category of categories) {
+        const response = await fetch(`/api/achievement-types?categoryId=${category.id}`, {
+          credentials: 'include'
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          const foundType = data.types?.find((t: AchievementType) => t.id === typeId)
+          if (foundType) {
+            return category.id.toString()
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error finding category for type:', error)
+    }
+    
+    return ''
   }
 
   const handleCancelEdit = () => {
