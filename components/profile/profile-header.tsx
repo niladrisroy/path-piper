@@ -810,7 +810,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                                       {achievement.description || "Achievement earned"}
                                     </p>
                                     <div className="flex items-center gap-1 mt-2">
-                                      <CalendarIcon className="h-3 w-3 text-gray-400" />
+                                      <Calendar className="h-3 w-3 text-gray-400" />
                                       <span className="text-[10px] text-gray-500">
                                         {format(new Date(achievement.dateOfAchievement), 'MMM dd, yyyy')}
                                       </span>
