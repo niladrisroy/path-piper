@@ -111,10 +111,11 @@ export default function SkillsStep({
               console.log('✅ Fetched existing user skills:', userSkillsData.skills)
               
               // Convert the existing skills to the format expected by the component
+              // Handle both possible API response structures
               const existingSkills = userSkillsData.skills.map((userSkill: any) => ({
-                name: userSkill.skill.name,
-                level: userSkill.proficiencyLevel,
-                id: userSkill.skill.id
+                name: userSkill.skill?.name || userSkill.skills?.name || userSkill.name,
+                level: userSkill.proficiencyLevel || userSkill.proficiency_level || userSkill.level || 1,
+                id: userSkill.skill?.id || userSkill.skills?.id || userSkill.skill_id || userSkill.id
               }))
               
               setSkills(existingSkills)

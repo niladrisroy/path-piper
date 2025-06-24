@@ -36,6 +36,18 @@ interface PersonalInfoStepProps {
   onNext?: () => void;
 }
 
+// Helper function to get display name for age group
+const getAgeGroupDisplayName = (ageGroup: AgeGroup): string => {
+  const displayNames = {
+    'early_childhood': 'Early Childhood (0-4 years)',
+    'elementary': 'Elementary (5-10 years)', 
+    'middle_school': 'Middle School (11-12 years)',
+    'high_school': 'High School (13-17 years)',
+    'young_adult': 'Young Adult (18+ years)'
+  }
+  return displayNames[ageGroup] || 'Not specified'
+}
+
 // Function to calculate age group based on birth month and year
 const calculateAgeGroup = (birthMonth: string, birthYear: string): string => {
   if (!birthMonth || !birthYear) return "young_adult";
@@ -160,7 +172,7 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
       const originalValue = originalData[key as keyof PersonalInfo];
       return currentValue !== originalValue;
     });
-    
+
     setIsDirty(hasChanges);
   }, [watchedValues, originalData, form]);
 
@@ -192,7 +204,7 @@ export default function PersonalInfoStep({ initialData, onComplete, onNext }: Pe
   const onSubmit = async (data: PersonalInfo) => {
     console.log("Form submitted with data:", data);
     console.log("🔍 Personal Info dirty bit:", isDirty);
-    
+
     if (isDirty) {
       console.log("💾 Personal info has changes, saving to database...");
       // Save to database
