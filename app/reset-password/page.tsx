@@ -1,22 +1,29 @@
+
 "use client"
 
-import type React from "react"
-
-import { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef, Suspense } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, CheckCircle } from "lucide-react"
+import { ArrowLeft, CheckCircle, Eye, EyeOff } from "lucide-react"
+import { supabase } from "@/lib/supabase"
 
-export default function ForgotPassword() {
-  const [email, setEmail] = useState("")
+function ResetPasswordContent() {
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isCompleted, setIsCompleted] = useState(false)
+  const [error, setError] = useState("")
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
   // Track mouse position for interactive elements
   useEffect(() => {
@@ -24,7 +31,6 @@ export default function ForgotPassword() {
       if (!containerRef.current) return
 
       const rect = containerRef.current.getBoundingClientRect()
-      // Calculate mouse position relative to container (0-100)
       const x = ((e.clientX - rect.left) / rect.width) * 100
       const y = ((e.clientY - rect.top) / rect.height) * 100
 
@@ -45,30 +51,57 @@ export default function ForgotPassword() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError("")
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match")
+      return
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long")
+      return
+    }
+
     setIsLoading(true)
 
     try {
-      const response = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
+      // Get the session from URL hash (Supabase auth callback)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1))
+      const accessToken = hashParams.get('access_token')
+      const refreshToken = hashParams.get('refresh_token')
+
+      if (accessToken && refreshToken) {
+        // Set the session
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        })
+
+        if (sessionError) {
+          throw sessionError
+        }
+      }
+
+      // Update the password
+      const { error } = await supabase.auth.updateUser({
+        password: password
       })
 
-      const data = await response.json()
-
-      if (response.ok) {
-        setIsSubmitted(true)
-      } else {
-        console.error('Password reset failed:', data.error)
-        // Still show success message for security (prevent email enumeration)
-        setIsSubmitted(true)
+      if (error) {
+        throw error
       }
-    } catch (error) {
+
+      setIsCompleted(true)
+      
+      // Redirect to login after 3 seconds
+      setTimeout(() => {
+        router.push('/login?message=Password updated successfully')
+      }, 3000)
+
+    } catch (error: any) {
       console.error('Password reset error:', error)
-      // Still show success message for security
-      setIsSubmitted(true)
+      setError(error.message || 'Failed to reset password. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -76,7 +109,7 @@ export default function ForgotPassword() {
 
   return (
     <main className="min-h-screen flex flex-col bg-white">
-      {/* Header/Navbar from signup page */}
+      {/* Header */}
       <header className="w-full py-4 px-6 flex justify-between items-center bg-white border-b border-slate-200">
         <Link href="/" className="h-10">
           <Image
@@ -121,17 +154,17 @@ export default function ForgotPassword() {
               }}
             />
 
-            {/* Hero text from home page - positioned at top left */}
+            {/* Hero text */}
             <div className="z-10 mb-auto">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
-                Don't worry! I'll help you get back into{" "}
+                Create a new{" "}
                 <span className="bg-gradient-to-r from-orange-500 via-purple-500 to-teal-500 bg-clip-text text-transparent">
-                  PathPiper
+                  secure password
                 </span>
               </h1>
             </div>
 
-            {/* Floating Pip character with bounce effect - larger size */}
+            {/* Floating Pip character */}
             <motion.div
               className="relative z-10 mx-auto my-auto flex-grow flex items-center justify-center py-8"
               animate={{
@@ -210,31 +243,75 @@ export default function ForgotPassword() {
           </div>
         </div>
 
-        {/* Right side - Forgot Password form */}
+        {/* Right side - Reset Password form */}
         <div className="w-full md:flex-1 flex items-center justify-center p-8 bg-white">
           <div className="w-full max-w-md mx-auto">
-            {/* Mobile logo - only visible on mobile */}
-
             <h1 className="text-4xl font-bold text-gray-900 mb-8">Reset Password</h1>
 
-            {!isSubmitted ? (
+            {!isCompleted ? (
               <form onSubmit={handleSubmit} className="space-y-6">
+                {error && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-red-600 text-sm">{error}</p>
+                  </div>
+                )}
+
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-gray-700">
-                    Email
+                  <Label htmlFor="password" className="text-gray-700">
+                    New Password
                   </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="h-12 rounded-lg"
-                  />
-                  <p className="text-sm text-slate-600">
-                    Enter your email and we'll send you instructions to reset your password
-                  </p>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your new password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="h-12 rounded-lg pr-10"
+                      minLength={8}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" className="text-gray-700">
+                    Confirm Password
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm your new password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      className="h-12 rounded-lg pr-10"
+                      minLength={8}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="text-sm text-gray-600">
+                  <p>Password requirements:</p>
+                  <ul className="list-disc list-inside mt-1 space-y-1">
+                    <li>At least 8 characters long</li>
+                    <li>Must match confirmation password</li>
+                  </ul>
                 </div>
 
                 <Button
@@ -245,10 +322,10 @@ export default function ForgotPassword() {
                   {isLoading ? (
                     <div className="flex items-center justify-center">
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                      Sending...
+                      Updating Password...
                     </div>
                   ) : (
-                    "Send Reset Instructions"
+                    "Update Password"
                   )}
                 </Button>
 
@@ -271,24 +348,15 @@ export default function ForgotPassword() {
                     <CheckCircle className="w-8 h-8 text-teal-500" />
                   </div>
                 </div>
-                <h2 className="text-2xl font-bold mb-4">Check Your Email</h2>
+                <h2 className="text-2xl font-bold mb-4">Password Updated!</h2>
                 <p className="text-slate-600 mb-6">
-                  We've sent password reset instructions to <span className="font-medium">{email}</span>
+                  Your password has been successfully updated. You will be redirected to the login page shortly.
                 </p>
-                <div className="space-y-4">
-                  <Button
-                    onClick={() => setIsSubmitted(false)}
-                    variant="outline"
-                    className="w-full h-12 rounded-lg border-slate-300"
-                  >
-                    Try a Different Email
+                <Link href="/login" className="block">
+                  <Button className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white rounded-lg">
+                    Continue to Login
                   </Button>
-                  <Link href="/login" className="block">
-                    <Button variant="ghost" className="w-full text-slate-600 hover:text-teal-500">
-                      Back to Login
-                    </Button>
-                  </Link>
-                </div>
+                </Link>
               </motion.div>
             )}
           </div>
@@ -302,5 +370,20 @@ export default function ForgotPassword() {
         </div>
       </footer>
     </main>
+  )
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-pathpiper-teal"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <ResetPasswordContent />
+    </Suspense>
   )
 }

@@ -25,7 +25,7 @@ async function mockSendEmail() {
   return { success: true, data: { id: 'mocked_id' } };
 }
 
-export type EmailTemplate = 'verification' | 'parent-approval';
+export type EmailTemplate = 'verification' | 'parent-approval' | 'password-reset';
 
 export async function sendEmail(
   template: EmailTemplate,
@@ -35,6 +35,7 @@ export async function sendEmail(
     verificationLink?: string;
     studentName?: string;
     approvalLink?: string;
+    resetLink?: string;
   }
 ) {
   try {
@@ -60,6 +61,49 @@ export async function sendEmail(
           <p>${data.studentName} has created an account on PathPiper and requires your approval to proceed.</p>
           <p>Please review and approve their account by clicking the link below:</p>
           <a href="${data.approvalLink}">Review and Approve</a>
+        `;
+        break;
+
+      case 'password-reset':
+        subject = 'Reset your PathPiper password';
+        html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #14b8a6; margin: 0;">PathPiper</h1>
+            </div>
+            
+            <h2 style="color: #1f2937; margin-bottom: 20px;">Reset Your Password</h2>
+            
+            <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
+              Hi ${data.userName || 'there'},
+            </p>
+            
+            <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
+              We received a request to reset your PathPiper account password. Click the button below to reset it:
+            </p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${data.resetLink}" 
+                 style="display: inline-block; background-color: #14b8a6; color: white; padding: 12px 30px; 
+                        text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
+                Reset Password
+              </a>
+            </div>
+            
+            <p style="color: #6b7280; font-size: 14px; line-height: 1.5;">
+              If you didn't request this password reset, you can safely ignore this email. Your password will remain unchanged.
+            </p>
+            
+            <p style="color: #6b7280; font-size: 14px; line-height: 1.5;">
+              This link will expire in 1 hour for security reasons.
+            </p>
+            
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+            
+            <p style="color: #9ca3af; font-size: 12px; text-align: center;">
+              © ${new Date().getFullYear()} PathPiper. All rights reserved.
+            </p>
+          </div>
         `;
         break;
     }
