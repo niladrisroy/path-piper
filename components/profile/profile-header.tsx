@@ -750,11 +750,11 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                         {recentAchievements.slice(0, 5).map((achievement, index) => (
                           <div 
                             key={achievement.id} 
-                            className="min-w-[220px] shrink-0 group cursor-pointer"
+                            className="min-w-[220px] shrink-0 cursor-pointer"
                             title={`${achievement.name} - Awarded ${format(new Date(achievement.dateOfAchievement), 'MMM dd, yyyy')}`}
                           >
                             <div 
-                              className={`p-3 rounded-lg transition-transform group-hover:scale-105 border h-16 ${
+                              className={`p-3 rounded-lg border h-16 ${
                                 index % 4 === 0
                                   ? "bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border-yellow-200 dark:border-yellow-800"
                                   : index % 4 === 1
