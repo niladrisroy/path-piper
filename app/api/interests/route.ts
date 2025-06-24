@@ -70,9 +70,15 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             name: true
+          },
+          orderBy: {
+            name: 'asc'
           }
         }
-      }
+      },
+      orderBy: [
+        { name: 'asc' }
+      ]
     })
 
     console.log('✅ Found', interestCategories.length, 'interest categories for age group:', ageGroup)

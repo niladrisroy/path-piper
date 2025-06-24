@@ -48,16 +48,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Get available interests for user's age group
-    const availableInterestCategories = await prisma.interestCategory.findMany({
-      where: { ageGroup: ageGroup as any },
-      include: { interests: { select: { name: true } } }
-    })
-
-    const availableInterestNames = availableInterestCategories.flatMap(
-      category => category.interests.map(interest => interest.name)
-    )
-
-    // Get available interest IDs for user's current age group (more precise filtering)
     const availableInterests = await prisma.interest.findMany({
       where: {
         category: {
@@ -73,9 +63,71 @@ export async function POST(request: NextRequest) {
     const availableInterestIds = availableInterests.map(interest => interest.id)
     const availableInterestNamesMap = new Map(availableInterests.map(interest => [interest.name, interest.id]))
 
-    // Filter interests to only include those available for current age group
-    const validInterests = interests.filter(interest => availableInterestNamesMap.has(interest))
-    console.log('🔍 Filtering interests for age group', ageGroup, '. Valid:', validInterests.length, 'out of', interests.length)
+    // Get or create custom interest category for this age group
+    let customInterestCategory = await prisma.interestCategory.findFirst({
+      where: {
+        name: 'Custom',
+        ageGroup: ageGroup as any
+      }
+    })
+
+    if (!customInterestCategory) {
+      customInterestCategory = await prisma.interestCategory.create({
+        data: {
+          name: 'Custom',
+          ageGroup: ageGroup as any
+        }
+      })
+      console.log('✅ Created custom interest category for age group:', ageGroup)
+    }
+
+    // Process custom interests and create them in database
+    for (const interest of interests) {
+      const interestId = typeof interest === 'object' ? interest.id : null
+      const interestName = typeof interest === 'object' ? interest.name : interest
+
+      if (!interestId && !availableInterestNamesMap.has(interestName)) {
+        console.log('🔍 Processing custom interest:', interestName)
+
+        // Check if this custom interest already exists
+        const existingCustomInterest = await prisma.interest.findFirst({
+          where: {
+            name: interestName,
+            categoryId: customInterestCategory.id
+          }
+        })
+
+        if (!existingCustomInterest) {
+          // Create the custom interest
+          const newCustomInterest = await prisma.interest.create({
+            data: {
+              name: interestName,
+              categoryId: customInterestCategory.id
+            }
+          })
+
+          // Add to our maps so it can be processed normally
+          availableInterestIds.push(newCustomInterest.id)
+          availableInterestNamesMap.set(interestName, newCustomInterest.id)
+          console.log('✅ Created custom interest:', interestName, 'with ID:', newCustomInterest.id)
+        } else {
+          // Add existing custom interest to our maps
+          availableInterestIds.push(existingCustomInterest.id)
+          availableInterestNamesMap.set(interestName, existingCustomInterest.id)
+          console.log('✅ Found existing custom interest:', interestName, 'with ID:', existingCustomInterest.id)
+        }
+      }
+    }
+
+    // Now all interests (including newly created custom ones) should be valid
+    const validInterests = interests.filter(interest => {
+      const interestId = typeof interest === 'object' ? interest.id : null
+      const interestName = typeof interest === 'object' ? interest.name : interest
+
+      return interestId ? availableInterestIds.includes(interestId) : availableInterestNamesMap.has(interestName)
+    })
+
+    console.log('🔍 Processing interests for age group', ageGroup, '. Valid:', validInterests.length, 'out of', interests.length)
 
     // Get currently saved user interests
     const currentUserInterests = await prisma.userInterest.findMany({
@@ -85,13 +137,13 @@ export async function POST(request: NextRequest) {
 
     const currentInterestNames = currentUserInterests.map(ui => ui.interest.name)
     const currentInterestIds = currentUserInterests.map(ui => ui.interest.id)
-    
+
     console.log('🔍 Current saved interests:', currentInterestNames.length, currentInterestNames)
     console.log('🔍 New interests to save:', validInterests.length, validInterests)
 
     // Find interests to add (in new list but not in current)
     const interestsToAdd = validInterests.filter(interest => !currentInterestNames.includes(interest))
-    
+
     // Find interests to remove (in current but not in new list, or not valid for current age group)
     const interestsToRemove = currentUserInterests.filter(ui => 
       !validInterests.includes(ui.interest.name) || !availableInterestIds.includes(ui.interest.id)
@@ -261,9 +313,9 @@ export async function GET(request: NextRequest) {
       const invalidInterestIds = userInterests
         .filter(ui => !availableInterestIds.includes(ui.interest.id))
         .map(ui => ui.interest.id)
-      
+
       console.log('🧹 Found interests from other age groups, cleaning up:', invalidInterestIds)
-      
+
       await prisma.userInterest.deleteMany({
         where: {
           userId: user.id,
@@ -272,7 +324,7 @@ export async function GET(request: NextRequest) {
           }
         }
       })
-      
+
       console.log('✅ Cleaned up', invalidInterestIds.length, 'interests from previous age groups')
     }
 

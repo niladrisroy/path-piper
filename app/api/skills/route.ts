@@ -31,16 +31,23 @@ export async function GET(request: NextRequest) {
 
     // Fetch skill categories and skills for the age group using Prisma
     const skillCategories = await prisma.skillCategory.findMany({
-      where: { ageGroup: mappedAgeGroup as any },
-      include: { 
+      where: {
+        ageGroup: ageGroup as any
+      },
+      include: {
         skills: {
           select: {
             id: true,
             name: true
+          },
+          orderBy: {
+            name: 'asc'
           }
         }
       },
-      orderBy: { name: 'asc' }
+      orderBy: [
+        { name: 'asc' }
+      ]
     })
 
     console.log('✅ Found', skillCategories.length, 'skill categories for age group:', ageGroup)

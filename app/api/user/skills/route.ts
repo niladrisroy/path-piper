@@ -129,17 +129,64 @@ export async function POST(request: NextRequest) {
     const availableSkillIds = availableSkills.map(skill => skill.id)
     const availableSkillNamesMap = new Map(availableSkills.map(skill => [skill.name, skill.id]))
 
-    // Filter skills to include those available for current age group
-    // Also include custom skills (those without IDs) for now
-    const validSkills = skills.filter(skill => {
-      if (!skill.id && !availableSkillNamesMap.has(skill.name)) {
-        // This is a custom skill, allow it for now but log it
-        console.log('🔍 Custom skill detected:', skill.name)
-        return true
+    // Get or create custom skill category for this age group
+    let customSkillCategory = await prisma.skillCategory.findFirst({
+      where: {
+        name: 'Custom',
+        ageGroup: ageGroup as any
       }
+    })
+
+    if (!customSkillCategory) {
+      customSkillCategory = await prisma.skillCategory.create({
+        data: {
+          name: 'Custom',
+          ageGroup: ageGroup as any
+        }
+      })
+      console.log('✅ Created custom skill category for age group:', ageGroup)
+    }
+
+    // Process custom skills (those without IDs) and create them in database
+    for (const skill of skills) {
+      if (!skill.id && !availableSkillNamesMap.has(skill.name)) {
+        console.log('🔍 Processing custom skill:', skill.name)
+        
+        // Check if this custom skill already exists
+        const existingCustomSkill = await prisma.skill.findFirst({
+          where: {
+            name: skill.name,
+            categoryId: customSkillCategory.id
+          }
+        })
+
+        if (!existingCustomSkill) {
+          // Create the custom skill
+          const newCustomSkill = await prisma.skill.create({
+            data: {
+              name: skill.name,
+              categoryId: customSkillCategory.id
+            }
+          })
+          
+          // Add to our maps so it can be processed normally
+          availableSkillIds.push(newCustomSkill.id)
+          availableSkillNamesMap.set(skill.name, newCustomSkill.id)
+          console.log('✅ Created custom skill:', skill.name, 'with ID:', newCustomSkill.id)
+        } else {
+          // Add existing custom skill to our maps
+          availableSkillIds.push(existingCustomSkill.id)
+          availableSkillNamesMap.set(skill.name, existingCustomSkill.id)
+          console.log('✅ Found existing custom skill:', skill.name, 'with ID:', existingCustomSkill.id)
+        }
+      }
+    }
+
+    // Now all skills (including newly created custom ones) should be valid
+    const validSkills = skills.filter(skill => {
       return skill.id ? availableSkillIds.includes(skill.id) : availableSkillNamesMap.has(skill.name)
     })
-    console.log('🔍 Filtering skills for age group', ageGroup, '. Valid:', validSkills.length, 'out of', skills.length)
+    console.log('🔍 Processing skills for age group', ageGroup, '. Valid:', validSkills.length, 'out of', skills.length)
 
     // Get currently saved user skills
     const currentUserSkills = await prisma.userSkill.findMany({
@@ -235,15 +282,7 @@ export async function POST(request: NextRequest) {
       console.log('🔄 Updated', skillsToUpdate.length, 'skill proficiency levels')
     }
 
-    // Log custom skills that don't exist in database
-    const customSkills = skills.filter(skill => 
-      !skill.id && !availableSkillNamesMap.has(skill.name)
-    )
-
-    if (customSkills.length > 0) {
-      console.log('⚠️ Custom skills detected but not saved (not in database for age group', ageGroup, '):', customSkills.map(s => s.name))
-      console.log('💡 Consider creating these skills in the database or allowing custom skill creation')
-    }
+    console.log('✅ All skills processed successfully, including custom skills')
 
     // Log filtered out skills (those not valid for current age group)
     const filteredOutSkills = skills.filter(skill => !validSkills.includes(skill))

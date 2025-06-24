@@ -55,7 +55,7 @@ export default function InterestsStep({
         }
         const { user } = await userResponse.json()
         console.log('🔍 User data for interests:', user)
-        
+
         if (user.ageGroup) {
           setUserAgeGroup(user.ageGroup as AgeGroup)
           console.log('✅ User age group set to:', user.ageGroup)
@@ -65,7 +65,7 @@ export default function InterestsStep({
         const interestsUrl = user.ageGroup 
           ? `/api/interests?ageGroup=${user.ageGroup}` 
           : '/api/interests'
-        
+
         console.log('🔍 Fetching interests from:', interestsUrl)
         const interestsResponse = await fetch(interestsUrl)
         if (!interestsResponse.ok) {
@@ -115,7 +115,7 @@ export default function InterestsStep({
       const filteredInterests = selectedInterests.filter(interest => 
         availableInterestIds.includes(interest.id)
       )
-      
+
       // Only update if the filtered list is different
       if (filteredInterests.length !== selectedInterests.length) {
         console.log('🔄 Re-filtering interests for new age group. Before:', selectedInterests.length, 'After:', filteredInterests.length)
@@ -128,11 +128,11 @@ export default function InterestsStep({
   useEffect(() => {
     const selectedNames = selectedInterests.map(interest => interest.name).sort()
     const initialNames = [...initialData].sort()
-    
+
     // Check if arrays are different
     const hasChanges = selectedNames.length !== initialNames.length || 
                       !selectedNames.every((name, index) => name === initialNames[index])
-    
+
     setIsDirty(hasChanges)
     console.log("🔍 Interests dirty bit:", hasChanges)
   }, [selectedInterests, initialData])
@@ -180,28 +180,42 @@ export default function InterestsStep({
   const addCustomInterest = () => {
     const trimmedInterest = customInterest.trim()
     if (trimmedInterest === "" || selectedInterests.some(i => i.name === trimmedInterest)) return
-    
+
     // Create a temporary interest object for custom interests (negative ID to distinguish)
     const customInterestObj: Interest = {
       id: -Date.now(), // Use negative timestamp as temporary ID
       name: trimmedInterest
     }
-    
+
     setSelectedInterests([...selectedInterests, customInterestObj])
     setCustomInterest("")
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     try {
       // Convert interest objects to names for API
       const interestNames = selectedInterests.map(interest => interest.name)
-      
+
       console.log("🔍 Interests dirty bit:", isDirty)
-      
+
       if (isDirty) {
         console.log("💾 Interests have changes, saving to database...")
+
+         // Separate interests with and without IDs
+        const interestsWithIds = selectedInterests.filter(i => i.id > 0)
+        const customInterests = selectedInterests.filter(i => i.id <= 0)
+
+        console.log("📊 Interests breakdown:", {
+          total: selectedInterests.length,
+          withIds: interestsWithIds.length,
+          custom: customInterests.length
+        })
+
+        if (customInterests.length > 0) {
+          console.log("ℹ️ Custom interests will be created in database:", customInterests.map(i => i.name))
+        }
         // Save interests to database
         const response = await fetch('/api/user/interests', {
           method: 'POST',
@@ -220,7 +234,7 @@ export default function InterestsStep({
       } else {
         console.log("✅ Interests unchanged, skipping database save")
       }
-      
+
       onComplete(interestNames)
       onNext()
     } catch (error) {

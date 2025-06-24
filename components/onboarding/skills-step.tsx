@@ -274,7 +274,7 @@ export default function SkillsStep({
         }
 
         if (customSkills.length > 0) {
-          console.log("⚠️ Custom skills detected but not saved:", customSkills.map(s => s.name))
+          console.log("ℹ️ Custom skills will be created in database:", customSkills.map(s => s.name))
         }
         
         setIsDirty(false)
