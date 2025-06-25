@@ -23,7 +23,7 @@ export interface UserRegistrationData {
   birthMonth?: string;
   birthYear?: string;
   parentEmail?: string;
-  role: "student" | "mentor" | "institution";
+  role: "student";
 }
 
 export async function registerStudent(data: UserRegistrationData) {
@@ -125,121 +125,7 @@ export async function registerStudent(data: UserRegistrationData) {
   }
 }
 
-export async function registerMentor(data: UserRegistrationData) {
-  try {
-    // Step 1: Use Supabase for auth only - create user in Supabase Auth
-    const { data: authData, error: authError } =
-      await supabase.auth.admin.createUser({
-        email: data.email,
-        password: data.password,
-        email_confirm: true,
-        user_metadata: {
-          first_name: data.firstName,
-          last_name: data.lastName,
-          role: "mentor",
-        },
-      });
 
-    if (authError || !authData.user) {
-      throw new Error(authError?.message || "Failed to create user account");
-    }
-
-    // Step 2: Use Prisma for all database operations
-    // Create user profile with the Supabase user ID
-    const profile = await prisma.profile.create({
-      data: {
-        id: authData.user.id,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        role: "mentor",
-      },
-    });
-
-    // Create mentor profile
-    await prisma.mentorProfile.create({
-      data: {
-        id: profile.id,
-        profession: "Not specified", // Default value
-        verified: false,
-      },
-    });
-
-    return { success: true, userId: authData.user.id };
-  } catch (error) {
-    console.error("Registration failed:", error);
-    return {
-      success: false,
-      error: (error as Error).message || "Registration failed",
-    };
-  }
-}
-
-export interface InstitutionRegistrationData extends UserRegistrationData {
-  institutionData: {
-    institutionName: string;
-    institutionTypeId: number | null;
-    category: string;
-    website: string;
-    logoUrl: string;
-    coverImageUrl: string;
-    description: string;
-  };
-}
-
-export async function registerInstitution(data: InstitutionRegistrationData) {
-  try {
-    // Step 1: Use Supabase for auth only - create user in Supabase Auth
-    const { data: authData, error: authError } =
-      await supabase.auth.admin.createUser({
-        email: data.email,
-        password: data.password,
-        email_confirm: true,
-        user_metadata: {
-          first_name: data.firstName,
-          last_name: data.lastName,
-          role: "institution",
-        },
-      });
-
-    if (authError || !authData.user) {
-      throw new Error(authError?.message || "Failed to create user account");
-    }
-
-    // Step 2: Use Prisma for all database operations
-    // Create user profile with the Supabase user ID
-    const profile = await prisma.profile.create({
-      data: {
-        id: authData.user.id,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        role: "institution",
-        bio: data.institutionData.description || null,
-      },
-    });
-
-    // Create institution profile with all required fields
-    await prisma.institutionProfile.create({
-      data: {
-        id: profile.id,
-        institutionName: data.institutionData.institutionName,
-        institutionTypeId: data.institutionData.institutionTypeId,
-        website: data.institutionData.website || null,
-        logoUrl: data.institutionData.logoUrl || null,
-        coverImageUrl: data.institutionData.coverImageUrl || null,
-        verified: false,
-        onboardingCompleted: false,
-      },
-    });
-
-    return { success: true, userId: authData.user.id };
-  } catch (error) {
-    console.error("Registration failed:", error);
-    return {
-      success: false,
-      error: (error as Error).message || "Registration failed",
-    };
-  }
-}
 
 export interface LoginData {
   email: string;
@@ -264,13 +150,10 @@ export async function loginUser(data: LoginData) {
     }
 
     // Get user's profile with a single optimized query
-    // Include the specific profile type based on role to get onboarding status in one query
     const profile = await prisma.profile.findUnique({
       where: { id: authData.user.id },
       include: {
         student: true,
-        mentor: true,
-        institution: true,
       },
     });
 
@@ -318,10 +201,6 @@ export async function loginUser(data: LoginData) {
         console.error('Error checking onboarding completion:', error);
         onboardingCompleted = false;
       }
-    } else if (profile.role === 'mentor' && profile.mentor) {
-      onboardingCompleted = profile.mentor.onboardingCompleted || false;
-    } else if (profile.role === 'institution' && profile.institution) {
-      onboardingCompleted = profile.institution.onboardingCompleted || false;
     }
 
     return {

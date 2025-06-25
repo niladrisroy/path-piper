@@ -23,15 +23,9 @@ function ProfileEditContent() {
       return
     }
 
-    // Redirect non-students to their appropriate profile pages
+    // Redirect non-students to feed
     if (user.role !== 'student') {
-      if (user.role === 'mentor') {
-        router.push('/mentor/profile')
-      } else if (user.role === 'institution') {
-        router.push('/institution/profile')
-      } else {
-        router.push('/feed')
-      }
+      router.push('/feed')
       return
     }
   }, [user, loading, router])

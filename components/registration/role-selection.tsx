@@ -20,24 +20,6 @@ export default function RoleSelection({ onSelectRole }: RoleSelectionProps) {
       bgColor: "bg-teal-500",
       hoverImage: "/images/student-profile.png",
     },
-    {
-      id: "mentor",
-      title: "Mentor",
-      description: "Guide and inspire students on their educational journey",
-      icon: <Briefcase className="h-8 w-8" />,
-      iconColor: "text-orange-500",
-      bgColor: "bg-orange-500",
-      hoverImage: "/images/career-path.png",
-    },
-    {
-      id: "institution",
-      title: "Institution",
-      description: "Connect your school or organization with students",
-      icon: <Building className="h-8 w-8" />,
-      iconColor: "text-purple-500",
-      bgColor: "bg-purple-500",
-      hoverImage: "/images/institution-profile.png",
-    },
   ]
 
   return (
