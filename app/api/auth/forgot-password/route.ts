@@ -1,6 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, User } from '@supabase/supabase-js';
 import { sendEmail } from '@/lib/email';
 import { prisma } from '@/lib/prisma';
 
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     let userProfile = null;
 
     if (!listError && authUsers?.users) {
-      const authUser = authUsers.users.find(user => user.email === email);
+      const authUser = authUsers.users.find((user: User) => user.email === email);
       if (authUser) {
         userExists = true;
         // Get the user's profile for the name
