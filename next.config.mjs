@@ -9,10 +9,7 @@ const nextConfig = {
   images: {
     domains: ['localhost', '74f7eb31-b1cd-42e1-bc33-49105efe81c2-00-2sp4lhr2dgh9s.sisko.replit.dev'],
   },
-  output: 'standalone',
-  typescript: {
-    ignoreBuildErrors: true
-  }
+  output: 'standalone'
 }
 
 export default nextConfig
