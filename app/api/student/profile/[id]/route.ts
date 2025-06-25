@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@supabase/supabase-js'
@@ -130,7 +129,7 @@ export async function GET(
 
     // Format the response - for viewing other profiles, we might want to limit some sensitive data
     const isOwnProfile = studentId === user.id
-    
+
     const formattedProfile = {
       id: studentProfile.id,
       ageGroup: studentProfile.age_group,

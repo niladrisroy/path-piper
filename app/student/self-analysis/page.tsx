@@ -49,44 +49,79 @@ export default function SelfAnalysisPage() {
     fetchStudentData()
   }, [user, loading, router])
 
+  // Format analysis text with proper HTML formatting
+  const formatAnalysisText = (text: string) => {
+    return text
+      // Convert markdown-style headers to HTML
+      .replace(/#### (.*?)$/gm, '<h4 class="text-lg font-semibold text-blue-600 dark:text-blue-400 mt-6 mb-3 flex items-center"><span class="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>$1</h4>')
+      .replace(/### (.*?)$/gm, '<h3 class="text-xl font-bold text-purple-600 dark:text-purple-400 mt-8 mb-4 flex items-center"><span class="w-3 h-3 bg-purple-600 rounded-full mr-2"></span>$1</h3>')
+      .replace(/## (.*?)$/gm, '<h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 mt-10 mb-6 border-l-4 border-purple-500 pl-4">$1</h2>')
+      
+      // Convert bullet points to styled lists
+      .replace(/- \*\*(.*?)\*\*: (.*?)$/gm, '<div class="flex items-start space-x-3 mb-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-400"><div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div><div><span class="font-semibold text-blue-700 dark:text-blue-300">$1:</span> <span class="text-gray-700 dark:text-gray-300">$2</span></div></div>')
+      .replace(/- (.*?)$/gm, '<div class="flex items-start space-x-3 mb-2"><div class="w-1.5 h-1.5 bg-gray-500 rounded-full mt-2 flex-shrink-0"></div><span class="text-gray-700 dark:text-gray-300">$1</span></div>')
+      
+      // Convert bold text
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900 dark:text-white">$1</strong>')
+      
+      // Convert numbered lists
+      .replace(/(\d+)\. (.*?)$/gm, '<div class="flex items-start space-x-3 mb-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors"><div class="flex items-center justify-center w-6 h-6 bg-green-500 text-white text-sm font-bold rounded-full flex-shrink-0">$1</div><span class="text-gray-700 dark:text-gray-300">$2</span></div>')
+      
+      // Convert line breaks to proper spacing
+      .replace(/\n\n/g, '<div class="my-4"></div>')
+      .replace(/\n/g, '<br/>')
+  }
+
   const fetchStudentData = async () => {
     try {
       setDataLoading(true)
       
-      // Fetch complete student profile data
+      // Fetch complete student profile data from the main profile endpoint
       const response = await fetch(`/api/student/profile/${user.id}`)
       if (!response.ok) {
         throw new Error('Failed to fetch profile data')
       }
       
       const data = await response.json()
+      console.log('🔍 Main profile data:', data)
       
-      // Fetch additional data that might not be in the main profile endpoint
+      // Use the data from profile endpoint, but also fetch additional data to ensure completeness
       const [skillsRes, interestsRes, goalsRes, achievementsRes] = await Promise.all([
         fetch('/api/user/skills'),
-        fetch('/api/user/interests'),
+        fetch('/api/user/interests'), 
         fetch('/api/goals'),
         fetch('/api/achievements')
       ])
 
-      const [skills, interests, goals, achievements] = await Promise.all([
-        skillsRes.ok ? skillsRes.json() : [],
-        interestsRes.ok ? interestsRes.json() : [],
-        goalsRes.ok ? goalsRes.json() : [],
-        achievementsRes.ok ? achievementsRes.json() : []
+      const [skillsData, interestsData, goalsData, achievementsData] = await Promise.all([
+        skillsRes.ok ? skillsRes.json() : { skills: [] },
+        interestsRes.ok ? interestsRes.json() : { interests: [] },
+        goalsRes.ok ? goalsRes.json() : { goals: [] },
+        achievementsRes.ok ? achievementsRes.json() : { achievements: [] }
       ])
 
+      console.log('🔍 Additional data fetched:', {
+        skills: skillsData.skills?.length || 0,
+        interests: interestsData.interests?.length || 0, 
+        goals: goalsData.goals?.length || 0,
+        achievements: achievementsData.achievements?.length || 0
+      })
+
       const studentData: StudentData = {
-        profile: data.profile || {},
-        interests: data.interests || interests,
-        skills: data.skills || skills,
+        profile: {
+          ...data.profile,
+          ageGroup: data.profile?.studentProfile?.age_group || data.profile?.ageGroup || 'young_adult',
+          educationLevel: data.profile?.studentProfile?.education_level || data.profile?.educationLevel || 'undergraduate'
+        },
+        interests: data.interests?.length > 0 ? data.interests : (interestsData.interests || []),
+        skills: data.skills?.length > 0 ? data.skills : (skillsData.skills || []),
         educationHistory: data.educationHistory || [],
-        achievements: achievements,
-        goals: goals
+        achievements: data.achievements?.length > 0 ? data.achievements : (achievementsData.achievements || []),
+        goals: data.goals?.length > 0 ? data.goals : (goalsData.goals || [])
       }
 
       setStudentData(studentData)
-      console.log('🔍 Student data cached for analysis:', studentData)
+      console.log('🔍 Complete student data cached for analysis:', studentData)
     } catch (error) {
       console.error('Error fetching student data:', error)
       toast.error('Failed to load your profile data')
@@ -149,6 +184,41 @@ export default function SelfAnalysisPage() {
   return (
     <ProtectedLayout>
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <style jsx global>{`
+          .analysis-content h2 {
+            border-left: 4px solid #8b5cf6;
+            padding-left: 1rem;
+            margin: 2rem 0 1.5rem 0;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1f2937;
+          }
+          .dark .analysis-content h2 {
+            color: #f3f4f6;
+          }
+          .analysis-content h3 {
+            margin: 2rem 0 1rem 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #7c3aed;
+            display: flex;
+            align-items: center;
+          }
+          .dark .analysis-content h3 {
+            color: #a78bfa;
+          }
+          .analysis-content h4 {
+            margin: 1.5rem 0 0.75rem 0;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+          }
+          .dark .analysis-content h4 {
+            color: #60a5fa;
+          }
+        `}</style>
         <InternalNavbar />
         <main className="flex-grow pt-16 sm:pt-24">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-6xl">
@@ -357,10 +427,13 @@ export default function SelfAnalysisPage() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="prose prose-sm max-w-none dark:prose-invert">
-                        <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-300 leading-relaxed">
-                          {analysis}
-                        </div>
+                      <div className="prose prose-lg max-w-none dark:prose-invert">
+                        <div 
+                          className="analysis-content text-gray-700 dark:text-gray-300 leading-relaxed space-y-4"
+                          dangerouslySetInnerHTML={{ 
+                            __html: formatAnalysisText(analysis) 
+                          }}
+                        />
                       </div>
                     </CardContent>
                   </Card>
