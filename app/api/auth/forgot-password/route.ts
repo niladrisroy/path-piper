@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
         if (emailResult.success) {
           console.log('Reset email sent successfully');
         } else {
-          console.error('Failed to send reset email:', emailResult.error);
+          console.error('Failed to send reset email:', 'error' in emailResult ? emailResult.error : 'Unknown error');
         }
       }
     } else {
