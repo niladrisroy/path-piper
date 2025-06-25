@@ -60,8 +60,6 @@ model Profile {
   email              String?   // User's registered email for authentication
   phone              String?   // Direct contact phone number
   coverImageUrl      String?   @map("cover_image_url")
-  linkedinUrl        String?   @map("linkedin_url")
-  portfolioUrl       String?   @map("portfolio_url")
   themePreference    String    @default("default") @map("theme_preference")
   timezone           String?
   availabilityStatus String    @default("online") @map("availability_status")
