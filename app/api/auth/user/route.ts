@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
               break;
             }
           } catch (parseError) {
-            console.log(`API: Failed to parse cookie ${cookieName}:`, parseError.message);
+            console.log(`API: Failed to parse cookie ${cookieName}:`, parseError instanceof Error ? parseError.message : String(parseError));
           }
         }
       }
