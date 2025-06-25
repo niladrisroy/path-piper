@@ -1,3 +1,6 @@
+Refactor handleSubmit to handle errors and ensure subjects are properly handled.
+```
+```replit_final_file
 "use client"
 
 import { useState, useEffect } from "react"
@@ -197,10 +200,10 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
   const handleEditEntry = (entry: EducationEntry) => {
     // Find the category for this institution type
     let categoryId = ''
-    
+
     // Convert institutionType to string for comparison
     const typeIdStr = String(entry.institutionType)
-    
+
     for (const category of institutionCategories) {
       const type = category.types.find(t => String(t.id) === typeIdStr)
       if (type) {
@@ -208,11 +211,11 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
         break
       }
     }
-    
+
     console.log('Editing entry:', entry)
     console.log('Found category ID:', categoryId, 'for type ID:', typeIdStr)
     console.log('Available categories:', institutionCategories.map(cat => ({ id: cat.id, name: cat.name, types: cat.types.map(t => ({ id: t.id, name: t.name })) })))
-    
+
     setEditingEntry({ 
       ...entry, 
       institutionCategory: categoryId // Set the category so the type dropdown works
@@ -391,7 +394,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
         return type.name
       }
     }
-    
+
     console.log('Type not found for ID:', typeIdStr, 'Available types:', institutionCategories.flatMap(cat => cat.types))
     return 'Institution Type'
   }
@@ -567,10 +570,10 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                           const currentYear = currentDate.getFullYear();
                           const currentMonth = currentDate.getMonth();
                           const selectedYear = currentEntry.startDate ? new Date(currentEntry.startDate).getFullYear() : currentYear;
-                          
+
                           // Disable future months in current year
                           const isDisabled = selectedYear === currentYear && index > currentMonth;
-                          
+
                           return (
                             <SelectItem key={index} value={index.toString()} disabled={isDisabled}>
                               {month}

@@ -112,6 +112,16 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const body = await request.json()
+
+    // Validate required fields
+    if (!body.userId || !body.firstName || !body.lastName) {
+      return NextResponse.json(
+        { error: 'User ID, first name, and last name are required' },
+        { status: 400 }
+      );
+    }
+
     const cookieStore = await cookies()
 
     // Get the access token from cookies
@@ -128,8 +138,6 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized - invalid token' }, { status: 401 })
     }
 
-    const body = await request.json()
-
     // Separate profile data from student-specific data
     const {
       educationLevel,
@@ -143,12 +151,27 @@ export async function PUT(request: NextRequest) {
     } = body
 
     // Update main profile using Prisma
-    const updatedProfile = await updateUserProfile(user.id, profileData)
+    const updatedProfile = await updateUserProfile(user.id, {
+      firstName: profileData.firstName.trim(),
+      lastName: profileData.lastName.trim(),
+      bio: profileData.bio?.trim() || null,
+      location: profileData.location?.trim() || null,
+      tagline: profileData.tagline,
+      professionalSummary: profileData.professionalSummary,
+      profileImageUrl: profileData.profileImageUrl,
+      coverImageUrl: profileData.coverImageUrl,
+      githubUrl: profileData.githubUrl,
+      linkedinUrl: profileData.linkedinUrl,
+      portfolioUrl: profileData.portfolioUrl,
+      timezone: profileData.timezone,
+      availabilityStatus: profileData.availabilityStatus,
+      role: profileData.role,
+    })
 
     // Update student profile if student-specific data is provided
     if (updatedProfile.role === 'student' && 
         (educationLevel || ageGroup || birthMonth || birthYear || personalityType || learningStyle || favoriteQuote)) {
-      
+
       // Calculate age group from birth data if available
       const calculateAgeGroup = (birthMonth: string, birthYear: string): string => {
         if (!birthMonth || !birthYear) return "young_adult";
@@ -203,8 +226,8 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     console.error('Error updating profile:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error instanceof Error ? error.message : 'Failed to update profile' },
       { status: 500 }
-    )
+    );
   }
 }

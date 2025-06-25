@@ -3,6 +3,27 @@ import { prisma } from '@/lib/prisma'
 import { supabase } from '@/lib/supabase'
 import { cookies } from 'next/headers'
 
+// Auth helper function
+async function getAuthenticatedUser(request: NextRequest) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    throw new Error('No valid authorization header');
+  }
+
+  const token = authHeader.split(' ')[1];
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+
+  if (error || !user) {
+    throw new Error('Invalid authentication token');
+  }
+
+  return { userId: user.id, user };
+}
+
 export async function GET(request: NextRequest) {
   try {
     console.log('🔄 Fetching education history')
@@ -66,71 +87,39 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('💾 Saving education history')
+    const { userId } = await getAuthenticatedUser(request);
+    const data = await request.json();
 
-    // Get user from session
-    const cookieStore = await cookies()
-    const accessToken = cookieStore.get('sb-access-token')?.value
-
-    if (!accessToken) {
-      console.log('❌ No access token found')
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    // Validate required fields
+    if (!data.institutionName || !data.institutionTypeId) {
+      return NextResponse.json(
+        { error: 'Institution name and type are required' },
+        { status: 400 }
+      );
     }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
+    const educationRecord = await prisma.studentEducationHistory.create({
+      data: {
+        studentId: userId,
+        institutionName: data.institutionName,
+        institutionTypeId: parseInt(data.institutionTypeId),
+        degreeProgram: data.degree || null,
+        fieldOfStudy: data.fieldOfStudy || null,
+        subjects: Array.isArray(data.subjects) ? data.subjects : [],
+        startDate: data.startDate ? new Date(data.startDate) : null,
+        endDate: data.endDate ? new Date(data.endDate) : null,
+        isCurrent: Boolean(data.isCurrent),
+        gradeLevel: data.grade || null,
+        description: data.description || null
+      },
+    });
 
-    if (authError || !user) {
-      console.log('❌ Authentication failed')
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { education } = await request.json()
-
-    if (!Array.isArray(education)) {
-      return NextResponse.json({ error: 'Education data must be an array' }, { status: 400 })
-    }
-
-    // Use a transaction to delete existing and insert new education entries
-    await prisma.$transaction(async (tx) => {
-      // First, delete existing education history for this user
-      await tx.studentEducationHistory.deleteMany({
-        where: {
-          studentId: user.id
-        }
-      })
-
-      // Insert new education entries if any
-      if (education.length > 0) {
-        const educationToInsert = education.map(entry => ({
-          studentId: user.id,
-          institutionName: entry.institutionName,
-          institutionTypeId: entry.institutionType ? parseInt(entry.institutionType) : null,
-          degreeProgram: entry.degree || null,
-          fieldOfStudy: entry.fieldOfStudy || null,
-          subjects: entry.subjects || [],
-          startDate: entry.startDate ? new Date(entry.startDate) : null,
-          endDate: entry.endDate ? new Date(entry.endDate) : null,
-          isCurrent: entry.isCurrent || false,
-          gradeLevel: entry.grade || null,
-          description: entry.description || null
-        }))
-
-        await tx.studentEducationHistory.createMany({
-          data: educationToInsert
-        })
-      }
-    })
-
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Education history saved successfully' 
-    })
-
+    return NextResponse.json(educationRecord);
   } catch (error) {
-    console.error('❌ Error saving education history:', error)
-    return NextResponse.json({ 
-      error: 'Failed to save education history',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
+    console.error('Error creating education record:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to create education record' },
+      { status: 500 }
+    );
   }
 }

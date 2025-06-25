@@ -60,6 +60,12 @@ export default function ProfileEditForm({ userId, initialSection }: ProfileEditF
   const [completionData, setCompletionData] = useState<Record<string, boolean>>({})
   const [formDirtyStates, setFormDirtyStates] = useState<{[key: string]: boolean}>({})
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+
+  // Update unsaved changes when form states change
+  useEffect(() => {
+    const hasDirtyForms = Object.values(formDirtyStates).some(Boolean);
+    setHasUnsavedChanges(hasDirtyForms);
+  }, [formDirtyStates]);
   const [formData, setFormData] = useState<any>({
     skills: [],
     interests: [],
