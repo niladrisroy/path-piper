@@ -10,6 +10,23 @@ import GalleryStep from "@/components/onboarding/institution/gallery-step"
 import InstitutionCompletionStep from "@/components/onboarding/institution/completion-step"
 import { supabase } from "@/lib/supabase"
 
+// Define TypeScript interfaces
+interface ProfileData {
+  institutionInfo: {
+    name: string;
+    type: string;
+    category: string;
+    bio: string;
+    location: string;
+    website: string;
+    logo: any;
+    coverImage: any;
+  };
+  programs: any[];
+  events: any[];
+  gallery: any[];
+}
+
 // Define the steps for the institution onboarding process
 const STEPS = [
   { id: "institution-info", title: "Institution Info", icon: <Building className="h-5 w-5" /> },
@@ -22,7 +39,7 @@ const STEPS = [
 export default function InstitutionOnboardingPage() {
   const [currentStep, setCurrentStep] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
-  const [profileData, setProfileData] = useState({
+  const [profileData, setProfileData] = useState<ProfileData>({
     institutionInfo: {
       name: "",
       type: "",
@@ -120,8 +137,8 @@ export default function InstitutionOnboardingPage() {
             logo: institutionProfile?.logo_url || null,
             coverImage: institutionProfile?.cover_image_url || null,
           },
-          programs: institutionPrograms || [],
-          events: institutionEvents || [],
+          programs: (institutionPrograms as any[]) || [],
+          events: (institutionEvents as any[]) || [],
           gallery: institutionGallery?.map(item => ({
             id: item.id,
             imageUrl: item.image_url,
