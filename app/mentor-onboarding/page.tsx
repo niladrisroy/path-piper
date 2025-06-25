@@ -285,7 +285,7 @@ export default function MentorOnboardingPage() {
                     {index < STEPS.length - 1 && (
                       <div
                         className={`hidden md:block w-8 h-0.5 mx-2 ${
-                          index < currentStep || (completedSteps[step.id] && completedSteps[STEPS[index + 1].id])
+                          index < currentStep || (completedSteps[step.id] && index + 1 < STEPS.length && completedSteps[STEPS[index + 1].id])
                             ? "bg-orange-500"
                             : "bg-slate-200"
                         }`}
