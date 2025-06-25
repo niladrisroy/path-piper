@@ -54,6 +54,73 @@ export default function SelfAnalysisPage() {
     }
   }, [user, loading, router, profileData, profileDataLoading])
 
+  // Parse analysis into sections for horizontal layout
+  const parseAnalysisIntoSections = (text: string) => {
+    const sections = [];
+    
+    // Split by major headers (## pattern)
+    const majorSections = text.split(/## (.*?)$/gm);
+    
+    for (let i = 1; i < majorSections.length; i += 2) {
+      const title = majorSections[i].trim();
+      const content = majorSections[i + 1] || '';
+      
+      if (title && content.trim()) {
+        sections.push({
+          title: title,
+          content: content.trim()
+        });
+      }
+    }
+    
+    // If no major sections found, try to split by other patterns
+    if (sections.length === 0) {
+      const fallbackSections = text.split(/### (.*?)$/gm);
+      for (let i = 1; i < fallbackSections.length; i += 2) {
+        const title = fallbackSections[i].trim();
+        const content = fallbackSections[i + 1] || '';
+        
+        if (title && content.trim()) {
+          sections.push({
+            title: title,
+            content: content.trim()
+          });
+        }
+      }
+    }
+    
+    // If still no sections, create a single section
+    if (sections.length === 0) {
+      sections.push({
+        title: 'Analysis Results',
+        content: text
+      });
+    }
+    
+    return sections;
+  };
+
+  // Get icon for section based on title
+  const getSectionIcon = (title: string) => {
+    const titleLower = title.toLowerCase();
+    
+    if (titleLower.includes('insight') || titleLower.includes('overview')) {
+      return <Lightbulb className="h-5 w-5 text-yellow-500" />;
+    } else if (titleLower.includes('strength') || titleLower.includes('skills')) {
+      return <TrendingUp className="h-5 w-5 text-green-500" />;
+    } else if (titleLower.includes('improvement') || titleLower.includes('gap') || titleLower.includes('weakness')) {
+      return <Target className="h-5 w-5 text-orange-500" />;
+    } else if (titleLower.includes('career') || titleLower.includes('path') || titleLower.includes('recommendation')) {
+      return <Award className="h-5 w-5 text-blue-500" />;
+    } else if (titleLower.includes('goal') || titleLower.includes('future')) {
+      return <Target className="h-5 w-5 text-purple-500" />;
+    } else if (titleLower.includes('education') || titleLower.includes('learning')) {
+      return <BookOpen className="h-5 w-5 text-indigo-500" />;
+    } else {
+      return <Brain className="h-5 w-5 text-purple-500" />;
+    }
+  };
+
   // Format analysis text with proper HTML formatting
   const formatAnalysisText = (text: string) => {
     return text
@@ -202,6 +269,43 @@ export default function SelfAnalysisPage() {
           }
           .dark .analysis-content h4 {
             color: #60a5fa;
+          }
+          
+          /* Custom scrollbar styles */
+          .scrollbar-thin {
+            scrollbar-width: thin;
+          }
+          .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+            background-color: #d1d5db;
+            border-radius: 0.375rem;
+          }
+          .dark .scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
+            background-color: #4b5563;
+          }
+          .scrollbar-track-transparent::-webkit-scrollbar-track {
+            background-color: transparent;
+          }
+          ::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+          }
+          ::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          ::-webkit-scrollbar-thumb {
+            background-color: #d1d5db;
+            border-radius: 0.375rem;
+            border: 2px solid transparent;
+            background-clip: content-box;
+          }
+          .dark ::-webkit-scrollbar-thumb {
+            background-color: #4b5563;
+          }
+          ::-webkit-scrollbar-thumb:hover {
+            background-color: #9ca3af;
+          }
+          .dark ::-webkit-scrollbar-thumb:hover {
+            background-color: #6b7280;
           }
         `}</style>
         <InternalNavbar />
@@ -420,13 +524,51 @@ export default function SelfAnalysisPage() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="prose prose-lg max-w-none dark:prose-invert">
-                        <div 
-                          className="analysis-content text-gray-700 dark:text-gray-300 leading-relaxed space-y-4"
-                          dangerouslySetInnerHTML={{ 
-                            __html: formatAnalysisText(analysis) 
-                          }}
-                        />
+                      <div className="w-full">
+                        {/* Horizontal Scrollable Container */}
+                        <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                          {(() => {
+                            // Parse the analysis into sections
+                            const sections = parseAnalysisIntoSections(analysis);
+                            return sections.map((section, index) => (
+                              <div
+                                key={index}
+                                className="flex-shrink-0 w-80 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200"
+                              >
+                                <div className="mb-4">
+                                  <div className="flex items-center gap-2 mb-3">
+                                    {getSectionIcon(section.title)}
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                      {section.title}
+                                    </h3>
+                                  </div>
+                                  <div className="h-1 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full mb-4"></div>
+                                </div>
+                                
+                                <div className="space-y-3 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+                                  <div 
+                                    className="analysis-content text-sm text-gray-700 dark:text-gray-300 leading-relaxed"
+                                    dangerouslySetInnerHTML={{ 
+                                      __html: formatAnalysisText(section.content) 
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            ));
+                          })()}
+                        </div>
+                        
+                        {/* Navigation Hint */}
+                        <div className="flex items-center justify-center mt-4 text-sm text-gray-500 dark:text-gray-400">
+                          <div className="flex items-center gap-2">
+                            <div className="flex gap-1">
+                              <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                              <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                            </div>
+                            <span>Scroll horizontally to explore all insights</span>
+                          </div>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
