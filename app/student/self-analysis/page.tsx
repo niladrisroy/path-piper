@@ -194,17 +194,17 @@ export default function SelfAnalysisPage() {
                     <div>
                       <h4 className="font-semibold text-sm text-gray-900 dark:text-white mb-2 flex items-center gap-1">
                         <Lightbulb className="h-4 w-4" />
-                        Interests ({studentData?.interests?.length || 0})
+                        Interests ({Array.isArray(studentData?.interests) ? studentData.interests.length : 0})
                       </h4>
                       <div className="flex flex-wrap gap-1">
-                        {studentData?.interests?.slice(0, 6).map((interest, index) => (
+                        {Array.isArray(studentData?.interests) && studentData.interests.slice(0, 6).map((interest, index) => (
                           <Badge key={index} variant="secondary" className="text-xs">
                             {interest.name || interest.interest?.name}
                           </Badge>
                         ))}
-                        {(studentData?.interests?.length || 0) > 6 && (
+                        {Array.isArray(studentData?.interests) && studentData.interests.length > 6 && (
                           <Badge variant="outline" className="text-xs">
-                            +{(studentData?.interests?.length || 0) - 6} more
+                            +{studentData.interests.length - 6} more
                           </Badge>
                         )}
                       </div>
@@ -214,17 +214,17 @@ export default function SelfAnalysisPage() {
                     <div>
                       <h4 className="font-semibold text-sm text-gray-900 dark:text-white mb-2 flex items-center gap-1">
                         <TrendingUp className="h-4 w-4" />
-                        Skills ({studentData?.skills?.length || 0})
+                        Skills ({Array.isArray(studentData?.skills) ? studentData.skills.length : 0})
                       </h4>
                       <div className="flex flex-wrap gap-1">
-                        {studentData?.skills?.slice(0, 4).map((skill, index) => (
+                        {Array.isArray(studentData?.skills) && studentData.skills.slice(0, 4).map((skill, index) => (
                           <Badge key={index} variant="default" className="text-xs">
                             {skill.name || skill.skill?.name}
                           </Badge>
                         ))}
-                        {(studentData?.skills?.length || 0) > 4 && (
+                        {Array.isArray(studentData?.skills) && studentData.skills.length > 4 && (
                           <Badge variant="outline" className="text-xs">
-                            +{(studentData?.skills?.length || 0) - 4} more
+                            +{studentData.skills.length - 4} more
                           </Badge>
                         )}
                       </div>
@@ -234,9 +234,9 @@ export default function SelfAnalysisPage() {
                     <div>
                       <h4 className="font-semibold text-sm text-gray-900 dark:text-white mb-2 flex items-center gap-1">
                         <BookOpen className="h-4 w-4" />
-                        Education ({studentData?.educationHistory?.length || 0})
+                        Education ({Array.isArray(studentData?.educationHistory) ? studentData.educationHistory.length : 0})
                       </h4>
-                      {studentData?.educationHistory?.length > 0 ? (
+                      {Array.isArray(studentData?.educationHistory) && studentData.educationHistory.length > 0 ? (
                         <div className="space-y-2">
                           {studentData.educationHistory.slice(0, 2).map((edu, index) => (
                             <div key={index} className="text-xs">
@@ -257,14 +257,14 @@ export default function SelfAnalysisPage() {
                           <Target className="h-4 w-4" />
                           Goals
                         </h4>
-                        <p className="text-xs text-gray-500">{studentData?.goals?.length || 0} goals set</p>
+                        <p className="text-xs text-gray-500">{Array.isArray(studentData?.goals) ? studentData.goals.length : 0} goals set</p>
                       </div>
                       <div>
                         <h4 className="font-semibold text-sm text-gray-900 dark:text-white mb-1 flex items-center gap-1">
                           <Award className="h-4 w-4" />
                           Achievements
                         </h4>
-                        <p className="text-xs text-gray-500">{studentData?.achievements?.length || 0} achievements</p>
+                        <p className="text-xs text-gray-500">{Array.isArray(studentData?.achievements) ? studentData.achievements.length : 0} achievements</p>
                       </div>
                     </div>
                   </CardContent>
