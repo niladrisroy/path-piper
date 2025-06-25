@@ -65,8 +65,6 @@ export async function GET(request: NextRequest) {
       professionalSummary: profile.professionalSummary,
       profileImageUrl: profile.profileImageUrl,
       coverImageUrl: profile.coverImageUrl,
-      linkedinUrl: profile.linkedinUrl,
-      portfolioUrl: profile.portfolioUrl,
       timezone: profile.timezone,
       availabilityStatus: profile.availabilityStatus,
       role: profile.role,
@@ -146,6 +144,8 @@ export async function PUT(request: NextRequest) {
       personalityType,
       learningStyle,
       favoriteQuote,
+      linkedinUrl,
+      portfolioUrl,
       ...profileData
     } = body
 
@@ -159,8 +159,6 @@ export async function PUT(request: NextRequest) {
       professionalSummary: profileData.professionalSummary,
       profileImageUrl: profileData.profileImageUrl,
       coverImageUrl: profileData.coverImageUrl,
-      linkedinUrl: profileData.linkedinUrl,
-      portfolioUrl: profileData.portfolioUrl,
       timezone: profileData.timezone,
       availabilityStatus: profileData.availabilityStatus,
       role: profileData.role,
