@@ -37,9 +37,6 @@ export async function POST(request: NextRequest) {
     console.log('🔍 Processing analysis for user:', user.id)
     console.log('📝 Query:', query)
 
-    // Prepare student data summary for AI
-    const profileSummary = createProfileSummary(studentData)
-
     // Create optimized AI prompt
     const systemPrompt = `You are an expert educational counselor. Provide concise, actionable insights based on student profiles.
 
