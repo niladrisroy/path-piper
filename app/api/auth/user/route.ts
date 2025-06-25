@@ -274,11 +274,10 @@ export async function PUT(request: Request) {
         data: profileUpdateData
       });
 
+      console.log("API: Profile updated successfully");
 
-    console.log("API: Profile updated successfully");
-
-    // If user is a student, also update student profile
-    if (profileData.educationLevel || profileData.birthMonth || profileData.birthYear || profileData.ageGroup) {
+      // If user is a student, also update student profile
+      if (profileData.educationLevel || profileData.birthMonth || profileData.birthYear || profileData.ageGroup) {
       const studentUpdateData: any = {};
 
       if (profileData.educationLevel) {
