@@ -562,11 +562,25 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                       </SelectTrigger>
                       <SelectContent>
                         {["January", "February", "March", "April", "May", "June", 
-                          "July", "August", "September", "October", "November", "December"].map((month, index) => (
-                          <SelectItem key={index} value={index.toString()}>
-                            {month}
-                          </SelectItem>
-                        ))}
+                          "July", "August", "September", "October", "November", "December"].map((month, index) => {
+                          const selectedYear = currentEntry.startDate ? new Date(currentEntry.startDate).getFullYear() : new Date().getFullYear()
+                          const currentDate = new Date()
+                          const currentYear = currentDate.getFullYear()
+                          const currentMonth = currentDate.getMonth()
+                          
+                          // Disable future months only if selected year is current year
+                          const isFutureMonth = selectedYear === currentYear && index > currentMonth
+                          
+                          return (
+                            <SelectItem 
+                              key={index} 
+                              value={index.toString()}
+                              disabled={isFutureMonth}
+                            >
+                              {month}
+                            </SelectItem>
+                          )
+                        })}
                       </SelectContent>
                     </Select>
                     <Select
@@ -608,11 +622,25 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                       </SelectTrigger>
                       <SelectContent>
                         {["January", "February", "March", "April", "May", "June", 
-                          "July", "August", "September", "October", "November", "December"].map((month, index) => (
-                          <SelectItem key={index} value={index.toString()}>
-                            {month}
-                          </SelectItem>
-                        ))}
+                          "July", "August", "September", "October", "November", "December"].map((month, index) => {
+                          const selectedYear = currentEntry.endDate ? new Date(currentEntry.endDate).getFullYear() : new Date().getFullYear()
+                          const currentDate = new Date()
+                          const currentYear = currentDate.getFullYear()
+                          const currentMonth = currentDate.getMonth()
+                          
+                          // Disable future months only if selected year is current year
+                          const isFutureMonth = selectedYear === currentYear && index > currentMonth
+                          
+                          return (
+                            <SelectItem 
+                              key={index} 
+                              value={index.toString()}
+                              disabled={isFutureMonth}
+                            >
+                              {month}
+                            </SelectItem>
+                          )
+                        })}
                       </SelectContent>
                     </Select>
                     <Select
