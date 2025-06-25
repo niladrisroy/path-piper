@@ -311,6 +311,7 @@ export async function PUT(request: Request) {
         location: updatedProfile.location,
       }
     });
+    }
 
   } catch (error) {
     console.error('Error updating profile:', error);
