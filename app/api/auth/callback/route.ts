@@ -71,10 +71,10 @@ export async function GET(request: NextRequest) {
             include: {
               profile: {
                 include: {
-                  userInterests: true,
-                  educationHistory: true
+                  userInterests: true
                 }
-              }
+              },
+              educationHistory: true
             }
           });
           
@@ -89,8 +89,8 @@ export async function GET(request: NextRequest) {
                                studentProfile.profile.userInterests.length > 0;
 
             // Check 3: Education History (at least one education entry)
-            const hasEducation = studentProfile.profile.educationHistory && 
-                               studentProfile.profile.educationHistory.length > 0;
+            const hasEducation = studentProfile.educationHistory && 
+                               studentProfile.educationHistory.length > 0;
 
             // Only mark as completed if ALL THREE sections have data
             onboardingCompleted = hasBasicInfo && hasInterests && hasEducation;
