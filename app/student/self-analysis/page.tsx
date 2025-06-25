@@ -25,13 +25,12 @@ interface StudentData {
 }
 
 export default function SelfAnalysisPage() {
-  const { user, loading } = useAuth()
+  const { user, loading, profileData, profileDataLoading } = useAuth()
   const router = useRouter()
   const [studentData, setStudentData] = useState<StudentData | null>(null)
   const [query, setQuery] = useState("")
   const [analysis, setAnalysis] = useState("")
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [dataLoading, setDataLoading] = useState(true)
 
   useEffect(() => {
     if (loading) return
@@ -46,8 +45,14 @@ export default function SelfAnalysisPage() {
       return
     }
 
-    fetchStudentData()
-  }, [user, loading, router])
+    // Use cached data if available, otherwise fetch
+    if (profileData) {
+      console.log('🚀 Using cached profile data for self-analysis')
+      setStudentData(profileData)
+    } else if (!profileDataLoading) {
+      fetchStudentData()
+    }
+  }, [user, loading, router, profileData, profileDataLoading])
 
   // Format analysis text with proper HTML formatting
   const formatAnalysisText = (text: string) => {
@@ -74,9 +79,8 @@ export default function SelfAnalysisPage() {
 
   const fetchStudentData = async () => {
     try {
-      setDataLoading(true)
+      console.log('⚠️ Fallback: Fetching profile data (cache miss)')
       
-      // Single optimized fetch to main profile endpoint only
       const response = await fetch(`/api/student/profile/${user.id}`)
       if (!response.ok) {
         throw new Error('Failed to fetch profile data')
@@ -87,8 +91,8 @@ export default function SelfAnalysisPage() {
       const studentData: StudentData = {
         profile: {
           ...data.profile,
-          ageGroup: data.profile?.studentProfile?.age_group || data.profile?.ageGroup || 'young_adult',
-          educationLevel: data.profile?.studentProfile?.education_level || data.profile?.educationLevel || 'undergraduate'
+          ageGroup: data.ageGroup || 'young_adult',
+          educationLevel: data.educationLevel || 'undergraduate'
         },
         interests: data.profile?.userInterests || [],
         skills: data.profile?.userSkills || [],
@@ -98,7 +102,7 @@ export default function SelfAnalysisPage() {
       }
 
       setStudentData(studentData)
-      console.log('🔍 Profile data optimized and cached:', {
+      console.log('📦 Fallback data loaded:', {
         interests: studentData.interests.length,
         skills: studentData.skills.length,
         education: studentData.educationHistory.length,
@@ -108,8 +112,6 @@ export default function SelfAnalysisPage() {
     } catch (error) {
       console.error('Error fetching student data:', error)
       toast.error('Failed to load your profile data')
-    } finally {
-      setDataLoading(false)
     }
   }
 
@@ -147,7 +149,7 @@ export default function SelfAnalysisPage() {
     }
   }
 
-  if (loading || dataLoading) {
+  if (loading || (profileDataLoading && !studentData)) {
     return (
       <ProtectedLayout>
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">

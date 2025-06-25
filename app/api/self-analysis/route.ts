@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
@@ -12,7 +11,7 @@ const OPENAI_API_KEY = 'sk-proj-Rj4Ist32ttxKMtXcs-pGK8umzTejIo41X6_mIyI3ILTRgdLy
 export async function POST(request: NextRequest) {
   try {
     console.log('🤖 Self-analysis API request received')
-    
+
     // Get auth token from cookies
     const cookieStore = await cookies()
     const token = cookieStore.get('sb-access-token')?.value
@@ -23,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     // Verify token with Supabase
     const { data: { user }, error } = await supabase.auth.getUser(token)
-    
+
     if (error || !user) {
       console.error('Auth error:', error)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -40,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     // Prepare student data summary for AI
     const profileSummary = createProfileSummary(studentData)
-    
+
     // Create optimized AI prompt
     const systemPrompt = `You are an expert educational counselor. Provide concise, actionable insights based on student profiles.
 
@@ -50,7 +49,7 @@ Guidelines: Be specific, encouraging, and provide clear next steps. Keep respons
 
     // Create a more concise profile summary
     const profileSummary = createOptimizedProfileSummary(studentData)
-    
+
     const userPrompt = `Profile: ${profileSummary}
 
 Question: "${query}"
@@ -163,7 +162,7 @@ function createProfileSummary(studentData: any): string {
 
 function calculateProfileCompleteness(studentData: any) {
   const { profile, interests, skills, educationHistory, achievements, goals } = studentData
-  
+
   let score = 0
   let maxScore = 6
   const missingSections = []
