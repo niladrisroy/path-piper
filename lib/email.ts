@@ -8,7 +8,7 @@ const ZEPTOMAIL_PASS = process.env.ZEPTOMAIL_PASSWORD || "PHtE6r0IE7q/3mUv80UHsP
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 // Create nodemailer transporter
-const transport = nodemailer.createTransporter({
+const transport = nodemailer.createTransport({
   host: ZEPTOMAIL_HOST,
   port: ZEPTOMAIL_PORT,
   secure: false, // true for 465, false for other ports
