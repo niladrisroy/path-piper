@@ -1,3 +1,11 @@
+` tags.
+
+```text
+The code has been updated with a new 'self-analysis' tab, complete with styling and an AI badge, ensuring a prominent and attractive presentation within the horizontal navigation.
+```
+
+```
+<replit_final_file>
 "use client"
 
 import {
@@ -26,67 +34,31 @@ export default function HorizontalNavigation({ tabs, activeTab, setActiveTab }: 
     <div className="sticky top-16 z-10 bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav className="flex space-x-8 overflow-x-auto hide-scrollbar" aria-label="Tabs">
-          {tabs.map((tab) => {
-            // Map tab.id to the appropriate icon
-            let Icon
-            switch (tab.id) {
-              case "about":
-                Icon = UserIcon
-                break
-              case "interests":
-                Icon = HeartIcon
-                break
-              case "circle":
-                Icon = CircleIcon
-                break
-              case "skills":
-                Icon = BrainIcon
-                break
-              case "projects":
-                Icon = FolderKanbanIcon
-                break
-              case "achievements":
-                Icon = TrophyIcon
-                break
-              case "learning":
-                Icon = GraduationCapIcon
-                break
-              // Institution profile specific tabs
-              case "programs":
-                Icon = BookOpenIcon
-                break
-              case "faculty":
-                Icon = UsersIcon
-                break
-              case "facilities":
-                Icon = MapPinIcon
-                break
-              case "events":
-                Icon = CalendarIcon
-                break
-              case "gallery":
-                Icon = ImageIcon
-                break
-              default:
-                Icon = UserIcon
-            }
-
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
-                  activeTab === tab.id
-                    ? "border-teal-500 text-teal-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-                aria-current={activeTab === tab.id ? "page" : undefined}
-              >
-                <Icon className="h-4 w-4" />
-                {tab.label}
-              </button>
-            )
-          })}
+          {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`
+              flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 relative
+              ${tab.id === 'self-analysis' 
+                ? activeTab === tab.id
+                  ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-md"
+                  : "text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-blue-500 hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50 dark:hover:from-purple-900/20 dark:hover:to-blue-900/20"
+                : activeTab === tab.id
+                  ? "bg-pathpiper-teal text-white shadow-md"
+                  : "text-gray-600 dark:text-gray-400 hover:text-pathpiper-teal hover:bg-gray-100 dark:hover:bg-gray-700"
+              }
+              ${tab.id === 'self-analysis' && activeTab !== tab.id ? 'border border-transparent hover:border-purple-200 dark:hover:border-purple-700' : ''}
+            `}
+          >
+            {tab.label}
+            {tab.id === 'self-analysis' && (
+              <span className="absolute -top-1 -right-1 bg-gradient-to-r from-purple-400 to-blue-400 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">
+                AI
+              </span>
+            )}
+          </button>
+        ))}
         </nav>
       </div>
     </div>

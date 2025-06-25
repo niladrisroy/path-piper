@@ -12,6 +12,7 @@ import ActionBar from "./action-bar"
 import Goals from "./goals"
 import InterestsSection from "./interests-section"
 import SuggestedConnections from "./suggested-connections"
+import SelfAnalysis from "./self-analysis"
 
 interface StudentProfileProps {
   studentId?: string
@@ -177,6 +178,7 @@ export default function StudentProfile({ studentId, currentUser, studentData, is
     { id: "projects", label: "Projects" },
     { id: "achievements", label: "Achievements" },
     { id: "goals", label: "Goals" },
+    { id: "self-analysis", label: "Self Analysis" },
   ]
 
   return (
@@ -195,6 +197,7 @@ export default function StudentProfile({ studentId, currentUser, studentData, is
           {activeTab === "achievements" && <AchievementTimeline userId={student.id} isOwnProfile={!isViewMode} />}
           {activeTab === "circle" && <CircleView student={student} isViewMode={isViewMode} />}
           {activeTab === "goals" && <Goals student={student} currentUser={currentUser} isViewMode={isViewMode} />}
+          {activeTab === "self-analysis" && <SelfAnalysis student={student} isViewMode={isViewMode} />}
         </div>
       </div>
 
