@@ -161,7 +161,6 @@ export async function PUT(request: NextRequest) {
       coverImageUrl: profileData.coverImageUrl,
       timezone: profileData.timezone,
       availabilityStatus: profileData.availabilityStatus,
-      role: profileData.role,
     })
 
     // Update student profile if student-specific data is provided
