@@ -242,10 +242,14 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
     // First, get the category ID for this achievement type
     const categoryId = await getCategoryIdFromTypeId(achievement.achievementTypeId)
     
+    // Format the date to ensure it has day as 01
+    const originalDate = new Date(achievement.dateOfAchievement)
+    const formattedDate = `${originalDate.getFullYear()}-${String(originalDate.getMonth() + 1).padStart(2, '0')}-01`
+    
     setEditFormData({
       name: achievement.name,
       description: achievement.description,
-      dateOfAchievement: achievement.dateOfAchievement.split('T')[0],
+      dateOfAchievement: formattedDate,
       categoryId: categoryId,
       achievementTypeId: achievement.achievementTypeId?.toString() || '',
       achievementImageIcon: achievement.achievementImageIcon || ''
@@ -487,13 +491,47 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
 
               <div>
                 <Label htmlFor="dateOfAchievement">Date of Achievement *</Label>
-                <Input
-                  id="dateOfAchievement"
-                  type="date"
-                  value={formData.dateOfAchievement}
-                  onChange={(e) => setFormData({ ...formData, dateOfAchievement: e.target.value })}
-                  required
-                />
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  <Select
+                    value={formData.dateOfAchievement ? new Date(formData.dateOfAchievement).getMonth().toString() : ''}
+                    onValueChange={(value) => {
+                      const year = formData.dateOfAchievement ? new Date(formData.dateOfAchievement).getFullYear() : new Date().getFullYear()
+                      const newDate = `${year}-${String(parseInt(value) + 1).padStart(2, '0')}-01`
+                      setFormData({ ...formData, dateOfAchievement: newDate })
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Month" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["January", "February", "March", "April", "May", "June", 
+                        "July", "August", "September", "October", "November", "December"].map((month, index) => (
+                        <SelectItem key={index} value={index.toString()}>
+                          {month}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={formData.dateOfAchievement ? new Date(formData.dateOfAchievement).getFullYear().toString() : ''}
+                    onValueChange={(value) => {
+                      const month = formData.dateOfAchievement ? new Date(formData.dateOfAchievement).getMonth() : 0
+                      const newDate = `${value}-${String(month + 1).padStart(2, '0')}-01`
+                      setFormData({ ...formData, dateOfAchievement: newDate })
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 50 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="space-y-3">
@@ -658,13 +696,47 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
 
                     <div>
                       <Label htmlFor={`edit-date-${achievement.id}`}>Date of Achievement *</Label>
-                      <Input
-                        id={`edit-date-${achievement.id}`}
-                        type="date"
-                        value={editFormData.dateOfAchievement}
-                        onChange={(e) => setEditFormData({ ...editFormData, dateOfAchievement: e.target.value })}
-                        required
-                      />
+                      <div className="grid grid-cols-2 gap-2 mt-1">
+                        <Select
+                          value={editFormData.dateOfAchievement ? new Date(editFormData.dateOfAchievement).getMonth().toString() : ''}
+                          onValueChange={(value) => {
+                            const year = editFormData.dateOfAchievement ? new Date(editFormData.dateOfAchievement).getFullYear() : new Date().getFullYear()
+                            const newDate = `${year}-${String(parseInt(value) + 1).padStart(2, '0')}-01`
+                            setEditFormData({ ...editFormData, dateOfAchievement: newDate })
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Month" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {["January", "February", "March", "April", "May", "June", 
+                              "July", "August", "September", "October", "November", "December"].map((month, index) => (
+                              <SelectItem key={index} value={index.toString()}>
+                                {month}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          value={editFormData.dateOfAchievement ? new Date(editFormData.dateOfAchievement).getFullYear().toString() : ''}
+                          onValueChange={(value) => {
+                            const month = editFormData.dateOfAchievement ? new Date(editFormData.dateOfAchievement).getMonth() : 0
+                            const newDate = `${value}-${String(month + 1).padStart(2, '0')}-01`
+                            setEditFormData({ ...editFormData, dateOfAchievement: newDate })
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Year" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 50 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                              <SelectItem key={year} value={year.toString()}>
+                                {year}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
 
                     <div className="space-y-3">
@@ -749,7 +821,7 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                       <div className="flex items-center gap-2">
                         <CalendarIcon className="h-4 w-4 text-gray-500" />
                         <span className="text-sm text-gray-500">
-                          {format(new Date(achievement.dateOfAchievement), 'MMM dd, yyyy')}
+                          {format(new Date(achievement.dateOfAchievement), 'MMMM yyyy')}
                         </span>
                       </div>
                     </div>

@@ -526,23 +526,94 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-gray-700 dark:text-gray-300">Start Date</Label>
-                  <Input
-                    type="date"
-                    value={currentEntry.startDate}
-                    onChange={(e) => handleInputChange('startDate', e.target.value)}
-                    className="mt-1"
-                  />
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    <Select
+                      value={currentEntry.startDate ? new Date(currentEntry.startDate).getMonth().toString() : ''}
+                      onValueChange={(value) => {
+                        const year = currentEntry.startDate ? new Date(currentEntry.startDate).getFullYear() : new Date().getFullYear()
+                        const newDate = `${year}-${String(parseInt(value) + 1).padStart(2, '0')}-01`
+                        handleInputChange('startDate', newDate)
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Month" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {["January", "February", "March", "April", "May", "June", 
+                          "July", "August", "September", "October", "November", "December"].map((month, index) => (
+                          <SelectItem key={index} value={index.toString()}>
+                            {month}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={currentEntry.startDate ? new Date(currentEntry.startDate).getFullYear().toString() : ''}
+                      onValueChange={(value) => {
+                        const month = currentEntry.startDate ? new Date(currentEntry.startDate).getMonth() : 0
+                        const newDate = `${value}-${String(month + 1).padStart(2, '0')}-01`
+                        handleInputChange('startDate', newDate)
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Year" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 50 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                          <SelectItem key={year} value={year.toString()}>
+                            {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div>
                   <Label className="text-gray-700 dark:text-gray-300">End Date</Label>
-                  <Input
-                    type="date"
-                    value={currentEntry.endDate}
-                    onChange={(e) => handleInputChange('endDate', e.target.value)}
-                    disabled={currentEntry.isCurrent}
-                    className="mt-1"
-                  />
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    <Select
+                      value={currentEntry.endDate ? new Date(currentEntry.endDate).getMonth().toString() : ''}
+                      onValueChange={(value) => {
+                        const year = currentEntry.endDate ? new Date(currentEntry.endDate).getFullYear() : new Date().getFullYear()
+                        const newDate = `${year}-${String(parseInt(value) + 1).padStart(2, '0')}-01`
+                        handleInputChange('endDate', newDate)
+                      }}
+                      disabled={currentEntry.isCurrent}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Month" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {["January", "February", "March", "April", "May", "June", 
+                          "July", "August", "September", "October", "November", "December"].map((month, index) => (
+                          <SelectItem key={index} value={index.toString()}>
+                            {month}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={currentEntry.endDate ? new Date(currentEntry.endDate).getFullYear().toString() : ''}
+                      onValueChange={(value) => {
+                        const month = currentEntry.endDate ? new Date(currentEntry.endDate).getMonth() : 0
+                        const newDate = `${value}-${String(month + 1).padStart(2, '0')}-01`
+                        handleInputChange('endDate', newDate)
+                      }}
+                      disabled={currentEntry.isCurrent}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Year" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 50 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                          <SelectItem key={year} value={year.toString()}>
+                            {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
 
@@ -652,7 +723,7 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                         <div className="flex items-center space-x-2">
                           <Calendar size={14} />
                           <span>
-                            {entry.startDate} - {entry.isCurrent ? 'Present' : entry.endDate}
+                            {entry.startDate ? new Date(entry.startDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : ''} - {entry.isCurrent ? 'Present' : entry.endDate ? new Date(entry.endDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : ''}
                           </span>
                         </div>
                         {entry.description && (
