@@ -80,17 +80,17 @@ export async function GET(request: NextRequest) {
           
           if (studentProfile) {
             // Check 1: Personal Information (first name, last name, bio)
-            const hasBasicInfo = existingProfile.firstName && 
+            const hasBasicInfo = !!(existingProfile.firstName && 
                                existingProfile.lastName && 
-                               existingProfile.bio;
+                               existingProfile.bio);
 
             // Check 2: Interests (at least one interest)
-            const hasInterests = studentProfile.profile.userInterests && 
-                               studentProfile.profile.userInterests.length > 0;
+            const hasInterests = !!(studentProfile.profile.userInterests && 
+                               studentProfile.profile.userInterests.length > 0);
 
             // Check 3: Education History (at least one education entry)
-            const hasEducation = studentProfile.educationHistory && 
-                               studentProfile.educationHistory.length > 0;
+            const hasEducation = !!(studentProfile.educationHistory && 
+                               studentProfile.educationHistory.length > 0);
 
             // Only mark as completed if ALL THREE sections have data
             onboardingCompleted = hasBasicInfo && hasInterests && hasEducation;
