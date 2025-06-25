@@ -983,7 +983,7 @@ function CircleInvitationsSection({ onInvitationHandled }: CircleInvitationsSect
     setLoading(true)
     try {
       const response = await fetch(`/api/circles/invitations/${invitationId}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
