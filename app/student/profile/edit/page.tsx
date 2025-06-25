@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useEffect, useState, Suspense } from "react"
+import React, { useEffect, useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import InternalNavbar from "@/components/internal-navbar"

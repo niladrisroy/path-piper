@@ -247,7 +247,7 @@ export default function Onboarding() {
 
   
 
-  const handlePersonalInfoComplete = async (data) => {
+  const handlePersonalInfoComplete = async (data: any) => {
     console.log('Personal info completed:', data);
 
     try {
@@ -302,7 +302,7 @@ export default function Onboarding() {
   };
 
     // Function to calculate age group based on birth year
-    const calculateAgeGroup = (birthYear) => {
+    const calculateAgeGroup = (birthYear: string) => {
       const currentYear = new Date().getFullYear();
       const age = currentYear - parseInt(birthYear);
 

@@ -103,7 +103,7 @@ export const INSTITUTION_PLACEHOLDERS = {
 
 // Helper function to get placeholders for a specific institution type
 export function getPlaceholdersForType(typeSlug: string) {
-  return INSTITUTION_PLACEHOLDERS[typeSlug] || INSTITUTION_PLACEHOLDERS.default
+  return INSTITUTION_PLACEHOLDERS[typeSlug as keyof typeof INSTITUTION_PLACEHOLDERS] || INSTITUTION_PLACEHOLDERS.default
 }
 
 // Helper function to get specific placeholder text

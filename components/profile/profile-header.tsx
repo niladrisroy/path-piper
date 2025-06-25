@@ -50,6 +50,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
 
   // Use passed student data or fallback to mock data
   const studentProp = student || {
+    id: "",
     profile: {
       firstName: "Alex",
       lastName: "Johnson", 
@@ -61,7 +62,10 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
         institutionName: "Westlake High School",
         isCurrent: true
       }
-    ]
+    ],
+    projects: [],
+    customBadges: [],
+    skills: []
   }
 
   const displayName = studentProp.profile ? `${studentProp.profile.firstName} ${studentProp.profile.lastName}` : "Student"
@@ -295,7 +299,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
 
   const colorOptions = ['#3B82F6', '#8B5CF6', '#EC4899', '#10B981', '#F59E0B'];
 
-  const handleImageUpload = (e: any) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setNewCircleImageFile(file);

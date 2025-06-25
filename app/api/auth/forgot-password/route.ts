@@ -16,9 +16,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email } = body;
 
-    if (!email) {
+    if (!email || typeof email !== 'string' || !email.includes('@')) {
       return NextResponse.json(
-        { error: 'Email is required' },
+        { error: 'Valid email is required' },
         { status: 400 }
       );
     }

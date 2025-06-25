@@ -46,7 +46,7 @@ interface TabConfig {
 
 interface PersonalInfoFormProps {
   data: any
-  onChange: (sectionId: string, data: any) => void
+  onChange: (sectionId: string, data: any, isDirty?: boolean) => void
   onSave?: (data: any) => Promise<void>
 }
 
@@ -71,7 +71,7 @@ export default function ProfileEditForm({ userId, initialSection }: ProfileEditF
     interests: [],
     goals: [],
   })
-  const [activeSection, setActiveSection] = useState(null)
+  const [activeSection, setActiveSection] = useState<string | null>(null)
 
   // Warn user about unsaved changes only when there are actual changes
   useEffect(() => {
@@ -88,7 +88,7 @@ export default function ProfileEditForm({ userId, initialSection }: ProfileEditF
 
   // Security check: Ensure user can only edit their own profile
   useEffect(() => {
-    if (user && user.id !== userId) {
+    if (typeof window !== 'undefined' && user && user.id !== userId) {
       console.warn('User attempted to edit another user\'s profile')
       router.push(`/student/profile/edit`)
       return

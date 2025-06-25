@@ -6,8 +6,13 @@ import { sendEmail } from "@/lib/email";
 import { createClient } from "@supabase/supabase-js";
 
 // Initialize Supabase client - ONLY for auth operations
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  throw new Error('Missing required environment variables for Supabase');
+}
+
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export interface UserRegistrationData {
@@ -55,7 +60,7 @@ export async function registerStudent(data: UserRegistrationData) {
     });
 
     // Calculate age group from birth data
-    const calculateAgeGroup = (birthMonth: string, birthYear: string): string => {
+    const calculateAgeGroup = (birthMonth: string | null, birthYear: string | null): string => {
       if (!birthMonth || !birthYear) return "young_adult";
 
       const currentDate = new Date();
