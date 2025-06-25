@@ -321,9 +321,3 @@ export async function PUT(request: Request) {
     );
   }
 }
-    return NextResponse.json(
-      { success: false, error: 'Failed to update profile' },
-      { status: 500 }
-    );
-  }
-}
