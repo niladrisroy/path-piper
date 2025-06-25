@@ -176,7 +176,7 @@ export async function sendEmail(
     console.log(`Sending email with subject: ${subject}`);
 
     const mailOptions = {
-      from: '"PathPiper" <noreply@pathpiper.com>',
+      from: '"PathPiper" <noreply@www.pathpiper.com>',
       to: to,
       subject: subject,
       html: html
