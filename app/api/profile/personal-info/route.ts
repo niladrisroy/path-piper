@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
         id: us.skill.id,
         name: us.skill.name,
         category: us.skill.category.name,
-        level: us.level
+        level: us.proficiencyLevel
       })) || []
     }
 
