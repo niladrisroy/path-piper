@@ -144,8 +144,24 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
     }
   }
 
+  const validateDates = (startDate: string, endDate: string, isCurrent: boolean) => {
+    if (!startDate) return true; // If no start date, skip validation
+    if (isCurrent || !endDate) return true; // If current or no end date, skip validation
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    return start <= end;
+  };
+
   const handleAddEntry = async () => {
     if (!newEntry.institutionName.trim() || !newEntry.subjects?.length) return
+
+    // Validate dates
+    if (!validateDates(newEntry.startDate, newEntry.endDate || '', newEntry.isCurrent)) {
+      toast.error('Start date must be earlier than or equal to end date');
+      return;
+    }
 
     const entryToAdd = {
       ...newEntry,
@@ -206,6 +222,12 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
 
   const handleSaveEdit = async () => {
     if (!editingEntry?.institutionName.trim() || !editingEntry?.subjects?.length) return
+
+    // Validate dates
+    if (!validateDates(editingEntry.startDate, editingEntry.endDate || '', editingEntry.isCurrent)) {
+      toast.error('Start date must be earlier than or equal to end date');
+      return;
+    }
 
     const updatedEducation = educationHistory.map(entry => 
       entry.id === editingEntry.id ? editingEntry : entry
