@@ -291,19 +291,19 @@ export async function loginUser(data: LoginData) {
     if (profile.role === 'student') {
       try {
         // Check if user has minimum required data for all three essential sections
-        const hasBasicInfo = profile.firstName && profile.lastName && profile.bio;
+        const hasBasicInfo = !!(profile.firstName && profile.lastName && profile.bio);
         
         // Check interests
         const interests = await prisma.userInterest.findMany({
           where: { userId: profile.id }
         });
-        const hasInterests = interests.length > 0;
+        const hasInterests = !!(interests.length > 0);
         
         // Check education
         const education = await prisma.studentEducationHistory.findMany({
           where: { studentId: profile.id }
         });
-        const hasEducation = education.length > 0;
+        const hasEducation = !!(education.length > 0);
         
         onboardingCompleted = hasBasicInfo && hasInterests && hasEducation;
         

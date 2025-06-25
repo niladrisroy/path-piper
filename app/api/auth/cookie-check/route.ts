@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   const cookieNames = allCookies.map(c => c.name);
   
   // Mask actual values for security
-  const cookieValues = {};
+  const cookieValues: Record<string, string> = {};
   allCookies.forEach(c => {
     cookieValues[c.name] = c.value.substring(0, 3) + '...'; 
   });

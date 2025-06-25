@@ -28,7 +28,15 @@
         "./*"
       ]
     },
-    "target": "ES2017"
+    "target": "ES2017",
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true
   },
   "include": [
     "next-env.d.ts",
