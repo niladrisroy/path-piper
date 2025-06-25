@@ -427,7 +427,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                             {actualConnectionCounts?.mentors || 0}
                           </span>
                         </div>
-
+                        
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 text-blue-600 dark:text-blue-300 px-3 py-1.5 rounded-full">
@@ -728,7 +728,7 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                   <div className="mt-3">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400">Recent Achievements</h3>
-                      {isOwnProfile && (```text
+                      {isOwnProfile && (
                         <button
                           onClick={() => router.push('/student/profile/edit?section=achievements')}
                           className="text-xs text-pathpiper-teal hover:text-pathpiper-teal/80 font-medium transition-colors"
