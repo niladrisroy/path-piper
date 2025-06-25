@@ -1,6 +1,3 @@
-Refactor handleSubmit to handle errors and ensure subjects are properly handled.
-```
-```replit_final_file
 "use client"
 
 import { useState, useEffect } from "react"
