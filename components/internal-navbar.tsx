@@ -49,25 +49,58 @@ export function InternalNavbar() {
   const [connections, setConnections] = useState<any[]>([]);
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
   const { totalCount: notificationCount, loading: notificationsLoading } = useNotifications();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
+      setIsLoggingOut(true)
+
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+      })
+
+      const data = await response.json()
 
       if (response.ok) {
-        toast.success("Logged out successfully");
-        router.push("/login");
+        // Import the enhanced cache clearing function
+        const { clearAllUserData } = await import('@/hooks/use-auth')
+
+        // Clear all user data and storage
+        clearAllUserData()
+
+        // Clear any additional browser storage
+        if (typeof window !== 'undefined') {
+          // Clear all cookies by setting them to expire
+          document.cookie.split(";").forEach(cookie => {
+            const eqPos = cookie.indexOf("=")
+            const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim()
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.${window.location.hostname}`
+          })
+
+          // Force a hard reload after a brief delay to ensure all storage is cleared
+          setTimeout(() => {
+            window.location.href = '/login'
+          }, 100)
+        } else {
+          // Fallback for server-side
+          router.push('/login')
+        }
+
+        // Show success message
+        toast.success("Logged out successfully. All session data cleared.")
       } else {
-        toast.error("Failed to logout");
+        throw new Error(data.error || 'Logout failed')
       }
     } catch (error) {
-      console.error("Logout error:", error);
-      toast.error("Failed to logout");
+      console.error('Logout error:', error)
+      toast.error("Failed to logout. Please try again.")
+    } finally {
+      setIsLoggingOut(false)
     }
-  };
+  }
 
   useEffect(() => {
     const handleScroll = () => {

@@ -51,52 +51,50 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
+      // Clear any cached user data and storage before login
+      invalidateUserCache()
+
+      // Clear any residual storage to ensure fresh session
+      try {
+        localStorage.clear()
+        sessionStorage.clear()
+      } catch (error) {
+        console.log('Storage clear error:', error)
+      }
+
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({ email, password }),
+        credentials: 'include'
       })
 
       const data = await response.json()
 
-      if (response.ok && data.success) {
-        toast.success('Login successful!')
-        invalidateUserCache();
+      if (data.success) {
+        toast.success("Login successful!")
 
-        // Show redirecting state
         setIsRedirecting(true)
 
-        // Small delay to ensure smooth transition
+        // Determine redirect path based on role and onboarding status
+        let redirectPath = '/feed' // default
+
+        if (data.role === 'student') {
+          redirectPath = data.onboardingCompleted ? '/feed' : '/onboarding'
+        } else if (data.role === 'mentor') {
+          redirectPath = data.onboardingCompleted ? '/mentor/profile' : '/mentor-onboarding'
+        } else if (data.role === 'institution') {
+          redirectPath = data.onboardingCompleted ? '/institution/profile' : '/institution-onboarding'
+        }
+
+        // Force a hard navigation to ensure fresh session
         setTimeout(() => {
-          // Redirect based on user role and onboarding status
-          if (data.onboardingCompleted) {
-            if (data.role === 'student') {
-              router.push('/student/profile')
-            } else if (data.role === 'mentor') {
-              router.push('/mentor/profile')
-            } else if (data.role === 'institution') {
-              router.push('/institution/profile')
-            } else {
-              router.push('/feed')
-            }
-          } else {
-            // User needs to complete onboarding
-            if (data.role === 'student') {
-              router.push('/onboarding')
-            } else if (data.role === 'mentor') {
-              router.push('/mentor-onboarding')
-            } else if (data.role === 'institution') {
-              router.push('/institution-onboarding')
-            } else {
-              router.push('/onboarding')
-            }
-          }
-        }, 500)
+          window.location.href = redirectPath
+        }, 1000)
       } else {
-        toast.error(data.error || 'Login failed')
+        throw new Error(data.error || 'Login failed')
       }
     } catch (error) {
       console.error('Login error:', error)

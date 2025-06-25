@@ -177,12 +177,59 @@ export function useAuth() {
   return { user, loading, profileData, profileDataLoading }
 }
 
-// Function to invalidate cache (useful after login/logout)
+// Function to invalidate cache and clear all storage (useful after login/logout)
 export function invalidateUserCache() {
   globalUserCache = null
   globalUserPromise = null
   globalProfileDataCache = null
   globalProfileDataPromise = null
+}
+
+// Function to completely clear all user data and storage
+export function clearAllUserData() {
+  // Clear global caches
+  invalidateUserCache()
+  
+  // Clear localStorage
+  if (typeof window !== 'undefined') {
+    try {
+      // Clear all localStorage
+      localStorage.clear()
+      
+      // Clear sessionStorage
+      sessionStorage.clear()
+      
+      // Clear IndexedDB if it exists
+      if ('indexedDB' in window) {
+        indexedDB.databases?.().then(databases => {
+          databases.forEach(db => {
+            if (db.name) {
+              indexedDB.deleteDatabase(db.name)
+            }
+          })
+        }).catch(() => {
+          // Ignore errors when clearing IndexedDB
+        })
+      }
+      
+      // Clear any Supabase-specific storage
+      const supabaseKeys = [
+        'supabase.auth.token',
+        'sb-access-token',
+        'sb-refresh-token',
+        'sb-user-id'
+      ]
+      
+      supabaseKeys.forEach(key => {
+        localStorage.removeItem(key)
+        sessionStorage.removeItem(key)
+      })
+      
+      console.log('✅ All user data and storage cleared')
+    } catch (error) {
+      console.error('Error clearing storage:', error)
+    }
+  }
 }
 
 // Function to get cached profile data without triggering a fetch
