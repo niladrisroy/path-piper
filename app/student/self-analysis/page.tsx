@@ -76,52 +76,35 @@ export default function SelfAnalysisPage() {
     try {
       setDataLoading(true)
       
-      // Fetch complete student profile data from the main profile endpoint
+      // Single optimized fetch to main profile endpoint only
       const response = await fetch(`/api/student/profile/${user.id}`)
       if (!response.ok) {
         throw new Error('Failed to fetch profile data')
       }
       
       const data = await response.json()
-      console.log('🔍 Main profile data:', data)
       
-      // Use the data from profile endpoint, but also fetch additional data to ensure completeness
-      const [skillsRes, interestsRes, goalsRes, achievementsRes] = await Promise.all([
-        fetch('/api/user/skills'),
-        fetch('/api/user/interests'), 
-        fetch('/api/goals'),
-        fetch('/api/achievements')
-      ])
-
-      const [skillsData, interestsData, goalsData, achievementsData] = await Promise.all([
-        skillsRes.ok ? skillsRes.json() : { skills: [] },
-        interestsRes.ok ? interestsRes.json() : { interests: [] },
-        goalsRes.ok ? goalsRes.json() : { goals: [] },
-        achievementsRes.ok ? achievementsRes.json() : { achievements: [] }
-      ])
-
-      console.log('🔍 Additional data fetched:', {
-        skills: skillsData.skills?.length || 0,
-        interests: interestsData.interests?.length || 0, 
-        goals: goalsData.goals?.length || 0,
-        achievements: achievementsData.achievements?.length || 0
-      })
-
       const studentData: StudentData = {
         profile: {
           ...data.profile,
           ageGroup: data.profile?.studentProfile?.age_group || data.profile?.ageGroup || 'young_adult',
           educationLevel: data.profile?.studentProfile?.education_level || data.profile?.educationLevel || 'undergraduate'
         },
-        interests: data.interests?.length > 0 ? data.interests : (interestsData.interests || []),
-        skills: data.skills?.length > 0 ? data.skills : (skillsData.skills || []),
+        interests: data.profile?.userInterests || [],
+        skills: data.profile?.userSkills || [],
         educationHistory: data.educationHistory || [],
-        achievements: data.achievements?.length > 0 ? data.achievements : (achievementsData.achievements || []),
-        goals: data.goals?.length > 0 ? data.goals : (goalsData.goals || [])
+        achievements: data.profile?.customBadges || [],
+        goals: data.profile?.careerGoals || []
       }
 
       setStudentData(studentData)
-      console.log('🔍 Complete student data cached for analysis:', studentData)
+      console.log('🔍 Profile data optimized and cached:', {
+        interests: studentData.interests.length,
+        skills: studentData.skills.length,
+        education: studentData.educationHistory.length,
+        goals: studentData.goals.length,
+        achievements: studentData.achievements.length
+      })
     } catch (error) {
       console.error('Error fetching student data:', error)
       toast.error('Failed to load your profile data')
@@ -402,7 +385,7 @@ export default function SelfAnalysisPage() {
                       {isAnalyzing ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Analyzing your profile...
+                          Analyzing... (30-60s)
                         </>
                       ) : (
                         <>
@@ -411,6 +394,14 @@ export default function SelfAnalysisPage() {
                         </>
                       )}
                     </Button>
+                    
+                    {isAnalyzing && (
+                      <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-400">
+                        <p className="text-sm text-blue-700 dark:text-blue-300">
+                          🤖 AI is processing your profile data... This usually takes 30-60 seconds for detailed analysis.
+                        </p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 

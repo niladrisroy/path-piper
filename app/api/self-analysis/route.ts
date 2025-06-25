@@ -41,52 +41,23 @@ export async function POST(request: NextRequest) {
     // Prepare student data summary for AI
     const profileSummary = createProfileSummary(studentData)
     
-    // Create the AI prompt
-    const systemPrompt = `You are an expert educational counselor and career advisor specialized in student development. You provide thoughtful, encouraging, and actionable insights based on comprehensive student profile analysis.
+    // Create optimized AI prompt
+    const systemPrompt = `You are an expert educational counselor. Provide concise, actionable insights based on student profiles.
 
-Your role is to:
-1. Analyze the student's complete academic and personal profile
-2. Provide honest but constructive feedback
-3. Identify strengths, growth areas, and opportunities
-4. Suggest specific, actionable steps for improvement
-5. Offer career guidance aligned with their interests and skills
-6. Give realistic timelines and expectations
-7. Maintain a supportive and motivational tone
+FORMATTING: Use ## for sections, ### for subsections, **bold** for emphasis, numbered lists for steps.
 
-FORMATTING REQUIREMENTS:
-- Use ## for main sections (like "Key Insights", "Strengths", "Recommendations")
-- Use ### for subsections
-- Use #### for detailed points
-- Use **bold text** for emphasis
-- Use numbered lists (1. 2. 3.) for step-by-step recommendations
-- Use bullet points (- ) for lists of items
-- Structure your response with clear sections and proper spacing
+Guidelines: Be specific, encouraging, and provide clear next steps. Keep responses focused and under 1500 words.`
 
-Guidelines:
-- Be specific and data-driven in your analysis
-- Provide actionable recommendations with clear next steps
-- Consider both short-term and long-term goals
-- Acknowledge achievements while identifying improvement areas
-- Suggest resources, courses, or activities when relevant
-- Be encouraging but realistic about challenges
-- Consider the student's age group and education level in your advice`
+    // Create a more concise profile summary
+    const profileSummary = createOptimizedProfileSummary(studentData)
+    
+    const userPrompt = `Profile: ${profileSummary}
 
-    const userPrompt = `Here is the complete profile data for analysis:
+Question: "${query}"
 
-${profileSummary}
+Provide analysis with: Key insights, strengths, improvement areas, specific recommendations, and next steps.`
 
-Student's Question: "${query}"
-
-Please provide a comprehensive analysis addressing their question. Include:
-1. Key insights about their current profile
-2. Strengths and areas for improvement
-3. Specific recommendations and next steps
-4. Career alignment suggestions if relevant
-5. Timeline for achieving goals
-
-Be detailed, supportive, and actionable in your response.`
-
-    // Call OpenAI API
+    // Call OpenAI API with optimized settings
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -99,8 +70,9 @@ Be detailed, supportive, and actionable in your response.`
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        max_tokens: 2000,
-        temperature: 0.7,
+        max_tokens: 1500, // Reduced from 2000
+        temperature: 0.5, // Reduced for faster processing
+        stream: false
       }),
     })
 
@@ -132,114 +104,61 @@ Be detailed, supportive, and actionable in your response.`
   }
 }
 
-function createProfileSummary(studentData: any): string {
+function createOptimizedProfileSummary(studentData: any): string {
   const { profile, interests, skills, educationHistory, achievements, goals } = studentData
 
-  let summary = `STUDENT PROFILE ANALYSIS DATA:\n\n`
+  let summary = `Student: ${profile?.firstName || ''} ${profile?.lastName || ''}\n`
+  summary += `Bio: ${profile?.bio || 'None'}\n`
+  summary += `Age Group: ${profile?.ageGroup || 'Unknown'}\n`
+  summary += `Education Level: ${profile?.educationLevel || 'Unknown'}\n\n`
 
-  // Basic Information
-  summary += `## PERSONAL INFORMATION:\n`
-  summary += `Name: ${profile?.firstName || 'Not provided'} ${profile?.lastName || ''}\n`
-  summary += `Bio: ${profile?.bio || 'No bio provided'}\n`
-  summary += `Location: ${profile?.location || 'Not specified'}\n`
-  summary += `Age Group: ${profile?.ageGroup || 'Not specified'}\n`
-  summary += `Education Level: ${profile?.educationLevel || 'Not specified'}\n\n`
-
-  // Interests
-  summary += `## INTERESTS (${interests?.length || 0} total):\n`
+  // Condensed interests
   if (interests && interests.length > 0) {
-    interests.forEach((interest: any, index: number) => {
-      const interestName = interest.name || interest.interest?.name || 'Unknown'
-      const category = interest.category || interest.interest?.category?.name || 'General'
-      summary += `${index + 1}. ${interestName} (Category: ${category})\n`
-    })
+    const interestNames = interests.slice(0, 10).map((i: any) => i.name || i.interest?.name).filter(Boolean)
+    summary += `Interests (${interests.length}): ${interestNames.join(', ')}\n`
   } else {
-    summary += `No interests specified - This is a significant gap that needs attention.\n`
+    summary += `Interests: None listed\n`
   }
-  summary += `\n`
 
-  // Skills
-  summary += `## SKILLS (${skills?.length || 0} total):\n`
+  // Condensed skills
   if (skills && skills.length > 0) {
-    skills.forEach((skill: any, index: number) => {
-      const skillName = skill.name || skill.skill?.name || 'Unknown'
-      const proficiency = skill.proficiencyLevel || skill.proficiency_level || 'Not rated'
-      const category = skill.category || skill.skill?.category?.name || 'General'
-      summary += `${index + 1}. ${skillName} - Proficiency: ${proficiency}% (Category: ${category})\n`
-    })
+    const skillsWithProficiency = skills.slice(0, 8).map((s: any) => {
+      const name = s.name || s.skill?.name
+      const prof = s.proficiencyLevel || s.proficiency_level || 'unknown'
+      return `${name} (${prof}%)`
+    }).filter(s => s.includes('('))
+    summary += `Skills (${skills.length}): ${skillsWithProficiency.join(', ')}\n`
   } else {
-    summary += `No skills listed - This is a critical gap that needs immediate attention.\n`
+    summary += `Skills: None listed\n`
   }
-  summary += `\n`
 
-  // Education History
-  summary += `## EDUCATION HISTORY (${educationHistory?.length || 0} entries):\n`
+  // Latest education only
   if (educationHistory && educationHistory.length > 0) {
-    educationHistory.forEach((edu: any, index: number) => {
-      summary += `${index + 1}. Institution: ${edu.institutionName || 'Not specified'}\n`
-      summary += `   - Degree/Program: ${edu.degreeProgram || 'Not specified'}\n`
-      summary += `   - Field of Study: ${edu.fieldOfStudy || 'Not specified'}\n`
-      summary += `   - Grade Level: ${edu.gradeLevel || edu.grade_level || 'Not specified'}\n`
-      summary += `   - Current: ${edu.isCurrent || edu.is_current ? 'Yes' : 'No'}\n`
-      summary += `   - Duration: ${edu.startDate || 'Not specified'} to ${edu.endDate || (edu.isCurrent ? 'Present' : 'Not specified')}\n`
-      if (edu.subjects && edu.subjects.length > 0) {
-        summary += `   - Subjects: ${edu.subjects.join(', ')}\n`
-      }
-      if (edu.gpa) {
-        summary += `   - GPA: ${edu.gpa}\n`
-      }
-      summary += `\n`
-    })
+    const latest = educationHistory[0]
+    summary += `Current Education: ${latest.institutionName} - ${latest.degreeProgram}\n`
   } else {
-    summary += `No education history provided - This is essential information that's missing.\n\n`
+    summary += `Education: None listed\n`
   }
 
-  // Goals
-  summary += `## CAREER GOALS (${goals?.length || 0} total):\n`
+  // Goals summary
   if (goals && goals.length > 0) {
-    goals.forEach((goal: any, index: number) => {
-      summary += `${index + 1}. ${goal.title || goal.goal || 'Untitled Goal'}\n`
-      if (goal.description) {
-        summary += `   Description: ${goal.description}\n`
-      }
-      if (goal.targetDate || goal.target_date) {
-        summary += `   Target Date: ${goal.targetDate || goal.target_date}\n`
-      }
-      if (goal.category) {
-        summary += `   Category: ${goal.category}\n`
-      }
-      summary += `\n`
-    })
+    const goalTitles = goals.slice(0, 5).map((g: any) => g.title || g.goal).filter(Boolean)
+    summary += `Goals (${goals.length}): ${goalTitles.join(', ')}\n`
   } else {
-    summary += `No goals specified - This indicates lack of direction and planning.\n\n`
+    summary += `Goals: None set\n`
   }
 
-  // Achievements
-  summary += `## ACHIEVEMENTS (${achievements?.length || 0} total):\n`
+  // Recent achievements
   if (achievements && achievements.length > 0) {
-    achievements.forEach((achievement: any, index: number) => {
-      summary += `${index + 1}. ${achievement.name || achievement.title || 'Untitled Achievement'}\n`
-      if (achievement.description) {
-        summary += `   Description: ${achievement.description}\n`
-      }
-      if (achievement.date_of_achievement || achievement.dateOfAchievement) {
-        summary += `   Date: ${achievement.date_of_achievement || achievement.dateOfAchievement}\n`
-      }
-      summary += `\n`
-    })
-  } else {
-    summary += `No achievements recorded - This suggests either lack of documentation or limited accomplishments.\n\n`
+    const achievementNames = achievements.slice(0, 3).map((a: any) => a.name || a.title).filter(Boolean)
+    summary += `Recent Achievements: ${achievementNames.join(', ')}\n`
   }
-
-  // Profile Completeness Analysis
-  summary += `## PROFILE COMPLETENESS ANALYSIS:\n`
-  const completeness = calculateProfileCompleteness(studentData)
-  summary += `Overall Profile Completeness: ${completeness.percentage}%\n`
-  summary += `Missing Critical Sections: ${completeness.missingSections.join(', ')}\n`
-  summary += `Strengths: ${completeness.strengths.join(', ')}\n`
-  summary += `Priority Improvements: ${completeness.improvements.join(', ')}\n\n`
 
   return summary
+}
+
+function createProfileSummary(studentData: any): string {
+  return createOptimizedProfileSummary(studentData)
 }
 
 function calculateProfileCompleteness(studentData: any) {
