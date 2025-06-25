@@ -122,7 +122,7 @@ function createOptimizedProfileSummary(studentData: any): string {
       const name = s.name || s.skill?.name
       const prof = s.proficiencyLevel || s.proficiency_level || 'unknown'
       return `${name} (${prof}%)`
-    }).filter(s => s.includes('('))
+    }).filter((s: string) => s.includes('('))
     summary += `Skills (${skills.length}): ${skillsWithProficiency.join(', ')}\n`
   } else {
     summary += `Skills: None listed\n`
