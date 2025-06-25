@@ -24,324 +24,6 @@ interface StudentData {
   goals: any[]
 }
 
-interface AnalysisCard {
-  id: string
-  title: string
-  content: string
-  color: string
-  icon: string
-}
-
-// Streaming Text Component
-function StreamingText({ text, delay = 50, onComplete }: { text: string; delay?: number; onComplete?: () => void }) {
-  const [displayedText, setDisplayedText] = useState('')
-  const [currentIndex, setCurrentIndex] = useState(0)
-
-  useEffect(() => {
-    if (currentIndex < text.length) {
-      const timer = setTimeout(() => {
-        setDisplayedText(prev => prev + text[currentIndex])
-        setCurrentIndex(prev => prev + 1)
-      }, delay)
-      return () => clearTimeout(timer)
-    } else if (onComplete) {
-      onComplete()
-    }
-  }, [currentIndex, text, delay, onComplete])
-
-  return (
-    <div className="text-gray-700 dark:text-gray-300 leading-relaxed">
-      {displayedText}
-      {currentIndex < text.length && (
-        <span className="inline-block w-2 h-5 bg-blue-500 animate-pulse ml-1"></span>
-      )}
-    </div>
-  )
-}
-
-// Analysis Card Network Component
-function AnalysisCardNetwork({ analysis }: { analysis: string }) {
-  const [visibleCards, setVisibleCards] = useState<number[]>([])
-  const [streamingCardIndex, setStreamingCardIndex] = useState(0)
-
-  // Parse analysis into cards
-  const parseAnalysisIntoCards = (analysisText: string): AnalysisCard[] => {
-    const cards: AnalysisCard[] = []
-    
-    const colors = [
-      'from-purple-500 to-blue-600',
-      'from-blue-500 to-cyan-600', 
-      'from-cyan-500 to-teal-600',
-      'from-teal-500 to-green-600',
-      'from-green-500 to-lime-600',
-      'from-yellow-500 to-orange-600',
-      'from-orange-500 to-red-600',
-      'from-red-500 to-pink-600',
-      'from-pink-500 to-purple-600',
-      'from-indigo-500 to-purple-600',
-      'from-rose-500 to-pink-600',
-      'from-emerald-500 to-teal-600'
-    ]
-    
-    const icons = ['🎯', '💡', '🚀', '⭐', '🔍', '💪', '🌟', '🎨', '📚', '🧠', '✨', '🎪', '🎭', '🎪', '🔮', '⚡', '🌈', '🎵', '🎲', '🎊']
-
-    // Split analysis into sections first
-    const sections = analysisText.split(/(?=##\s)|(?=###\s)|(?=####\s)/).filter(Boolean)
-    let cardIndex = 0
-
-    sections.forEach((section) => {
-      const lines = section.trim().split('\n').filter(line => line.trim())
-      if (lines.length === 0) return
-
-      let currentSectionTitle = 'Analysis Point'
-      let startIndex = 0
-
-      // Extract section title from markdown headers
-      const headerMatch = lines[0].match(/^#{1,4}\s+(.+)/)
-      if (headerMatch) {
-        currentSectionTitle = headerMatch[1]
-        startIndex = 1
-      }
-
-      // Process each line after the header
-      for (let i = startIndex; i < lines.length; i++) {
-        const line = lines[i].trim()
-        
-        // Skip empty lines
-        if (!line) continue
-
-        // Check if this is a bullet point
-        if (line.startsWith('- ') || line.startsWith('• ')) {
-          // Create a card for this bullet point
-          let bulletContent = line.replace(/^- |^• /, '').trim()
-          
-          // Clean and format the content
-          bulletContent = bulletContent
-            .replace(/\*\*(.*?)\*\*/g, '$1')
-            .trim()
-
-          // Create title from the first few words or use section context
-          let bulletTitle = bulletContent.length > 50 
-            ? bulletContent.substring(0, 47) + '...'
-            : bulletContent
-
-          // If the bullet has a colon, use the part before colon as title
-          const colonIndex = bulletContent.indexOf(':')
-          if (colonIndex > 0 && colonIndex < 60) {
-            bulletTitle = bulletContent.substring(0, colonIndex)
-            bulletContent = bulletContent.substring(colonIndex + 1).trim()
-          }
-
-          if (bulletContent) {
-            cards.push({
-              id: `card-${cardIndex}`,
-              title: bulletTitle,
-              content: bulletContent,
-              color: colors[cardIndex % colors.length],
-              icon: icons[cardIndex % icons.length]
-            })
-            cardIndex++
-          }
-        } else if (line.match(/^\d+\./)) {
-          // Handle numbered lists
-          let numberedContent = line.replace(/^\d+\.\s*/, '').trim()
-          
-          numberedContent = numberedContent
-            .replace(/\*\*(.*?)\*\*/g, '$1')
-            .trim()
-
-          let numberedTitle = numberedContent.length > 50 
-            ? numberedContent.substring(0, 47) + '...'
-            : numberedContent
-
-          const colonIndex = numberedContent.indexOf(':')
-          if (colonIndex > 0 && colonIndex < 60) {
-            numberedTitle = numberedContent.substring(0, colonIndex)
-            numberedContent = numberedContent.substring(colonIndex + 1).trim()
-          }
-
-          if (numberedContent) {
-            cards.push({
-              id: `card-${cardIndex}`,
-              title: numberedTitle,
-              content: numberedContent,
-              color: colors[cardIndex % colors.length],
-              icon: icons[cardIndex % icons.length]
-            })
-            cardIndex++
-          }
-        } else if (!line.match(/^#{1,4}\s+/)) {
-          // Handle regular paragraphs (non-header lines)
-          let paragraphContent = line.replace(/\*\*(.*?)\*\*/g, '$1').trim()
-          
-          if (paragraphContent && paragraphContent.length > 10) {
-            let paragraphTitle = paragraphContent.length > 50 
-              ? paragraphContent.substring(0, 47) + '...'
-              : paragraphContent
-
-            const colonIndex = paragraphContent.indexOf(':')
-            if (colonIndex > 0 && colonIndex < 60) {
-              paragraphTitle = paragraphContent.substring(0, colonIndex)
-              paragraphContent = paragraphContent.substring(colonIndex + 1).trim()
-            }
-
-            cards.push({
-              id: `card-${cardIndex}`,
-              title: paragraphTitle,
-              content: paragraphContent,
-              color: colors[cardIndex % colors.length],
-              icon: icons[cardIndex % icons.length]
-            })
-            cardIndex++
-          }
-        }
-      }
-    })
-
-    return cards
-  }
-
-  const cards = parseAnalysisIntoCards(analysis)
-
-  useEffect(() => {
-    // Show first card immediately
-    if (cards.length > 0) {
-      setVisibleCards([0])
-      setStreamingCardIndex(0)
-    }
-  }, [cards.length])
-
-  const handleStreamingComplete = (cardIndex: number) => {
-    const nextIndex = cardIndex + 1
-    if (nextIndex < cards.length) {
-      setTimeout(() => {
-        setVisibleCards(prev => [...prev, nextIndex])
-        setStreamingCardIndex(nextIndex)
-      }, 500)
-    }
-  }
-
-  const getCardPosition = (index: number) => {
-    const row = Math.floor(index / 3)
-    const col = index % 3
-    return { row, col }
-  }
-
-  const renderConnectionLine = (fromIndex: number, toIndex: number) => {
-    const fromPos = getCardPosition(fromIndex)
-    const toPos = getCardPosition(toIndex)
-    
-    if (fromPos.row === toPos.row) {
-      // Horizontal connection
-      return (
-        <div 
-          className="absolute h-0.5 bg-gradient-to-r from-blue-400 to-purple-400 z-10 animate-pulse"
-          style={{
-            top: '50%',
-            left: '100%',
-            width: '2rem',
-            transform: 'translateY(-50%)'
-          }}
-        />
-      )
-    } else {
-      // Vertical connection to next row
-      return (
-        <div className="absolute flex items-center justify-center z-10">
-          <div 
-            className="w-0.5 bg-gradient-to-b from-blue-400 to-purple-400 animate-pulse"
-            style={{
-              height: '3rem',
-              top: '100%',
-              left: '50%',
-              transform: 'translateX(-50%)'
-            }}
-          />
-          <div 
-            className="absolute w-2 h-2 bg-purple-500 rounded-full animate-bounce"
-            style={{
-              top: '100%',
-              left: '50%',
-              transform: 'translate(-50%, 1.5rem)'
-            }}
-          />
-        </div>
-      )
-    }
-  }
-
-  return (
-    <div className="space-y-8">
-      {Array.from({ length: Math.ceil(cards.length / 3) }).map((_, rowIndex) => (
-        <div key={rowIndex} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative">
-          {cards.slice(rowIndex * 3, (rowIndex + 1) * 3).map((card, colIndex) => {
-            const cardIndex = rowIndex * 3 + colIndex
-            const isVisible = visibleCards.includes(cardIndex)
-            const isStreaming = streamingCardIndex === cardIndex
-            
-            return (
-              <div key={card.id} className="relative">
-                <Card 
-                  className={`transition-all duration-700 transform ${
-                    isVisible 
-                      ? 'opacity-100 translate-y-0 scale-100' 
-                      : 'opacity-0 translate-y-8 scale-95'
-                  } ${isStreaming ? 'ring-2 ring-blue-400 shadow-lg shadow-blue-200 dark:shadow-blue-900' : ''}`}
-                >
-                  <CardHeader className={`bg-gradient-to-r ${card.color} text-white rounded-t-lg`}>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <span className="text-2xl">{card.icon}</span>
-                      {card.title}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    {isVisible && (
-                      <StreamingText 
-                        text={card.content}
-                        delay={30}
-                        onComplete={() => handleStreamingComplete(cardIndex)}
-                      />
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Connection Lines */}
-                {isVisible && cardIndex < cards.length - 1 && (
-                  <div className="absolute top-1/2 left-full">
-                    {renderConnectionLine(cardIndex, cardIndex + 1)}
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      ))}
-      
-      {/* Progress Indicator */}
-      <div className="flex justify-center items-center space-x-2 mt-8">
-        <div className="text-sm text-gray-600 dark:text-gray-400">
-          Analysis Progress:
-        </div>
-        <div className="flex space-x-1">
-          {cards.map((_, index) => (
-            <div
-              key={index}
-              className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                visibleCards.includes(index)
-                  ? 'bg-blue-500'
-                  : 'bg-gray-300 dark:bg-gray-600'
-              }`}
-            />
-          ))}
-        </div>
-        <div className="text-sm text-gray-600 dark:text-gray-400">
-          {visibleCards.length}/{cards.length}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default function SelfAnalysisPage() {
   const { user, loading, profileData, profileDataLoading } = useAuth()
   const router = useRouter()
@@ -520,47 +202,6 @@ export default function SelfAnalysisPage() {
           }
           .dark .analysis-content h4 {
             color: #60a5fa;
-          }
-          
-          /* Card Network Animations */
-          @keyframes cardSlideIn {
-            from {
-              opacity: 0;
-              transform: translateY(30px) scale(0.9);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0) scale(1);
-            }
-          }
-          
-          @keyframes connectionGlow {
-            0%, 100% {
-              opacity: 0.6;
-              transform: scaleX(1);
-            }
-            50% {
-              opacity: 1;
-              transform: scaleX(1.1);
-            }
-          }
-          
-          .card-network-enter {
-            animation: cardSlideIn 0.7s ease-out;
-          }
-          
-          .connection-line {
-            animation: connectionGlow 2s ease-in-out infinite;
-          }
-          
-          /* Streaming text cursor */
-          @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0; }
-          }
-          
-          .streaming-cursor {
-            animation: blink 1s infinite;
           }
         `}</style>
         <InternalNavbar />
@@ -766,19 +407,29 @@ export default function SelfAnalysisPage() {
                   </CardContent>
                 </Card>
 
-                {/* Analysis Results - Card Network */}
+                {/* Analysis Results */}
                 {analysis && (
-                  <div className="space-y-8">
-                    <div className="text-center">
-                      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                        AI Analysis Network
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-400">
-                        Personalized insights flowing through your profile analysis
-                      </p>
-                    </div>
-                    <AnalysisCardNetwork analysis={analysis} />
-                  </div>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Brain className="h-5 w-5 text-purple-600" />
+                        AI Analysis Results
+                      </CardTitle>
+                      <CardDescription>
+                        Personalized insights based on your complete profile
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="prose prose-lg max-w-none dark:prose-invert">
+                        <div 
+                          className="analysis-content text-gray-700 dark:text-gray-300 leading-relaxed space-y-4"
+                          dangerouslySetInnerHTML={{ 
+                            __html: formatAnalysisText(analysis) 
+                          }}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
                 )}
 
                 {/* Tips */}
