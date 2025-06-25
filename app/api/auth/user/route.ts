@@ -302,20 +302,25 @@ export async function PUT(request: Request) {
     }
 
     return NextResponse.json({
-        success: true,
-        message: "Profile updated successfully",
-        user: {
-          id: updatedProfile.id,
-          firstName: updatedProfile.firstName,
-          lastName: updatedProfile.lastName,
-          bio: updatedProfile.bio,
-          location: updatedProfile.location,
-        }
-      });
-    }
+      success: true,
+      message: "Profile updated successfully",
+      user: {
+        id: updatedProfile.id,
+        firstName: updatedProfile.firstName,
+        lastName: updatedProfile.lastName,
+        bio: updatedProfile.bio,
+        location: updatedProfile.location,
+      }
+    });
 
   } catch (error) {
     console.error('Error updating profile:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to update profile' },
+      { status: 500 }
+    );
+  }
+}
     return NextResponse.json(
       { success: false, error: 'Failed to update profile' },
       { status: 500 }
