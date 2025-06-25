@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     console.log('🤖 Self-analysis API request received')
     
     // Get auth token from cookies
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const token = cookieStore.get('sb-access-token')?.value
 
     if (!token) {
