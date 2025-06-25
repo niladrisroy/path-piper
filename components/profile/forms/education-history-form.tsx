@@ -562,11 +562,21 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                       </SelectTrigger>
                       <SelectContent>
                         {["January", "February", "March", "April", "May", "June", 
-                          "July", "August", "September", "October", "November", "December"].map((month, index) => (
-                          <SelectItem key={index} value={index.toString()}>
-                            {month}
-                          </SelectItem>
-                        ))}
+                          "July", "August", "September", "October", "November", "December"].map((month, index) => {
+                          const currentDate = new Date();
+                          const currentYear = currentDate.getFullYear();
+                          const currentMonth = currentDate.getMonth();
+                          const selectedYear = currentEntry.startDate ? new Date(currentEntry.startDate).getFullYear() : currentYear;
+                          
+                          // Disable future months in current year
+                          const isDisabled = selectedYear === currentYear && index > currentMonth;
+                          
+                          return (
+                            <SelectItem key={index} value={index.toString()} disabled={isDisabled}>
+                              {month}
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                     <Select

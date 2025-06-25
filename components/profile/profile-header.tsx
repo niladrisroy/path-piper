@@ -457,6 +457,14 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                   <div className="mt-4">
                     <div className="flex justify-between items-center mb-3">
                       <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">My Circles</h3>
+                      {isOwnProfile && (
+                        <button
+                          onClick={() => setShowCreateCircle(true)}
+                          className="text-xs text-pathpiper-teal hover:text-pathpiper-teal/80 font-medium transition-colors"
+                        >
+                          + Add
+                        </button>
+                      )}
                     </div>
 
                     <div className="relative flex items-center">
@@ -542,49 +550,11 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                                   </div>
                                 ))}
 
-                                {/* Add Circle Button - Show inline when no scrolling needed */}
-                                {isOwnProfile && !needsScrolling && (
-                                  <div className="flex flex-col items-center min-w-[72px] shrink-0">
-                                    <div className="relative mb-1">
-                                      <button
-                                        onClick={() => setShowCreateCircle(true)}
-                                        className="w-16 h-16 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 p-[3px] hover:from-pathpiper-teal hover:to-pathpiper-blue transition-all duration-200"
-                                      >
-                                        <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
-                                          <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                                            <Plus className="h-6 w-6 text-gray-500 dark:text-gray-400" />
-                                          </div>
-                                        </div>
-                                      </button>
-                                    </div>
-                                    <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
-                                      Add Circle
-                                    </span>
-                                  </div>
-                                )}
+                                
                               </div>
                             </div>
 
-                            {/* Fixed Add New Circle Button - Only show when scrolling is needed */}
-                            {isOwnProfile && needsScrolling && (
-                              <div className="flex flex-col items-center min-w-[72px] shrink-0 ml-2">
-                                <div className="relative mb-1">
-                                  <button
-                                    onClick={() => setShowCreateCircle(true)}
-                                    className="w-16 h-16 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 p-[3px] hover:from-pathpiper-teal hover:to-pathpiper-blue transition-all duration-200"
-                                  >
-                                    <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
-                                      <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                                        <Plus className="h-6 w-6 text-gray-500 dark:text-gray-400" />
-                                      </div>
-                                    </div>
-                                  </button>
-                                </div>
-                                <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
-                                  Add Circle
-                                </span>
-                              </div>
-                            )}
+                            
                           </>
                         );
                       })()}
