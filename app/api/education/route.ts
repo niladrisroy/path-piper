@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { supabase } from '@/lib/supabase'
 import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
 
 // Auth helper function
 async function getAuthenticatedUser(request: NextRequest) {
