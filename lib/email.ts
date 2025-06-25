@@ -1,24 +1,27 @@
 
-import { SendMailClient } from "zeptomail";
+import nodemailer from 'nodemailer';
 
-const ZEPTOMAIL_URL = "api.zeptomail.in/";
-const ZEPTOMAIL_TOKEN = process.env.ZEPTOMAIL_TOKEN || "Zoho-enczapikey PHtE6r0IE7q/3mUv80UHsP/pRc+tZownrO8zflYS5o1LWfZSGU1VqNl/kTKxqht8XPkWR/SfyN5t5Oycsu6BITzsYG4dWmqyqK3sx/VYSPOZsbq6x00ctF4SfkLVVoDmcd9u1iXRuNnaNA==";
+const ZEPTOMAIL_HOST = "smtp.zeptomail.in";
+const ZEPTOMAIL_PORT = 587;
+const ZEPTOMAIL_USER = "emailapikey";
+const ZEPTOMAIL_PASS = process.env.ZEPTOMAIL_PASSWORD || "PHtE6r0IE7q/3mUv80UHsP/pRc+tZownrO8zflYS5o1LWfZSGU1VqNl/kTKxqht8XPkWR/SfyN5t5Oycsu6BITzsYG4dWmqyqK3sx/VYSPOZsbq6x00ctF4SfkLVVoDmcd9u1iXRuNnaNA==";
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-let zeptoClient: SendMailClient;
-try {
-  zeptoClient = new SendMailClient({
-    url: ZEPTOMAIL_URL,
-    token: ZEPTOMAIL_TOKEN
-  });
-} catch (error) {
-  console.warn('ZeptoMail service initialization failed:', error);
-}
+// Create nodemailer transporter
+const transport = nodemailer.createTransporter({
+  host: ZEPTOMAIL_HOST,
+  port: ZEPTOMAIL_PORT,
+  secure: false, // true for 465, false for other ports
+  auth: {
+    user: ZEPTOMAIL_USER,
+    pass: ZEPTOMAIL_PASS
+  }
+});
 
 // Mock email sending for development
 async function mockSendEmail() {
   console.log('Email sending mocked due to missing API key');
-  return { success: true, data: { id: 'mocked_id' } };
+  return { success: true, data: { messageId: 'mocked_id' } };
 }
 
 export type EmailTemplate = 'verification' | 'parent-approval' | 'password-reset';
@@ -38,23 +41,23 @@ export async function sendEmail(
     console.log(`Attempting to send ${template} email to ${to}`);
     
     // Check if we're in development mode without proper API key
-    if (!ZEPTOMAIL_TOKEN && isDevelopment) {
+    if (!ZEPTOMAIL_PASS && isDevelopment) {
       console.log('Development mode: Mocking email send');
       return mockSendEmail();
     }
 
-    if (!ZEPTOMAIL_TOKEN) {
-      console.error('ZEPTOMAIL_TOKEN is not configured');
+    if (!ZEPTOMAIL_PASS) {
+      console.error('ZEPTOMAIL_PASSWORD is not configured');
       return { success: false, error: 'Email service not configured' };
     }
 
     let subject = '';
-    let htmlbody = '';
+    let html = '';
 
     switch (template) {
       case 'verification':
         subject = 'Verify your PathPiper account';
-        htmlbody = `
+        html = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 30px;">
               <h1 style="color: #14b8a6; margin: 0;">PathPiper</h1>
@@ -89,7 +92,7 @@ export async function sendEmail(
 
       case 'parent-approval':
         subject = 'Parent Approval Required for PathPiper Account';
-        htmlbody = `
+        html = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 30px;">
               <h1 style="color: #14b8a6; margin: 0;">PathPiper</h1>
@@ -128,7 +131,7 @@ export async function sendEmail(
 
       case 'password-reset':
         subject = 'Reset your PathPiper password';
-        htmlbody = `
+        html = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 30px;">
               <h1 style="color: #14b8a6; margin: 0;">PathPiper</h1>
@@ -172,24 +175,15 @@ export async function sendEmail(
 
     console.log(`Sending email with subject: ${subject}`);
 
-    const result = await zeptoClient.sendMail({
-      "from": {
-        "address": "noreply@pathpiper.com",
-        "name": "PathPiper"
-      },
-      "to": [
-        {
-          "email_address": {
-            "address": to,
-            "name": data.userName || "User"
-          }
-        }
-      ],
-      "subject": subject,
-      "htmlbody": htmlbody
-    });
+    const mailOptions = {
+      from: '"PathPiper" <noreply@pathpiper.com>',
+      to: to,
+      subject: subject,
+      html: html
+    };
 
-    console.log('Email sent successfully:', result);
+    const result = await transport.sendMail(mailOptions);
+    console.log('Email sent successfully:', result.messageId);
     return { success: true, data: result };
   } catch (error) {
     console.error('Email sending failed:', error);
