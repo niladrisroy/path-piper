@@ -313,6 +313,12 @@ export async function PUT(request: Request) {
     });
     }
 
+    // If no profile data to update
+    return NextResponse.json({
+      success: false,
+      error: 'No profile data provided'
+    }, { status: 400 });
+
   } catch (error) {
     console.error('Error updating profile:', error);
     return NextResponse.json(
