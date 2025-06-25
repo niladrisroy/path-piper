@@ -197,7 +197,7 @@ export async function PUT(request: NextRequest) {
       };
 
       // Get existing student profile to access birth data
-      const existingStudentProfile = await prisma.student.findUnique({
+      const existingStudentProfile = await prisma.studentProfile.findUnique({
         where: { id: user.id },
         select: { birthMonth: true, birthYear: true }
       });
