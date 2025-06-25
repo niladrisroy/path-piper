@@ -66,7 +66,6 @@ function AnalysisCardNetwork({ analysis }: { analysis: string }) {
 
   // Parse analysis into cards
   const parseAnalysisIntoCards = (analysisText: string): AnalysisCard[] => {
-    const sections = analysisText.split(/(?=##\s)|(?=###\s)|(?=####\s)/).filter(Boolean)
     const cards: AnalysisCard[] = []
     
     const colors = [
@@ -78,40 +77,124 @@ function AnalysisCardNetwork({ analysis }: { analysis: string }) {
       'from-yellow-500 to-orange-600',
       'from-orange-500 to-red-600',
       'from-red-500 to-pink-600',
-      'from-pink-500 to-purple-600'
+      'from-pink-500 to-purple-600',
+      'from-indigo-500 to-purple-600',
+      'from-rose-500 to-pink-600',
+      'from-emerald-500 to-teal-600'
     ]
     
-    const icons = ['🎯', '💡', '🚀', '⭐', '🔍', '💪', '🌟', '🎨', '📚']
+    const icons = ['🎯', '💡', '🚀', '⭐', '🔍', '💪', '🌟', '🎨', '📚', '🧠', '✨', '🎪', '🎭', '🎪', '🔮', '⚡', '🌈', '🎵', '🎲', '🎊']
 
-    sections.forEach((section, index) => {
+    // Split analysis into sections first
+    const sections = analysisText.split(/(?=##\s)|(?=###\s)|(?=####\s)/).filter(Boolean)
+    let cardIndex = 0
+
+    sections.forEach((section) => {
       const lines = section.trim().split('\n').filter(line => line.trim())
       if (lines.length === 0) return
 
-      let title = 'Analysis Point'
-      let content = section
+      let currentSectionTitle = 'Analysis Point'
+      let startIndex = 0
 
-      // Extract title from markdown headers
+      // Extract section title from markdown headers
       const headerMatch = lines[0].match(/^#{1,4}\s+(.+)/)
       if (headerMatch) {
-        title = headerMatch[1]
-        content = lines.slice(1).join('\n').trim()
+        currentSectionTitle = headerMatch[1]
+        startIndex = 1
       }
 
-      // Clean content for display
-      content = content
-        .replace(/#{1,4}\s+/g, '')
-        .replace(/\*\*(.*?)\*\*/g, '$1')
-        .replace(/- /g, '• ')
-        .trim()
+      // Process each line after the header
+      for (let i = startIndex; i < lines.length; i++) {
+        const line = lines[i].trim()
+        
+        // Skip empty lines
+        if (!line) continue
 
-      if (content) {
-        cards.push({
-          id: `card-${index}`,
-          title,
-          content,
-          color: colors[index % colors.length],
-          icon: icons[index % icons.length]
-        })
+        // Check if this is a bullet point
+        if (line.startsWith('- ') || line.startsWith('• ')) {
+          // Create a card for this bullet point
+          let bulletContent = line.replace(/^- |^• /, '').trim()
+          
+          // Clean and format the content
+          bulletContent = bulletContent
+            .replace(/\*\*(.*?)\*\*/g, '$1')
+            .trim()
+
+          // Create title from the first few words or use section context
+          let bulletTitle = bulletContent.length > 50 
+            ? bulletContent.substring(0, 47) + '...'
+            : bulletContent
+
+          // If the bullet has a colon, use the part before colon as title
+          const colonIndex = bulletContent.indexOf(':')
+          if (colonIndex > 0 && colonIndex < 60) {
+            bulletTitle = bulletContent.substring(0, colonIndex)
+            bulletContent = bulletContent.substring(colonIndex + 1).trim()
+          }
+
+          if (bulletContent) {
+            cards.push({
+              id: `card-${cardIndex}`,
+              title: bulletTitle,
+              content: bulletContent,
+              color: colors[cardIndex % colors.length],
+              icon: icons[cardIndex % icons.length]
+            })
+            cardIndex++
+          }
+        } else if (line.match(/^\d+\./)) {
+          // Handle numbered lists
+          let numberedContent = line.replace(/^\d+\.\s*/, '').trim()
+          
+          numberedContent = numberedContent
+            .replace(/\*\*(.*?)\*\*/g, '$1')
+            .trim()
+
+          let numberedTitle = numberedContent.length > 50 
+            ? numberedContent.substring(0, 47) + '...'
+            : numberedContent
+
+          const colonIndex = numberedContent.indexOf(':')
+          if (colonIndex > 0 && colonIndex < 60) {
+            numberedTitle = numberedContent.substring(0, colonIndex)
+            numberedContent = numberedContent.substring(colonIndex + 1).trim()
+          }
+
+          if (numberedContent) {
+            cards.push({
+              id: `card-${cardIndex}`,
+              title: numberedTitle,
+              content: numberedContent,
+              color: colors[cardIndex % colors.length],
+              icon: icons[cardIndex % icons.length]
+            })
+            cardIndex++
+          }
+        } else if (!line.match(/^#{1,4}\s+/)) {
+          // Handle regular paragraphs (non-header lines)
+          let paragraphContent = line.replace(/\*\*(.*?)\*\*/g, '$1').trim()
+          
+          if (paragraphContent && paragraphContent.length > 10) {
+            let paragraphTitle = paragraphContent.length > 50 
+              ? paragraphContent.substring(0, 47) + '...'
+              : paragraphContent
+
+            const colonIndex = paragraphContent.indexOf(':')
+            if (colonIndex > 0 && colonIndex < 60) {
+              paragraphTitle = paragraphContent.substring(0, colonIndex)
+              paragraphContent = paragraphContent.substring(colonIndex + 1).trim()
+            }
+
+            cards.push({
+              id: `card-${cardIndex}`,
+              title: paragraphTitle,
+              content: paragraphContent,
+              color: colors[cardIndex % colors.length],
+              icon: icons[cardIndex % icons.length]
+            })
+            cardIndex++
+          }
+        }
       }
     })
 
