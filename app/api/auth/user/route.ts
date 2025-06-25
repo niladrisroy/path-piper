@@ -122,7 +122,11 @@ export async function GET(request: NextRequest) {
             include: {
               student: true,
               mentor: true,
-              institution: true
+              institution: {
+                include: {
+                  institutionType: true
+                }
+              }
             }
           });
 
@@ -166,7 +170,7 @@ export async function GET(request: NextRequest) {
                 ...(userProfile.institution && {
                   institutionName: userProfile.institution.institutionName,
                   institutionType: userProfile.institution.institutionType,
-                  category: userProfile.institution.category,
+                  institutionTypeId: userProfile.institution.institutionTypeId,
                   website: userProfile.institution.website,
                   onboardingCompleted: userProfile.institution.onboardingCompleted
                 })
