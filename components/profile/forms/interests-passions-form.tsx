@@ -22,11 +22,9 @@ interface InterestCategory {
 interface InterestsPassionsFormProps {
   data: any
   onChange: (sectionId: string, data: Interest[], isDirty?: boolean) => void
-  userId?: string
-  isParentView?: boolean
 }
 
-export default function InterestsPassionsForm({ data, onChange, userId, isParentView = false }: InterestsPassionsFormProps) {
+export default function InterestsPassionsForm({ data, onChange }: InterestsPassionsFormProps) {
   const [selectedInterests, setSelectedInterests] = useState<Interest[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [customInterest, setCustomInterest] = useState("")
@@ -41,18 +39,12 @@ export default function InterestsPassionsForm({ data, onChange, userId, isParent
   useEffect(() => {
     const fetchUserDataAndInterests = async () => {
       try {
-        // Get user data to determine age group
-        const userApiUrl = isParentView && userId 
-          ? `/api/parent/student/${userId}/profile`
-          : '/api/auth/user'
-          
-        const userResponse = await fetch(userApiUrl)
+        // First, get user data to determine age group
+        const userResponse = await fetch('/api/auth/user')
         if (!userResponse.ok) {
           throw new Error('Failed to fetch user data')
         }
-        
-        const responseData = await userResponse.json()
-        const user = isParentView ? responseData.profile : responseData.user
+        const { user } = await userResponse.json()
         console.log('🔍 User data for interests:', user)
 
         if (user.ageGroup) {
@@ -76,11 +68,7 @@ export default function InterestsPassionsForm({ data, onChange, userId, isParent
         setFilteredCategories(categories)
 
         // Load user's existing interests
-        const interestsApiUrl = isParentView && userId 
-          ? `/api/parent/student/${userId}/interests`
-          : '/api/user/interests'
-          
-        const userInterestsResponse = await fetch(interestsApiUrl)
+        const userInterestsResponse = await fetch('/api/user/interests')
         if (userInterestsResponse.ok) {
           const { interests } = await userInterestsResponse.json()
           console.log('✅ User existing interests loaded:', interests.length, 'interests:', interests)
@@ -195,11 +183,7 @@ export default function InterestsPassionsForm({ data, onChange, userId, isParent
       if (isDirty) {
         console.log("💾 Interests have changes, saving to database...")
         // Save interests to database
-        const saveApiUrl = isParentView && userId 
-          ? `/api/parent/student/${userId}/interests`
-          : '/api/user/interests'
-          
-        const response = await fetch(saveApiUrl, {
+        const response = await fetch('/api/user/interests', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

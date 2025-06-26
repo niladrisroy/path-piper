@@ -34,7 +34,6 @@ import AchievementsForm from "./forms/achievements-form"
 interface ProfileEditFormProps {
   userId: string
   initialSection?: string
-  isParentView?: boolean
 }
 
 interface TabConfig {
@@ -51,7 +50,7 @@ interface PersonalInfoFormProps {
   onSave?: (data: any) => Promise<void>
 }
 
-export default function ProfileEditForm({ userId, initialSection, isParentView = false }: ProfileEditFormProps) {
+export default function ProfileEditForm({ userId, initialSection }: ProfileEditFormProps) {
   const router = useRouter()
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState(initialSection || "personal")
