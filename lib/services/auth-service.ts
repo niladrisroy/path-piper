@@ -145,21 +145,14 @@ export async function registerStudent(data: UserRegistrationData) {
       // Send parent verification email
       try {
         const verificationLink = `${process.env.NEXT_PUBLIC_APP_URL}/verify-parent?token=${verificationToken}`;
-        await sendEmail({
-          to: data.parentEmail,
-          subject: 'Child Account Approval Required - PathPiper',
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2>Child Account Approval Required</h2>
-              <p>Hello,</p>
-              <p>Your child <strong>${data.firstName} ${data.lastName}</strong> has created an account on PathPiper and requires your approval.</p>
-              <p>Please click the link below to approve their account:</p>
-              <a href="${verificationLink}" style="background-color: #14b8a6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Approve Child Account</a>
-              <p>If you did not expect this email, please ignore it.</p>
-              <p>Best regards,<br>PathPiper Team</p>
-            </div>
-          `
-        });
+        await sendEmail(
+          'parent-approval',
+          data.parentEmail,
+          {
+            studentName: `${data.firstName} ${data.lastName}`,
+            approvalLink: verificationLink
+          }
+        );
         console.log('📧 Parent verification email sent successfully');
       } catch (emailError) {
         console.error('❌ Failed to send parent verification email:', emailError);
