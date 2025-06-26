@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { prisma } from '@/lib/prisma'
@@ -80,29 +79,27 @@ export async function POST(
       redirectUrl: `/student/profile/${studentProfile.id}`
     })
 
-    // Set temporary session cookies to indicate parent is viewing as student
+    // Set cookies for parent view mode
     response.cookies.set('parent-view-mode', 'true', {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 4, // 4 hours
-      path: '/'
+      maxAge: 60 * 60 * 24 // 24 hours
     })
 
     response.cookies.set('parent-view-student-id', studentId, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 4, // 4 hours
-      path: '/'
+      maxAge: 60 * 60 * 24 // 24 hours
     })
 
+    // Set parent auth ID for proper permission checking
     response.cookies.set('parent-auth-id', user.id, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 4, // 4 hours
-      path: '/'
+      maxAge: 60 * 60 * 24 // 24 hours
     })
 
     return response
