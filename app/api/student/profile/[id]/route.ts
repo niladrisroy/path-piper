@@ -17,10 +17,13 @@ export async function GET(
     // Check if parent is viewing as student
     const parentViewMode = request.cookies.get('parent-view-mode')?.value === 'true'
     const parentViewStudentId = request.cookies.get('parent-view-student-id')?.value
+    let user = null
+    let isParentView = false
 
     if (parentViewMode && parentViewStudentId && parentViewStudentId === studentId) {
       // Parent is viewing this student's profile, allow access
       console.log('API: Parent view mode access granted for student:', studentId)
+      isParentView = true
     } else {
       // Normal authentication flow
       const accessToken = request.cookies.get('sb-access-token')?.value
@@ -33,14 +36,16 @@ export async function GET(
       }
 
       // Verify token and get user
-      const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(accessToken)
 
-      if (authError || !user) {
+      if (authError || !authUser) {
         return NextResponse.json(
           { error: 'Invalid authentication' }, 
           { status: 401 }
         )
       }
+
+      user = authUser
 
       // Check if user has permission to view this profile
       if (user.id !== studentId) {
@@ -111,7 +116,8 @@ export async function GET(
     }
 
     // Format the response - for viewing other profiles, we might want to limit some sensitive data
-    const isOwnProfile = studentId === user?.id
+    // In parent view mode, treat as own profile for data access purposes
+    const isOwnProfile = isParentView || (user && studentId === user.id)
 
     const formattedProfile = {
       id: studentProfile.id,
