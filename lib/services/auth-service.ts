@@ -92,8 +92,10 @@ export async function registerStudent(data: UserRegistrationData) {
 
     let parentId = null;
 
-    // Handle parent profile creation for students under 16
+    // Handle parent profile creation for students under 16 - ALWAYS create/update parent first
     if (needsParentApproval && data.parentEmail) {
+      console.log('🔄 Student needs parent approval, creating/updating parent profile...');
+      
       // Generate verification token first
       const verificationToken = Buffer.from(`${data.parentEmail}:${authData.user.id}:${Date.now()}`).toString('base64');
       
@@ -103,6 +105,7 @@ export async function registerStudent(data: UserRegistrationData) {
       });
 
       if (!parentProfile) {
+        console.log('✨ Creating new parent profile for:', data.parentEmail);
         // Create new parent profile with verification token
         parentProfile = await prisma.parentProfile.create({
           data: {
@@ -110,7 +113,9 @@ export async function registerStudent(data: UserRegistrationData) {
             verificationToken: verificationToken,
           },
         });
+        console.log('✅ Parent profile created with ID:', parentProfile.id);
       } else {
+        console.log('🔄 Updating existing parent profile for:', data.parentEmail);
         // Update existing parent profile with new verification token
         parentProfile = await prisma.parentProfile.update({
           where: { id: parentProfile.id },
@@ -118,9 +123,11 @@ export async function registerStudent(data: UserRegistrationData) {
             verificationToken: verificationToken
           }
         });
+        console.log('✅ Parent profile updated with ID:', parentProfile.id);
       }
 
       parentId = parentProfile.id;
+      console.log('🎯 Parent ID set to:', parentId);
 
       // Send parent verification email
       try {
@@ -140,8 +147,9 @@ export async function registerStudent(data: UserRegistrationData) {
             </div>
           `
         });
+        console.log('📧 Parent verification email sent successfully');
       } catch (emailError) {
-        console.error('Failed to send parent verification email:', emailError);
+        console.error('❌ Failed to send parent verification email:', emailError);
         // Continue with registration even if email fails
       }
     }
@@ -156,16 +164,21 @@ export async function registerStudent(data: UserRegistrationData) {
         birthYear: data.birthYear || null,
       },
     });
+    console.log('✅ Student profile created');
 
-    // Update profile with parent information if needed
+    // Update profile with parent information if needed - THIS MUST HAPPEN
     if (parentId) {
-      await prisma.profile.update({
+      console.log('🔗 Linking student profile to parent ID:', parentId);
+      const updatedProfile = await prisma.profile.update({
         where: { id: profile.id },
         data: {
           parentId: parentId,
           parentVerified: false,
         },
       });
+      console.log('✅ Profile updated with parent_id:', updatedProfile.parentId);
+    } else {
+      console.log('ℹ️ No parent linking required (student is 16+ or no parent email provided)');
     }
 
     return {
