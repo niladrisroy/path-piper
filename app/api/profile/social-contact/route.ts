@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { supabase } from '@/lib/supabase'
@@ -8,25 +7,37 @@ export async function GET(request: NextRequest) {
   try {
     console.log('🔄 Fetching social contact data')
 
-    // Get user from session
-    const cookieStore = await cookies()
-    const accessToken = cookieStore.get('sb-access-token')?.value
+    // Check if parent is viewing as student
+    const parentViewMode = request.cookies.get('parent-view-mode')?.value === 'true'
+    const parentViewStudentId = request.cookies.get('parent-view-student-id')?.value
+    let userId = null
 
-    if (!accessToken) {
-      console.log('❌ No access token found')
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    if (parentViewMode && parentViewStudentId) {
+      // Parent is viewing a student's profile
+      userId = parentViewStudentId
+    } else {
+      // Normal authentication flow
+      const cookieStore = await cookies()
+      const accessToken = cookieStore.get('sb-access-token')?.value
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
+      if (!accessToken) {
+        console.log('❌ No access token found')
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
 
-    if (authError || !user) {
-      console.log('❌ Authentication failed')
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
+
+      if (authError || !user) {
+        console.log('❌ Authentication failed')
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+
+      userId = user.id
     }
 
     // Fetch profile data and social links
-    const profile = await getUserProfile(user.id)
-    const socialLinks = await getUserSocialLinks(user.id)
+    const profile = await getUserProfile(userId)
+    const socialLinks = await getUserSocialLinks(userId)
     console.log('✅ Fetched profile and social links:', { email: profile?.email, phone: profile?.phone, socialLinksCount: socialLinks.length })
 
     return NextResponse.json({ 
@@ -76,7 +87,7 @@ export async function POST(request: NextRequest) {
       const profileData: any = {}
       if (email !== undefined) profileData.email = email
       if (phone !== undefined) profileData.phone = phone
-      
+
       await updateUserProfile(user.id, profileData)
       console.log('✅ Updated profile contact info')
     }
@@ -85,7 +96,7 @@ export async function POST(request: NextRequest) {
     if (socialLinks && Array.isArray(socialLinks)) {
       const updatedLinks = await updateUserSocialLinks(user.id, socialLinks)
       console.log('✅ Updated social links:', updatedLinks.length)
-      
+
       return NextResponse.json({ 
         message: 'Social contact data saved successfully',
         socialLinks: updatedLinks
