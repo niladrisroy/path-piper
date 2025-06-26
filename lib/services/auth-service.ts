@@ -104,6 +104,10 @@ export async function registerStudent(data: UserRegistrationData) {
     if (needsParentApproval && data.parentEmail) {
       console.log('🔄 Student needs parent approval - Age:', age, 'Parent Email:', data.parentEmail);
       
+      // Debug: Check if parentProfile exists on prisma client
+      console.log('🔍 Prisma client has parentProfile?', 'parentProfile' in prisma);
+      console.log('🔍 Available prisma methods:', Object.keys(prisma));
+      
       // Generate verification token first
       const verificationToken = Buffer.from(`${data.parentEmail}:${authData.user.id}:${Date.now()}`).toString('base64');
       
