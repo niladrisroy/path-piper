@@ -30,6 +30,12 @@ export async function registerStudent(data: UserRegistrationData) {
   try {
     const age = data.birthYear ? calculateAge(parseInt(data.birthYear)) : null;
     const needsParentApproval = age !== null && age < 16;
+    
+    console.log('🔍 Registration Debug Info:');
+    console.log('   - Birth Year:', data.birthYear);
+    console.log('   - Calculated Age:', age);
+    console.log('   - Needs Parent Approval:', needsParentApproval);
+    console.log('   - Parent Email Provided:', data.parentEmail);
 
     // Step 1: Use Supabase for auth only - create user in Supabase Auth
     const { data: authData, error: authError } =
@@ -94,7 +100,7 @@ export async function registerStudent(data: UserRegistrationData) {
 
     // Handle parent profile creation for students under 16 - ALWAYS create/update parent first
     if (needsParentApproval && data.parentEmail) {
-      console.log('🔄 Student needs parent approval, creating/updating parent profile...');
+      console.log('🔄 Student needs parent approval - Age:', age, 'Parent Email:', data.parentEmail);
       
       // Generate verification token first
       const verificationToken = Buffer.from(`${data.parentEmail}:${authData.user.id}:${Date.now()}`).toString('base64');
@@ -126,8 +132,9 @@ export async function registerStudent(data: UserRegistrationData) {
         console.log('✅ Parent profile updated with ID:', parentProfile.id);
       }
 
+      // ENSURE parentId is set
       parentId = parentProfile.id;
-      console.log('🎯 Parent ID set to:', parentId);
+      console.log('🎯 Parent ID CONFIRMED set to:', parentId);
 
       // Send parent verification email
       try {
@@ -178,7 +185,11 @@ export async function registerStudent(data: UserRegistrationData) {
       });
       console.log('✅ Profile updated with parent_id:', updatedProfile.parentId);
     } else {
-      console.log('ℹ️ No parent linking required (student is 16+ or no parent email provided)');
+      console.log('ℹ️ No parent linking required');
+      console.log('   - needsParentApproval:', needsParentApproval);
+      console.log('   - parentEmail provided:', !!data.parentEmail);
+      console.log('   - calculated age:', age);
+      console.log('   - parentId value:', parentId);
     }
 
     return {
