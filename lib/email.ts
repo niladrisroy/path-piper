@@ -1,4 +1,3 @@
-
 import nodemailer from 'nodemailer';
 
 const ZEPTOMAIL_HOST = "smtp.zeptomail.in";
@@ -39,7 +38,7 @@ export async function sendEmail(
 ) {
   try {
     console.log(`Attempting to send ${template} email to ${to}`);
-    
+
     // Check if we're in development mode without proper API key
     if (!ZEPTOMAIL_PASS && isDevelopment) {
       console.log('Development mode: Mocking email send');
@@ -62,17 +61,17 @@ export async function sendEmail(
             <div style="text-align: center; margin-bottom: 30px;">
               <h1 style="color: #14b8a6; margin: 0;">PathPiper</h1>
             </div>
-            
+
             <h2 style="color: #1f2937; margin-bottom: 20px;">Welcome to PathPiper!</h2>
-            
+
             <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
               Hi ${data.userName || 'there'},
             </p>
-            
+
             <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
               Please verify your email address by clicking the button below:
             </p>
-            
+
             <div style="text-align: center; margin: 30px 0;">
               <a href="${data.verificationLink}" 
                  style="display: inline-block; background-color: #14b8a6; color: white; padding: 12px 30px; 
@@ -80,9 +79,9 @@ export async function sendEmail(
                 Verify Email
               </a>
             </div>
-            
+
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
-            
+
             <p style="color: #9ca3af; font-size: 12px; text-align: center;">
               © ${new Date().getFullYear()} PathPiper. All rights reserved.
             </p>
@@ -97,21 +96,21 @@ export async function sendEmail(
             <div style="text-align: center; margin-bottom: 30px;">
               <h1 style="color: #14b8a6; margin: 0;">PathPiper</h1>
             </div>
-            
+
             <h2 style="color: #1f2937; margin-bottom: 20px;">Parent Approval Request</h2>
-            
+
             <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
               Dear Parent/Guardian,
             </p>
-            
+
             <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
               ${data.studentName} has created an account on PathPiper and requires your approval to proceed.
             </p>
-            
+
             <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
               Please review and approve their account by clicking the button below:
             </p>
-            
+
             <div style="text-align: center; margin: 30px 0;">
               <a href="${data.approvalLink}" 
                  style="display: inline-block; background-color: #14b8a6; color: white; padding: 12px 30px; 
@@ -119,9 +118,9 @@ export async function sendEmail(
                 Review and Approve
               </a>
             </div>
-            
+
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
-            
+
             <p style="color: #9ca3af; font-size: 12px; text-align: center;">
               © ${new Date().getFullYear()} PathPiper. All rights reserved.
             </p>
@@ -136,17 +135,17 @@ export async function sendEmail(
             <div style="text-align: center; margin-bottom: 30px;">
               <h1 style="color: #14b8a6; margin: 0;">PathPiper</h1>
             </div>
-            
+
             <h2 style="color: #1f2937; margin-bottom: 20px;">Reset Your Password</h2>
-            
+
             <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
               Hi ${data.userName || 'there'},
             </p>
-            
+
             <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
               We received a request to reset your PathPiper account password. Click the button below to reset it:
             </p>
-            
+
             <div style="text-align: center; margin: 30px 0;">
               <a href="${data.resetLink}" 
                  style="display: inline-block; background-color: #14b8a6; color: white; padding: 12px 30px; 
@@ -154,17 +153,17 @@ export async function sendEmail(
                 Reset Password
               </a>
             </div>
-            
+
             <p style="color: #6b7280; font-size: 14px; line-height: 1.5;">
               If you didn't request this password reset, you can safely ignore this email. Your password will remain unchanged.
             </p>
-            
+
             <p style="color: #6b7280; font-size: 14px; line-height: 1.5;">
               This link will expire in 1 hour for security reasons.
             </p>
-            
+
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
-            
+
             <p style="color: #9ca3af; font-size: 12px; text-align: center;">
               © ${new Date().getFullYear()} PathPiper. All rights reserved.
             </p>

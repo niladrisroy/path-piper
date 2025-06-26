@@ -90,6 +90,61 @@ export async function registerStudent(data: UserRegistrationData) {
 
     const calculatedAgeGroup = calculateAgeGroup(data.birthMonth || "", data.birthYear || "");
 
+    let parentId = null;
+
+    // Handle parent profile creation for students under 16
+    if (needsParentApproval && data.parentEmail) {
+      // Check if parent profile already exists
+      let parentProfile = await prisma.parentProfile.findFirst({
+        where: { email: data.parentEmail }
+      });
+
+      if (!parentProfile) {
+        // Create new parent profile
+        parentProfile = await prisma.parentProfile.create({
+          data: {
+            email: data.parentEmail,
+          },
+        });
+      }
+
+      parentId = parentProfile.id;
+
+      // Generate verification token
+      const verificationToken = Buffer.from(`${data.parentEmail}:${authData.user.id}:${Date.now()}`).toString('base64');
+      
+      // Store verification token (you might want to add this to parent_profile table or create a separate verification table)
+      await prisma.parentProfile.update({
+        where: { id: parentProfile.id },
+        data: {
+          verificationToken: verificationToken
+        }
+      });
+
+      // Send parent verification email
+      try {
+        const verificationLink = `${process.env.NEXT_PUBLIC_APP_URL}/verify-parent?token=${verificationToken}`;
+        await sendEmail({
+          to: data.parentEmail,
+          subject: 'Child Account Approval Required - PathPiper',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2>Child Account Approval Required</h2>
+              <p>Hello,</p>
+              <p>Your child <strong>${data.firstName} ${data.lastName}</strong> has created an account on PathPiper and requires your approval.</p>
+              <p>Please click the link below to approve their account:</p>
+              <a href="${verificationLink}" style="background-color: #14b8a6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Approve Child Account</a>
+              <p>If you did not expect this email, please ignore it.</p>
+              <p>Best regards,<br>PathPiper Team</p>
+            </div>
+          `
+        });
+      } catch (emailError) {
+        console.error('Failed to send parent verification email:', emailError);
+        // Continue with registration even if email fails
+      }
+    }
+
     // Create student profile
     await prisma.studentProfile.create({
       data: {
@@ -101,14 +156,16 @@ export async function registerStudent(data: UserRegistrationData) {
       },
     });
 
-    // Send verification email logic goes here
-    // if (needsParentApproval && data.parentEmail) {
-    //   await sendEmail({
-    //     to: data.parentEmail,
-    //     subject: 'Parental Approval Required',
-    //     text: `Your child ${data.firstName} has signed up for PathPiper and requires your approval.`
-    //   });
-    // }
+    // Update profile with parent information if needed
+    if (parentId) {
+      await prisma.profile.update({
+        where: { id: profile.id },
+        data: {
+          parentId: parentId,
+          parentVerified: false,
+        },
+      });
+    }
 
     return {
       success: true,
@@ -290,6 +347,32 @@ export async function loginUser(data: LoginData) {
     let onboardingCompleted = false;
     if (profile.role === 'student') {
       try {
+        // Check parent verification for students under 16
+        if (profile.student && profile.student.birthYear && profile.student.birthMonth) {
+          const currentDate = new Date();
+          const currentYear = currentDate.getFullYear();
+          const currentMonth = currentDate.getMonth() + 1;
+          
+          const birthYear = parseInt(profile.student.birthYear);
+          const birthMonth = parseInt(profile.student.birthMonth);
+          
+          let ageInYears = currentYear - birthYear;
+          if (currentMonth < birthMonth) {
+            ageInYears--;
+          }
+          
+          // Check if student is under 16 and parent verification status
+          if (ageInYears < 16) {
+            if (!profile.parentVerified) {
+              return {
+                success: false,
+                error: "Please wait and let your parent approve your account",
+                needsParentApproval: true
+              };
+            }
+          }
+        }
+
         // Check if user has minimum required data for all three essential sections
         const hasBasicInfo = !!(profile.firstName && profile.lastName && profile.bio);
         

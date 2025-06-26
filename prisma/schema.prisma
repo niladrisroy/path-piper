@@ -67,7 +67,10 @@ model Profile {
   profileViews       Int       @default(0) @map("profile_views")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
+  parentId        BigInt?           @map("parent_id")
+  parentVerified  Boolean?          @default(false) @map("parent_verified")
 
+// Relationships
   student             StudentProfile?
   mentor              MentorProfile?
   institution         InstitutionProfile?
@@ -92,7 +95,8 @@ model Profile {
   receivedCircleInvitations CircleInvitation[] @relation("ReceivedCircleInvitations")
   goals                 Goal[]
   achievements          UserAchievement[]
-  
+  parent                 ParentProfile?        @relation(fields: [parentId], references: [id])
+
 
   @@map("profiles")
 }
@@ -546,4 +550,16 @@ model UserAchievement {
   achievementType AchievementType? @relation(fields: [achievementTypeId], references: [id])
 
   @@map("user_achievements")
+}
+
+model ParentProfile {
+  id                BigInt   @id @default(autoincrement())
+  email             String
+  verificationToken String?  @map("verification_token")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  // Relationships
+  children          Profile[]
+
+  @@map("parent_profile")
 }

@@ -107,7 +107,7 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
         toast({
           title: "Account created successfully!",
           description: result.needsParentApproval 
-            ? `A verification email has been sent to your email and an approval request to ${result.parentEmail}`
+            ? `A parent approval email has been sent to ${result.parentEmail}. Please ask your parent to check their email and approve your account before you can login.`
             : "A verification email has been sent to your email address",
         })
         onComplete(isUnder16)
