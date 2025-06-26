@@ -144,7 +144,8 @@ export async function registerStudent(data: UserRegistrationData) {
 
       // Send parent verification email
       try {
-        const verificationLink = `${process.env.NEXT_PUBLIC_APP_URL}/verify-parent?token=${verificationToken}`;
+        const verificationLink = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/verify-parent?token=${verificationToken}`;
+        console.log('🔗 Verification link:', verificationLink);
         await sendEmail(
           'parent-approval',
           data.parentEmail,

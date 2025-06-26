@@ -34,6 +34,19 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Get student profile to display name in success message
+    const studentProfile = await prisma.profile.findUnique({
+      where: { id: studentId },
+      select: { firstName: true, lastName: true }
+    })
+
+    if (!studentProfile) {
+      return NextResponse.json(
+        { success: false, error: 'Student profile not found' },
+        { status: 400 }
+      )
+    }
+
     // Check if token is expired (24 hours)
     const tokenTimestamp = parseInt(timestamp)
     const currentTime = Date.now()
@@ -109,18 +122,24 @@ export async function GET(request: NextRequest) {
           h1 {
             color: #1f2937;
             margin-bottom: 16px;
+            font-size: 24px;
+          }
+          .student-name {
+            color: #14b8a6;
+            font-weight: bold;
           }
           p {
             color: #6b7280;
             line-height: 1.6;
+            font-size: 16px;
           }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="success-icon">✅</div>
-          <h1>Email Verified and Your Child Account Approved</h1>
-          <p>Thank you for approving your child's PathPiper account. They can now log in and start their learning journey!</p>
+          <h1>Account of <span class="student-name">${studentProfile.firstName} ${studentProfile.lastName}</span> Approved!</h1>
+          <p>Thank you for approving your child's PathPiper account. <strong>${studentProfile.firstName}</strong> can now log in and start their learning journey!</p>
         </div>
       </body>
       </html>
