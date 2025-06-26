@@ -555,6 +555,7 @@ model UserAchievement {
 model ParentProfile {
   id                BigInt   @id @default(autoincrement())
   email             String
+  authId            String?  @map("auth_id") @db.Uuid
   verificationToken String?  @map("verification_token")
   createdAt         DateTime @default(now()) @map("created_at")
 
