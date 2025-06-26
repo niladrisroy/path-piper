@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       hasAccount,
-      parentId: parentProfile.id
+      parentId: parentProfile.id.toString()
     })
 
   } catch (error) {
