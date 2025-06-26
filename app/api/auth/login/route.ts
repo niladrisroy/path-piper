@@ -137,6 +137,18 @@ export async function POST(request: NextRequest) {
       return response;
     }
 
+    // Check if it's a parent approval error and return appropriate status
+    if (result.error && result.error.includes('parent approve')) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: result.error,
+          needsParentApproval: true 
+        },
+        { status: 403 } // Forbidden - different from 401 unauthorized
+      );
+    }
+
     return NextResponse.json(
       { success: false, error: result.error || 'Login failed' },
       { status: 401 }

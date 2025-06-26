@@ -94,11 +94,65 @@ export default function LoginPage() {
           window.location.href = redirectPath
         }, 1000)
       } else {
-        throw new Error(data.error || 'Login failed')
+        // Check if it's a parent approval error
+        if (data.needsParentApproval) {
+          // Show prominent parent approval warning
+          toast.error(
+            <div className="flex flex-col space-y-3 p-2">
+              <div className="flex items-center space-x-3">
+                <div className="text-2xl">👨‍👩‍👧‍👦</div>
+                <div>
+                  <div className="font-bold text-base">Parent Approval Required</div>
+                  <div className="text-sm opacity-90">Account pending approval</div>
+                </div>
+              </div>
+              <div className="bg-orange-100 p-3 rounded-lg">
+                <p className="text-sm font-medium text-orange-800">
+                  Please wait for your parent to approve your account first. 
+                  Check your parent's email for the approval link.
+                </p>
+              </div>
+            </div>,
+            {
+              duration: 8000,
+              style: {
+                background: '#FEF3C7',
+                border: '2px solid #F59E0B',
+                borderRadius: '12px',
+                minWidth: '400px'
+              }
+            }
+          )
+        } else {
+          throw new Error(data.error || 'Login failed')
+        }
       }
     } catch (error) {
       console.error('Login error:', error)
-      toast.error('An error occurred during login')
+      
+      // Check if it's a parent approval error
+      if (error instanceof Error && error.message.includes('parent approve')) {
+        // Show custom warning for parent approval
+        toast.error(
+          <div className="flex flex-col space-y-2">
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">👨‍👩‍👧‍👦</span>
+              <span className="font-semibold">Parent Approval Required</span>
+            </div>
+            <p className="text-sm">Please wait for your parent to approve your account first</p>
+          </div>,
+          {
+            duration: 6000,
+            style: {
+              background: '#FEF3C7',
+              border: '1px solid #F59E0B',
+              color: '#92400E'
+            }
+          }
+        )
+      } else {
+        toast.error('An error occurred during login')
+      }
     } finally {
       setLoading(false)
     }
