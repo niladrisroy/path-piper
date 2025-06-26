@@ -20,10 +20,19 @@ function ResetPasswordContent() {
   const [isLoading, setIsLoading] = useState(false)
   const [isCompleted, setIsCompleted] = useState(false)
   const [error, setError] = useState("")
+  const [email, setEmail] = useState("")
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  // Get email from URL parameters
+  useEffect(() => {
+    const emailParam = searchParams.get('email')
+    if (emailParam) {
+      setEmail(emailParam)
+    }
+  }, [searchParams])
 
   // Track mouse position for interactive elements
   useEffect(() => {
@@ -66,13 +75,13 @@ function ResetPasswordContent() {
     setIsLoading(true)
 
     try {
-      // Get the session from URL hash (Supabase auth callback)
+      // Check if we have auth tokens in the URL hash first
       const hashParams = new URLSearchParams(window.location.hash.substring(1))
       const accessToken = hashParams.get('access_token')
       const refreshToken = hashParams.get('refresh_token')
 
       if (accessToken && refreshToken) {
-        // Set the session
+        // Set the session from hash parameters
         const { error: sessionError } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken
@@ -81,9 +90,16 @@ function ResetPasswordContent() {
         if (sessionError) {
           throw sessionError
         }
+      } else {
+        // Check if user is already authenticated
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+          setError('Session expired. Please request a new password reset link.')
+          return
+        }
       }
 
-      // Update the password
+      // Update the password in Supabase Auth
       const { error } = await supabase.auth.updateUser({
         password: password
       })
@@ -93,6 +109,9 @@ function ResetPasswordContent() {
       }
 
       setIsCompleted(true)
+      
+      // Sign out the user to ensure they login with new password
+      await supabase.auth.signOut()
       
       // Redirect to login after 3 seconds
       setTimeout(() => {
@@ -250,6 +269,12 @@ function ResetPasswordContent() {
 
             {!isCompleted ? (
               <form onSubmit={handleSubmit} className="space-y-6">
+                {email && (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-blue-600 text-sm">Resetting password for: <strong>{email}</strong></p>
+                  </div>
+                )}
+                
                 {error && (
                   <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                     <p className="text-red-600 text-sm">{error}</p>

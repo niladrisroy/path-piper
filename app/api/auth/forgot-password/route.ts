@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       
       // Generate password reset link using Supabase
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`,
+        redirectTo: `https://pathpiper.replit.app/reset-password`,
       });
 
       if (error) {
@@ -59,8 +59,8 @@ export async function POST(request: NextRequest) {
       } else {
         console.log('Supabase reset initiated successfully');
         
-        // Send our custom email
-        const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?email=${encodeURIComponent(email)}`;
+        // Send our custom email with the correct domain
+        const resetLink = `https://pathpiper.replit.app/reset-password?email=${encodeURIComponent(email)}`;
         
         const emailResult = await sendEmail('password-reset', email, {
           userName: userProfile?.firstName || 'User',
