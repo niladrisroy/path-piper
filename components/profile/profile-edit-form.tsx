@@ -484,60 +484,7 @@ export default function ProfileEditForm({ userId, initialSection, isParentView =
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.2 }}
               >
-                <PersonalInfoForm 
-              userId={userId} 
-              isActive={activeSection === 'personal-info'}
-              onDataChange={(isDirty) => handleFormChange('personal-info', isDirty)}
-              isParentView={isParentView}
-            />
-                <SocialContactForm 
-              userId={userId} 
-              isActive={activeSection === 'social-contact'}
-              onDataChange={(isDirty) => handleFormChange('social-contact', isDirty)}
-              isParentView={isParentView}
-            />
-            <InterestsPassionsForm 
-              userId={userId}
-              isActive={activeSection === 'interests-passions'}
-              onDataChange={(isDirty) => handleFormChange('interests-passions', isDirty)}
-              isParentView={isParentView}
-            />
-            <EducationHistoryForm 
-              userId={userId} 
-              isActive={activeSection === 'education-history'}
-              onDataChange={(isDirty) => handleFormChange('education-history', isDirty)}
-              isParentView={isParentView}
-            />
-            <SkillsAbilitiesForm 
-              userId={userId} 
-              isActive={activeSection === 'skills-abilities'}
-              onDataChange={(isDirty) => handleFormChange('skills-abilities', isDirty)}
-              isParentView={isParentView}
-            />
-            <GoalsAspirationsForm 
-              userId={userId} 
-              isActive={activeSection === 'goals-aspirations'}
-              onDataChange={(isDirty) => handleFormChange('goals-aspirations', isDirty)}
-              isParentView={isParentView}
-            />
-            <AchievementsForm 
-              userId={userId} 
-              isActive={activeSection === 'achievements'}
-              onDataChange={(isDirty) => handleFormChange('achievements', isDirty)}
-              isParentView={isParentView}
-            />
-            <MoodBoardMediaForm 
-              userId={userId} 
-              isActive={activeSection === 'mood-board-media'}
-              onDataChange={(isDirty) => handleFormChange('mood-board-media', isDirty)}
-              isParentView={isParentView}
-            />
-            <PrivacySettingsForm 
-              userId={userId} 
-              isActive={activeSection === 'privacy-settings'}
-              onDataChange={(isDirty) => handleFormChange('privacy-settings', isDirty)}
-              isParentView={isParentView}
-            />
+                {tabs.find(tab => tab.id === activeTab)?.component}
               </motion.div>
             </AnimatePresence>
           </div>
