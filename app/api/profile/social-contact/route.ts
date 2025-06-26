@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { supabase } from '@/lib/supabase'
@@ -76,7 +75,7 @@ export async function POST(request: NextRequest) {
       const profileData: any = {}
       if (email !== undefined) profileData.email = email
       if (phone !== undefined) profileData.phone = phone
-      
+
       await updateUserProfile(user.id, profileData)
       console.log('✅ Updated profile contact info')
     }
@@ -85,7 +84,7 @@ export async function POST(request: NextRequest) {
     if (socialLinks && Array.isArray(socialLinks)) {
       const updatedLinks = await updateUserSocialLinks(user.id, socialLinks)
       console.log('✅ Updated social links:', updatedLinks.length)
-      
+
       return NextResponse.json({ 
         message: 'Social contact data saved successfully',
         socialLinks: updatedLinks

@@ -226,3 +226,203 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+export async function GET(request: NextRequest) {
+  try {
+    // Check if parent is viewing as student
+    const parentViewMode = request.cookies.get('parent-view-mode')?.value === 'true'
+    const parentViewStudentId = request.cookies.get('parent-view-student-id')?.value
+    let userId = null
+
+    if (parentViewMode && parentViewStudentId) {
+      // Parent is viewing a student's profile
+      userId = parentViewStudentId
+    } else {
+      // Normal authentication flow
+      const accessToken = request.cookies.get('sb-access-token')?.value
+
+      if (!accessToken) {
+        return NextResponse.json(
+          { error: 'No access token found' }, 
+          { status: 401 }
+        )
+      }
+
+      // Verify token and get user
+      const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
+
+      if (authError || !user) {
+        return NextResponse.json(
+          { error: 'Invalid authentication' }, 
+          { status: 401 }
+        )
+      }
+
+      userId = user.id
+    }
+
+    // Fetch user profile
+    const profile = await prisma.profile.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        bio: true,
+        location: true,
+        tagline: true,
+        professionalSummary: true,
+        email: true,
+        phone: true,
+        timezone: true,
+        availabilityStatus: true,
+        profileImageUrl: true,
+        coverImageUrl: true
+      }
+    })
+
+    if (!profile) {
+      return NextResponse.json(
+        { error: 'Profile not found' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json(profile)
+
+  } catch (error) {
+    console.error('Error fetching personal info:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json()
+    
+    // Check if parent is viewing as student
+    const parentViewMode = request.cookies.get('parent-view-mode')?.value === 'true'
+    const parentViewStudentId = request.cookies.get('parent-view-student-id')?.value
+    let userId = null
+    let isParentUpdate = false
+
+    if (parentViewMode && parentViewStudentId) {
+      // Parent is updating a student's profile
+      userId = parentViewStudentId
+      isParentUpdate = true
+      
+      // Verify parent has permission (get parent auth from cookie)
+      const parentAuthId = request.cookies.get('parent-auth-id')?.value
+      if (!parentAuthId) {
+        return NextResponse.json(
+          { error: 'Parent authentication required' }, 
+          { status: 401 }
+        )
+      }
+
+      // Verify parent profile and student relationship
+      const parentProfile = await prisma.parentProfile.findFirst({
+        where: { authId: parentAuthId }
+      })
+
+      if (!parentProfile) {
+        return NextResponse.json(
+          { error: 'Parent profile not found' }, 
+          { status: 404 }
+        )
+      }
+
+      // Verify student belongs to this parent
+      const studentProfile = await prisma.profile.findFirst({
+        where: {
+          id: parentViewStudentId,
+          parentId: parentProfile.id,
+          role: 'student'
+        }
+      })
+
+      if (!studentProfile) {
+        return NextResponse.json(
+          { error: 'Student not found or not authorized' }, 
+          { status: 404 }
+        )
+      }
+    } else {
+      // Normal authentication flow
+      const accessToken = request.cookies.get('sb-access-token')?.value
+
+      if (!accessToken) {
+        return NextResponse.json(
+          { error: 'No access token found' }, 
+          { status: 401 }
+        )
+      }
+
+      // Verify token and get user
+      const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
+
+      if (authError || !user) {
+        return NextResponse.json(
+          { error: 'Invalid authentication' }, 
+          { status: 401 }
+        )
+      }
+
+      userId = user.id
+    }
+
+    // Update the profile
+    const updatedProfile = await prisma.profile.update({
+      where: { id: userId },
+      data: {
+        firstName: body.firstName,
+        lastName: body.lastName,
+        bio: body.bio,
+        location: body.location,
+        tagline: body.tagline,
+        professionalSummary: body.professionalSummary,
+        email: body.email,
+        phone: body.phone,
+        timezone: body.timezone,
+        availabilityStatus: body.availabilityStatus
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        bio: true,
+        location: true,
+        tagline: true,
+        professionalSummary: true,
+        email: true,
+        phone: true,
+        timezone: true,
+        availabilityStatus: true,
+        profileImageUrl: true,
+        coverImageUrl: true
+      }
+    })
+
+    return NextResponse.json({
+      success: true,
+      profile: updatedProfile
+    })
+
+  } catch (error) {
+    console.error('Error updating personal info:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
