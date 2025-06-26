@@ -48,9 +48,13 @@ export async function POST(request: NextRequest) {
     if (userExists) {
       console.log('User found, sending reset email');
       
-      // Generate password reset link using Supabase
+      // Generate password reset link using Supabase with longer session duration
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `https://pathpiper.replit.app/reset-password`,
+        options: {
+          // Set session to last 30 minutes (1800 seconds)
+          sessionDuration: 1800
+        }
       });
 
       if (error) {
