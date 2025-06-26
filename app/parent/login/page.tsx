@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Eye, EyeOff, UserX, Users } from "lucide-react"
+import { Eye, EyeOff, UserX, Users, LogIn } from "lucide-react"
 
 export default function ParentLoginPage() {
+  const [mode, setMode] = useState<'choice' | 'newParent' | 'existingParent'>('choice')
   const [step, setStep] = useState<'email' | 'password'>('email')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -48,6 +49,42 @@ export default function ParentLoginPage() {
         }
       } else {
         setError(data.error || 'Email verification failed')
+      }
+    } catch (error) {
+      setError('Network error. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleExistingParentLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email || !password) {
+      setError('Please enter both email and password')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Check if user is actually a parent
+        if (data.role === 'parent') {
+          router.push('/parent/dashboard')
+        } else {
+          setError('This account is not registered as a parent account')
+        }
+      } else {
+        setError(data.error || 'Login failed')
       }
     } catch (error) {
       setError('Network error. Please try again.')
@@ -109,7 +146,9 @@ export default function ParentLoginPage() {
             Parent Access
           </CardTitle>
           <CardDescription>
-            {step === 'email' ? 'Enter your registered email address' : 'Create your account password'}
+            {mode === 'choice' && 'Choose how you want to access your account'}
+            {mode === 'newParent' && (step === 'email' ? 'Enter your registered email address' : 'Create your account password')}
+            {mode === 'existingParent' && 'Login with your existing account'}
           </CardDescription>
         </CardHeader>
 
@@ -123,7 +162,99 @@ export default function ParentLoginPage() {
             </Alert>
           )}
 
-          {step === 'email' ? (
+          {mode === 'choice' && (
+            <div className="space-y-4">
+              <Button 
+                onClick={() => setMode('existingParent')}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center space-x-2"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>I already have an account</span>
+              </Button>
+              
+              <div className="text-center text-gray-500 text-sm">or</div>
+              
+              <Button 
+                onClick={() => setMode('newParent')}
+                variant="outline"
+                className="w-full flex items-center justify-center space-x-2"
+              >
+                <Users className="w-4 h-4" />
+                <span>First time parent setup</span>
+              </Button>
+
+              <p className="text-xs text-gray-500 text-center mt-4">
+                First time parents need to be invited by their child during registration
+              </p>
+            </div>
+          )}
+
+          {mode === 'existingParent' && (
+            <form onSubmit={handleExistingParentLogin} className="space-y-4">
+              <div>
+                <label htmlFor="loginEmail" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address
+                </label>
+                <Input
+                  id="loginEmail"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email address"
+                  required
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="loginPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <Input
+                    id="loginPassword"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    required
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full bg-indigo-600 hover:bg-indigo-700"
+                disabled={loading}
+              >
+                {loading ? 'Logging in...' : 'Login'}
+              </Button>
+
+              <Button 
+                type="button"
+                onClick={() => {
+                  setMode('choice')
+                  setEmail('')
+                  setPassword('')
+                  setError('')
+                }}
+                variant="ghost"
+                className="w-full"
+              >
+                Back to options
+              </Button>
+            </form>
+          )}
+
+          {mode === 'newParent' && step === 'email' && (
             <form onSubmit={handleEmailSubmit} className="space-y-4">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -147,8 +278,23 @@ export default function ParentLoginPage() {
               >
                 {loading ? 'Verifying...' : 'Continue'}
               </Button>
+
+              <Button 
+                type="button"
+                onClick={() => {
+                  setMode('choice')
+                  setEmail('')
+                  setError('')
+                }}
+                variant="ghost"
+                className="w-full"
+              >
+                Back to options
+              </Button>
             </form>
-          ) : (
+          )}
+
+          {mode === 'newParent' && step === 'password' && (
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
               <div className="text-sm text-gray-600 mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
                 ✅ Email verified: <strong>{email}</strong>
@@ -199,6 +345,20 @@ export default function ParentLoginPage() {
                 disabled={loading}
               >
                 {loading ? 'Creating Account...' : 'Create Account & Login'}
+              </Button>
+
+              <Button 
+                type="button"
+                onClick={() => {
+                  setStep('email')
+                  setPassword('')
+                  setConfirmPassword('')
+                  setError('')
+                }}
+                variant="ghost"
+                className="w-full"
+              >
+                Back to email
               </Button>
             </form>
           )}
