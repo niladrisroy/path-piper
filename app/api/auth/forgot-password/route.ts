@@ -1,7 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, User } from '@supabase/supabase-js';
-import { sendEmail } from '@/lib/email';
 import { prisma } from '@/lib/prisma';
 
 // Initialize Supabase client with service role key for admin operations
@@ -46,9 +45,9 @@ export async function POST(request: NextRequest) {
     // Always return success to prevent email enumeration attacks
     // But only send email if user actually exists
     if (userExists) {
-      console.log('User found, sending reset email');
+      console.log('User found, sending reset email via Supabase');
       
-      // Generate password reset link using Supabase with longer session duration
+      // Generate password reset link using Supabase - let Supabase handle the email
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `https://pathpiper.replit.app/reset-password`,
         options: {
@@ -61,21 +60,7 @@ export async function POST(request: NextRequest) {
         console.error('Supabase password reset error:', error);
         // Still return success to prevent email enumeration
       } else {
-        console.log('Supabase reset initiated successfully');
-        
-        // Send our custom email with the correct domain
-        const resetLink = `https://pathpiper.replit.app/reset-password?email=${encodeURIComponent(email)}`;
-        
-        const emailResult = await sendEmail('password-reset', email, {
-          userName: userProfile?.firstName || 'User',
-          resetLink: resetLink
-        });
-        
-        if (emailResult.success) {
-          console.log('Reset email sent successfully');
-        } else {
-          console.error('Failed to send reset email:', 'error' in emailResult ? emailResult.error : 'Unknown error');
-        }
+        console.log('Supabase reset email sent successfully');
       }
     } else {
       console.log('User not found, but returning success for security');
