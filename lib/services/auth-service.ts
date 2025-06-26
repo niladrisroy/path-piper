@@ -94,32 +94,33 @@ export async function registerStudent(data: UserRegistrationData) {
 
     // Handle parent profile creation for students under 16
     if (needsParentApproval && data.parentEmail) {
+      // Generate verification token first
+      const verificationToken = Buffer.from(`${data.parentEmail}:${authData.user.id}:${Date.now()}`).toString('base64');
+      
       // Check if parent profile already exists
       let parentProfile = await prisma.parentProfile.findFirst({
         where: { email: data.parentEmail }
       });
 
       if (!parentProfile) {
-        // Create new parent profile
+        // Create new parent profile with verification token
         parentProfile = await prisma.parentProfile.create({
           data: {
             email: data.parentEmail,
+            verificationToken: verificationToken,
           },
+        });
+      } else {
+        // Update existing parent profile with new verification token
+        parentProfile = await prisma.parentProfile.update({
+          where: { id: parentProfile.id },
+          data: {
+            verificationToken: verificationToken
+          }
         });
       }
 
       parentId = parentProfile.id;
-
-      // Generate verification token
-      const verificationToken = Buffer.from(`${data.parentEmail}:${authData.user.id}:${Date.now()}`).toString('base64');
-      
-      // Store verification token (you might want to add this to parent_profile table or create a separate verification table)
-      await prisma.parentProfile.update({
-        where: { id: parentProfile.id },
-        data: {
-          verificationToken: verificationToken
-        }
-      });
 
       // Send parent verification email
       try {
