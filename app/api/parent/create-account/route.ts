@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       email_confirm: true,
       user_metadata: {
         role: 'parent',
-        parent_id: parentProfile.id
+        parent_id: parentProfile.id.toString()
       }
     })
 
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({
       success: true,
       user: signInData.user,
-      parentId: parentProfile.id
+      parentId: parentProfile.id.toString()
     })
 
     // Set auth cookies
