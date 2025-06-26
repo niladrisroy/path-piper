@@ -144,10 +144,8 @@ export async function registerStudent(data: UserRegistrationData) {
 
       // Send parent verification email
       try {
-        // Get the base URL with fallback for development
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-                       process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` :
-                       'http://localhost:3000';
+        // Use the specific PathPiper deployment domain
+        const baseUrl = 'https://pathpiper.replit.app';
         
         const verificationLink = `${baseUrl}/api/auth/verify-parent?token=${verificationToken}`;
         console.log('🔗 Base URL:', baseUrl);
