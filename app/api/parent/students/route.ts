@@ -55,14 +55,6 @@ export async function GET(request: NextRequest) {
         parentId: parentProfile.id,
         role: 'student'
       },
-      include: {
-        student: {
-          select: {
-            age_group: true,
-            educationLevel: true
-          }
-        }
-      },
       select: {
         id: true,
         firstName: true,
@@ -70,7 +62,12 @@ export async function GET(request: NextRequest) {
         profileImageUrl: true,
         bio: true,
         createdAt: true,
-        student: true
+        student: {
+          select: {
+            age_group: true,
+            educationLevel: true
+          }
+        }
       }
     })
 
