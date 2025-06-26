@@ -48,29 +48,23 @@ export async function POST(request: NextRequest) {
     if (userExists) {
       console.log('User found, sending reset email');
       
-      try {
-        // Generate a manual reset token instead of using Supabase's email system
-        const resetToken = Buffer.from(`${email}:${Date.now()}:${Math.random()}`).toString('base64');
-        
-        // Store the reset token temporarily (you might want to use a database for this in production)
-        // For now, we'll use Supabase Auth but handle the email ourselves
-        const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `https://pathpiper.replit.app/reset-password?token=${resetToken}`,
-          options: {
-            // Set session to last 30 minutes (1800 seconds)
-            sessionDuration: 1800
-          }
-        });
-
-        if (error) {
-          console.error('Supabase password reset error:', error);
-          // Continue anyway to send our custom email
-        } else {
-          console.log('Supabase reset initiated successfully');
+      // Generate password reset link using Supabase with longer session duration
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `https://pathpiper.replit.app/reset-password`,
+        options: {
+          // Set session to last 30 minutes (1800 seconds)
+          sessionDuration: 1800
         }
+      });
+
+      if (error) {
+        console.error('Supabase password reset error:', error);
+        // Still return success to prevent email enumeration
+      } else {
+        console.log('Supabase reset initiated successfully');
         
-        // Always send our custom email regardless of Supabase email status
-        const resetLink = `https://pathpiper.replit.app/reset-password?email=${encodeURIComponent(email)}&source=pathpiper`;
+        // Send our custom email with the correct domain
+        const resetLink = `https://pathpiper.replit.app/reset-password?email=${encodeURIComponent(email)}`;
         
         const emailResult = await sendEmail('password-reset', email, {
           userName: userProfile?.firstName || 'User',
@@ -78,13 +72,10 @@ export async function POST(request: NextRequest) {
         });
         
         if (emailResult.success) {
-          console.log('Custom reset email sent successfully');
+          console.log('Reset email sent successfully');
         } else {
-          console.error('Failed to send custom reset email:', 'error' in emailResult ? emailResult.error : 'Unknown error');
+          console.error('Failed to send reset email:', 'error' in emailResult ? emailResult.error : 'Unknown error');
         }
-      } catch (emailError) {
-        console.error('Error in password reset process:', emailError);
-        // Continue with success response for security
       }
     } else {
       console.log('User not found, but returning success for security');
