@@ -28,7 +28,9 @@ export interface UserRegistrationData {
 
 export async function registerStudent(data: UserRegistrationData) {
   try {
-    const age = data.birthYear ? calculateAge(parseInt(data.birthYear)) : null;
+    // Calculate age properly using both birth month and year
+    const age = (data.birthYear && data.birthMonth) ? 
+      Math.floor(calculateAge(parseInt(data.birthMonth), parseInt(data.birthYear)) / 12) : null;
     const needsParentApproval = age !== null && age < 16;
     
     console.log('🔍 Registration Debug Info:');
