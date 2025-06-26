@@ -29,16 +29,25 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Check if user is a parent
-    if (user.user_metadata?.role !== 'parent') {
-      return NextResponse.json(
-        { success: false, error: 'Not authorized as parent' },
-        { status: 403 }
-      )
+    // Check if user is a parent - either by role metadata or by checking if they have a parent profile
+    const hasParentRole = user.user_metadata?.role === 'parent'
+    
+    // If not explicitly marked as parent, check if they have a parent profile
+    if (!hasParentRole) {
+      const parentProfile = await prisma.parentProfile.findFirst({
+        where: { authId: user.id }
+      })
+      
+      if (!parentProfile) {
+        return NextResponse.json(
+          { success: false, error: 'Not authorized as parent' },
+          { status: 403 }
+        )
+      }
     }
 
-    // Find parent profile
-    const parentProfile = await prisma.parentProfile.findFirst({
+    // Find parent profile (reuse if already found above)
+    let parentProfile = await prisma.parentProfile.findFirst({
       where: { authId: user.id }
     })
 

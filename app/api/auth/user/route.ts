@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
 
     console.log('API: Checking cookies for auth token')
     console.log('API: Available cookies:', Object.keys(Object.fromEntries(request.cookies)))
-    console.log('API: Available cookies:', [...request.cookies.keys()])
+    console.log('API: Available cookies:', Array.from(request.cookies.keys()))
 
     if (!accessToken) {
       console.log('API: No access token found')
