@@ -14,58 +14,41 @@ export async function GET(
     const resolvedParams = await params
     const studentId = resolvedParams.id
 
-    // Get user from session cookie to verify authentication
-    const cookieStore = request.headers.get('cookie') || ''
-    const cookies = Object.fromEntries(
-      cookieStore.split(';').map(cookie => {
-        const [name, ...rest] = cookie.trim().split('=')
-        return [name, decodeURIComponent(rest.join('='))]
-      })
-    )
+    // Check if parent is viewing as student
+    const parentViewMode = request.cookies.get('parent-view-mode')?.value === 'true'
+    const parentViewStudentId = request.cookies.get('parent-view-student-id')?.value
 
-    const accessToken = cookies['sb-access-token']
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    if (parentViewMode && parentViewStudentId && parentViewStudentId === studentId) {
+      // Parent is viewing this student's profile, allow access
+      console.log('API: Parent view mode access granted for student:', studentId)
+    } else {
+      // Normal authentication flow
+      const accessToken = request.cookies.get('sb-access-token')?.value
 
-    // Verify token with Supabase
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
+      if (!accessToken) {
+        return NextResponse.json(
+          { error: 'No access token found' }, 
+          { status: 401 }
+        )
+      }
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+      // Verify token and get user
+      const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
 
-    // Check if the current user is a student (only students can view student profiles)
-    const currentUserProfile = await prisma.profile.findUnique({
-      where: { id: user.id },
-      select: { role: true }
-    })
+      if (authError || !user) {
+        return NextResponse.json(
+          { error: 'Invalid authentication' }, 
+          { status: 401 }
+        )
+      }
 
-    if (!currentUserProfile || currentUserProfile.role !== 'student') {
-      return NextResponse.json(
-        { error: 'Only students can view student profiles' },
-        { status: 403 }
-      )
-    }
-
-    // Check if the target profile exists and is a student
-    const targetProfile = await prisma.profile.findUnique({
-      where: { id: studentId },
-      select: { role: true }
-    })
-
-    if (!targetProfile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      )
-    }
-
-    if (targetProfile.role !== 'student') {
-      return NextResponse.json(
-        { error: 'Profile is not a student profile' },
-        { status: 403 }
-      )
+      // Check if user has permission to view this profile
+      if (user.id !== studentId) {
+        return NextResponse.json(
+          { error: 'Access denied' }, 
+          { status: 403 }
+        )
+      }
     }
 
     // Fetch student profile with all related data
@@ -128,7 +111,7 @@ export async function GET(
     }
 
     // Format the response - for viewing other profiles, we might want to limit some sensitive data
-    const isOwnProfile = studentId === user.id
+    const isOwnProfile = studentId === user?.id
 
     const formattedProfile = {
       id: studentProfile.id,

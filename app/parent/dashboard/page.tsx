@@ -49,8 +49,24 @@ export default function ParentDashboard() {
     }
   }
 
-  const handleStudentClick = (studentId: string) => {
-    router.push(`/parent/student/${studentId}`)
+  const handleStudentClick = async (studentId: string) => {
+    try {
+      const response = await fetch(`/api/parent/student/${studentId}/login`, {
+        method: 'POST',
+        credentials: 'include'
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Redirect to student profile with parent view mode
+        router.push(data.redirectUrl)
+      } else {
+        setError(data.error || 'Failed to access student profile')
+      }
+    } catch (error) {
+      setError('Network error occurred')
+    }
   }
 
   const handleLogout = async () => {
