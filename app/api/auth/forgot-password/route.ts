@@ -48,12 +48,9 @@ export async function POST(request: NextRequest) {
     if (userExists) {
       console.log('User found, sending reset email');
       
-      // Generate a secure token for password reset
-      const resetToken = Buffer.from(`${email}:${Date.now()}:${Math.random()}`).toString('base64');
-      
-      // Generate password reset link using Supabase with proper redirect
+      // Generate password reset link using Supabase
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `https://pathpiper.replit.app/reset-password?email=${encodeURIComponent(email)}&token=${resetToken}`,
+        redirectTo: `https://pathpiper.replit.app/reset-password`,
       });
 
       if (error) {
@@ -61,20 +58,20 @@ export async function POST(request: NextRequest) {
         // Still return success to prevent email enumeration
       } else {
         console.log('Supabase reset initiated successfully');
-      }
-      
-      // Always send our custom email regardless of Supabase result
-      const resetLink = `https://pathpiper.replit.app/reset-password?email=${encodeURIComponent(email)}`;
-      
-      const emailResult = await sendEmail('password-reset', email, {
-        userName: userProfile?.firstName || 'User',
-        resetLink: resetLink
-      });
-      
-      if (emailResult.success) {
-        console.log('Reset email sent successfully');
-      } else {
-        console.error('Failed to send reset email:', 'error' in emailResult ? emailResult.error : 'Unknown error');
+        
+        // Send our custom email with the correct domain
+        const resetLink = `https://pathpiper.replit.app/reset-password?email=${encodeURIComponent(email)}`;
+        
+        const emailResult = await sendEmail('password-reset', email, {
+          userName: userProfile?.firstName || 'User',
+          resetLink: resetLink
+        });
+        
+        if (emailResult.success) {
+          console.log('Reset email sent successfully');
+        } else {
+          console.error('Failed to send reset email:', 'error' in emailResult ? emailResult.error : 'Unknown error');
+        }
       }
     } else {
       console.log('User not found, but returning success for security');
