@@ -1,50 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserProfile, updateUserProfile, updateStudentProfile } from '@/lib/db/profile'
 import { prisma } from '@/lib/prisma'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
 import { cookies } from 'next/headers'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function GET(request: NextRequest) {
   try {
-    // Check if parent is viewing as student
-    const parentViewMode = request.cookies.get('parent-view-mode')?.value === 'true'
-    const parentViewStudentId = request.cookies.get('parent-view-student-id')?.value
-    let userId = null
+    const cookieStore = await cookies()
 
-    if (parentViewMode && parentViewStudentId) {
-      // Parent is viewing a student's profile
-      userId = parentViewStudentId
-    } else {
-      // Normal authentication flow
-      const accessToken = request.cookies.get('sb-access-token')?.value
+    // Get the access token from cookies
+    const accessToken = cookieStore.get('sb-access-token')?.value
 
-      if (!accessToken) {
-        return NextResponse.json(
-          { error: 'No access token found' }, 
-          { status: 401 }
-        )
-      }
+    if (!accessToken) {
+      return NextResponse.json({ error: 'Unauthorized - no access token' }, { status: 401 })
+    }
 
-      // Verify token and get user
-      const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
+    // Verify the token with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken)
 
-      if (authError || !user) {
-        return NextResponse.json(
-          { error: 'Invalid authentication' }, 
-          { status: 401 }
-        )
-      }
-
-      userId = user.id
+    if (error || !user) {
+      return NextResponse.json({ error: 'Unauthorized - invalid token' }, { status: 401 })
     }
 
     // Use optimized single query to get all profile data
     const profile = await prisma.profile.findUnique({
-      where: { id: userId },
+      where: { id: user.id },
       include: {
         student: true,
         mentor: true,
@@ -131,119 +111,118 @@ export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
 
-    // Check if parent is viewing as student
-    const parentViewMode = request.cookies.get('parent-view-mode')?.value === 'true'
-    const parentViewStudentId = request.cookies.get('parent-view-student-id')?.value
-    let userId = null
-    let isParentUpdate = false
-
-    if (parentViewMode && parentViewStudentId) {
-      // Parent is updating a student's profile
-      userId = parentViewStudentId
-      isParentUpdate = true
-
-      // Verify parent has permission (get parent auth from cookie)
-      const parentAuthId = request.cookies.get('parent-auth-id')?.value
-      if (!parentAuthId) {
-        return NextResponse.json(
-          { error: 'Parent authentication required' }, 
-          { status: 401 }
-        )
-      }
-
-      // Verify parent profile and student relationship
-      const parentProfile = await prisma.parentProfile.findFirst({
-        where: { authId: parentAuthId }
-      })
-
-      if (!parentProfile) {
-        return NextResponse.json(
-          { error: 'Parent profile not found' }, 
-          { status: 404 }
-        )
-      }
-
-      // Verify student belongs to this parent
-      const studentProfile = await prisma.profile.findFirst({
-        where: {
-          id: parentViewStudentId,
-          parentId: parentProfile.id,
-          role: 'student'
-        }
-      })
-
-      if (!studentProfile) {
-        return NextResponse.json(
-          { error: 'Student not found or not authorized' }, 
-          { status: 404 }
-        )
-      }
-    } else {
-      // Normal authentication flow
-      const accessToken = request.cookies.get('sb-access-token')?.value
-
-      if (!accessToken) {
-        return NextResponse.json(
-          { error: 'No access token found' }, 
-          { status: 401 }
-        )
-      }
-
-      // Verify token and get user
-      const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
-
-      if (authError || !user) {
-        return NextResponse.json(
-          { error: 'Invalid authentication' }, 
-          { status: 401 }
-        )
-      }
-
-      userId = user.id
+    // Validate required fields
+    if (!body.userId || !body.firstName || !body.lastName) {
+      return NextResponse.json(
+        { error: 'User ID, first name, and last name are required' },
+        { status: 400 }
+      );
     }
 
-    // Update the profile
-    const updatedProfile = await prisma.profile.update({
-      where: { id: userId },
-      data: {
-        firstName: body.firstName,
-        lastName: body.lastName,
-        bio: body.bio,
-        location: body.location,
-        tagline: body.tagline,
-        professionalSummary: body.professionalSummary,
-        email: body.email,
-        phone: body.phone,
-        timezone: body.timezone,
-        availabilityStatus: body.availabilityStatus
-      },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        bio: true,
-        location: true,
-        tagline: true,
-        professionalSummary: true,
-        email: true,
-        phone: true,
-        timezone: true,
-        availabilityStatus: true,
-        profileImageUrl: true,
-        coverImageUrl: true
-      }
+    const cookieStore = await cookies()
+
+    // Get the access token from cookies
+    const accessToken = cookieStore.get('sb-access-token')?.value
+
+    if (!accessToken) {
+      return NextResponse.json({ error: 'Unauthorized - no access token' }, { status: 401 })
+    }
+
+    // Verify the token with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken)
+
+    if (error || !user) {
+      return NextResponse.json({ error: 'Unauthorized - invalid token' }, { status: 401 })
+    }
+
+    // Separate profile data from student-specific data
+    const {
+      educationLevel,
+      ageGroup,
+      birthMonth,
+      birthYear,
+      personalityType,
+      learningStyle,
+      favoriteQuote,
+      linkedinUrl,
+      portfolioUrl,
+      ...profileData
+    } = body
+
+    // Update main profile using Prisma
+    const updatedProfile = await updateUserProfile(user.id, {
+      firstName: profileData.firstName.trim(),
+      lastName: profileData.lastName.trim(),
+      bio: profileData.bio?.trim() || null,
+      location: profileData.location?.trim() || null,
+      tagline: profileData.tagline,
+      professionalSummary: profileData.professionalSummary,
+      profileImageUrl: profileData.profileImageUrl,
+      coverImageUrl: profileData.coverImageUrl,
+      timezone: profileData.timezone,
+      availabilityStatus: profileData.availabilityStatus,
     })
 
-    return NextResponse.json({
-      success: true,
-      profile: updatedProfile
-    })
+    // Update student profile if student-specific data is provided
+    if (updatedProfile.role === 'student' && 
+        (educationLevel || ageGroup || birthMonth || birthYear || personalityType || learningStyle || favoriteQuote)) {
 
+      // Calculate age group from birth data if available
+      const calculateAgeGroup = (birthMonth: string, birthYear: string): string => {
+        if (!birthMonth || !birthYear) return "young_adult";
+
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1;
+
+        const birthYearNum = parseInt(birthYear);
+        const birthMonthNum = parseInt(birthMonth);
+
+        let ageInYears = currentYear - birthYearNum;
+        if (currentMonth < birthMonthNum) {
+          ageInYears--;
+        }
+
+        if (ageInYears < 5) {
+          return "early_childhood";
+        } else if (ageInYears < 11) {
+          return "elementary";
+        } else if (ageInYears < 13) {
+          return "middle_school";
+        } else if (ageInYears < 18) {
+          return "high_school";
+        } else {
+          return "young_adult";
+        }
+      };
+
+      // Get existing student profile to access birth data
+      const existingStudentProfile = await prisma.studentProfile.findUnique({
+        where: { id: user.id },
+        select: { birthMonth: true, birthYear: true }
+      });
+
+      const calculatedAgeGroup = existingStudentProfile 
+        ? calculateAgeGroup(existingStudentProfile.birthMonth || "", existingStudentProfile.birthYear || "")
+        : "young_adult";
+
+      await updateStudentProfile(user.id, {
+        educationLevel,
+        age_group: calculatedAgeGroup, // Note: using age_group as per database schema
+        birthMonth,
+        birthYear,
+        personalityType,
+        learningStyle,
+        favoriteQuote
+      })
+    }
+
+    return NextResponse.json({ success: true, profile: updatedProfile })
   } catch (error) {
-    console.error('Error updating personal info:', error)
+    console.error('Error updating profile:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error instanceof Error ? error.message : 'Failed to update profile' },
       { status: 500 }
-    )
+    );
   }
 }

@@ -9,10 +9,10 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id: studentId } = await params
+    const studentId = params.id
 
     // Get auth token from cookies
     const accessToken = request.cookies.get('sb-access-token')?.value

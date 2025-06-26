@@ -24,15 +24,11 @@ interface SkillCategory {
 interface SkillsAbilitiesFormProps {
   data: any
   onChange: (sectionId: string, data: Skill[], isDirty?: boolean) => void
-  userId?: string
-  isParentView?: boolean
 }
 
 export default function SkillsAbilitiesForm({ 
   data, 
-  onChange,
-  userId,
-  isParentView = false
+  onChange
 }: SkillsAbilitiesFormProps) {
   const [skills, setSkills] = useState<Skill[]>([])
   const [originalSkills, setOriginalSkills] = useState<Skill[]>([])
@@ -53,14 +49,9 @@ export default function SkillsAbilitiesForm({
         setLoading(true)
 
         // Fetch user data to get age group
-        const userApiUrl = isParentView && userId 
-          ? `/api/parent/student/${userId}/profile`
-          : '/api/auth/user'
-          
-        const userResponse = await fetch(userApiUrl)
+        const userResponse = await fetch('/api/auth/user')
         if (userResponse.ok) {
-          const responseData = await userResponse.json()
-          const userData = isParentView ? { user: responseData.profile } : responseData
+          const userData = await userResponse.json()
           // Try both possible field names for age group
           const actualAgeGroup = userData.user?.ageGroup || userData.user?.studentProfile?.age_group
           
@@ -97,11 +88,7 @@ export default function SkillsAbilitiesForm({
         }
 
         // Fetch user's current skills
-        const skillsApiUrl = isParentView && userId 
-          ? `/api/parent/student/${userId}/skills`
-          : '/api/user/skills'
-          
-        const userSkillsResponse = await fetch(skillsApiUrl)
+        const userSkillsResponse = await fetch('/api/user/skills')
         if (userSkillsResponse.ok) {
           const userSkillsData = await userSkillsResponse.json()
           // Transform user skills to match component format
@@ -242,11 +229,7 @@ export default function SkillsAbilitiesForm({
         
         // Send all skills (with and without IDs) to the API
         // The API will handle filtering based on user's actual age group
-        const saveApiUrl = isParentView && userId 
-          ? `/api/parent/student/${userId}/skills`
-          : '/api/user/skills'
-          
-        const response = await fetch(saveApiUrl, {
+        const response = await fetch('/api/user/skills', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

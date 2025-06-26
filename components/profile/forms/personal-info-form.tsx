@@ -37,7 +37,6 @@ interface PersonalInfoFormProps {
   data: any
   onChange: (sectionId: string, data: PersonalInfoData) => void
   onSave?: (data: PersonalInfoData) => Promise<void>
-  isParentView?: boolean
 }
 
 // Function to calculate age group based on birth month and year (reused from onboarding)
@@ -66,7 +65,7 @@ const calculateAgeGroup = (birthMonth: string, birthYear: string): string => {
   }
 }
 
-export default function PersonalInfoForm({ data, onChange, onSave, isParentView = false }: PersonalInfoFormProps) {
+export default function PersonalInfoForm({ data, onChange, onSave }: PersonalInfoFormProps) {
   const [profileImagePreview, setProfileImagePreview] = useState<string>("")
   const [coverImagePreview, setCoverImagePreview] = useState<string>("")
   const [isDirty, setIsDirty] = useState(false)
@@ -262,11 +261,7 @@ export default function PersonalInfoForm({ data, onChange, onSave, isParentView 
 
       console.log("📤 Saving personal info data:", apiData)
 
-      const endpoint = isParentView
-        ? `/api/parent/student/\${userId}/profile`
-        : '/api/profile/personal-info'
-
-      const response = await fetch(endpoint, {
+      const response = await fetch('/api/profile/personal-info', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

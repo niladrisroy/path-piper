@@ -29,36 +29,27 @@ export async function GET(request: NextRequest) {
   try {
     console.log('🔄 Fetching education history')
 
-    // Check if parent is viewing as student
-    const parentViewMode = request.cookies.get('parent-view-mode')?.value === 'true'
-    const parentViewStudentId = request.cookies.get('parent-view-student-id')?.value
-    let userId = null
+    // Get user from session
+    const cookieStore = await cookies()
+    const accessToken = cookieStore.get('sb-access-token')?.value
 
-    if (parentViewMode && parentViewStudentId) {
-      // Parent is viewing a student's education
-      userId = parentViewStudentId
-    } else {
-      // Normal authentication flow
-      const accessToken = request.cookies.get('sb-access-token')?.value
+    if (!accessToken) {
+      console.log('❌ No access token found')
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-      if (!accessToken) {
-        console.log('❌ No access token found')
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-      }
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
 
-      const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
-
-      if (authError || !user) {
-        console.log('❌ Authentication failed')
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-      }
-
-      userId = user.id
+    if (authError || !user) {
+      console.log('❌ Authentication failed')
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Fetch education history for the authenticated user using Prisma
     const educationHistory = await prisma.studentEducationHistory.findMany({
-      where: { studentId: userId },
+      where: {
+        studentId: user.id
+      },
       orderBy: {
         startDate: 'desc'
       },
@@ -97,75 +88,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const { userId } = await getAuthenticatedUser(request);
     const data = await request.json();
-
-    // Check if parent is viewing as student
-    const parentViewMode = request.cookies.get('parent-view-mode')?.value === 'true'
-    const parentViewStudentId = request.cookies.get('parent-view-student-id')?.value
-    let userId = null
-
-    if (parentViewMode && parentViewStudentId) {
-      // Parent is updating a student's education
-      userId = parentViewStudentId
-
-      // Verify parent has permission
-      const parentAuthId = request.cookies.get('parent-auth-id')?.value
-      if (!parentAuthId) {
-        return NextResponse.json(
-          { error: 'Parent authentication required' },
-          { status: 401 }
-        )
-      }
-
-      // Verify parent profile and student relationship
-      const parentProfile = await prisma.parentProfile.findFirst({
-        where: { authId: parentAuthId }
-      })
-
-      if (!parentProfile) {
-        return NextResponse.json(
-          { error: 'Parent profile not found' },
-          { status: 404 }
-        )
-      }
-
-      // Verify student belongs to this parent
-      const studentProfile = await prisma.profile.findFirst({
-        where: {
-          id: parentViewStudentId,
-          parentId: parentProfile.id,
-          role: 'student'
-        }
-      })
-
-      if (!studentProfile) {
-        return NextResponse.json(
-          { error: 'Student not found or not authorized' },
-          { status: 404 }
-        )
-      }
-    } else {
-      // Normal authentication flow
-      const accessToken = request.cookies.get('sb-access-token')?.value
-
-      if (!accessToken) {
-        return NextResponse.json(
-          { error: 'No access token found' },
-          { status: 401 }
-        )
-      }
-
-      const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
-
-      if (authError || !user) {
-        return NextResponse.json(
-          { error: 'Invalid authentication' },
-          { status: 401 }
-        )
-      }
-
-      userId = user.id
-    }
 
     // Validate required fields
     if (!data.institutionName || !data.institutionTypeId) {

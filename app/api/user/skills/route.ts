@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
@@ -150,7 +151,7 @@ export async function POST(request: NextRequest) {
     for (const skill of skills) {
       if (!skill.id && !availableSkillNamesMap.has(skill.name)) {
         console.log('🔍 Processing custom skill:', skill.name)
-
+        
         // Check if this custom skill already exists
         const existingCustomSkill = await prisma.skill.findFirst({
           where: {
@@ -167,7 +168,7 @@ export async function POST(request: NextRequest) {
               categoryId: customSkillCategory.id
             }
           })
-
+          
           // Add to our maps so it can be processed normally
           availableSkillIds.push(newCustomSkill.id)
           availableSkillNamesMap.set(skill.name, newCustomSkill.id)
@@ -204,19 +205,19 @@ export async function POST(request: NextRequest) {
       us.skill.name, 
       { id: us.skill.id, level: us.proficiencyLevel }
     ]))
-
+    
     console.log('🔍 Current saved skills:', currentUserSkills.length, Array.from(currentSkillsMap.keys()))
     console.log('🔍 New skills to save:', validSkills.length, validSkills.map(s => s.name))
 
     // Find skills to add (in new list but not in current)
     const skillsToAdd = validSkills.filter(skill => !currentSkillsMap.has(skill.name))
-
+    
     // Find skills to update (in both lists but with different proficiency level)
     const skillsToUpdate = validSkills.filter(skill => {
       const current = currentSkillsMap.get(skill.name)
       return current && current.level !== (skill.level || 1)
     })
-
+    
     // Find skills to remove (in current but not in new list, or not valid for current age group)
     const skillsToRemove = currentUserSkills.filter(us => {
       const isInNewList = validSkills.some(skill => skill.name === us.skill.name)

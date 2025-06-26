@@ -17,7 +17,6 @@ import {
   UserPlus,
   Loader2,
   Users,
-  ArrowLeft
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
@@ -275,19 +274,6 @@ export function InternalNavbar() {
     { name: "Messages", href: "/messages", icon: <MessageCircle size={20} /> },
     { name: "Profile", href: "/student/profile", icon: <User size={20} /> },
   ];
-
-  const handleBackToParentDashboard = async () => {
-    try {
-      await fetch('/api/parent/logout-student-view', {
-        method: 'POST',
-        credentials: 'include'
-      })
-      router.push('/parent/dashboard')
-    } catch (error) {
-      console.error('Error returning to parent dashboard:', error)
-      router.push('/parent/dashboard')
-    }
-  }
 
   return (
     <>

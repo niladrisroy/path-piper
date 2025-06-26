@@ -35,17 +35,6 @@ export async function middleware(request: NextRequest) {
   
   // If it's a protected path, validate authentication properly
   if (isProtectedPath && !isPublicPath) {
-    // Check if parent is viewing as student
-    const parentViewMode = request.cookies.get('parent-view-mode')?.value === 'true'
-    const parentAuthId = request.cookies.get('parent-auth-id')?.value
-    
-    if (parentViewMode && parentAuthId) {
-      // Parent view mode is active, allow access
-      const response = NextResponse.next()
-      response.headers.set('x-parent-view-mode', 'true')
-      return response
-    }
-    
     // Try multiple cookie names that Supabase might use
     const accessToken = request.cookies.get('sb-access-token')?.value || 
                        request.cookies.get('supabase-auth-token')?.value ||

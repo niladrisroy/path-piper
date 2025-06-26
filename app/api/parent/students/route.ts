@@ -29,7 +29,15 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Find parent profile directly - this is the only check we need
+    // Check if user is a parent
+    if (user.user_metadata?.role !== 'parent') {
+      return NextResponse.json(
+        { success: false, error: 'Not authorized as parent' },
+        { status: 403 }
+      )
+    }
+
+    // Find parent profile
     const parentProfile = await prisma.parentProfile.findFirst({
       where: { authId: user.id }
     })

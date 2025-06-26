@@ -33,8 +33,6 @@ interface EducationEntry {
 interface EducationHistoryFormProps {
   data: any
   onChange: (sectionId: string, data: EducationEntry[]) => void
-  userId?: string
-  isParentView?: boolean
 }
 
 interface InstitutionType {
@@ -50,7 +48,7 @@ interface InstitutionCategory {
   types: InstitutionType[]
 }
 
-export default function EducationHistoryForm({ data, onChange, userId, isParentView = false }: EducationHistoryFormProps) {
+export default function EducationHistoryForm({ data, onChange }: EducationHistoryFormProps) {
   const [educationHistory, setEducationHistory] = useState<EducationEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [isAddingEntry, setIsAddingEntry] = useState(false)
@@ -77,11 +75,7 @@ export default function EducationHistoryForm({ data, onChange, userId, isParentV
     const fetchEducationHistory = async () => {
       try {
         setLoading(true)
-        const apiUrl = isParentView && userId 
-          ? `/api/parent/student/${userId}/education` 
-          : '/api/education'
-        
-        const response = await fetch(apiUrl, {
+        const response = await fetch('/api/education', {
           method: 'GET',
           credentials: 'include',
           cache: 'no-store'
@@ -285,11 +279,7 @@ export default function EducationHistoryForm({ data, onChange, userId, isParentV
       setIsSaving(true)
       console.log('💾 Auto-saving education history:', educationToSave)
 
-      const apiUrl = isParentView && userId 
-        ? `/api/parent/student/${userId}/education` 
-        : '/api/education'
-
-      const response = await fetch(apiUrl, {
+      const response = await fetch('/api/education', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -321,11 +311,7 @@ export default function EducationHistoryForm({ data, onChange, userId, isParentV
 
   const fetchEducationFromDatabase = async () => {
     try {
-      const apiUrl = isParentView && userId 
-        ? `/api/parent/student/${userId}/education` 
-        : '/api/education'
-        
-      const response = await fetch(apiUrl, {
+      const response = await fetch('/api/education', {
         method: 'GET',
         credentials: 'include',
         cache: 'no-store'

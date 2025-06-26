@@ -349,22 +349,6 @@ export async function loginUser(data: LoginData) {
       throw new Error("No user returned from login");
     }
 
-    // Check if this is a parent first (parents don't have main profiles)
-    const parentProfile = await prisma.parentProfile.findFirst({
-      where: { authId: authData.user.id }
-    });
-
-    if (parentProfile) {
-      // This is a parent - they don't need a main profile
-      return {
-        success: true,
-        user: authData.user,
-        session: authData.session,
-        role: "parent",
-        onboardingCompleted: true, // Parents don't have onboarding
-      };
-    }
-
     // Get user's profile with a single optimized query
     // Include the specific profile type based on role to get onboarding status in one query
     const profile = await prisma.profile.findUnique({
@@ -383,7 +367,6 @@ export async function loginUser(data: LoginData) {
       return {
         success: true,
         user: authData.user,
-        session: authData.session,
         role: authData.user.user_metadata?.role || "student",
         onboardingCompleted: false,
       };
