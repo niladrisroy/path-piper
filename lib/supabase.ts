@@ -10,4 +10,15 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Missing Supabase environment variables')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    // Configure redirect URLs to use production domain
+    redirectTo: 'https://pathpiper.replit.app/auth/callback',
+    // Disable automatic redirect detection
+    detectSessionInUrl: true,
+    // Set session persistence
+    persistSession: true,
+    // Configure flow type
+    flowType: 'pkce'
+  }
+})

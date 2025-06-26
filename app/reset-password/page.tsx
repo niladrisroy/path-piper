@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect, useRef, Suspense } from "react"
@@ -108,43 +107,67 @@ function ResetPasswordContent() {
     setIsLoading(true)
 
     try {
-      // First, try to get auth tokens from URL hash
-      const hashParams = new URLSearchParams(window.location.hash.substring(1))
-      const accessToken = hashParams.get('access_token')
-      const refreshToken = hashParams.get('refresh_token')
-      const type = hashParams.get('type')
+      const hash = window.location.hash
 
-      if (accessToken && refreshToken && type === 'recovery') {
-        console.log('Setting session from URL hash parameters')
-        // Set the session from hash parameters
-        const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken
-        })
+      // Check if we have hash fragments (from Supabase auth)
+      if (hash) {
+        console.log('Hash fragments found, attempting to set session...')
 
-        if (sessionError) {
-          console.error('Session error:', sessionError)
-          throw new Error('Invalid or expired reset link. Please request a new password reset.')
+        // Parse hash parameters manually to get session
+        const hashParams = new URLSearchParams(hash.substring(1))
+        const accessToken = hashParams.get('access_token')
+        const refreshToken = hashParams.get('refresh_token')
+        const expiresIn = hashParams.get('expires_in')
+
+        if (accessToken && refreshToken) {
+          // Set session with extended expiry time (30 minutes)
+          const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          })
+
+          if (sessionError) {
+            throw new Error('Failed to establish session: ' + sessionError.message)
+          }
+
+          console.log('Session set successfully, user:', sessionData?.user?.email)
+          console.log('Session expires in:', expiresIn, 'seconds')
+        } else {
+          throw new Error('Missing access token or refresh token in URL')
         }
-
-        console.log('Session set successfully, user:', sessionData?.user?.email)
       } else {
+        console.log('No hash found, checking for existing session...')
+
         // Check if user is already authenticated or try to refresh session
         const { data: { session }, error: getSessionError } = await supabase.auth.getSession()
-        
+
         if (getSessionError || !session) {
           console.log('No valid session found, attempting to refresh...')
-          
+
           // Try to refresh the session if we have a refresh token
           const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
-          
+
           if (refreshError || !refreshData.session) {
             throw new Error('Session expired. Please request a new password reset link.')
           }
-          
+
           console.log('Session refreshed successfully')
         } else {
           console.log('Existing valid session found')
+
+          // Check if session is about to expire and refresh if needed
+          const expiresAt = session.expires_at ? new Date(session.expires_at * 1000) : null
+          const now = new Date()
+          const timeLeft = expiresAt ? expiresAt.getTime() - now.getTime() : 0
+
+          // If less than 5 minutes left, refresh the session
+          if (timeLeft < 5 * 60 * 1000) {
+            console.log('Session expiring soon, refreshing...')
+            const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
+            if (!refreshError && refreshData.session) {
+              console.log('Session refreshed proactively')
+            }
+          }
         }
       }
 
@@ -168,10 +191,10 @@ function ResetPasswordContent() {
 
       console.log('Password updated successfully')
       setIsCompleted(true)
-      
+
       // Sign out the user to ensure they login with new password
       await supabase.auth.signOut()
-      
+
       // Redirect to login after 3 seconds
       setTimeout(() => {
         router.push('/login?message=Password updated successfully')
@@ -337,7 +360,7 @@ function ResetPasswordContent() {
                     <p className="text-blue-600 text-sm">Resetting password for: <strong>{email}</strong></p>
                   </div>
                 )}
-                
+
                 {error && (
                   <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                     <p className="text-red-600 text-sm">{error}</p>
