@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     const parentProfile = await prisma.parentProfile.findFirst({
       where: { 
         email: email,
-        auth_id: authData.user.id 
+        authId: authData.user.id 
       }
     })
 
