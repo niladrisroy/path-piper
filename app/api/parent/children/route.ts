@@ -49,8 +49,7 @@ export async function GET(request: NextRequest) {
       parentId: child.parentId?.toString(),
       student: child.student ? {
         ...child.student,
-        id: child.student.id.toString(),
-        profileId: child.student.profileId.toString()
+        id: child.student.id.toString()
       } : null
     }))
 
