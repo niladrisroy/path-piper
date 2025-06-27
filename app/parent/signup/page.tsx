@@ -299,15 +299,6 @@ export default function ParentSignupPage() {
           <div className="w-full max-w-md mx-auto">
             <Card className="w-full border-0 shadow-none md:border md:shadow-sm">
               <CardHeader className="space-y-1 text-center">
-                <div className="flex justify-center mb-4 md:hidden">
-                  <Image
-                    src="/images/pathpiper-logo-full.png"
-                    alt="PathPiper"
-                    width={200}
-                    height={60}
-                    className="h-12 w-auto"
-                  />
-                </div>
                 <CardTitle className="text-2xl font-bold">Create Parent Account</CardTitle>
                 <CardDescription>
                   Join PathPiper to support your child's education
