@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const [parentEmail, studentId, timestamp] = decodedToken.split(':')
+    const [parentEmail, studentId, timestamp, isRegistered] = decodedToken.split(':')
 
     if (!parentEmail || !studentId || !timestamp) {
       return NextResponse.json(
@@ -73,9 +73,6 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Decode token to check parent registration status
-    const [, , , isRegistered] = decodedToken.split(':')
-    
     // Clear the verification token (but do NOT set parent_verified to true)
     await prisma.parentProfile.update({
       where: { id: parentProfile.id },
