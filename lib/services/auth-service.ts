@@ -130,8 +130,10 @@ export async function registerStudent(data: UserRegistrationData) {
         });
         console.log('✅ Parent profile created with ID:', parentProfile.id);
       } else {
-        console.log('🔄 Updating existing parent profile for:', data.parentEmail);
-        // Update existing parent profile with new verification token
+        console.log('🔄 Reusing existing parent profile for:', data.parentEmail);
+        console.log('   - Existing parent ID:', parentProfile.id);
+        console.log('   - Updating verification token for new child approval');
+        // Update existing parent profile with new verification token only
         parentProfile = await prisma.parentProfile.update({
           where: { id: parentProfile.id },
           data: {

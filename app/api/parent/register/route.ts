@@ -29,7 +29,8 @@ export async function POST(request: NextRequest) {
       where: { email: email }
     })
 
-    if (existingParent) {
+    if (existingParent && existingParent.auth_id) {
+      // Parent profile exists and already has auth_id (fully registered)
       return NextResponse.json(
         { success: false, error: 'Account with this email already exists' },
         { status: 400 }
@@ -58,18 +59,35 @@ export async function POST(request: NextRequest) {
     // Generate email verification token
     const verificationToken = Buffer.from(`${email}:${Date.now()}`).toString('base64')
 
-    // Create parent profile in database with email_verified as false
-    const parentProfile = await prisma.parentProfile.create({
-      data: {
-        name: name,
-        email: email,
-        auth_id: authData.user.id,
-        emailVerified: false,
-        verificationToken: verificationToken,
-      }
-    })
-
-    console.log('Parent profile created:', parentProfile.id)
+    let parentProfile;
+    
+    if (existingParent) {
+      // Update existing parent profile with auth_id and verification details
+      console.log('🔄 Updating existing parent profile for:', email);
+      parentProfile = await prisma.parentProfile.update({
+        where: { id: existingParent.id },
+        data: {
+          name: name, // Update name in case it was different
+          auth_id: authData.user.id,
+          emailVerified: false,
+          verificationToken: verificationToken,
+        }
+      })
+      console.log('✅ Parent profile updated with ID:', parentProfile.id);
+    } else {
+      // Create new parent profile in database with email_verified as false
+      console.log('✨ Creating new parent profile for:', email);
+      parentProfile = await prisma.parentProfile.create({
+        data: {
+          name: name,
+          email: email,
+          auth_id: authData.user.id,
+          emailVerified: false,
+          verificationToken: verificationToken,
+        }
+      })
+      console.log('✅ Parent profile created with ID:', parentProfile.id);
+    }
 
     // Send email verification email
     try {
