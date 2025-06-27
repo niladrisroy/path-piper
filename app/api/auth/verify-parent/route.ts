@@ -73,6 +73,9 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Decode token to check parent registration status
+    const [, , , isRegistered] = decodedToken.split(':')
+    
     // Clear the verification token (but do NOT set parent_verified to true)
     await prisma.parentProfile.update({
       where: { id: parentProfile.id },
@@ -82,6 +85,7 @@ export async function GET(request: NextRequest) {
     })
 
     console.log('✅ Parent verification link clicked for student:', studentId)
+    console.log('ℹ️ Parent_verified remains FALSE until parent completes registration/login')
 
     // Redirect based on parent registration status
     const isParentRegistered = isRegistered === 'true'

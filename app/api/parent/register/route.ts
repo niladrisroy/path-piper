@@ -90,6 +90,14 @@ export async function POST(request: NextRequest) {
       // Continue with registration even if email fails
     }
 
+    // After successful registration, set parent_verified to true for their children
+    await prisma.profile.updateMany({
+      where: { parentId: parentProfile.id },
+      data: { parentVerified: true }
+    })
+    
+    console.log('✅ Parent registration successful - setting parent_verified to TRUE for children')
+
     return NextResponse.json({
       success: true,
       parentId: parentProfile.id.toString(),
