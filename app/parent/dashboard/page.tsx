@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -118,19 +117,19 @@ export default function ParentDashboard() {
 
   const getAgeFromBirth = (birthMonth?: string, birthYear?: string) => {
     if (!birthMonth || !birthYear) return null
-    
+
     const currentDate = new Date()
     const currentYear = currentDate.getFullYear()
     const currentMonth = currentDate.getMonth() + 1
-    
+
     const birthYearNum = parseInt(birthYear)
     const birthMonthNum = parseInt(birthMonth)
-    
+
     let age = currentYear - birthYearNum
     if (currentMonth < birthMonthNum) {
       age--
     }
-    
+
     return age
   }
 
@@ -242,14 +241,14 @@ export default function ParentDashboard() {
                       </div>
                     </div>
                   </CardHeader>
-                  
+
                   <CardContent className="space-y-4">
                     {child.bio && (
                       <p className="text-sm text-gray-600 line-clamp-2">
                         {child.bio}
                       </p>
                     )}
-                    
+
                     <div className="space-y-2">
                       {child.student?.birthMonth && child.student?.birthYear && (
                         <div className="flex items-center text-sm text-gray-600">
@@ -257,14 +256,14 @@ export default function ParentDashboard() {
                           Age: {getAgeFromBirth(child.student.birthMonth, child.student.birthYear)} years
                         </div>
                       )}
-                      
+
                       {child.student?.educationLevel && (
                         <div className="flex items-center text-sm text-gray-600">
                           <GraduationCap className="w-4 h-4 mr-2" />
                           {formatEducationLevel(child.student.educationLevel)}
                         </div>
                       )}
-                      
+
                       {child.location && (
                         <div className="flex items-center text-sm text-gray-600">
                           <MapPin className="w-4 h-4 mr-2" />
@@ -272,7 +271,7 @@ export default function ParentDashboard() {
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="pt-4 border-t space-y-2">
                       {child.parentVerified === false && (
                         <Button 
