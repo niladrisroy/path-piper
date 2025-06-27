@@ -23,7 +23,7 @@ async function mockSendEmail() {
   return { success: true, data: { messageId: 'mocked_id' } };
 }
 
-export type EmailTemplate = 'verification' | 'parent-approval' | 'password-reset' | 'parent-email-verification';
+export type EmailTemplate = 'verification' | 'parent-approval' | 'parent-approval-existing' | 'parent-approval-new' | 'password-reset' | 'parent-email-verification';
 
 export async function sendEmail(
   template: EmailTemplate,
@@ -117,6 +117,76 @@ export async function sendEmail(
                  style="display: inline-block; background-color: #14b8a6; color: white; padding: 12px 30px; 
                         text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
                 Review and Approve
+              </a>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+
+            <p style="color: #9ca3af; font-size: 12px; text-align: center;">
+              © ${new Date().getFullYear()} PathPiper. All rights reserved.
+            </p>
+          </div>
+        `;
+        break;
+
+      case 'parent-approval-existing':
+        subject = 'Account Approval Request from Your Child';
+        html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #14b8a6; margin: 0;">PathPiper</h1>
+            </div>
+
+            <h2 style="color: #1f2937; margin-bottom: 20px;">Account Approval Request</h2>
+
+            <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
+              Dear Parent/Guardian,
+            </p>
+
+            <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
+              Your child <strong>${data.studentName}</strong> has requested for account approval on PathPiper. Please click on the link below for approving their account:
+            </p>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${data.approvalLink}" 
+                 style="display: inline-block; background-color: #14b8a6; color: white; padding: 12px 30px; 
+                        text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
+                Approve Account
+              </a>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+
+            <p style="color: #9ca3af; font-size: 12px; text-align: center;">
+              © ${new Date().getFullYear()} PathPiper. All rights reserved.
+            </p>
+          </div>
+        `;
+        break;
+
+      case 'parent-approval-new':
+        subject = 'Your Child Needs Your Approval - Register on PathPiper';
+        html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #14b8a6; margin: 0;">PathPiper</h1>
+            </div>
+
+            <h2 style="color: #1f2937; margin-bottom: 20px;">Registration & Approval Required</h2>
+
+            <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
+              Dear Parent/Guardian,
+            </p>
+
+            <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
+              Your child <strong>${data.studentName}</strong> is asking for approval on PathPiper, but as you are not registered as a parent on PathPiper, please click on the link below to register and then approve their account:
+            </p>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${data.approvalLink}" 
+                 style="display: inline-block; background-color: #14b8a6; color: white; padding: 12px 30px; 
+                        text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
+                Register & Approve
               </a>
             </div>
 

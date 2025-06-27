@@ -104,12 +104,13 @@ export async function registerStudent(data: UserRegistrationData) {
     if (needsParentApproval && data.parentEmail) {
       console.log('🔄 Student needs parent approval - Age:', age, 'Parent Email:', data.parentEmail);
       
-      // Debug: Check if parentProfile exists on prisma client
-      console.log('🔍 Prisma client has parentProfile?', 'parentProfile' in prisma);
-      console.log('🔍 Available prisma methods:', Object.keys(prisma));
+      // Check if parent email exists in Supabase auth.users
+      const { data: existingUser } = await supabase.auth.admin.getUserByEmail(data.parentEmail);
+      const isParentRegistered = !!existingUser.user;
+      console.log('🔍 Parent registered in auth.users:', isParentRegistered);
       
-      // Generate verification token first
-      const verificationToken = Buffer.from(`${data.parentEmail}:${authData.user.id}:${Date.now()}`).toString('base64');
+      // Generate verification token with registration status
+      const verificationToken = Buffer.from(`${data.parentEmail}:${authData.user.id}:${Date.now()}:${isParentRegistered}`).toString('base64');
       
       // Check if parent profile already exists
       let parentProfile = await prisma.parentProfile.findFirst({
@@ -142,7 +143,7 @@ export async function registerStudent(data: UserRegistrationData) {
       parentId = parentProfile.id;
       console.log('🎯 Parent ID CONFIRMED set to:', parentId);
 
-      // Send parent verification email
+      // Send parent verification email with appropriate template
       try {
         // Use the specific PathPiper deployment domain
         const baseUrl = 'https://pathpiper.replit.app';
@@ -150,15 +151,19 @@ export async function registerStudent(data: UserRegistrationData) {
         const verificationLink = `${baseUrl}/api/auth/verify-parent?token=${verificationToken}`;
         console.log('🔗 Base URL:', baseUrl);
         console.log('🔗 Verification link:', verificationLink);
+        
+        // Use different email template based on parent registration status
+        const emailTemplate = isParentRegistered ? 'parent-approval-existing' : 'parent-approval-new';
+        
         await sendEmail(
-          'parent-approval',
+          emailTemplate,
           data.parentEmail,
           {
             studentName: `${data.firstName} ${data.lastName}`,
             approvalLink: verificationLink
           }
         );
-        console.log('📧 Parent verification email sent successfully');
+        console.log('📧 Parent verification email sent successfully with template:', emailTemplate);
       } catch (emailError) {
         console.error('❌ Failed to send parent verification email:', emailError);
         // Continue with registration even if email fails
