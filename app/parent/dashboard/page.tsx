@@ -53,6 +53,7 @@ export default function ParentDashboard() {
       }
 
       const data = await response.json()
+      console.log('Children data from API:', data.children)
       setChildren(data.children || [])
       setParentName(data.parentName || "Parent")
     } catch (error) {
@@ -214,7 +215,9 @@ export default function ParentDashboard() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {children.map((child) => (
+              {children.map((child) => {
+                console.log('Child data:', child.id, 'parentVerified:', child.parentVerified);
+                return (
                 <Card key={child.id} className="hover:shadow-lg transition-shadow duration-200">
                   <CardHeader className="pb-4">
                     <div className="flex items-center space-x-4">
@@ -286,7 +289,8 @@ export default function ParentDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
