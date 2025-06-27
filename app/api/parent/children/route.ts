@@ -45,8 +45,13 @@ export async function GET(request: NextRequest) {
     // Convert BigInt IDs to strings for JSON serialization
     const serializedChildren = children.map(child => ({
       ...child,
-      id: child.id,
-      parentId: child.parentId?.toString()
+      id: child.id.toString(),
+      parentId: child.parentId?.toString(),
+      student: child.student ? {
+        ...child.student,
+        id: child.student.id.toString(),
+        profileId: child.student.profileId.toString()
+      } : null
     }))
 
     return NextResponse.json({
