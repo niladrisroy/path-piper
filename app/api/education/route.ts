@@ -4,26 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { supabase } from '@/lib/supabase'
 import { cookies } from 'next/headers'
 
-// Auth helper function
-async function getAuthenticatedUser(request: NextRequest) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    throw new Error('No valid authorization header');
-  }
-
-  const token = authHeader.split(' ')[1];
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-
-  if (error || !user) {
-    throw new Error('Invalid authentication token');
-  }
-
-  return { userId: user.id, user };
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -88,7 +69,25 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await getAuthenticatedUser(request);
+    console.log('📝 Creating education record')
+
+    // Get user from session using cookies (same as GET method)
+    const cookieStore = await cookies()
+    const accessToken = cookieStore.get('sb-access-token')?.value
+
+    if (!accessToken) {
+      console.log('❌ No access token found')
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
+
+    if (authError || !user) {
+      console.log('❌ Authentication failed')
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const userId = user.id
     const data = await request.json();
 
     // Check if this is a batch save or single entry
