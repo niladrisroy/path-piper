@@ -23,6 +23,7 @@ export interface UserRegistrationData {
   birthMonth?: string;
   birthYear?: string;
   parentEmail?: string;
+  parentName?: string;
   role: "student" | "mentor" | "institution";
 }
 
@@ -123,6 +124,7 @@ export async function registerStudent(data: UserRegistrationData) {
         parentProfile = await prisma.parentProfile.create({
           data: {
             email: data.parentEmail,
+            name: data.parentName || "Parent/Guardian",
             verificationToken: verificationToken,
           },
         });

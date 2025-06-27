@@ -32,6 +32,7 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
     birthMonth: "",
     birthYear: "",
     parentEmail: "",
+    parentName: "",
     agreeTerms: false,
   })
 
@@ -100,7 +101,8 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
         role: 'student',
         birthMonth: formData.birthMonth,
         birthYear: formData.birthYear,
-        parentEmail: isUnder16 ? formData.parentEmail : undefined
+        parentEmail: isUnder16 ? formData.parentEmail : undefined,
+        parentName: isUnder16 ? formData.parentName : undefined
       })
 
       if (result.success) {
@@ -320,30 +322,49 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
         )}
 
         {isUnder16 && (
-          <div className="space-y-2">
-            <div className="flex items-start">
-              <Label htmlFor="parentEmail" className="flex-1">
-                Parent/Guardian Email
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="parentName">
+                Parent/Guardian Name
                 <RequiredIndicator />
               </Label>
-              <div className="group relative">
-                <Info size={16} className="text-slate-400 cursor-help" />
-                <div className="absolute right-0 w-64 p-2 bg-white rounded-lg shadow-lg border border-slate-200 text-xs text-slate-600 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                  We'll send a verification email to your parent/guardian for consent, as required for users under 16.
+              <Input
+                id="parentName"
+                name="parentName"
+                type="text"
+                placeholder="Enter parent/guardian full name"
+                value={formData.parentName}
+                onChange={handleChange}
+                required={isUnder16}
+                className="rounded-lg border-slate-300"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-start">
+                <Label htmlFor="parentEmail" className="flex-1">
+                  Parent/Guardian Email
+                  <RequiredIndicator />
+                </Label>
+                <div className="group relative">
+                  <Info size={16} className="text-slate-400 cursor-help" />
+                  <div className="absolute right-0 w-64 p-2 bg-white rounded-lg shadow-lg border border-slate-200 text-xs text-slate-600 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                    We'll send a verification email to your parent/guardian for consent, as required for users under 16.
+                  </div>
                 </div>
               </div>
+              <Input
+                id="parentEmail"
+                name="parentEmail"
+                type="email"
+                placeholder="Enter parent/guardian email"
+                value={formData.parentEmail}
+                onChange={handleChange}
+                required={isUnder16}
+                className="rounded-lg border-slate-300"
+              />
+              <p className="text-xs text-slate-500">Required for users under 16 years old</p>
             </div>
-            <Input
-              id="parentEmail"
-              name="parentEmail"
-              type="email"
-              placeholder="Enter parent/guardian email"
-              value={formData.parentEmail}
-              onChange={handleChange}
-              required={isUnder16}
-              className="rounded-lg border-slate-300"
-            />
-            <p className="text-xs text-slate-500">Required for users under 16 years old</p>
           </div>
         )}
 
