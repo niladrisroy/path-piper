@@ -87,8 +87,10 @@ export async function GET(request: NextRequest) {
     // Redirect based on parent registration status
     const isParentRegistered = isRegistered === 'true'
     const redirectUrl = isParentRegistered ? '/parent/login' : '/parent/signup'
-
-    return NextResponse.redirect(new URL(redirectUrl, request.url))
+    
+    // Use the specific PathPiper deployment domain for redirect
+    const baseUrl = 'https://pathpiper.replit.app'
+    return NextResponse.redirect(new URL(redirectUrl, baseUrl))
 
   } catch (error) {
     console.error('Parent verification error:', error)
