@@ -19,12 +19,6 @@ interface ChildProfile {
   bio?: string
   location?: string
   parentVerified?: boolean
-  student?: {
-    age_group?: string
-    educationLevel?: string
-    birthMonth?: string
-    birthYear?: string
-  }
 }
 
 export default function ParentDashboard() {
@@ -233,11 +227,6 @@ export default function ParentDashboard() {
                         <CardTitle className="text-xl">
                           {child.firstName} {child.lastName}
                         </CardTitle>
-                        {child.student?.age_group && (
-                          <Badge variant="secondary" className="mt-1">
-                            {formatAgeGroup(child.student.age_group)}
-                          </Badge>
-                        )}
                       </div>
                     </div>
                   </CardHeader>
@@ -250,20 +239,6 @@ export default function ParentDashboard() {
                     )}
 
                     <div className="space-y-2">
-                      {child.student?.birthMonth && child.student?.birthYear && (
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Calendar className="w-4 h-4 mr-2" />
-                          Age: {getAgeFromBirth(child.student.birthMonth, child.student.birthYear)} years
-                        </div>
-                      )}
-
-                      {child.student?.educationLevel && (
-                        <div className="flex items-center text-sm text-gray-600">
-                          <GraduationCap className="w-4 h-4 mr-2" />
-                          {formatEducationLevel(child.student.educationLevel)}
-                        </div>
-                      )}
-
                       {child.location && (
                         <div className="flex items-center text-sm text-gray-600">
                           <MapPin className="w-4 h-4 mr-2" />

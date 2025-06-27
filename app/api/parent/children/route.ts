@@ -39,15 +39,7 @@ export async function GET(request: NextRequest) {
         profileImageUrl: true,
         bio: true,
         location: true,
-        parentVerified: true,
-        student: {
-          select: {
-            age_group: true,
-            educationLevel: true,
-            birthMonth: true,
-            birthYear: true
-          }
-        }
+        parentVerified: true
       }
     });
 
@@ -56,9 +48,6 @@ export async function GET(request: NextRequest) {
       ...child,
       id: child.id.toString(),
       parentId: parseInt(parentId).toString(), // Ensure parentId is always a string
-      student: child.student ? {
-        ...child.student
-      } : null,
       parentVerified: child.parentVerified // Preserve the parentVerified value
     }))
 
