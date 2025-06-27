@@ -22,7 +22,6 @@ const STEPS = [
   { id: "skills", title: "Skills", icon: <Code className="h-5 w-5" /> },
   { id: "education", title: "Education", icon: <GraduationCap className="h-5 w-5" /> },
   { id: "goals", title: "Goals", icon: <Target className="h-5 w-5" /> },
-  { id: "completion", title: "Complete", icon: <CheckCircle className="h-5 w-5" /> },
 ]
 
 export default function Onboarding() {
@@ -383,10 +382,10 @@ export default function Onboarding() {
                 </div>
 
                 <button
-                  onClick={step < 5 ? handleNext : handleSubmit}
-                  disabled={step === 6}
+                  onClick={step < 5 ? handleNext : () => {}}
+                  disabled={step === 5}
                   className={`p-2 rounded-full ${
-                    step === 6
+                    step === 5
                       ? "text-slate-300 cursor-not-allowed"
                       : "text-slate-500 hover:text-teal-500 hover:bg-teal-50"
                   }`}
@@ -550,9 +549,7 @@ export default function Onboarding() {
                   onComplete={async (goals) => {
                     setUserData({ ...userData, goals });
 
-                    // Only save goals if there are actually changes (goals component handles dirty checking internally)
-                    // The goals component will call this onComplete regardless of dirty state
-                    // We save to database here to ensure completion step has the data
+                    // Save goals to database
                     try {
                       const response = await fetch('/api/goals', {
                         method: 'POST',
@@ -570,49 +567,33 @@ export default function Onboarding() {
                         return;
                       }
 
-                      console.log('Goals saved successfully');
-
-                      // For students, onboarding completion is determined by data presence
-                      // No need to set a completion flag since it's dynamically checked
                       console.log('Goals saved successfully - onboarding complete');
                       toast.success('Onboarding completed successfully!');
-                      setStep(6); // Move to completion step
+                      
+                      // Redirect to profile page instead of moving to completion step
+                      router.push('/student/profile');
                     } catch (error) {
                       console.error('Error during onboarding completion:', error);
                       toast.error('Failed to complete onboarding');
                       return;
                     }
                   }}
-                  onNext={handleSubmit}
+                  onNext={() => {
+                    // This shouldn't be called now since onComplete handles the redirect
+                    console.log('Goals step next clicked');
+                  }}
                   onSkip={() => {
                     console.log('🔄 Skipping goals step');
                     setUserData({ ...userData, goals: [] });
-                    // Complete onboarding even when skipping goals
                     console.log('Goals skipped - completing onboarding');
                     toast.success('Onboarding completed successfully!');
-                    setStep(6); // Move to completion step
+                    // Redirect to profile page
+                    router.push('/student/profile');
                   }}
                 />
               )}
 
-              {step === 6 && (
-                <CompletionStep 
-                  profileData={{
-                    personalInfo: {
-                      firstName: userData.firstName,
-                      lastName: userData.lastName,
-                      bio: userData.bio,
-                      location: userData.location,
-                      educationLevel: userData.educationLevel,
-                      profileImage: null
-                    },
-                    interests: userData.interests,
-                    skills: userData.skills,
-                    goals: userData.goals
-                  }}
-                  completionPercentage={Math.round((step / 6) * 100)}
-                />
-              )}
+              
             </div>
           </div>
         </div>
