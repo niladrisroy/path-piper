@@ -34,6 +34,9 @@ export async function GET(request: NextRequest) {
         parentId: parseInt(parentId),
         role: 'student'
       },
+      include: {
+        student: true
+      },
       orderBy: {
         firstName: 'asc'
       }
@@ -43,7 +46,11 @@ export async function GET(request: NextRequest) {
     const serializedChildren = children.map(child => ({
       ...child,
       id: child.id.toString(),
-      parentId: child.parentId?.toString()
+      parentId: child.parentId?.toString(),
+      student: child.student ? {
+        ...child.student,
+        id: child.student.id.toString()
+      } : null
     }))
 
     return NextResponse.json({
