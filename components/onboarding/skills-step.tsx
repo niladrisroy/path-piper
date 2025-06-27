@@ -1,3 +1,7 @@
+The code is modified to correctly display custom skills in the floating ribbon within the skills section, addressing the issue where fetched custom skills were not being shown.
+```
+
+```replit_final_file
 "use client"
 
 import type React from "react"
@@ -200,26 +204,82 @@ export default function SkillsStep({
 
   const [filteredCategories, setFilteredCategories] = useState(skillCategories)
 
-  // Update filtered categories when search term or skill categories change
+  // Filter categories based on search
   useEffect(() => {
     if (searchTerm.trim() === "") {
-      setFilteredCategories(skillCategories)
+      // Show all categories including custom skills from user's existing skills
+      const categoriesWithCustom = [...skillCategories]
+
+      // Add custom skills from user's existing skills if any
+      const customSkills = skills.filter(skill => 
+        !skill.id || skill.id < 0 || skill.category === "Custom"
+      ).map(skill => ({
+        id: skill.id || -Date.now(),
+        name: skill.name
+      }))
+
+      if (customSkills.length > 0) {
+        const existingCustomCategory = categoriesWithCustom.find(cat => cat.name === "Custom")
+        if (existingCustomCategory) {
+          // Update existing custom category with user's custom skills
+          existingCustomCategory.skills = [
+            ...existingCustomCategory.skills,
+            ...customSkills.filter(customSkill => 
+              !existingCustomCategory.skills.some(existing => existing.name === customSkill.name)
+            )
+          ]
+        } else {
+          // Add new custom category
+          categoriesWithCustom.push({
+            name: "Custom",
+            skills: customSkills
+          })
+        }
+      }
+
+      setFilteredCategories(categoriesWithCustom)
       return
     }
 
     const term = searchTerm.toLowerCase()
-    const filtered = skillCategories
+
+    // Include custom skills in search
+    const categoriesWithCustom = [...skillCategories]
+    const customSkills = skills.filter(skill => 
+      !skill.id || skill.id < 0 || skill.category === "Custom"
+    ).map(skill => ({
+      id: skill.id || -Date.now(),
+      name: skill.name
+    }))
+
+    if (customSkills.length > 0) {
+      const existingCustomCategory = categoriesWithCustom.find(cat => cat.name === "Custom")
+      if (existingCustomCategory) {
+        existingCustomCategory.skills = [
+          ...existingCustomCategory.skills,
+          ...customSkills.filter(customSkill => 
+            !existingCustomCategory.skills.some(existing => existing.name === customSkill.name)
+          )
+        ]
+      } else {
+        categoriesWithCustom.push({
+          name: "Custom",
+          skills: customSkills
+        })
+      }
+    }
+
+    const filtered = categoriesWithCustom
       .map((category) => ({
         name: category.name,
-        skills: category.skills.filter((skill) => {
-          const skillName = typeof skill === 'object' ? skill.name : skill
-          return skillName.toLowerCase().includes(term)
-        }),
+        skills: category.skills.filter((skill) =>
+          skill.name.toLowerCase().includes(term)
+        ),
       }))
       .filter((category) => category.skills.length > 0)
 
     setFilteredCategories(filtered)
-  }, [searchTerm, skillCategories])
+  }, [searchTerm, skillCategories, skills])
 
   // Initialize filtered categories when skill categories are loaded
   useEffect(() => {
