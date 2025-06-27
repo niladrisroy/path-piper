@@ -117,9 +117,20 @@ export default function ParentSignupPage() {
               </div>
             </div>
             <h2 className="text-2xl md:text-3xl font-bold mb-4">Registration Complete!</h2>
-            <p className="text-slate-600 mb-8 max-w-md mx-auto">
-              Your parent account has been created successfully. You can now login to access your dashboard.
+            <p className="text-slate-600 mb-4 max-w-md mx-auto">
+              Your parent account has been created successfully.
             </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 max-w-md mx-auto">
+              <div className="flex items-start space-x-3">
+                <div className="text-blue-500 text-xl">📧</div>
+                <div>
+                  <h3 className="font-semibold text-blue-900 mb-1">Email Verification Required</h3>
+                  <p className="text-blue-700 text-sm">
+                    We've sent a verification email to your inbox. Please verify your email address before logging in to access your dashboard.
+                  </p>
+                </div>
+              </div>
+            </div>
             <Link href="/parent/login">
               <Button className="bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full px-8 py-6">
                 Continue to Login
