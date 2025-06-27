@@ -1,7 +1,4 @@
-The code is modified to correctly display custom skills in the floating ribbon within the skills section, addressing the issue where fetched custom skills were not being shown.
-```
 
-```replit_final_file
 "use client"
 
 import type React from "react"
