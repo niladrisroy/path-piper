@@ -99,13 +99,18 @@ export default function SkillsStep({
             console.log('✅ Fetched skill categories:', skillsData.categories)
 
             // Filter custom category to only show user's custom skills
-            const userId = userData.user.id; // Assuming user data contains user ID
+            const userId = userData.user.id;
             const filteredCategories = skillsData.categories.map((category: any) => {
               if (category.name === 'Custom') {
                 // Only show custom skills that belong to the current user
+                // Check if skill has user_id or userId property
                 return {
                   ...category,
-                  skills: category.skills.filter((skill: any) => skill.userId === userId) // Assuming skill object has a userId property
+                  skills: category.skills.filter((skill: any) => {
+                    // Handle both possible field names for user ID
+                    const skillUserId = skill.user_id || skill.userId || skill.createdBy;
+                    return skillUserId === userId;
+                  })
                 };
               }
               return category;
@@ -156,17 +161,16 @@ export default function SkillsStep({
 
           const skillsResponse = await fetch(`/api/skills?ageGroup=${fallbackAgeGroup}`)
           if (skillsResponse.ok) {
-             const skillsData = await skillsResponse.json()
-            console.log('✅ Fetched skill categories:', skillsData.categories)
+            const skillsData = await skillsResponse.json()
+            console.log('✅ Fetched skill categories (fallback):', skillsData.categories)
 
-            // Filter custom category to only show user's custom skills
-            const userId = userData.user.id; // Assuming user data contains user ID
+            // For fallback case, we don't have userId, so just show empty custom skills
             const filteredCategories = skillsData.categories.map((category: any) => {
               if (category.name === 'Custom') {
-                // Only show custom skills that belong to the current user
+                // Show empty custom skills for fallback case
                 return {
                   ...category,
-                  skills: category.skills.filter((skill: any) => skill.userId === userId) // Assuming skill object has a userId property
+                  skills: []
                 };
               }
               return category;
