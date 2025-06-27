@@ -5,7 +5,7 @@ import { cookies } from 'next/headers'
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const parentId = cookieStore.get('parent_id')?.value
     const parentSession = cookieStore.get('parent_session')?.value
 
@@ -42,9 +42,16 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    // Convert BigInt IDs to strings for JSON serialization
+    const serializedChildren = children.map(child => ({
+      ...child,
+      id: child.id,
+      parentId: child.parentId?.toString()
+    }))
+
     return NextResponse.json({
       success: true,
-      children: children,
+      children: serializedChildren,
       parentName: parentProfile.name
     })
 
