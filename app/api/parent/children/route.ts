@@ -27,28 +27,14 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get children profiles for this parent
+    // Find all children linked to this parent
     const children = await prisma.profile.findMany({
       where: {
         parentId: parseInt(parentId),
         role: 'student'
       },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        bio: true,
-        location: true,
-        profileImageUrl: true,
-        parentVerified: true,
-        student: {
-          select: {
-            age_group: true,
-            educationLevel: true,
-            birthMonth: true,
-            birthYear: true
-          }
-        }
+      include: {
+        student: true
       },
       orderBy: {
         firstName: 'asc'
