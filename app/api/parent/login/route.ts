@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Set authentication cookie
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     cookieStore.set('parent_session', authData.session?.access_token || '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      parentId: parentProfile.id,
+      parentId: parentProfile.id.toString(),
       parentName: parentProfile.name
     })
 
