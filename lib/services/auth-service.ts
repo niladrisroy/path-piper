@@ -105,8 +105,8 @@ export async function registerStudent(data: UserRegistrationData) {
       console.log('🔄 Student needs parent approval - Age:', age, 'Parent Email:', data.parentEmail);
       
       // Check if parent email exists in Supabase auth.users
-      const { data: existingUser } = await supabase.auth.admin.getUserByEmail(data.parentEmail);
-      const isParentRegistered = !!existingUser.user;
+      const { data: existingUsers } = await supabase.auth.admin.listUsers();
+      const isParentRegistered = existingUsers.users?.some(user => user.email === data.parentEmail) || false;
       console.log('🔍 Parent registered in auth.users:', isParentRegistered);
       
       // Generate verification token with registration status
