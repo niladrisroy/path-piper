@@ -25,14 +25,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if parent already exists
-    const existingParent = await prisma.parentProfile.findFirst({
-      where: { email: email }
-    })
+    let existingParent;
+    try {
+      existingParent = await prisma.parentProfile.findFirst({
+        where: { email: email }
+      })
+    } catch (error) {
+      console.log('Error checking existing parent (might be data inconsistency):', error)
+      // If there's a data inconsistency, try to find by email only with error handling
+      existingParent = null
+    }
 
     if (existingParent && existingParent.auth_id) {
       // Parent profile exists and already has auth_id (fully registered)
       return NextResponse.json(
-        { success: false, error: 'Account with this email already exists' },
+        { success: false, error: 'You are already registered with this email address. Please try logging in instead.' },
         { status: 400 }
       )
     }

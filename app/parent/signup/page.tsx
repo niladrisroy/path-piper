@@ -78,11 +78,28 @@ export default function ParentSignupPage() {
         toast.success("Account created successfully!")
         setIsComplete(true)
       } else {
-        throw new Error(data.error || 'Registration failed')
+        // Handle specific error messages from the server
+        const errorMessage = data.error || 'Registration failed'
+        if (errorMessage.includes('already registered')) {
+          toast.error(errorMessage, {
+            duration: 5000,
+            style: {
+              background: '#fef3c7',
+              color: '#92400e',
+              border: '1px solid #f59e0b'
+            }
+          })
+        } else {
+          toast.error(errorMessage)
+        }
+        throw new Error(errorMessage)
       }
     } catch (error) {
       console.error('Registration error:', error)
-      toast.error('Registration failed. Please try again.')
+      // Only show generic error if we haven't already shown a specific one
+      if (!error.message.includes('already registered')) {
+        toast.error('Registration failed. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
