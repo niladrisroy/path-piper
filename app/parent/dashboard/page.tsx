@@ -53,6 +53,12 @@ export default function ParentDashboard() {
       }
 
       const data = await response.json()
+      console.log('🔍 Parent dashboard - received children data:', data.children)
+      console.log('🔍 Children verification status:', data.children?.map(child => ({
+        name: `${child.firstName} ${child.lastName}`,
+        parentVerified: child.parentVerified,
+        type: typeof child.parentVerified
+      })))
       setChildren(data.children || [])
       setParentName(data.parentName || "Parent")
     } catch (error) {
@@ -268,13 +274,18 @@ export default function ParentDashboard() {
                     </div>
                     
                     <div className="pt-4 border-t space-y-2">
-                      {!child.parentVerified && (
+                      {child.parentVerified === false && (
                         <Button 
                           onClick={() => handleApproveAccount(child.id)}
                           className="w-full bg-green-500 hover:bg-green-600 text-white"
                         >
                           Approve Account
                         </Button>
+                      )}
+                      {child.parentVerified === true && (
+                        <div className="w-full p-2 bg-green-50 border border-green-200 rounded text-center text-sm text-green-700">
+                          ✅ Account Approved
+                        </div>
                       )}
                       <Link href={`/student/profile/view/${child.id}`}>
                         <Button 

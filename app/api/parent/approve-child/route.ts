@@ -62,3 +62,63 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+
+export async function POST(request: Request) {
+  try {
+    // Get parent session from cookies
+    const cookies = request.headers.get('cookie') || '';
+    const sessionCookie = cookies
+      .split(';')
+      .find(c => c.trim().startsWith('parent_session='));
+    
+    if (!sessionCookie) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const sessionValue = sessionCookie.split('=')[1];
+    const decoded = Buffer.from(sessionValue, 'base64').toString('utf-8');
+    const parentEmail = decoded.split(':')[0];
+
+    // Get parent profile
+    const parentProfile = await prisma.parentProfile.findFirst({
+      where: { email: parentEmail }
+    });
+
+    if (!parentProfile) {
+      return NextResponse.json({ error: 'Parent not found' }, { status: 404 });
+    }
+
+    const { childId } = await request.json();
+
+    if (!childId) {
+      return NextResponse.json({ error: 'Child ID is required' }, { status: 400 });
+    }
+
+    // Verify the child belongs to this parent
+    const child = await prisma.profile.findFirst({
+      where: {
+        id: childId,
+        parentId: parentProfile.id
+      }
+    });
+
+    if (!child) {
+      return NextResponse.json({ error: 'Child not found or not linked to this parent' }, { status: 404 });
+    }
+
+    // Update the child's parentVerified status
+    await prisma.profile.update({
+      where: { id: childId },
+      data: { parentVerified: true }
+    });
+
+    console.log(`✅ Parent ${parentEmail} approved child ${childId}`);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error approving child:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
