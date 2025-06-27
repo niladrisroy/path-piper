@@ -9,13 +9,27 @@ async function getAuthenticatedUser(request: NextRequest) {
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+  // First try authorization header
   const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    throw new Error('No valid authorization header');
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (!error && user) {
+      return { userId: user.id, user };
+    }
   }
 
-  const token = authHeader.split(' ')[1];
-  const { data: { user }, error } = await supabase.auth.getUser(token);
+  // Fallback to cookies (same as other routes)
+  const { cookies } = await import('next/headers');
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('sb-access-token')?.value;
+
+  if (!accessToken) {
+    throw new Error('No valid authentication found');
+  }
+
+  const { data: { user }, error } = await supabase.auth.getUser(accessToken);
 
   if (error || !user) {
     throw new Error('Invalid authentication token');

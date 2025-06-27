@@ -245,14 +245,47 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
   }
 
   const handleRemoveEntry = async (id: number | string) => {
-    const updatedEducation = educationHistory.filter(entry => entry.id !== id)
-    setEducationHistory(updatedEducation)
+    try {
+      // Only try to delete from database if it's a real ID (not negative temp ID)
+      if (typeof id === 'number' && id > 0) {
+        const response = await fetch(`/api/education/${id}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        })
 
-    // Auto-save to database
-    await saveEducationToDatabase(updatedEducation)
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'Failed to delete education entry')
+        }
 
-    // Fetch fresh data from database to ensure UI is in sync
-    await fetchEducationFromDatabase()
+        console.log('✅ Education entry deleted from database')
+        toast.success('Education entry deleted successfully!')
+      } else if (typeof id === 'string' && !id.startsWith('-')) {
+        // Handle string IDs (real database entries)
+        const response = await fetch(`/api/education/${id}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'Failed to delete education entry')
+        }
+
+        console.log('✅ Education entry deleted from database')
+        toast.success('Education entry deleted successfully!')
+      }
+
+      // Update local state
+      const updatedEducation = educationHistory.filter(entry => entry.id !== id)
+      setEducationHistory(updatedEducation)
+
+      // Fetch fresh data from database to ensure UI is in sync
+      await fetchEducationFromDatabase()
+    } catch (error) {
+      console.error('❌ Error deleting education entry:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to delete education entry')
+    }
   }
 
   const handleCancel = () => {
