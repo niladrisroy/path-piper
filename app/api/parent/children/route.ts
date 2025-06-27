@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
         parentVerified: true,
         student: {
           select: {
-            ageGroup: true,
+            age_group: true,
             educationLevel: true,
             birthMonth: true,
             birthYear: true
