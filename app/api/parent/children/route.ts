@@ -33,6 +33,9 @@ export async function GET(request: NextRequest) {
         parentId: parseInt(parentId),
         role: 'student'
       },
+      include: {
+        student: true
+      },
       orderBy: {
         firstName: 'asc'
       }

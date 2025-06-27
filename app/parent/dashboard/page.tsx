@@ -19,6 +19,7 @@ interface ChildProfile {
   profileImageUrl?: string
   bio?: string
   location?: string
+  parentVerified?: boolean
   student?: {
     age_group?: string
     educationLevel?: string
@@ -71,6 +72,37 @@ export default function ParentDashboard() {
       router.push('/parent/login')
     } catch (error) {
       console.error('Logout error:', error)
+    }
+  }
+
+  const handleApproveAccount = async (childId: string) => {
+    try {
+      const response = await fetch('/api/parent/approve-child', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ childId })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to approve account')
+      }
+
+      // Update the local state to reflect the change
+      setChildren(prevChildren => 
+        prevChildren.map(child => 
+          child.id === childId 
+            ? { ...child, parentVerified: true }
+            : child
+        )
+      )
+
+      toast.success('Account approved successfully!')
+    } catch (error) {
+      console.error('Error approving account:', error)
+      toast.error('Failed to approve account')
     }
   }
 
@@ -235,7 +267,15 @@ export default function ParentDashboard() {
                       )}
                     </div>
                     
-                    <div className="pt-4 border-t">
+                    <div className="pt-4 border-t space-y-2">
+                      {!child.parentVerified && (
+                        <Button 
+                          onClick={() => handleApproveAccount(child.id)}
+                          className="w-full bg-green-500 hover:bg-green-600 text-white"
+                        >
+                          Approve Account
+                        </Button>
+                      )}
                       <Link href={`/student/profile/view/${child.id}`}>
                         <Button 
                           className="w-full bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white"
