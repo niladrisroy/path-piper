@@ -180,7 +180,7 @@ export default function InterestsStep({
         // Remove Custom category entirely if no custom interests are selected
         category.name !== 'Custom' || category.interests.length > 0
       )
-      
+
       setFilteredCategories(categoriesWithFilteredCustom)
       return
     }
@@ -189,14 +189,14 @@ export default function InterestsStep({
     const filtered = interestCategories
       .map((category) => {
         let filteredInterests = category.interests.filter((interest) => interest.name.toLowerCase().includes(term))
-        
+
         // For custom category, also filter to only show user-selected interests
         if (category.name === 'Custom') {
           filteredInterests = filteredInterests.filter(interest =>
             selectedInterests.some(selectedInterest => selectedInterest.id === interest.id)
           )
         }
-        
+
         return {
           name: category.name,
           interests: filteredInterests,
@@ -227,7 +227,7 @@ export default function InterestsStep({
     }
 
     window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeUnload', handleBeforeUnload)
   }, [isDirty])
 
   const addCustomInterest = () => {
@@ -241,7 +241,7 @@ export default function InterestsStep({
     }
 
     setSelectedInterests([...selectedInterests, customInterestObj])
-    
+
     // Add the custom interest to the Custom category in interestCategories if it doesn't exist
     setInterestCategories(prevCategories => {
       const updatedCategories = prevCategories.map(category => {
@@ -256,7 +256,7 @@ export default function InterestsStep({
         }
         return category
       })
-      
+
       // If no Custom category exists, create one
       if (!updatedCategories.some(cat => cat.name === 'Custom')) {
         updatedCategories.push({
@@ -264,10 +264,10 @@ export default function InterestsStep({
           interests: [customInterestObj]
         })
       }
-      
+
       return updatedCategories
     })
-    
+
     setCustomInterest("")
   }
 

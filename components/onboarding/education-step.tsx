@@ -158,7 +158,7 @@ export default function EducationStep({
     return start <= end;
   };
 
-  const handleAddEntry = () => {
+  const handleAddEntry = async () => {
     if (!newEntry.institutionName.trim() || !newEntry.subjects?.length) {
       toast.error('Please fill in institution name and at least one subject');
       return;
@@ -170,29 +170,74 @@ export default function EducationStep({
       return;
     }
 
-    const entryToAdd = {
-      ...newEntry,
-      id: -Date.now(), // Use negative number for temporary client-side IDs
-      institutionTypeName: getInstitutionTypeName(newEntry.institutionType)
-    };
+    try {
+      // Save to database immediately
+      const response = await fetch('/api/education', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          institutionName: newEntry.institutionName,
+          institutionTypeId: parseInt(newEntry.institutionType),
+          degree: newEntry.degree || null,
+          fieldOfStudy: newEntry.fieldOfStudy || null,
+          subjects: newEntry.subjects || [],
+          startDate: newEntry.startDate ? new Date(newEntry.startDate) : null,
+          endDate: newEntry.endDate ? new Date(newEntry.endDate) : null,
+          isCurrent: Boolean(newEntry.isCurrent),
+          grade: newEntry.grade || null,
+          description: newEntry.description || null
+        }),
+      });
 
-    setEducationHistory([...educationHistory, entryToAdd]);
-    setNewEntry({
-      id: "",
-      institutionName: "",
-      institutionCategory: "",
-      institutionType: "",
-      degree: "",
-      fieldOfStudy: "",
-      subjects: [],
-      startDate: "",
-      endDate: "",
-      isCurrent: true,
-      grade: "",
-      description: ""
-    });
-    setIsAddingEntry(false);
-    toast.success('Education entry added successfully');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to save education entry');
+      }
+
+      const savedEntry = await response.json();
+      console.log('✅ Education entry saved:', savedEntry);
+
+      // Add to local state with real ID and institution type name
+      const entryToAdd = {
+        id: savedEntry.id,
+        institutionName: newEntry.institutionName,
+        institutionCategory: newEntry.institutionCategory,
+        institutionType: newEntry.institutionType,
+        institutionTypeName: getInstitutionTypeName(newEntry.institutionType),
+        degree: newEntry.degree,
+        fieldOfStudy: newEntry.fieldOfStudy,
+        subjects: newEntry.subjects,
+        startDate: newEntry.startDate,
+        endDate: newEntry.endDate,
+        isCurrent: newEntry.isCurrent,
+        grade: newEntry.grade,
+        description: newEntry.description
+      };
+
+      setEducationHistory([...educationHistory, entryToAdd]);
+      setNewEntry({
+        id: "",
+        institutionName: "",
+        institutionCategory: "",
+        institutionType: "",
+        degree: "",
+        fieldOfStudy: "",
+        subjects: [],
+        startDate: "",
+        endDate: "",
+        isCurrent: true,
+        grade: "",
+        description: ""
+      });
+      setIsAddingEntry(false);
+      toast.success('Education entry added successfully');
+    } catch (error) {
+      console.error('❌ Error saving education entry:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to save education entry');
+    }
   };
 
   const handleEditEntry = (entry: EducationEntry) => {
@@ -217,7 +262,7 @@ export default function EducationStep({
     setIsAddingEntry(true);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editingEntry?.institutionName.trim() || !editingEntry?.subjects?.length) {
       toast.error('Please fill in institution name and at least one subject');
       return;
@@ -229,19 +274,72 @@ export default function EducationStep({
       return;
     }
 
-    const updatedEducation = educationHistory.map(entry => 
-      entry.id === editingEntry.id ? editingEntry : entry
-    );
-    setEducationHistory(updatedEducation);
-    setEditingEntry(null);
-    setIsAddingEntry(false);
-    toast.success('Education entry updated successfully');
+    try {
+      // Save to database
+      const response = await fetch(`/api/education/${editingEntry.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          institutionName: editingEntry.institutionName,
+          institutionTypeId: parseInt(editingEntry.institutionType),
+          degree: editingEntry.degree || null,
+          fieldOfStudy: editingEntry.fieldOfStudy || null,
+          subjects: editingEntry.subjects || [],
+          startDate: editingEntry.startDate ? new Date(editingEntry.startDate) : null,
+          endDate: editingEntry.endDate ? new Date(editingEntry.endDate) : null,
+          isCurrent: Boolean(editingEntry.isCurrent),
+          grade: editingEntry.grade || null,
+          description: editingEntry.description || null
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update education entry');
+      }
+
+      console.log('✅ Education entry updated');
+
+      const updatedEducation = educationHistory.map(entry => 
+        entry.id === editingEntry.id ? editingEntry : entry
+      );
+      setEducationHistory(updatedEducation);
+      setEditingEntry(null);
+      setIsAddingEntry(false);
+      toast.success('Education entry updated successfully');
+    } catch (error) {
+      console.error('❌ Error updating education entry:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update education entry');
+    }
   };
 
-  const handleRemoveEntry = (id: number | string) => {
-    const updatedEducation = educationHistory.filter(entry => entry.id !== id);
-    setEducationHistory(updatedEducation);
-    toast.success('Education entry removed');
+  const handleRemoveEntry = async (id: number | string) => {
+    try {
+      // Only try to delete from database if it's a real ID (not negative temp ID)
+      if (typeof id === 'number' && id > 0) {
+        const response = await fetch(`/api/education/${id}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to delete education entry');
+        }
+
+        console.log('✅ Education entry deleted from database');
+      }
+
+      const updatedEducation = educationHistory.filter(entry => entry.id !== id);
+      setEducationHistory(updatedEducation);
+      toast.success('Education entry removed');
+    } catch (error) {
+      console.error('❌ Error deleting education entry:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to delete education entry');
+    }
   };
 
   const handleCancel = () => {
@@ -267,30 +365,14 @@ export default function EducationStep({
     setLoading(true);
 
     try {
-      if (educationHistory.length > 0) {
-        // Save education history to database
-        const response = await fetch('/api/education', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({ education: educationHistory }),
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          toast.error('Failed to save education history: ' + (error.error || 'Unknown error'));
-          return;
-        }
-
-        toast.success('Education history saved successfully');
-      }
-
+      // Education entries are already saved individually when added/edited
+      // Just complete the step
+      console.log('📚 Education step completed with entries:', educationHistory.length);
+      toast.success('Education step completed!');
       onComplete(educationHistory);
     } catch (error) {
-      console.error('Error saving education history:', error);
-      toast.error('Failed to save education history');
+      console.error('Error completing education step:', error);
+      toast.error('Failed to complete education step');
     } finally {
       setLoading(false);
     }

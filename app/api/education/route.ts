@@ -91,31 +91,59 @@ export async function POST(request: NextRequest) {
     const { userId } = await getAuthenticatedUser(request);
     const data = await request.json();
 
-    // Validate required fields
-    if (!data.institutionName || !data.institutionTypeId) {
-      return NextResponse.json(
-        { error: 'Institution name and type are required' },
-        { status: 400 }
-      );
+    // Check if this is a batch save or single entry
+    if (data.education && Array.isArray(data.education)) {
+      // Batch save - for compatibility with existing code
+      const savedEntries = [];
+      for (const entry of data.education) {
+        if (!entry.institutionName || !entry.institutionType) continue;
+        
+        const educationRecord = await prisma.studentEducationHistory.create({
+          data: {
+            studentId: userId,
+            institutionName: entry.institutionName,
+            institutionTypeId: parseInt(entry.institutionType),
+            degreeProgram: entry.degree || null,
+            fieldOfStudy: entry.fieldOfStudy || null,
+            subjects: Array.isArray(entry.subjects) ? entry.subjects : [],
+            startDate: entry.startDate ? new Date(entry.startDate) : null,
+            endDate: entry.endDate ? new Date(entry.endDate) : null,
+            isCurrent: Boolean(entry.isCurrent),
+            gradeLevel: entry.grade || null,
+            description: entry.description || null
+          },
+        });
+        savedEntries.push(educationRecord);
+      }
+      return NextResponse.json({ education: savedEntries });
+    } else {
+      // Single entry save
+      // Validate required fields
+      if (!data.institutionName || !data.institutionTypeId) {
+        return NextResponse.json(
+          { error: 'Institution name and type are required' },
+          { status: 400 }
+        );
+      }
+
+      const educationRecord = await prisma.studentEducationHistory.create({
+        data: {
+          studentId: userId,
+          institutionName: data.institutionName,
+          institutionTypeId: parseInt(data.institutionTypeId),
+          degreeProgram: data.degree || null,
+          fieldOfStudy: data.fieldOfStudy || null,
+          subjects: Array.isArray(data.subjects) ? data.subjects : [],
+          startDate: data.startDate ? new Date(data.startDate) : null,
+          endDate: data.endDate ? new Date(data.endDate) : null,
+          isCurrent: Boolean(data.isCurrent),
+          gradeLevel: data.grade || null,
+          description: data.description || null
+        },
+      });
+
+      return NextResponse.json(educationRecord);
     }
-
-    const educationRecord = await prisma.studentEducationHistory.create({
-      data: {
-        studentId: userId,
-        institutionName: data.institutionName,
-        institutionTypeId: parseInt(data.institutionTypeId),
-        degreeProgram: data.degree || null,
-        fieldOfStudy: data.fieldOfStudy || null,
-        subjects: Array.isArray(data.subjects) ? data.subjects : [],
-        startDate: data.startDate ? new Date(data.startDate) : null,
-        endDate: data.endDate ? new Date(data.endDate) : null,
-        isCurrent: Boolean(data.isCurrent),
-        gradeLevel: data.grade || null,
-        description: data.description || null
-      },
-    });
-
-    return NextResponse.json(educationRecord);
   } catch (error) {
     console.error('Error creating education record:', error);
     return NextResponse.json(

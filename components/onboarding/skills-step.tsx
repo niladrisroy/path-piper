@@ -81,15 +81,15 @@ export default function SkillsStep({
         const userResponse = await fetch('/api/auth/user')
         if (userResponse.ok) {
           const userData = await userResponse.json()
-          
+
           // Calculate age group from birth data
           const birthMonth = userData.user?.studentProfile?.birthMonth
           const birthYear = userData.user?.studentProfile?.birthYear
           const calculatedAgeGroup = calculateAgeGroupFromBirth(birthMonth, birthYear)
-          
+
           console.log('🔍 Birth data:', { birthMonth, birthYear })
           console.log('🔍 Calculated age group:', calculatedAgeGroup)
-          
+
           setUserAgeGroup(calculatedAgeGroup)
 
           // Fetch skill categories for the calculated age group
@@ -97,7 +97,21 @@ export default function SkillsStep({
           if (skillsResponse.ok) {
             const skillsData = await skillsResponse.json()
             console.log('✅ Fetched skill categories:', skillsData.categories)
-            setSkillCategories(skillsData.categories || [])
+
+            // Filter custom category to only show user's custom skills
+            const userId = userData.user.id; // Assuming user data contains user ID
+            const filteredCategories = skillsData.categories.map((category: any) => {
+              if (category.name === 'Custom') {
+                // Only show custom skills that belong to the current user
+                return {
+                  ...category,
+                  skills: category.skills.filter((skill: any) => skill.userId === userId) // Assuming skill object has a userId property
+                };
+              }
+              return category;
+            });
+            setSkillCategories(filteredCategories || [])
+
           } else {
             const errorText = await skillsResponse.text()
             console.error('Failed to fetch skills:', skillsResponse.status, errorText)
@@ -109,7 +123,7 @@ export default function SkillsStep({
             if (userSkillsResponse.ok) {
               const userSkillsData = await userSkillsResponse.json()
               console.log('✅ Fetched existing user skills:', userSkillsData.skills)
-              
+
               // Convert the existing skills to the format expected by the component
               // Handle both possible API response structures
               const existingSkills = userSkillsData.skills.map((userSkill: any) => ({
@@ -117,7 +131,7 @@ export default function SkillsStep({
                 level: userSkill.proficiencyLevel || userSkill.proficiency_level || userSkill.level || 1,
                 id: userSkill.skill?.id || userSkill.skills?.id || userSkill.skill_id || userSkill.id
               }))
-              
+
               setSkills(existingSkills)
               setOriginalSkills(existingSkills)
               console.log('✅ Preselected existing skills in onboarding:', existingSkills)
@@ -142,9 +156,22 @@ export default function SkillsStep({
 
           const skillsResponse = await fetch(`/api/skills?ageGroup=${fallbackAgeGroup}`)
           if (skillsResponse.ok) {
-            const skillsData = await skillsResponse.json()
-            console.log('✅ Fetched skill categories (fallback):', skillsData.categories)
-            setSkillCategories(skillsData.categories || [])
+             const skillsData = await skillsResponse.json()
+            console.log('✅ Fetched skill categories:', skillsData.categories)
+
+            // Filter custom category to only show user's custom skills
+            const userId = userData.user.id; // Assuming user data contains user ID
+            const filteredCategories = skillsData.categories.map((category: any) => {
+              if (category.name === 'Custom') {
+                // Only show custom skills that belong to the current user
+                return {
+                  ...category,
+                  skills: category.skills.filter((skill: any) => skill.userId === userId) // Assuming skill object has a userId property
+                };
+              }
+              return category;
+            });
+            setSkillCategories(filteredCategories || [])
           } else {
             const errorText = await skillsResponse.text()
             console.error('Failed to fetch skills:', skillsResponse.status, errorText)
@@ -203,7 +230,7 @@ export default function SkillsStep({
         const originalSkill = originalSkills.find(orig => orig.name === skill.name)
         return !originalSkill || originalSkill.level !== skill.level
       })
-    
+
     setIsDirty(skillsChanged)
     console.log("🔍 Skills dirty bit:", skillsChanged)
   }, [skills, originalSkills])
@@ -323,7 +350,7 @@ export default function SkillsStep({
         }
 
         console.log("✅ All skills (including custom) saved successfully during onboarding")
-        
+
         setIsDirty(false)
         setOriginalSkills([...skills])
       } else {
