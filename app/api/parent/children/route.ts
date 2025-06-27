@@ -57,8 +57,7 @@ export async function GET(request: NextRequest) {
       id: child.id.toString(),
       parentId: parseInt(parentId).toString(), // Ensure parentId is always a string
       student: child.student ? {
-        ...child.student,
-        id: child.student.id.toString()
+        ...child.student
       } : null,
       parentVerified: child.parentVerified // Preserve the parentVerified value
     }))
