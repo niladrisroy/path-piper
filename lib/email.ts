@@ -6,6 +6,9 @@ const ZEPTOMAIL_USER = "emailapikey";
 const ZEPTOMAIL_PASS = process.env.ZEPTOMAIL_PASSWORD || "PHtE6r0IE7q/3mUv80UHsP/pRc+tZownrO8zflYS5o1LWfZSGU1VqNl/kTKxqht8XPkWR/SfyN5t5Oycsu6BITzsYG4dWmqyqK3sx/VYSPOZsbq6x00ctF4SfkLVVoDmcd9u1iXRuNnaNA==";
 const isDevelopment = process.env.NODE_ENV === 'development';
 
+// Use production domain for all emails
+const BASE_URL = 'https://pathpiper.replit.app';
+
 // Create nodemailer transporter
 const transport = nodemailer.createTransport({
   host: ZEPTOMAIL_HOST,
