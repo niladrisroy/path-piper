@@ -31,39 +31,30 @@ export async function GET(request: NextRequest) {
     const children = await prisma.profile.findMany({
       where: {
         parentId: parseInt(parentId),
+        role: 'student'
       },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        profileImageUrl: true,
-        bio: true,
-        location: true,
-        parentVerified: true
+      orderBy: {
+        firstName: 'asc'
       }
-    });
+    })
 
     // Convert BigInt IDs to strings for JSON serialization
     const serializedChildren = children.map(child => ({
       ...child,
       id: child.id.toString(),
-      parentId: parseInt(parentId).toString(), // Ensure parentId is always a string
-      parentVerified: child.parentVerified // Preserve the parentVerified value
+      parentId: child.parentId?.toString(),
+      student: child.student ? {
+        ...child.student,
+        id: child.student.id.toString()
+      } : null
     }))
-
-    console.log('🔍 Fetched children with parentVerified status:', 
-      children.map(child => ({ 
-        id: child.id, 
-        name: `${child.firstName} ${child.lastName}`, 
-        parentVerified: child.parentVerified 
-      }))
-    );
 
     return NextResponse.json({
       success: true,
       children: serializedChildren,
       parentName: parentProfile.name
     })
+
   } catch (error) {
     console.error('Error fetching children:', error)
     return NextResponse.json(

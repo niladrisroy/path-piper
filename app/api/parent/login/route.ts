@@ -104,7 +104,13 @@ export async function POST(request: NextRequest) {
       maxAge: 24 * 60 * 60 // 24 hours
     })
 
-    console.log('✅ Parent login successful')
+    // Now that parent has successfully logged in, set parent_verified to true for their children
+    await prisma.profile.updateMany({
+      where: { parentId: parentProfile.id },
+      data: { parentVerified: true }
+    })
+    
+    console.log('✅ Parent login successful - setting parent_verified to TRUE for children')
 
     return NextResponse.json({
       success: true,

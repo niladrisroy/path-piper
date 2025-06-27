@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -18,7 +19,12 @@ interface ChildProfile {
   profileImageUrl?: string
   bio?: string
   location?: string
-  parentVerified?: boolean
+  student?: {
+    age_group?: string
+    educationLevel?: string
+    birthMonth?: string
+    birthYear?: string
+  }
 }
 
 export default function ParentDashboard() {
@@ -46,12 +52,6 @@ export default function ParentDashboard() {
       }
 
       const data = await response.json()
-      console.log('🔍 Parent dashboard - received children data:', data.children)
-      console.log('🔍 Children verification status:', data.children?.map(child => ({
-        name: `${child.firstName} ${child.lastName}`,
-        parentVerified: child.parentVerified,
-        type: typeof child.parentVerified
-      })))
       setChildren(data.children || [])
       setParentName(data.parentName || "Parent")
     } catch (error) {
@@ -74,56 +74,25 @@ export default function ParentDashboard() {
     }
   }
 
-  const handleApproveAccount = async (childId: string) => {
-    try {
-      const response = await fetch('/api/parent/approve-child', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ childId })
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to approve account')
-      }
-
-      // Update the local state to reflect the change
-      setChildren(prevChildren => 
-        prevChildren.map(child => 
-          child.id === childId 
-            ? { ...child, parentVerified: true }
-            : child
-        )
-      )
-
-      toast.success('Account approved successfully!')
-    } catch (error) {
-      console.error('Error approving account:', error)
-      toast.error('Failed to approve account')
-    }
-  }
-
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
   }
 
   const getAgeFromBirth = (birthMonth?: string, birthYear?: string) => {
     if (!birthMonth || !birthYear) return null
-
+    
     const currentDate = new Date()
     const currentYear = currentDate.getFullYear()
     const currentMonth = currentDate.getMonth() + 1
-
+    
     const birthYearNum = parseInt(birthYear)
     const birthMonthNum = parseInt(birthMonth)
-
+    
     let age = currentYear - birthYearNum
     if (currentMonth < birthMonthNum) {
       age--
     }
-
+    
     return age
   }
 
@@ -227,18 +196,37 @@ export default function ParentDashboard() {
                         <CardTitle className="text-xl">
                           {child.firstName} {child.lastName}
                         </CardTitle>
+                        {child.student?.age_group && (
+                          <Badge variant="secondary" className="mt-1">
+                            {formatAgeGroup(child.student.age_group)}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </CardHeader>
-
+                  
                   <CardContent className="space-y-4">
                     {child.bio && (
                       <p className="text-sm text-gray-600 line-clamp-2">
                         {child.bio}
                       </p>
                     )}
-
+                    
                     <div className="space-y-2">
+                      {child.student?.birthMonth && child.student?.birthYear && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Calendar className="w-4 h-4 mr-2" />
+                          Age: {getAgeFromBirth(child.student.birthMonth, child.student.birthYear)} years
+                        </div>
+                      )}
+                      
+                      {child.student?.educationLevel && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <GraduationCap className="w-4 h-4 mr-2" />
+                          {formatEducationLevel(child.student.educationLevel)}
+                        </div>
+                      )}
+                      
                       {child.location && (
                         <div className="flex items-center text-sm text-gray-600">
                           <MapPin className="w-4 h-4 mr-2" />
@@ -246,21 +234,8 @@ export default function ParentDashboard() {
                         </div>
                       )}
                     </div>
-
-                    <div className="pt-4 border-t space-y-2">
-                      {child.parentVerified === false && (
-                        <Button 
-                          onClick={() => handleApproveAccount(child.id)}
-                          className="w-full bg-green-500 hover:bg-green-600 text-white"
-                        >
-                          Approve Account
-                        </Button>
-                      )}
-                      {child.parentVerified === true && (
-                        <div className="w-full p-2 bg-green-50 border border-green-200 rounded text-center text-sm text-green-700">
-                          ✅ Account Approved
-                        </div>
-                      )}
+                    
+                    <div className="pt-4 border-t">
                       <Link href={`/student/profile/view/${child.id}`}>
                         <Button 
                           className="w-full bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white"
