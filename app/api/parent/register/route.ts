@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      parentId: parentProfile.id
+      parentId: parentProfile.id.toString()
     })
 
   } catch (error) {
