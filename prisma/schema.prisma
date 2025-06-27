@@ -558,6 +558,7 @@ model ParentProfile {
   name              String
   auth_id           String?  @map("auth_id") @db.Uuid
   verificationToken String?  @map("verification_token")
+  emailVerified     Boolean  @default(false) @map("email_verified")
   createdAt         DateTime @default(now()) @map("created_at")
 
   // Relationships

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
+import { sendEmail } from '@/lib/email'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
     const parentProfile = await prisma.parentProfile.findFirst({
       where: { 
         email: email,
-        authId: authData.user.id 
+        auth_id: authData.user.id 
       }
     })
 
@@ -50,6 +51,41 @@ export async function POST(request: NextRequest) {
         { success: false, error: 'Parent account not found' },
         { status: 404 }
       )
+    }
+
+    // Check if email is verified
+    if (!parentProfile.emailVerified) {
+      // Send verification email again
+      try {
+        const verificationToken = Buffer.from(`${email}:${Date.now()}`).toString('base64')
+        
+        // Update verification token
+        await prisma.parentProfile.update({
+          where: { id: parentProfile.id },
+          data: { verificationToken: verificationToken }
+        })
+
+        const baseUrl = 'https://pathpiper.replit.app';
+        const verificationLink = `${baseUrl}/api/parent/verify-email?token=${verificationToken}`;
+        
+        await sendEmail(
+          'parent-email-verification',
+          email,
+          {
+            parentName: parentProfile.name,
+            verificationLink: verificationLink
+          }
+        );
+        console.log('📧 Parent verification email resent successfully');
+      } catch (emailError) {
+        console.error('❌ Failed to send parent verification email:', emailError);
+      }
+
+      return NextResponse.json({
+        success: false,
+        error: 'Your email is not verified. We have sent an email for verification. Please click the link and verify to proceed with login.',
+        needsVerification: true
+      }, { status: 403 })
     }
 
     // Set authentication cookie

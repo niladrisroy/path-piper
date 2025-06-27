@@ -1,8 +1,7 @@
-
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,8 +10,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner"
 import Link from "next/link"
 import Image from "next/image"
+import { Suspense } from 'react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
-export default function ParentLoginPage() {
+function ParentLoginContent() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
@@ -20,6 +21,9 @@ export default function ParentLoginPage() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
 
   // Track mouse position for interactive elements
   useEffect(() => {
@@ -45,6 +49,33 @@ export default function ParentLoginPage() {
     }
   }, [])
 
+  useEffect(() => {
+    // Check for URL parameters
+    const verified = searchParams.get('verified')
+    const error = searchParams.get('error')
+
+    if (verified === 'true') {
+      setSuccessMessage('Email verified successfully! You can now log in.')
+    } else if (error) {
+      switch (error) {
+        case 'invalid_token':
+          setError('Invalid verification link. Please try again.')
+          break
+        case 'token_expired':
+          setError('Verification link has expired. Please request a new one.')
+          break
+        case 'invalid_verification':
+          setError('Invalid verification. Please try again.')
+          break
+        case 'verification_failed':
+          setError('Email verification failed. Please try again.')
+          break
+        default:
+          setError('An error occurred. Please try again.')
+      }
+    }
+  }, [searchParams])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -64,12 +95,16 @@ export default function ParentLoginPage() {
       if (data.success) {
         toast.success("Login successful!")
         setIsRedirecting(true)
-        
+
         setTimeout(() => {
           router.push('/parent/dashboard')
         }, 1000)
       } else {
-        throw new Error(data.error || 'Login failed')
+        if (data.needsVerification) {
+          setError("Your email is not verified. We have sent an email for verification. Please click the link and verify to proceed with login.")
+        } else {
+          setError(data.error || 'Login failed')
+        }
       }
     } catch (error) {
       console.error('Login error:', error)
@@ -245,7 +280,17 @@ export default function ParentLoginPage() {
                   Access your parent dashboard
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                {successMessage && (
+                  <Alert className="border-green-200 bg-green-50">
+                    <AlertDescription className="text-green-800">{successMessage}</AlertDescription>
+                  </Alert>
+                )}
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
@@ -273,8 +318,8 @@ export default function ParentLoginPage() {
                       className="rounded-lg border-slate-300"
                     />
                   </div>
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     className="w-full bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full py-6"
                     disabled={loading || isRedirecting}
                   >
@@ -284,8 +329,8 @@ export default function ParentLoginPage() {
 
                 <div className="mt-4 text-center text-sm text-gray-600">
                   Don't have an account?{' '}
-                  <Link 
-                    href="/parent/signup" 
+                  <Link
+                    href="/parent/signup"
                     className="text-pathpiper-teal hover:underline font-medium"
                   >
                     Sign up
@@ -304,5 +349,20 @@ export default function ParentLoginPage() {
         </div>
       </footer>
     </main>
+  )
+}
+
+export default function ParentLoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <ParentLoginContent />
+    </Suspense>
   )
 }

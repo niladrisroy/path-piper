@@ -23,7 +23,7 @@ async function mockSendEmail() {
   return { success: true, data: { messageId: 'mocked_id' } };
 }
 
-export type EmailTemplate = 'verification' | 'parent-approval' | 'password-reset';
+export type EmailTemplate = 'verification' | 'parent-approval' | 'password-reset' | 'parent-email-verification';
 
 export async function sendEmail(
   template: EmailTemplate,
@@ -34,6 +34,7 @@ export async function sendEmail(
     studentName?: string;
     approvalLink?: string;
     resetLink?: string;
+    parentName?: string;
   }
 ) {
   try {
@@ -171,6 +172,22 @@ export async function sendEmail(
             <p style="color: #9ca3af; font-size: 12px; text-align: center;">
               © ${new Date().getFullYear()} PathPiper. All rights reserved.
             </p>
+          </div>
+        `;
+        break;
+        
+        case 'parent-email-verification':
+        subject = 'Verify Your PathPiper Parent Account Email';
+        html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #2D5AA0;">Verify Your Email Address</h2>
+            <p>Hello ${data.parentName},</p>
+            <p>Thank you for creating a PathPiper parent account! To complete your registration and access your dashboard, please verify your email address.</p>
+            <div style="margin: 30px 0; text-align: center;">
+              <a href="${data.verificationLink}" style="background-color: #2D5AA0; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Verify Email Address</a>
+            </div>
+            <p>This verification link will expire in 24 hours. If you didn't create this account, please ignore this email.</p>
+            <p>Best regards,<br>The PathPiper Team</p>
           </div>
         `;
         break;

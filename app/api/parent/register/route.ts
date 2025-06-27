@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { prisma } from '@/lib/prisma'
+import { sendEmail } from '@/lib/email'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -54,20 +55,45 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create parent profile in database
+    // Generate email verification token
+    const verificationToken = Buffer.from(`${email}:${Date.now()}`).toString('base64')
+
+    // Create parent profile in database with email_verified as false
     const parentProfile = await prisma.parentProfile.create({
       data: {
         name: name,
         email: email,
         auth_id: authData.user.id,
+        emailVerified: false,
+        verificationToken: verificationToken,
       }
     })
 
     console.log('Parent profile created:', parentProfile.id)
 
+    // Send email verification email
+    try {
+      const baseUrl = 'https://pathpiper.replit.app';
+      const verificationLink = `${baseUrl}/api/parent/verify-email?token=${verificationToken}`;
+      
+      await sendEmail(
+        'parent-email-verification',
+        email,
+        {
+          parentName: name,
+          verificationLink: verificationLink
+        }
+      );
+      console.log('📧 Parent email verification sent successfully');
+    } catch (emailError) {
+      console.error('❌ Failed to send parent email verification:', emailError);
+      // Continue with registration even if email fails
+    }
+
     return NextResponse.json({
       success: true,
-      parentId: parentProfile.id.toString()
+      parentId: parentProfile.id.toString(),
+      message: 'Account created successfully! Please check your email to verify your account.'
     })
 
   } catch (error) {
