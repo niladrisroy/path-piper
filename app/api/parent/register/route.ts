@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     const parentProfile = await prisma.parentProfile.create({
       data: {
         email: email,
-        auth_id: authData.user.id,
+        authId: authData.user.id,
       }
     })
 
