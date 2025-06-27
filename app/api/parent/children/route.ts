@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
@@ -33,9 +32,6 @@ export async function GET(request: NextRequest) {
       where: {
         parentId: parseInt(parentId),
         role: 'student'
-      },
-      include: {
-        student: true
       },
       orderBy: {
         firstName: 'asc'
