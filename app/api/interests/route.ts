@@ -50,6 +50,16 @@ export async function GET(request: NextRequest) {
       } else {
         console.log('⚠️ Student profile found but no age_group set, using default:', ageGroup)
       }
+    } else if (profile.role === 'parent') {
+      // For parent requests, use the age group override from query params
+      const { searchParams } = new URL(request.url)
+      const ageGroupOverride = searchParams.get('ageGroup')
+      if (ageGroupOverride) {
+        ageGroup = ageGroupOverride
+        console.log('ℹ️ Parent user accessing interests, using age group from query parameter:', ageGroup)
+      } else {
+        console.log('ℹ️ Parent user accessing interests, no age group parameter provided. Using default age group:', ageGroup)
+      }
     } else {
       console.log('ℹ️ User is not a student, using default age group:', ageGroup)
     }

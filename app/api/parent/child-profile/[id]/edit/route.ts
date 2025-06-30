@@ -72,12 +72,35 @@ export async function PUT(
 
         // Add new interests
         if (data.interests && data.interests.length > 0) {
-          await prisma.userInterest.createMany({
-            data: data.interests.map((interestId: string) => ({
+          const interestRecords = []
+
+          for (const interestName of data.interests) {
+            // Check if interest exists in database
+            let existingInterest = await prisma.interest.findFirst({
+              where: { name: interestName }
+            })
+
+            // If interest doesn't exist, create it
+            if (!existingInterest) {
+              existingInterest = await prisma.interest.create({
+                data: {
+                  name: interestName,
+                  categoryId: 1 // Default to first category or create custom category
+                }
+              })
+            }
+
+            interestRecords.push({
               userId: childId,
-              interestId: interestId
-            }))
-          })
+              interestId: existingInterest.id
+            })
+          }
+
+          if (interestRecords.length > 0) {
+            await prisma.userInterest.createMany({
+              data: interestRecords
+            })
+          }
         }
         break
 
@@ -89,13 +112,45 @@ export async function PUT(
 
         // Add new skills
         if (data.skills && data.skills.length > 0) {
-          await prisma.userSkill.createMany({
-            data: data.skills.map((skill: any) => ({
+          const skillRecords = []
+
+          for (const skillData of data.skills) {
+            let existingSkill = null
+
+            // If skillId is provided, use existing skill
+            if (skillData.skillId) {
+              existingSkill = await prisma.skill.findUnique({
+                where: { id: skillData.skillId }
+              })
+            } else {
+              // Check if skill exists by name
+              existingSkill = await prisma.skill.findFirst({
+                where: { name: skillData.name }
+              })
+            }
+
+            // If skill doesn't exist, create it
+            if (!existingSkill) {
+              existingSkill = await prisma.skill.create({
+                data: {
+                  name: skillData.name,
+                  categoryId: 1 // Default to first category
+                }
+              })
+            }
+
+            skillRecords.push({
               userId: childId,
-              skillId: skill.skillId,
-              proficiencyLevel: skill.proficiencyLevel
-            }))
-          })
+              skillId: existingSkill.id,
+              proficiencyLevel: skillData.proficiencyLevel || 3
+            })
+          }
+
+          if (skillRecords.length > 0) {
+            await prisma.userSkill.createMany({
+              data: skillRecords
+            })
+          }
         }
         break
 

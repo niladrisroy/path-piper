@@ -738,50 +738,29 @@ export default function EditSectionDialog({
                 </p>
               </div>
             ) : (
-              <div className="flex-1 overflow-y-auto space-y-4">
-                {selectedSkills.map((skill, index) => (
-                  <div key={skill.id || `${skill.name}-${index}`} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h4 className="font-medium text-gray-800 dark:text-gray-200">{skill.name}</h4>
-                        {skill.category && (
-                          <Badge variant="secondary" className="text-xs mt-1">
-                            {skill.category}
-                          </Badge>
-                        )}
-                      </div>
+              <div className="flex-1 overflow-y-auto">
+                <div className="flex flex-wrap gap-2">
+                  {selectedSkills.map((skill, index) => (
+                    <span
+                      key={skill.id || `${skill.name}-${index}`}
+                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                    >
+                      {skill.name}
+                      <span className="ml-2 text-xs text-blue-500 dark:text-blue-400">
+                        {getLevelLabel(skill.level)}
+                      </span>
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
                         onClick={() => removeSkill(skill.name)}
-                        className="text-gray-400 hover:text-red-500"
+                        className="ml-2 p-0 h-auto text-blue-700 dark:text-blue-300 hover:text-red-500 hover:bg-transparent"
                       >
-                        <X size={16} />
+                        <X size={14} />
                       </Button>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-500">Proficiency Level</span>
-                        <span className="font-medium text-pathpiper-teal">
-                          {getLevelLabel(skill.level)}
-                        </span>
-                      </div>
-                      <Slider
-                        value={[skill.level]}
-                        min={1}
-                        max={5}
-                        step={1}
-                        onValueChange={(value) => updateSkillLevel(skill.name, value[0])}
-                        className="py-2"
-                      />
-                      <div className="flex justify-between text-xs text-gray-400">
-                        <span>Beginner</span>
-                        <span>Expert</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
           </div>
