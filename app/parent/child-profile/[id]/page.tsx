@@ -393,7 +393,6 @@ export default function ParentChildProfilePage() {
                     <div className="flex flex-wrap gap-2">
                       {childData.profile.userInterests.map((userInterest) => (
                         <Badge key={userInterest.id} variant="secondary" className="text-sm">
-                          <Heart className="w-3 h-3 mr-1" />
                           {userInterest.interest.name}
                         </Badge>
                       ))}
@@ -427,26 +426,11 @@ export default function ParentChildProfilePage() {
                 </CardHeader>
                 <CardContent>
                   {childData.profile.userSkills && childData.profile.userSkills.length > 0 ? (
-                    <div className="space-y-4">
+                    <div className="flex flex-wrap gap-2">
                       {childData.profile.userSkills.map((userSkill) => (
-                        <div key={userSkill.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div className="flex items-center space-x-3">
-                            <Sparkles className="w-5 h-5 text-yellow-500" />
-                            <div>
-                              <span className="font-medium">{userSkill.skill.name}</span>
-                              <p className="text-sm text-gray-600">{userSkill.skill.category.name}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-24 bg-gray-200 rounded-full h-2">
-                              <div 
-                                className="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full"
-                                style={{ width: `${userSkill.proficiencyLevel}%` }}
-                              ></div>
-                            </div>
-                            <span className="text-sm font-medium">{userSkill.proficiencyLevel}%</span>
-                          </div>
-                        </div>
+                        <Badge key={userSkill.id} variant="secondary" className="text-sm">
+                          {userSkill.skill.name}
+                        </Badge>
                       ))}
                     </div>
                   ) : (
