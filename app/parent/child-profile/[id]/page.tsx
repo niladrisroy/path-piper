@@ -1,0 +1,665 @@
+
+"use client"
+
+import { useState, useEffect } from "react"
+import { useRouter, useParams } from "next/navigation"
+import Image from "next/image"
+import Link from "next/link"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { toast } from "sonner"
+import EditSectionDialog from "@/components/parent/edit-section-dialog"
+import { 
+  User, 
+  Edit3, 
+  GraduationCap, 
+  Heart, 
+  Sparkles, 
+  Trophy, 
+  Users, 
+  MapPin,
+  Mail,
+  Phone,
+  Globe,
+  LogOut,
+  Plus,
+  Trash2
+} from "lucide-react"
+
+interface ChildData {
+  id: string
+  profile: {
+    firstName: string
+    lastName: string
+    bio?: string
+    location?: string
+    profileImageUrl?: string
+    coverImageUrl?: string
+    tagline?: string
+    userInterests: Array<{
+      id: string
+      interest: {
+        id: string
+        name: string
+        category: { name: string }
+      }
+    }>
+    userSkills: Array<{
+      id: string
+      skill: {
+        id: string
+        name: string
+        category: { name: string }
+      }
+      proficiencyLevel: number
+    }>
+    socialLinks: Array<{
+      id: string
+      platform: string
+      url: string
+    }>
+    careerGoals: Array<{
+      id: string
+      title: string
+      description: string
+      targetDate: string
+    }>
+    customBadges: Array<{
+      id: string
+      title: string
+      description: string
+      iconUrl?: string
+      earnedDate: string
+    }>
+  }
+  educationHistory: Array<{
+    id: string
+    institutionName: string
+    institutionTypeName?: string
+    degreeProgram?: string
+    fieldOfStudy?: string
+    subjects?: string[]
+    startDate: string
+    endDate?: string
+    isCurrent: boolean
+    gradeLevel?: string
+    gpa?: number
+    achievements?: string[]
+    description?: string
+  }>
+  connections?: Array<{
+    id: string
+    user: {
+      firstName: string
+      lastName: string
+      profileImageUrl?: string
+      role: string
+    }
+  }>
+  achievements?: Array<{
+    id: string
+    title: string
+    description: string
+    earnedDate: string
+    iconUrl?: string
+  }>
+}
+
+export default function ParentChildProfilePage() {
+  const [childData, setChildData] = useState<ChildData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [parentName, setParentName] = useState("")
+  const [activeTab, setActiveTab] = useState("about")
+  const [editingSection, setEditingSection] = useState<string | null>(null)
+  const router = useRouter()
+  const params = useParams()
+  const childId = params.id as string
+
+  useEffect(() => {
+    fetchChildProfile()
+  }, [childId])
+
+  const fetchChildProfile = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/parent/child-profile/${childId}`, {
+        credentials: 'include'
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          router.push('/parent/login')
+          return
+        }
+        if (response.status === 403) {
+          setError('You do not have permission to view this profile')
+          return
+        }
+        throw new Error('Failed to fetch child profile')
+      }
+
+      const data = await response.json()
+      setChildData(data.child)
+      setParentName(data.parentName || "Parent")
+    } catch (error) {
+      console.error('Error fetching child profile:', error)
+      setError('Failed to load child profile')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/parent/logout', {
+        method: 'POST',
+        credentials: 'include'
+      })
+      router.push('/parent/login')
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
+
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+        <header className="w-full py-4 px-6 flex justify-between items-center bg-white border-b border-slate-200">
+          <Link href="/" className="h-10">
+            <Image
+              src="/images/pathpiper-logo-full.png"
+              width={180}
+              height={40}
+              alt="PathPiper Logo"
+              className="h-full w-auto"
+            />
+          </Link>
+        </header>
+        <main className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-pathpiper-teal"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading profile...</p>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+        <header className="w-full py-4 px-6 flex justify-between items-center bg-white border-b border-slate-200">
+          <Link href="/" className="h-10">
+            <Image
+              src="/images/pathpiper-logo-full.png"
+              width={180}
+              height={40}
+              alt="PathPiper Logo"
+              className="h-full w-auto"
+            />
+          </Link>
+        </header>
+        <main className="flex-grow flex items-center justify-center">
+          <div className="text-center max-w-md">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <Button onClick={() => router.push('/parent/dashboard')}>
+              Back to Dashboard
+            </Button>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  if (!childData) return null
+
+  return (
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+      {/* Header */}
+      <header className="w-full py-4 px-6 flex justify-between items-center bg-white border-b border-slate-200">
+        <Link href="/" className="h-10">
+          <Image
+            src="/images/pathpiper-logo-full.png"
+            width={180}
+            height={40}
+            alt="PathPiper Logo"
+            className="h-full w-auto"
+          />
+        </Link>
+        <div className="flex items-center space-x-4">
+          <Button
+            variant="ghost"
+            onClick={() => router.push('/parent/dashboard')}
+            className="text-gray-600"
+          >
+            Back to Dashboard
+          </Button>
+          <span className="text-gray-700 font-medium">Welcome, {parentName}</span>
+          <Button 
+            variant="ghost" 
+            onClick={handleLogout}
+            className="text-gray-600 hover:text-red-600"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </Button>
+        </div>
+      </header>
+
+      {/* Profile Header */}
+      <div className="relative">
+        {/* Cover Image */}
+        <div className="h-48 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
+          {childData.profile.coverImageUrl && (
+            <Image
+              src={childData.profile.coverImageUrl}
+              alt="Cover"
+              fill
+              className="object-cover"
+            />
+          )}
+        </div>
+
+        {/* Profile Info Overlay */}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-6">
+          <div className="container mx-auto flex items-end space-x-6">
+            <Avatar className="w-32 h-32 border-4 border-white">
+              <AvatarImage 
+                src={childData.profile.profileImageUrl} 
+                alt={`${childData.profile.firstName} ${childData.profile.lastName}`} 
+              />
+              <AvatarFallback className="bg-gradient-to-r from-teal-400 to-blue-500 text-white text-2xl font-bold">
+                {getInitials(childData.profile.firstName, childData.profile.lastName)}
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="text-white mb-4">
+              <h1 className="text-3xl font-bold">
+                {childData.profile.firstName} {childData.profile.lastName}
+              </h1>
+              {childData.profile.tagline && (
+                <p className="text-lg opacity-90">{childData.profile.tagline}</p>
+              )}
+              {childData.profile.location && (
+                <div className="flex items-center mt-2 opacity-80">
+                  <MapPin className="w-4 h-4 mr-1" />
+                  <span>{childData.profile.location}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <main className="flex-grow">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-7">
+              <TabsTrigger value="about">About</TabsTrigger>
+              <TabsTrigger value="interests">Interests</TabsTrigger>
+              <TabsTrigger value="skills">Skills</TabsTrigger>
+              <TabsTrigger value="education">Education</TabsTrigger>
+              <TabsTrigger value="achievements">Achievements</TabsTrigger>
+              <TabsTrigger value="goals">Goals</TabsTrigger>
+              <TabsTrigger value="connections">Connections</TabsTrigger>
+            </TabsList>
+
+            {/* About Tab */}
+            <TabsContent value="about" className="space-y-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>About {childData.profile.firstName}</CardTitle>
+                    <CardDescription>Personal information and bio</CardDescription>
+                  </div>
+                  <EditSectionDialog 
+                    section="about" 
+                    childId={childId} 
+                    currentData={childData.profile}
+                    onUpdate={fetchChildProfile}
+                  >
+                    <Button variant="outline" size="sm">
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      Edit
+                    </Button>
+                  </EditSectionDialog>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {childData.profile.bio ? (
+                    <p className="text-gray-700">{childData.profile.bio}</p>
+                  ) : (
+                    <p className="text-gray-500 italic">No bio added yet</p>
+                  )}
+                  
+                  {childData.profile.socialLinks && childData.profile.socialLinks.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold mb-2">Social Links</h4>
+                      <div className="space-y-2">
+                        {childData.profile.socialLinks.map((link) => (
+                          <div key={link.id} className="flex items-center space-x-2">
+                            <Globe className="w-4 h-4" />
+                            <span className="capitalize">{link.platform}:</span>
+                            <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                              {link.url}
+                            </a>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Interests Tab */}
+            <TabsContent value="interests" className="space-y-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Interests & Passions</CardTitle>
+                    <CardDescription>Things {childData.profile.firstName} is passionate about</CardDescription>
+                  </div>
+                  <EditSectionDialog 
+                    section="interests" 
+                    childId={childId} 
+                    currentData={childData.profile}
+                    onUpdate={fetchChildProfile}
+                  >
+                    <Button variant="outline" size="sm">
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      Edit
+                    </Button>
+                  </EditSectionDialog>
+                </CardHeader>
+                <CardContent>
+                  {childData.profile.userInterests && childData.profile.userInterests.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {childData.profile.userInterests.map((userInterest) => (
+                        <Badge key={userInterest.id} variant="secondary" className="text-sm">
+                          <Heart className="w-3 h-3 mr-1" />
+                          {userInterest.interest.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 italic">No interests added yet</p>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Skills Tab */}
+            <TabsContent value="skills" className="space-y-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Skills & Abilities</CardTitle>
+                    <CardDescription>{childData.profile.firstName}'s skill portfolio</CardDescription>
+                  </div>
+                  <EditSectionDialog 
+                    section="skills" 
+                    childId={childId} 
+                    currentData={childData.profile}
+                    onUpdate={fetchChildProfile}
+                  >
+                    <Button variant="outline" size="sm">
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      Edit
+                    </Button>
+                  </EditSectionDialog>
+                </CardHeader>
+                <CardContent>
+                  {childData.profile.userSkills && childData.profile.userSkills.length > 0 ? (
+                    <div className="space-y-4">
+                      {childData.profile.userSkills.map((userSkill) => (
+                        <div key={userSkill.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <Sparkles className="w-5 h-5 text-yellow-500" />
+                            <div>
+                              <span className="font-medium">{userSkill.skill.name}</span>
+                              <p className="text-sm text-gray-600">{userSkill.skill.category.name}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-24 bg-gray-200 rounded-full h-2">
+                              <div 
+                                className="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full"
+                                style={{ width: `${userSkill.proficiencyLevel}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-sm font-medium">{userSkill.proficiencyLevel}%</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 italic">No skills added yet</p>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Education Tab */}
+            <TabsContent value="education" className="space-y-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Education History</CardTitle>
+                    <CardDescription>{childData.profile.firstName}'s educational journey</CardDescription>
+                  </div>
+                  <div className="flex space-x-2">
+                    <EditSectionDialog 
+                      section="education" 
+                      childId={childId} 
+                      currentData={null}
+                      onUpdate={fetchChildProfile}
+                    >
+                      <Button variant="outline" size="sm">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Education
+                      </Button>
+                    </EditSectionDialog>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {childData.educationHistory && childData.educationHistory.length > 0 ? (
+                    <div className="space-y-4">
+                      {childData.educationHistory.map((education) => (
+                        <div key={education.id} className="border rounded-lg p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-start space-x-3">
+                              <GraduationCap className="w-6 h-6 text-blue-600 mt-1" />
+                              <div>
+                                <h4 className="font-semibold text-lg">{education.institutionName}</h4>
+                                {education.institutionTypeName && (
+                                  <p className="text-sm text-gray-600">{education.institutionTypeName}</p>
+                                )}
+                                {education.degreeProgram && (
+                                  <p className="font-medium">{education.degreeProgram}</p>
+                                )}
+                                {education.fieldOfStudy && (
+                                  <p className="text-gray-700">{education.fieldOfStudy}</p>
+                                )}
+                                {education.gradeLevel && (
+                                  <p className="text-sm text-gray-600">Grade: {education.gradeLevel}</p>
+                                )}
+                                <p className="text-sm text-gray-500">
+                                  {new Date(education.startDate).getFullYear()} - {
+                                    education.isCurrent ? 'Present' : 
+                                    education.endDate ? new Date(education.endDate).getFullYear() : 'Present'
+                                  }
+                                </p>
+                              </div>
+                            </div>
+                            {education.isCurrent && (
+                              <Badge variant="outline" className="text-green-600 border-green-600">
+                                Current
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          {education.subjects && education.subjects.length > 0 && (
+                            <div className="mt-3">
+                              <p className="text-sm font-medium mb-2">Subjects:</p>
+                              <div className="flex flex-wrap gap-1">
+                                {education.subjects.map((subject, index) => (
+                                  <Badge key={index} variant="outline" className="text-xs">
+                                    {subject}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {education.description && (
+                            <p className="mt-3 text-sm text-gray-700">{education.description}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 italic">No education history added yet</p>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Achievements Tab */}
+            <TabsContent value="achievements" className="space-y-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Achievements & Badges</CardTitle>
+                    <CardDescription>{childData.profile.firstName}'s accomplishments</CardDescription>
+                  </div>
+                  <EditSectionDialog 
+                    section="achievements" 
+                    childId={childId} 
+                    currentData={null}
+                    onUpdate={fetchChildProfile}
+                  >
+                    <Button variant="outline" size="sm">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Achievement
+                    </Button>
+                  </EditSectionDialog>
+                </CardHeader>
+                <CardContent>
+                  {childData.profile.customBadges && childData.profile.customBadges.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {childData.profile.customBadges.map((badge) => (
+                        <div key={badge.id} className="border rounded-lg p-4 flex items-start space-x-3">
+                          <Trophy className="w-8 h-8 text-yellow-500 mt-1" />
+                          <div>
+                            <h4 className="font-semibold">{badge.title}</h4>
+                            <p className="text-sm text-gray-600 mt-1">{badge.description}</p>
+                            <p className="text-xs text-gray-500 mt-2">
+                              Earned: {new Date(badge.earnedDate).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 italic">No achievements added yet</p>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Goals Tab */}
+            <TabsContent value="goals" className="space-y-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Goals & Aspirations</CardTitle>
+                    <CardDescription>{childData.profile.firstName}'s future plans</CardDescription>
+                  </div>
+                  <EditSectionDialog 
+                    section="goals" 
+                    childId={childId} 
+                    currentData={null}
+                    onUpdate={fetchChildProfile}
+                  >
+                    <Button variant="outline" size="sm">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Goal
+                    </Button>
+                  </EditSectionDialog>
+                </CardHeader>
+                <CardContent>
+                  {childData.profile.careerGoals && childData.profile.careerGoals.length > 0 ? (
+                    <div className="space-y-4">
+                      {childData.profile.careerGoals.map((goal) => (
+                        <div key={goal.id} className="border rounded-lg p-4">
+                          <h4 className="font-semibold text-lg">{goal.title}</h4>
+                          <p className="text-gray-700 mt-2">{goal.description}</p>
+                          {goal.targetDate && (
+                            <p className="text-sm text-gray-500 mt-2">
+                              Target Date: {new Date(goal.targetDate).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 italic">No goals added yet</p>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Connections Tab */}
+            <TabsContent value="connections" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Connections</CardTitle>
+                  <CardDescription>{childData.profile.firstName}'s network</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {childData.connections && childData.connections.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {childData.connections.map((connection) => (
+                        <div key={connection.id} className="border rounded-lg p-4 text-center">
+                          <Avatar className="w-16 h-16 mx-auto mb-3">
+                            <AvatarImage src={connection.user.profileImageUrl} />
+                            <AvatarFallback>
+                              {getInitials(connection.user.firstName, connection.user.lastName)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <h4 className="font-medium">{connection.user.firstName} {connection.user.lastName}</h4>
+                          <Badge variant="outline" className="mt-1 capitalize">
+                            {connection.user.role}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 italic">No connections yet</p>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="w-full py-4 px-6 bg-white border-t border-slate-200">
+        <div className="container mx-auto flex justify-center">
+          <p className="text-slate-500 text-sm">© {new Date().getFullYear()} PathPiper. All rights reserved.</p>
+        </div>
+      </footer>
+    </div>
+  )
+}

@@ -261,7 +261,7 @@ export default function ParentDashboard() {
                           ✅ Account Approved
                         </div>
                       )}
-                      <Link href={`/student/profile/view/${child.id}`}>
+                      <Link href={`/parent/child-profile/${child.id}`}>
                         <Button 
                           className="w-full bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white"
                         >
