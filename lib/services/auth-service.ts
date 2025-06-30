@@ -175,6 +175,8 @@ export async function registerStudent(data: UserRegistrationData) {
 
       // Send email verification to student (under 16)
       try {
+        // Use the specific PathPiper deployment domain
+        const baseUrl = 'https://pathpiper.replit.app';
         const studentVerificationToken = Buffer.from(`${data.email}:${authData.user.id}:${Date.now()}`).toString('base64');
         const studentVerificationLink = `${baseUrl}/api/auth/verify-student-email?token=${studentVerificationToken}`;
         
@@ -211,16 +213,18 @@ export async function registerStudent(data: UserRegistrationData) {
       const updatedProfile = await prisma.profile.update({
         where: { id: profile.id },
         data: {
-          parentId: parentId,
+          parent: {
+            connect: { id: parentId }
+          },
           parentVerified: false,
           email: data.email,
           emailVerified: false, // Set to false for under-16 students requiring verification
         },
       });
-      console.log('✅ Profile updated with parent_id:', updatedProfile.parentId);
+      console.log('✅ Profile updated with parent connection');
     } else {
       console.log('ℹ️ No parent linking required');
-      // Still set email and email_verified for students who don't need parent approval
+      // Still set email and emailVerified for students who don't need parent approval
       await prisma.profile.update({
         where: { id: profile.id },
         data: {
