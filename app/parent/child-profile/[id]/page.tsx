@@ -183,22 +183,21 @@ export default function ParentChildProfilePage() {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
   }
 
+  const [editingItemData, setEditingItemData] = useState<any>(null)
+
   const handleEditEducation = (education: any) => {
-    // Open edit dialog for education
+    setEditingItemData(education)
     setEditingSection('education')
-    // You can pass education data to the EditSectionDialog component
   }
 
   const handleEditAchievement = (achievement: any) => {
-    // Open edit dialog for achievement
+    setEditingItemData(achievement)
     setEditingSection('achievements')
-    // You can pass achievement data to the EditSectionDialog component
   }
 
   const handleEditGoal = (goal: any) => {
-    // Open edit dialog for goal
+    setEditingItemData(goal)
     setEditingSection('goals')
-    // You can pass goal data to the EditSectionDialog component
   }
 
   const handleDeleteEducation = (id: string, name: string) => {
@@ -856,7 +855,10 @@ export default function ParentChildProfilePage() {
       {editingSection && childData && (
         <EditSectionDialog
           isOpen={!!editingSection}
-          onClose={() => setEditingSection(null)}
+          onClose={() => {
+            setEditingSection(null)
+            setEditingItemData(null)
+          }}
           section={editingSection}
           childProfile={{
             ...childData.profile,
@@ -864,6 +866,7 @@ export default function ParentChildProfilePage() {
           }}
           onSave={fetchChildProfile}
           childId={childId}
+          editingItemData={editingItemData}
         />
       )}
 

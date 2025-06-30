@@ -175,55 +175,54 @@ export async function PUT(
         break
 
       case 'education':
-        if (data.educationId) {
+        if (data.id) {
           // Update existing education
           await prisma.studentEducationHistory.update({
-            where: { id: data.educationId },
+            where: { id: data.id },
             data: {
               institutionName: data.institutionName,
               institutionTypeId: data.institutionTypeId,
-              degreeProgram: data.degreeProgram,
-              fieldOfStudy: data.fieldOfStudy,
-              subjects: data.subjects,
-              startDate: data.startDate,
-              endDate: data.endDate,
-              isCurrent: data.isCurrent,
-              gradeLevel: data.gradeLevel,
-              gpa: data.gpa,
-              description: data.description
+              degreeProgram: data.degreeProgram || null,
+              fieldOfStudy: data.fieldOfStudy || null,
+              subjects: data.subjects || [],
+              gradeLevel: data.gradeLevel || null,
+              startDate: data.startDate ? new Date(data.startDate) : new Date(),
+              endDate: data.endDate ? new Date(data.endDate) : null,
+              isCurrent: data.isCurrent || false,
+              description: data.description || null
             }
           })
         } else {
-          // Create new education entry
+          // Create new education
           await prisma.studentEducationHistory.create({
             data: {
               studentId: childId,
               institutionName: data.institutionName,
               institutionTypeId: data.institutionTypeId,
-              degreeProgram: data.degreeProgram,
-              fieldOfStudy: data.fieldOfStudy,
-              subjects: data.subjects,
-              startDate: data.startDate,
-              endDate: data.endDate,
-              isCurrent: data.isCurrent,
-              gradeLevel: data.gradeLevel,
-              gpa: data.gpa,
-              description: data.description
+              degreeProgram: data.degreeProgram || null,
+              fieldOfStudy: data.fieldOfStudy || null,
+              subjects: data.subjects || [],
+              gradeLevel: data.gradeLevel || null,
+              startDate: data.startDate ? new Date(data.startDate) : new Date(),
+              endDate: data.endDate ? new Date(data.endDate) : null,
+              isCurrent: data.isCurrent || false,
+              description: data.description || null
             }
           })
         }
         break
 
       case 'goals':
-        if (data.goalId) {
+        if (data.id) {
           // Update existing goal
           await prisma.goal.update({
-            where: { id: data.goalId },
+            where: { id: parseInt(data.id) },
             data: {
               title: data.title,
               description: data.description,
               category: data.category,
-              timeframe: data.timeframe
+              timeframe: data.timeframe,
+              completed: data.completed || false
             }
           })
         } else {
@@ -234,25 +233,38 @@ export async function PUT(
               title: data.title,
               description: data.description,
               category: data.category,
-              timeframe: data.timeframe,
-              completed: false
+              timeframe: data.timeframe
             }
           })
         }
         break
 
       case 'achievements':
-          // Create a new achievement using the userAchievement table
+        if (data.id) {
+          // Update existing achievement
+          await prisma.userAchievement.update({
+            where: { id: parseInt(data.id) },
+            data: {
+              name: data.name,
+              description: data.description,
+              dateOfAchievement: new Date(data.dateOfAchievement),
+              achievementTypeId: parseInt(data.achievementTypeId),
+              achievementImageIcon: data.achievementImageIcon || null
+            }
+          })
+        } else {
+          // Create new achievement
           await prisma.userAchievement.create({
             data: {
               userId: childId,
-              name: data.name, // Using 'name' field as per schema
+              name: data.name,
               description: data.description,
-              dateOfAchievement: data.dateOfAchievement ? new Date(data.dateOfAchievement) : new Date(),
-              achievementImageIcon: data.achievementImageIcon || null,
-              achievementTypeId: data.achievementTypeId ? parseInt(data.achievementTypeId) : null
+              dateOfAchievement: new Date(data.dateOfAchievement),
+              achievementTypeId: parseInt(data.achievementTypeId),
+              achievementImageIcon: data.achievementImageIcon
             }
           })
+        }
         break
 
       case 'social-links':

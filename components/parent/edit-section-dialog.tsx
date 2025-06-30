@@ -43,9 +43,14 @@ interface SkillCategory {
 interface EditSectionDialogProps {
   section: string
   childId: string
-  currentData: any
+  currentData?: any
   onUpdate: () => void
-  children: React.ReactNode
+  children?: React.ReactNode
+  isOpen?: boolean
+  onClose?: () => void
+  childProfile?: any
+  onSave?: () => void
+  editingItemData?: any
 }
 
 export default function EditSectionDialog({
@@ -53,9 +58,19 @@ export default function EditSectionDialog({
   childId,
   currentData,
   onUpdate,
-  children
+  children,
+  isOpen: externalIsOpen,
+  onClose: externalOnClose,
+  childProfile,
+  onSave,
+  editingItemData
 }: EditSectionDialogProps) {
   const [open, setOpen] = useState(false)
+  
+  // Handle external open state control
+  const isControlledExternally = externalIsOpen !== undefined
+  const actualOpen = isControlledExternally ? externalIsOpen : open
+  const actualOnClose = isControlledExternally ? externalOnClose : () => setOpen(false)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState<any>({})
   const [socialLinks, setSocialLinks] = useState<any[]>([])
@@ -81,11 +96,11 @@ export default function EditSectionDialog({
   const [uploadingImage, setUploadingImage] = useState(false)
 
   useEffect(() => {
-    if (open) {
+    if (actualOpen) {
       fetchOptions()
       initializeFormData()
     }
-  }, [open, section])
+  }, [actualOpen, section, editingItemData])
 
   // Filter interests based on search
   useEffect(() => {
@@ -316,12 +331,13 @@ export default function EditSectionDialog({
   const initializeFormData = () => {
     switch (section) {
       case 'about':
+        const aboutData = currentData || childProfile
         setFormData({
-          bio: currentData.bio || '',
-          location: currentData.location || '',
-          tagline: currentData.tagline || ''
+          bio: aboutData?.bio || '',
+          location: aboutData?.location || '',
+          tagline: aboutData?.tagline || ''
         })
-        setSocialLinks(currentData.socialLinks || [])
+        setSocialLinks(aboutData?.socialLinks || [])
         break
       case 'interests':
         fetchExistingData()
@@ -330,25 +346,74 @@ export default function EditSectionDialog({
         fetchExistingData()
         break
       case 'education':
-        setFormData({})
+        if (editingItemData) {
+          // Editing existing education
+          setFormData({
+            id: editingItemData.id,
+            institutionName: editingItemData.institutionName || '',
+            institutionTypeId: editingItemData.institutionTypeId || '',
+            degreeProgram: editingItemData.degreeProgram || '',
+            fieldOfStudy: editingItemData.fieldOfStudy || '',
+            subjects: editingItemData.subjects || [],
+            gradeLevel: editingItemData.gradeLevel || '',
+            startDate: editingItemData.startDate || '',
+            endDate: editingItemData.endDate || '',
+            isCurrent: editingItemData.isCurrent || false,
+            description: editingItemData.description || ''
+          })
+        } else {
+          // Adding new education
+          setFormData({})
+        }
         break
       case 'goals':
-        setFormData({
-          title: '',
-          description: '',
-          category: '',
-          timeframe: ''
-        })
+        if (editingItemData) {
+          // Editing existing goal
+          setFormData({
+            id: editingItemData.id,
+            title: editingItemData.title || '',
+            description: editingItemData.description || '',
+            category: editingItemData.category || '',
+            timeframe: editingItemData.timeframe || '',
+            completed: editingItemData.completed || false
+          })
+        } else {
+          // Adding new goal
+          setFormData({
+            title: '',
+            description: '',
+            category: '',
+            timeframe: ''
+          })
+        }
         break
       case 'achievements':
-        setFormData({
-          name: '',
-          description: '',
-          categoryId: '',
-          achievementTypeId: '',
-          dateOfAchievement: '',
-          achievementImageIcon: ''
-        })
+        if (editingItemData) {
+          // Editing existing achievement
+          setFormData({
+            id: editingItemData.id,
+            name: editingItemData.name || '',
+            description: editingItemData.description || '',
+            categoryId: editingItemData.achievementType?.category?.id?.toString() || '',
+            achievementTypeId: editingItemData.achievementType?.id?.toString() || '',
+            dateOfAchievement: editingItemData.dateOfAchievement || '',
+            achievementImageIcon: editingItemData.achievementImageIcon || ''
+          })
+          // Fetch achievement types for the selected category
+          if (editingItemData.achievementType?.category?.id) {
+            fetchAchievementTypes(editingItemData.achievementType.category.id)
+          }
+        } else {
+          // Adding new achievement
+          setFormData({
+            name: '',
+            description: '',
+            categoryId: '',
+            achievementTypeId: '',
+            dateOfAchievement: '',
+            achievementImageIcon: ''
+          })
+        }
         break
     }
   }
@@ -566,25 +631,36 @@ export default function EditSectionDialog({
           break
       }
 
+      // Determine if this is an edit or add operation
+      const isEditing = formData.id !== undefined
+      const method = isEditing ? 'PUT' : 'PUT' // We'll use PUT for both, but include ID for edits
+      
+      const requestBody = {
+        section: requestSection,
+        data: isEditing ? { ...data, id: formData.id } : data
+      }
+
       const response = await fetch(`/api/parent/child-profile/${childId}/edit`, {
-        method: 'PUT',
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({
-          section: requestSection,
-          data
-        })
+        body: JSON.stringify(requestBody)
       })
 
       if (!response.ok) {
         throw new Error('Failed to update profile')
       }
 
-      toast.success('Profile updated successfully!')
-      setOpen(false)
-      onUpdate()
+      toast.success(`${isEditing ? 'Updated' : 'Added'} successfully!`)
+      if (isControlledExternally) {
+        actualOnClose?.()
+        onSave?.()
+      } else {
+        setOpen(false)
+        onUpdate()
+      }
     } catch (error) {
       console.error('Error updating profile:', error)
       toast.error('Failed to update profile')
@@ -1312,13 +1388,16 @@ export default function EditSectionDialog({
   }
 
   const getSectionTitle = () => {
+    const isEditing = editingItemData !== null && editingItemData !== undefined
+    const prefix = isEditing ? 'Edit' : 'Add'
+    
     switch (section) {
       case 'about': return 'Edit About Information'
       case 'interests': return 'Edit Interests & Passions'
       case 'skills': return 'Edit Skills & Abilities'
-      case 'education': return 'Add Education Entry'
-      case 'goals': return 'Add Career Goal'
-      case 'achievements': return 'Add Achievement'
+      case 'education': return `${prefix} Education Entry`
+      case 'goals': return `${prefix} Career Goal`
+      case 'achievements': return `${prefix} Achievement`
       default: return 'Edit Section'
     }
   }
@@ -1345,10 +1424,12 @@ export default function EditSectionDialog({
   const isValid = getValidationStatus()
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+    <Dialog open={actualOpen} onOpenChange={isControlledExternally ? externalOnClose : setOpen}>
+      {children && (
+        <DialogTrigger asChild>
+          {children}
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{getSectionTitle()}</DialogTitle>
