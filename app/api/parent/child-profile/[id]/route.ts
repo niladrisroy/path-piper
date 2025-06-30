@@ -86,7 +86,7 @@ export async function GET(
                 createdAt: 'desc'
               }
             },
-            userAchievements: {
+            achievements: {
               include: {
                 achievementType: {
                   include: {
@@ -186,7 +186,7 @@ export async function GET(
         userSkills: childProfile.profile.userSkills,
         socialLinks: childProfile.profile.socialLinks,
         goals: childProfile.profile.goals,
-        userAchievements: childProfile.profile.userAchievements
+        userAchievements: childProfile.profile.achievements
       },
       educationHistory: childProfile.educationHistory.map(edu => ({
         id: edu.id,
