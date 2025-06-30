@@ -180,15 +180,15 @@ export default function EditSectionDialog({
 
   const fetchOptions = async () => {
     try {
-      if (section === 'interests') {
-        const response = await fetch('/api/interests')
+       if (section === 'interests') {
+        const response = await fetch(`/api/parent/child-profile/${childId}/interests`)
         if (response.ok) {
           const data = await response.json()
           setInterestCategories(data)
           setFilteredInterestCategories(data)
         }
       } else if (section === 'skills') {
-        const response = await fetch('/api/skills')
+        const response = await fetch(`/api/parent/child-profile/${childId}/skills`)
         if (response.ok) {
           const data = await response.json()
           setSkillCategories(data.categories || [])
@@ -937,7 +937,7 @@ export default function EditSectionDialog({
                 placeholder={
                   formData.institutionTypeId
                     ? getPlaceholderText(
-                        institutionTypes.find(t => t.id === formData.institutionTypeId)?.slug || 'default',
+                        institutionTypes.find(tt.id === formData.institutionTypeId)?.slug || 'default',
                         'grade'
                       )
                     : 'e.g., Grade 10, 1st Year, Beginner Level'
