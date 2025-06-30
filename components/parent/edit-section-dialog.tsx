@@ -76,7 +76,7 @@ export default function EditSectionDialog({
   const [newSkillLevel, setNewSkillLevel] = useState(3)
 
   const [institutionTypes, setInstitutionTypes] = useState<any[]>([])
-  const [achievementCategories, setAchievementCategories] = useState<any[]>([])
+  const [achievementCategories, setAchievementCategories] = useState<any[]>[])
   const [achievementTypes, setAchievementTypes] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
 
@@ -958,8 +958,7 @@ export default function EditSectionDialog({
               <Input
                 id="institutionName"
                 value={formData.institutionName || ''}
-                onChange={(e) => setFormData```text
-({ ...formData, institutionName: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, institutionName: e.target.value })}
                 placeholder="Name of the institution"
               />
             </div>
@@ -982,46 +981,46 @@ export default function EditSectionDialog({
               </Select>
             </div>
             <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="degreeProgram">Degree/Program</Label>
-                    <Input
-                      id="degreeProgram"
-                      value={formData.degreeProgram || ''}
-                      onChange={(e) => setFormData({ ...formData, degreeProgram: e.target.value })}
-                      placeholder="e.g., Bachelor's in Computer Science"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="fieldOfStudy">Field of Study</Label>
-                    <Input
-                      id="fieldOfStudy"
-                      value={formData.fieldOfStudy || ''}
-                      onChange={(e) => setFormData({ ...formData, fieldOfStudy: e.target.value })}
-                      placeholder="e.g., Computer Science"
-                    />
-                  </div>
-                </div>
+              <div>
+                <Label htmlFor="degreeProgram">Degree/Program</Label>
+                <Input
+                  id="degreeProgram"
+                  value={formData.degreeProgram || ''}
+                  onChange={(e) => setFormData({ ...formData, degreeProgram: e.target.value })}
+                  placeholder="e.g., Bachelor's in Computer Science"
+                />
+              </div>
+              <div>
+                <Label htmlFor="fieldOfStudy">Field of Study</Label>
+                <Input
+                  id="fieldOfStudy"
+                  value={formData.fieldOfStudy || ''}
+                  onChange={(e) => setFormData({ ...formData, fieldOfStudy: e.target.value })}
+                  placeholder="e.g., Computer Science"
+                />
+              </div>
+            </div>
 
-                <div>
-                  <Label htmlFor="subjects">Subjects/Courses <span className="text-red-500">*</span></Label>
-                  <MultiSelect
-                    value={formData.subjects || []}
-                    onChange={(value) => setFormData({ ...formData, subjects: value })}
-                    placeholder="Add subjects studied..."
-                    suggestions={[
-                      // General subjects
-                      'Mathematics', 'English', 'Science', 'History', 'Geography', 'Physics', 'Chemistry', 'Biology',
-                      'Computer Science', 'Information Technology', 'Programming', 'Data Science', 'Web Development',
-                      'Art', 'Music', 'Physical Education', 'Foreign Languages', 'Literature', 'Economics',
-                      'Business Studies', 'Accounting', 'Psychology', 'Sociology', 'Philosophy', 'Environmental Science'
-                    ]}
-                    className="mt-1"
-                    maxItems={20}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Addthe subjects or courses studied at this institution
-                  </p>
-                </div>
+            <div>
+              <Label htmlFor="subjects">Subjects/Courses <span className="text-red-500">*</span></Label>
+              <MultiSelect
+                value={formData.subjects || []}
+                onChange={(value) => setFormData({ ...formData, subjects: value })}
+                placeholder="Add subjects studied..."
+                suggestions={[
+                  // General subjects
+                  'Mathematics', 'English', 'Science', 'History', 'Geography', 'Physics', 'Chemistry', 'Biology',
+                  'Computer Science', 'Information Technology', 'Programming', 'Data Science', 'Web Development',
+                  'Art', 'Music', 'Physical Education', 'Foreign Languages', 'Literature', 'Economics',
+                  'Business Studies', 'Accounting', 'Psychology', 'Sociology', 'Philosophy', 'Environmental Science'
+                ]}
+                className="mt-1"
+                maxItems={20}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Add the subjects or courses studied at this institution
+              </p>
+            </div>
             <div>
               <Label htmlFor="gradeLevel">Grade/Level</Label>
               <Input
@@ -1031,9 +1030,9 @@ export default function EditSectionDialog({
                 placeholder={
                   formData.institutionTypeId
                     ? getPlaceholderText(
-                        institutionTypes.find(tt => tt.id === formData.institutionTypeId)?.slug || 'default',
-                        'grade'
-                      )
+                      institutionTypes.find(t => t.id === formData.institutionTypeId)?.slug || 'default',
+                      'grade'
+                    )
                     : 'e.g., Grade 10, 1st Year, Beginner Level'
                 }
               />
@@ -1104,7 +1103,7 @@ export default function EditSectionDialog({
                 <Label className="text-gray-700 dark:text-gray-300">Category</Label>
                 <Select
                   value={formData.category || ''}
-                  onValueChange={(value) => setFormData({ ...formData, category: value })}
+                  onChange={(e) => setFormData({ ...formData, category: value })}
                 >
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Select a category" />
@@ -1123,7 +1122,7 @@ export default function EditSectionDialog({
                 <Label className="text-gray-700 dark:text-gray-300">Timeframe</Label>
                 <Select
                   value={formData.timeframe || ''}
-                  onValueChange={(value) => setFormData({ ...formData, timeframe: value })}
+                  onChange={(e) => setFormData({ ...formData, timeframe: value })}
                 >
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Select a timeframe" />
@@ -1172,7 +1171,7 @@ export default function EditSectionDialog({
                 <Label htmlFor="category">Category *</Label>
                 <Select
                   value={formData.categoryId || ''}
-                  onValueChange={(value) => {
+                  onChange={(value) => {
                     setFormData({ ...formData, categoryId: value, achievementTypeId: '' })
                     if (value) fetchAchievementTypes(value)
                   }}
@@ -1194,7 +1193,7 @@ export default function EditSectionDialog({
                 <Label htmlFor="type">Achievement Type *</Label>
                 <Select
                   value={formData.achievementTypeId || ''}
-                  onValueChange={(value) => setFormData({ ...formData, achievementTypeId: value })}
+                  onChange={(value) => setFormData({ ...formData, achievementTypeId: value })}
                   disabled={!formData.categoryId}
                 >
                   <SelectTrigger className="mt-1">
@@ -1226,7 +1225,7 @@ export default function EditSectionDialog({
                     <SelectValue placeholder="Month" />
                   </SelectTrigger>
                   <SelectContent>
-                    {["January", "February", "March", "April", "May", "June", 
+                    {["January", "February", "March", "April", "May", "June",
                       "July", "August", "September", "October", "November", "December"].map((month, index) => (
                       <SelectItem key={index} value={index.toString()}>
                         {month}
@@ -1293,9 +1292,9 @@ export default function EditSectionDialog({
 
                 {formData.achievementImageIcon && (
                   <div className="flex items-center gap-2">
-                    <img 
-                      src={formData.achievementImageIcon} 
-                      alt="Achievement icon preview" 
+                    <img
+                      src={formData.achievementImageIcon}
+                      alt="Achievement icon preview"
                       className="h-8 w-8 object-cover rounded border"
                     />
                     <span className="text-sm text-green-600 font-medium">Uploaded</span>
