@@ -91,10 +91,13 @@ export async function PUT(
 
               // If interest doesn't exist, create it
               if (!existingInterest) {
+                // Use specific custom interest category ID 24
+                const customInterestCategoryId = 24
+
                 existingInterest = await prisma.interest.create({
                   data: {
                     name: interestData,
-                    categoryId: 1 // Default to first category or create custom category
+                    categoryId: customInterestCategoryId
                   }
                 })
               }
@@ -144,10 +147,13 @@ export async function PUT(
 
             // If skill doesn't exist, create it
             if (!existingSkill) {
+              // Use specific custom skill category ID 25
+              const customSkillCategoryId = 25
+
               existingSkill = await prisma.skill.create({
                 data: {
                   name: skillData.name,
-                  categoryId: 1 // Default to first category
+                  categoryId: customSkillCategoryId
                 }
               })
             }

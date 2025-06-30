@@ -77,7 +77,7 @@ export default function EditSectionDialog({
 
   const [institutionTypes, setInstitutionTypes] = useState<any[]>([])
   const [achievementCategories, setAchievementCategories] = useState<any[]>([])
-  const [achievementTypes, setAchievementTypes] = useState<any[]>([])
+  const [achievementTypes, setAchievementTypes] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
 
   useEffect(() => {
@@ -148,8 +148,8 @@ export default function EditSectionDialog({
         if (response.ok) {
           const data = await response.json()
           // Flatten the categories and types into a single array for the select dropdown
-          const flatTypes = data.data?.flatMap((category: any) => 
-            category.types?.map((type: any) => ({
+          const flatTypes = data.data?.flatMap((category) => 
+            category.types?.map((type) => ({
               id: type.id,
               name: type.name,
               slug: type.slug,
@@ -171,7 +171,7 @@ export default function EditSectionDialog({
     }
   }
 
-  const fetchAchievementTypes = async (categoryId: string) => {
+  const fetchAchievementTypes = async (categoryId) => {
     try {
       const response = await fetch(`/api/achievement-types?categoryId=${categoryId}`)
       if (response.ok) {
@@ -183,7 +183,7 @@ export default function EditSectionDialog({
     }
   }
 
-  const handleAchievementImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAchievementImageUpload = async (event) => {
     const file = event.target.files?.[0]
     if (!file) return
 
@@ -221,7 +221,7 @@ export default function EditSectionDialog({
         if (response.ok) {
           const data = await response.json()
           const childProfile = data.child || data // Handle both possible response structures
-          const currentInterests = childProfile?.profile?.userInterests?.map((ui: any) => ({
+          const currentInterests = childProfile?.profile?.userInterests?.map((ui) => ({
             id: ui.interest?.id || ui.interestId,
             name: ui.interest?.name || ui.name,
             category: ui.interest?.category?.name || ui.category
@@ -237,7 +237,7 @@ export default function EditSectionDialog({
             setInterestCategories(prevCategories => {
               const updatedCategories = [...prevCategories]
               const existingCustomCategory = updatedCategories.find(cat => cat.name === "Custom")
-              
+
               if (existingCustomCategory) {
                 // Only add custom interests that aren't already there
                 const newCustomInterests = customInterests.filter(customInterest =>
@@ -254,7 +254,7 @@ export default function EditSectionDialog({
                   interests: customInterests
                 })
               }
-              
+
               return updatedCategories
             })
           }
@@ -265,7 +265,7 @@ export default function EditSectionDialog({
         if (response.ok) {
           const data = await response.json()
           const childProfile = data.child || data // Handle both possible response structures
-          const currentSkills = childProfile?.profile?.userSkills?.map((us: any) => ({
+          const currentSkills = childProfile?.profile?.userSkills?.map((us) => ({
             id: us.skill?.id || us.skillId,
             name: us.skill?.name || us.name,
             level: us.proficiencyLevel || us.proficiency_level || 3,
@@ -285,7 +285,7 @@ export default function EditSectionDialog({
             setSkillCategories(prevCategories => {
               const updatedCategories = [...prevCategories]
               const existingCustomCategory = updatedCategories.find(cat => cat.name === "Custom")
-              
+
               if (existingCustomCategory) {
                 // Only add custom skills that aren't already there
                 const newCustomSkills = customSkills.filter(customSkill =>
@@ -302,7 +302,7 @@ export default function EditSectionDialog({
                   skills: customSkills
                 })
               }
-              
+
               return updatedCategories
             })
           }
@@ -353,7 +353,7 @@ export default function EditSectionDialog({
     }
   }
 
-  const toggleInterest = (interest: Interest) => {
+  const toggleInterest = (interest) => {
     const isSelected = selectedInterests.some(i => i.id === interest.id)
     if (isSelected) {
       setSelectedInterests(selectedInterests.filter((i) => i.id !== interest.id))
@@ -366,7 +366,7 @@ export default function EditSectionDialog({
     const trimmedInterest = customInterest.trim()
     if (trimmedInterest === "" || selectedInterests.some(i => i.name === trimmedInterest)) return
 
-    const customInterestObj: Interest = {
+    const customInterestObj = {
       id: -Date.now(),
       name: trimmedInterest,
       category: "Custom"
@@ -403,11 +403,11 @@ export default function EditSectionDialog({
     setCustomInterest("")
   }
 
-  const removeInterest = (interestId: number) => {
+  const removeInterest = (interestId) => {
     setSelectedInterests(selectedInterests.filter(i => i.id !== interestId))
   }
 
-  const addSkill = (skillName: string, skillId?: number) => {
+  const addSkill = (skillName, skillId) => {
     if (selectedSkills.some((s) => s.name === skillName)) return
 
     const newSkills = [...selectedSkills, {
@@ -461,19 +461,19 @@ export default function EditSectionDialog({
     setNewSkill("")
   }
 
-  const removeSkill = (skillName: string) => {
+  const removeSkill = (skillName) => {
     const newSkills = selectedSkills.filter((s) => s.name !== skillName)
     setSelectedSkills(newSkills)
   }
 
-  const updateSkillLevel = (skillName: string, level: number) => {
+  const updateSkillLevel = (skillName, level) => {
     const newSkills = selectedSkills.map((s) =>
       s.name === skillName ? { ...s, level } : s
     )
     setSelectedSkills(newSkills)
   }
 
-  const findSkillCategory = (skillName: string): string => {
+  const findSkillCategory = (skillName) => {
     for (const category of skillCategories) {
       if (category.skills.some(skill => skill.name === skillName)) {
         return category.name
@@ -482,7 +482,7 @@ export default function EditSectionDialog({
     return "Other"
   }
 
-  const getLevelLabel = (level: number) => {
+  const getLevelLabel = (level) => {
     switch (level) {
       case 1: return "Beginner"
       case 2: return "Elementary"
@@ -497,23 +497,23 @@ export default function EditSectionDialog({
     setSocialLinks([...socialLinks, { platform: '', url: '' }])
   }
 
-  const updateSocialLink = (index: number, field: string, value: string) => {
+  const updateSocialLink = (index, field, value) => {
     const updated = socialLinks.map((link, i) =>
       i === index ? { ...link, [field]: value } : link
     )
     setSocialLinks(updated)
   }
 
-  const removeSocialLink = (index: number) => {
+  const removeSocialLink = (index) => {
     setSocialLinks(socialLinks.filter((_, i) => i !== index))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
 
     try {
-      let data: any = {}
+      let data = {}
       let requestSection = section
 
       switch (section) {
@@ -958,7 +958,8 @@ export default function EditSectionDialog({
               <Input
                 id="institutionName"
                 value={formData.institutionName || ''}
-                onChange={(e) => setFormData({ ...formData, institutionName: e.target.value })}
+                onChange={(e) => setFormData```text
+({ ...formData, institutionName: e.target.value })}
                 placeholder="Name of the institution"
               />
             </div>
@@ -1030,7 +1031,7 @@ export default function EditSectionDialog({
                 placeholder={
                   formData.institutionTypeId
                     ? getPlaceholderText(
-                        institutionTypes.find(tt.id === formData.institutionTypeId)?.slug || 'default',
+                        institutionTypes.find(tt => tt.id === formData.institutionTypeId)?.slug || 'default',
                         'grade'
                       )
                     : 'e.g., Grade 10, 1st Year, Beginner Level'
