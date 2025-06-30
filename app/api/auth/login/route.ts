@@ -137,13 +137,14 @@ export async function POST(request: NextRequest) {
       return response;
     }
 
-    // Check if it's a parent approval error and return appropriate status
-    if (result.error && result.error.includes('parent approve')) {
+    // Check if it's a verification error and return appropriate status
+    if (result.error && (result.error.includes('parent verify') || result.error.includes('email verify'))) {
       return NextResponse.json(
         { 
           success: false, 
           error: result.error,
-          needsParentApproval: true 
+          needsParentApproval: result.needsParentApproval || false,
+          needsEmailVerification: result.needsEmailVerification || false
         },
         { status: 403 } // Forbidden - different from 401 unauthorized
       );

@@ -416,7 +416,7 @@ export async function loginUser(data: LoginData) {
     let onboardingCompleted = false;
     if (profile.role === 'student') {
       try {
-        // Check parent verification for students under 16
+        // Check parent verification and email verification for students under 16
         if (profile.student && profile.student.birthYear && profile.student.birthMonth) {
           const currentDate = new Date();
           const currentYear = currentDate.getFullYear();
@@ -430,13 +430,27 @@ export async function loginUser(data: LoginData) {
             ageInYears--;
           }
           
-          // Check if student is under 16 and parent verification status
+          // Check if student is under 16 and verification status
           if (ageInYears < 16) {
-            if (!profile.parentVerified) {
+            const isParentVerified = profile.parentVerified || false;
+            const isEmailVerified = profile.emailVerified || false;
+            
+            // Build error message based on what's missing
+            let errorMessages = [];
+            if (!isParentVerified) {
+              errorMessages.push("please first let your parent verify");
+            }
+            if (!isEmailVerified) {
+              errorMessages.push("please verify your own email also first");
+            }
+            
+            if (errorMessages.length > 0) {
+              const errorMessage = errorMessages.join(" and ");
               return {
                 success: false,
-                error: "Please wait and let your parent approve your account",
-                needsParentApproval: true
+                error: `Please complete verification: ${errorMessage}`,
+                needsParentApproval: !isParentVerified,
+                needsEmailVerification: !isEmailVerified
               };
             }
           }
