@@ -142,22 +142,25 @@ export async function PUT(
       case 'goals':
         if (data.goalId) {
           // Update existing goal
-          await prisma.careerGoal.update({
+          await prisma.goal.update({
             where: { id: data.goalId },
             data: {
               title: data.title,
               description: data.description,
-              targetDate: data.targetDate
+              category: data.category,
+              timeframe: data.timeframe
             }
           })
         } else {
           // Create new goal
-          await prisma.careerGoal.create({
+          await prisma.goal.create({
             data: {
               userId: childId,
               title: data.title,
               description: data.description,
-              targetDate: data.targetDate
+              category: data.category,
+              timeframe: data.timeframe,
+              completed: false
             }
           })
         }
@@ -270,13 +273,13 @@ export async function DELETE(
         break
 
       case 'goals':
-        await prisma.careerGoal.delete({
+        await prisma.goal.delete({
           where: { id: itemId }
         })
         break
 
       case 'achievements':
-        await prisma.customBadge.delete({
+        await prisma.userAchievement.delete({
           where: { id: itemId }
         })
         break
