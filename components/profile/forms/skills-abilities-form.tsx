@@ -119,10 +119,26 @@ export default function SkillsAbilitiesForm({
   // Filter categories based on search
   useEffect(() => {
     if (searchTerm.trim() === "") {
-      // Show all categories including custom skills from user's existing skills
-      const categoriesWithCustom = [...skillCategories]
-      
-      // Add custom skills from user's existing skills if any
+      // Show all categories, but for Custom category only show user's own skills
+      const categoriesWithCustom = skillCategories.map(category => {
+        if (category.name === "Custom") {
+          // Only show user's own custom skills
+          const userCustomSkills = skills.filter(skill => 
+            !skill.id || skill.id < 0 || skill.category === "Custom"
+          ).map(skill => ({
+            id: skill.id || -Date.now(),
+            name: skill.name
+          }))
+          
+          return {
+            ...category,
+            skills: userCustomSkills
+          }
+        }
+        return category
+      })
+
+      // Add custom category if user has custom skills but no custom category exists
       const customSkills = skills.filter(skill => 
         !skill.id || skill.id < 0 || skill.category === "Custom"
       ).map(skill => ({
@@ -130,65 +146,62 @@ export default function SkillsAbilitiesForm({
         name: skill.name
       }))
 
-      if (customSkills.length > 0) {
-        const existingCustomCategory = categoriesWithCustom.find(cat => cat.name === "Custom")
-        if (existingCustomCategory) {
-          // Update existing custom category with user's custom skills
-          existingCustomCategory.skills = [
-            ...existingCustomCategory.skills,
-            ...customSkills.filter(customSkill => 
-              !existingCustomCategory.skills.some(existing => existing.name === customSkill.name)
-            )
-          ]
-        } else {
-          // Add new custom category
-          categoriesWithCustom.push({
-            name: "Custom",
-            skills: customSkills
-          })
-        }
-      }
-
-      setFilteredCategories(categoriesWithCustom)
-      return
-    }
-
-    const term = searchTerm.toLowerCase()
-    
-    // Include custom skills in search
-    const categoriesWithCustom = [...skillCategories]
-    const customSkills = skills.filter(skill => 
-      !skill.id || skill.id < 0 || skill.category === "Custom"
-    ).map(skill => ({
-      id: skill.id || -Date.now(),
-      name: skill.name
-    }))
-
-    if (customSkills.length > 0) {
-      const existingCustomCategory = categoriesWithCustom.find(cat => cat.name === "Custom")
-      if (existingCustomCategory) {
-        existingCustomCategory.skills = [
-          ...existingCustomCategory.skills,
-          ...customSkills.filter(customSkill => 
-            !existingCustomCategory.skills.some(existing => existing.name === customSkill.name)
-          )
-        ]
-      } else {
+      if (customSkills.length > 0 && !categoriesWithCustom.some(cat => cat.name === "Custom")) {
         categoriesWithCustom.push({
           name: "Custom",
           skills: customSkills
         })
       }
+
+      setFilteredCategories(categoriesWithCustom.filter(category => category.skills.length > 0))
+      return
     }
 
-    const filtered = categoriesWithCustom
-      .map((category) => ({
-        name: category.name,
-        skills: category.skills.filter((skill) =>
-          skill.name.toLowerCase().includes(term)
-        ),
-      }))
+    const term = searchTerm.toLowerCase()
+    
+    // Filter with search term, ensuring Custom category only shows user's own skills
+    const filtered = skillCategories
+      .map((category) => {
+        if (category.name === "Custom") {
+          // Only show user's own custom skills that match search
+          const userCustomSkills = skills.filter(skill => 
+            (!skill.id || skill.id < 0 || skill.category === "Custom") &&
+            skill.name.toLowerCase().includes(term)
+          ).map(skill => ({
+            id: skill.id || -Date.now(),
+            name: skill.name
+          }))
+          
+          return {
+            name: category.name,
+            skills: userCustomSkills
+          }
+        }
+        
+        return {
+          name: category.name,
+          skills: category.skills.filter((skill) =>
+            skill.name.toLowerCase().includes(term)
+          ),
+        }
+      })
       .filter((category) => category.skills.length > 0)
+
+    // Add custom skills that match search if no custom category exists but user has custom skills
+    const customSkills = skills.filter(skill => 
+      (!skill.id || skill.id < 0 || skill.category === "Custom") &&
+      skill.name.toLowerCase().includes(term)
+    ).map(skill => ({
+      id: skill.id || -Date.now(),
+      name: skill.name
+    }))
+
+    if (customSkills.length > 0 && !filtered.some(cat => cat.name === "Custom")) {
+      filtered.push({
+        name: "Custom",
+        skills: customSkills
+      })
+    }
 
     setFilteredCategories(filtered)
   }, [searchTerm, skillCategories, skills])

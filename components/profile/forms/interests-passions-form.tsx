@@ -109,6 +109,33 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
     }
   }, [interestCategories])
 
+  // Filter interest categories to only show user's own custom interests
+  useEffect(() => {
+    if (interestCategories.length > 0) {
+      const filteredCategories = interestCategories.map(category => {
+        if (category.name === "Custom") {
+          // For custom category, only show interests that the user has selected
+          const userCustomInterests = selectedInterests.filter(selected => 
+            category.interests.some(categoryInterest => 
+              categoryInterest.id === selected.id && (selected.id < 0 || selected.category === "Custom")
+            )
+          )
+          
+          return {
+            ...category,
+            interests: userCustomInterests.map(interest => ({
+              id: interest.id,
+              name: interest.name
+            }))
+          }
+        }
+        return category
+      })
+      
+      setFilteredCategories(filteredCategories)
+    }
+  }, [interestCategories, selectedInterests])
+
   // Track dirty state - compare current interests with initial data
   useEffect(() => {
     const selectedNames = selectedInterests.map(interest => interest.name).sort()
@@ -128,20 +155,60 @@ export default function InterestsPassionsForm({ data, onChange }: InterestsPassi
 
   useEffect(() => {
     if (searchTerm.trim() === "") {
-      setFilteredCategories(interestCategories)
+      // Apply custom interest filtering when no search term
+      const filteredCategories = interestCategories.map(category => {
+        if (category.name === "Custom") {
+          // For custom category, only show interests that the user has selected
+          const userCustomInterests = selectedInterests.filter(selected => 
+            category.interests.some(categoryInterest => 
+              categoryInterest.id === selected.id && (selected.id < 0 || selected.category === "Custom")
+            )
+          )
+          
+          return {
+            ...category,
+            interests: userCustomInterests.map(interest => ({
+              id: interest.id,
+              name: interest.name
+            }))
+          }
+        }
+        return category
+      })
+      
+      setFilteredCategories(filteredCategories)
       return
     }
 
     const term = searchTerm.toLowerCase()
     const filtered = interestCategories
-      .map((category) => ({
-        name: category.name,
-        interests: category.interests.filter((interest) => interest.name.toLowerCase().includes(term)),
-      }))
+      .map((category) => {
+        if (category.name === "Custom") {
+          // For custom category, only show user's own custom interests that match search
+          const userCustomInterests = selectedInterests.filter(selected => 
+            category.interests.some(categoryInterest => 
+              categoryInterest.id === selected.id && (selected.id < 0 || selected.category === "Custom")
+            ) && selected.name.toLowerCase().includes(term)
+          )
+          
+          return {
+            name: category.name,
+            interests: userCustomInterests.map(interest => ({
+              id: interest.id,
+              name: interest.name
+            }))
+          }
+        }
+        
+        return {
+          name: category.name,
+          interests: category.interests.filter((interest) => interest.name.toLowerCase().includes(term)),
+        }
+      })
       .filter((category) => category.interests.length > 0)
 
     setFilteredCategories(filtered)
-  }, [searchTerm, interestCategories])
+  }, [searchTerm, interestCategories, selectedInterests])
 
   const toggleInterest = (interest: Interest) => {
     const isSelected = selectedInterests.some(i => i.id === interest.id)
