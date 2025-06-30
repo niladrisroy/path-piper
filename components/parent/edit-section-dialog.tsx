@@ -14,10 +14,7 @@ import { Save, X, Plus, Edit, Trash2 } from 'lucide-react'
 import { getPlaceholderText } from '@/data/institution-placeholders'
 import { MultiSelect } from "@/components/ui/multi-select"
 import { Slider } from '@/components/ui/slider'
-import { Calendar } from '@/components/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { format } from 'date-fns'
-import { CalendarIcon, Search, Heart, Award } from 'lucide-react'
+import { Search, Heart, Award } from 'lucide-react'
 
 interface Interest {
   id: number
@@ -1123,43 +1120,57 @@ text-blue-300 hover:text-red-500 hover:bg-transparent"
             </div>
             <div>
               <Label htmlFor="startDate">Start Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={`w-full justify-start text-left font-normal mt-1 ${
-                      !formData.startDate && "text-muted-foreground"
-                    }`}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.startDate ? (
-                      format(new Date(formData.startDate), "MMMM yyyy")
-                    ) : (
-                      <span>Pick a month and year</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={formData.startDate ? new Date(formData.startDate) : undefined}
-                    onSelect={(date) => {
-                      if (date) {
-                        const newDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`
-                        handleInputChange('startDate', newDate)
-                      }
-                    }}
-                    disabled={(date) => {
-                      const today = new Date()
-                      return date > today
-                    }}
-                    initialFocus
-                    captionLayout="dropdown"
-                    fromYear={new Date().getFullYear() - 50}
-                    toYear={new Date().getFullYear()}
-                  />
-                </PopoverContent>
-              </Popover>
+              <div className="grid grid-cols-2 gap-2 mt-1">
+                <Select
+                  value={formData.startDate ? new Date(formData.startDate).getMonth().toString() : ''}
+                  onValueChange={(value) => {
+                    const year = formData.startDate ? new Date(formData.startDate).getFullYear() : new Date().getFullYear()
+                    const newDate = `${year}-${String(parseInt(value) + 1).padStart(2, '0')}-01`
+                    handleInputChange('startDate', newDate)
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["January", "February", "March", "April", "May", "June", 
+                      "July", "August", "September", "October", "November", "December"].map((month, index) => {
+                      const currentDate = new Date()
+                      const currentYear = currentDate.getFullYear()
+                      const currentMonth = currentDate.getMonth()
+                      const selectedYear = formData.startDate ? new Date(formData.startDate).getFullYear() : currentYear
+                      
+                      // Disable future months in current year
+                      const isDisabled = selectedYear === currentYear && index > currentMonth
+                      
+                      return (
+                        <SelectItem key={index} value={index.toString()} disabled={isDisabled}>
+                          {month}
+                        </SelectItem>
+                      )
+                    })}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={formData.startDate ? new Date(formData.startDate).getFullYear().toString() : ''}
+                  onValueChange={(value) => {
+                    const month = formData.startDate ? new Date(formData.startDate).getMonth() : 0
+                    const newDate = `${value}-${String(month + 1).padStart(2, '0')}-01`
+                    handleInputChange('startDate', newDate)
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 50 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div>
               <Label htmlFor="description">Description</Label>
@@ -1317,43 +1328,57 @@ text-blue-300 hover:text-red-500 hover:bg-transparent"
 
             <div>
               <Label htmlFor="dateOfAchievement">Date of Achievement *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={`w-full justify-start text-left font-normal mt-1 ${
-                      !formData.dateOfAchievement && "text-muted-foreground"
-                    }`}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.dateOfAchievement ? (
-                      format(new Date(formData.dateOfAchievement), "MMMM yyyy")
-                    ) : (
-                      <span>Pick a month and year</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={formData.dateOfAchievement ? new Date(formData.dateOfAchievement) : undefined}
-                    onSelect={(date) => {
-                      if (date) {
-                        const newDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`
-                        setFormData({ ...formData, dateOfAchievement: newDate })
-                      }
-                    }}
-                    disabled={(date) => {
-                      const today = new Date()
-                      return date > today
-                    }}
-                    initialFocus
-                    captionLayout="dropdown"
-                    fromYear={new Date().getFullYear() - 50}
-                    toYear={new Date().getFullYear()}
-                  />
-                </PopoverContent>
-              </Popover>
+              <div className="grid grid-cols-2 gap-2 mt-1">
+                <Select
+                  value={formData.dateOfAchievement ? new Date(formData.dateOfAchievement).getMonth().toString() : ''}
+                  onValueChange={(value) => {
+                    const year = formData.dateOfAchievement ? new Date(formData.dateOfAchievement).getFullYear() : new Date().getFullYear()
+                    const newDate = `${year}-${String(parseInt(value) + 1).padStart(2, '0')}-01`
+                    setFormData({ ...formData, dateOfAchievement: newDate })
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["January", "February", "March", "April", "May", "June", 
+                      "July", "August", "September", "October", "November", "December"].map((month, index) => {
+                      const currentDate = new Date()
+                      const currentYear = currentDate.getFullYear()
+                      const currentMonth = currentDate.getMonth()
+                      const selectedYear = formData.dateOfAchievement ? new Date(formData.dateOfAchievement).getFullYear() : currentYear
+
+                      // Disable future months in current year
+                      const isDisabled = selectedYear === currentYear && index > currentMonth
+
+                      return (
+                        <SelectItem key={index} value={index.toString()} disabled={isDisabled}>
+                          {month}
+                        </SelectItem>
+                      )
+                    })}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={formData.dateOfAchievement ? new Date(formData.dateOfAchievement).getFullYear().toString() : ''}
+                  onValueChange={(value) => {
+                    const month = formData.dateOfAchievement ? new Date(formData.dateOfAchievement).getMonth() : 0
+                    const newDate = `${value}-${String(month + 1).padStart(2, '0')}-01`
+                    setFormData({ ...formData, dateOfAchievement: newDate })
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 50 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="space-y-3">
