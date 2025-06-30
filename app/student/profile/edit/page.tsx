@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useEffect, useState, Suspense } from "react"
@@ -14,6 +13,7 @@ function StudentProfileEditContent() {
   const searchParams = useSearchParams()
   const { user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!authLoading) {
@@ -23,7 +23,13 @@ function StudentProfileEditContent() {
       }
 
       if (user.role !== 'student') {
-        router.push('/feed')
+        if (user.role === 'mentor') {
+          router.push('/mentor/profile')
+        } else if (user.role === 'institution') {
+          router.push('/institution/profile')
+        } else {
+          router.push('/feed')
+        }
         return
       }
 
@@ -32,66 +38,6 @@ function StudentProfileEditContent() {
   }, [user, authLoading, router])
 
   if (authLoading || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500"></div>
-      </div>
-    )
-  }
-
-  return (
-    <ProtectedLayout>
-      <div className="min-h-screen bg-gray-50">
-        <InternalNavbar />
-        <main className="pt-16 sm:pt-24">
-          <ProfileEditForm />
-        </main>
-        <Footer />
-      </div>
-    </ProtectedLayout>
-  )
-}
-
-export default function StudentProfileEditPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500"></div>
-      </div>
-    }>
-      <StudentProfileEditContent />
-    </Suspense>
-  )
-}
-
-function ProfileEditContent() {
-  const { user, loading } = useAuth()
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
-  const searchParams = useSearchParams()
-
-  useEffect(() => {
-    if (loading) return
-
-    if (!user) {
-      router.push('/login')
-      return
-    }
-
-    // Redirect non-students to their appropriate profile pages
-    if (user.role !== 'student') {
-      if (user.role === 'mentor') {
-        router.push('/mentor/profile')
-      } else if (user.role === 'institution') {
-        router.push('/institution/profile')
-      } else {
-        router.push('/feed')
-      }
-      return
-    }
-  }, [user, loading, router])
-
-  if (loading) {
     return (
       <ProtectedLayout>
         <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
@@ -153,7 +99,7 @@ function ProfileEditContent() {
   )
 }
 
-export default function ProfileEditPage() {
+export default function StudentProfileEditPage() {
   return (
     <Suspense fallback={
       <ProtectedLayout>
@@ -169,7 +115,7 @@ export default function ProfileEditPage() {
         </div>
       </ProtectedLayout>
     }>
-      <ProfileEditContent />
+      <StudentProfileEditContent />
     </Suspense>
   )
 }
