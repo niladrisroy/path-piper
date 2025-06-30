@@ -218,18 +218,16 @@ export async function registerStudent(data: UserRegistrationData) {
           },
           parentVerified: false,
           email: data.email,
-          emailVerified: false, // Set to false for under-16 students requiring verification
         },
       });
       console.log('✅ Profile updated with parent connection');
     } else {
       console.log('ℹ️ No parent linking required');
-      // Still set email and emailVerified for students who don't need parent approval
+      // Still set email for students who don't need parent approval
       await prisma.profile.update({
         where: { id: profile.id },
         data: {
           email: data.email,
-          emailVerified: true, // Auto-verify for students not requiring parent approval
         },
       });
       console.log('   - needsParentApproval:', needsParentApproval);
