@@ -195,7 +195,16 @@ export default function EditSectionDialog({
         const response = await fetch('/api/institution-types')
         if (response.ok) {
           const data = await response.json()
-          setInstitutionTypes(data)
+          // Flatten the categories and types into a single array for the select dropdown
+          const flatTypes = data.data?.flatMap((category: any) => 
+            category.types?.map((type: any) => ({
+              id: type.id,
+              name: type.name,
+              slug: type.slug,
+              categoryName: category.name
+            })) || []
+          ) || []
+          setInstitutionTypes(flatTypes)
         }
       }
     } catch (error) {
@@ -810,7 +819,7 @@ export default function EditSectionDialog({
                 <SelectContent>
                   {institutionTypes.map((type) => (
                     <SelectItem key={type.id} value={type.id.toString()}>
-                      {type.name}
+                      {type.name} ({type.categoryName})
                     </SelectItem>
                   ))}
                 </SelectContent>
