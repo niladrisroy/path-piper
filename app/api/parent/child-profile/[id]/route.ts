@@ -119,8 +119,8 @@ export async function GET(
     const connections = await prisma.connection.findMany({
       where: {
         OR: [
-          { requesterId: childId, status: 'accepted' },
-          { receiverId: childId, status: 'accepted' }
+          { requester_id: childId, status: 'accepted' },
+          { receiver_id: childId, status: 'accepted' }
         ]
       },
       include: {
@@ -147,7 +147,7 @@ export async function GET(
 
     // Format connections to show the other user
     const formattedConnections = connections.map(connection => {
-      const otherUser = connection.requesterId === childId ? connection.receiver : connection.requester
+      const otherUser = connection.requester_id === childId ? connection.receiver : connection.requester
       return {
         id: connection.id,
         user: otherUser
