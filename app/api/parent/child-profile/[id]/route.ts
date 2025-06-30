@@ -154,16 +154,7 @@ export async function GET(
       }
     })
 
-    // Get child's achievements
-    const achievements = await prisma.userAchievement.findMany({
-      where: { userId: childId },
-      include: {
-        achievementType: true
-      },
-      orderBy: {
-        earnedDate: 'desc'
-      }
-    })
+    // Note: Achievements will be handled through custom badges which are already included above
 
     const formattedProfile = {
       id: childProfile.id,
@@ -207,14 +198,7 @@ export async function GET(
         achievements: edu.achievements,
         description: edu.description
       })),
-      connections: formattedConnections,
-      achievements: achievements.map(achievement => ({
-        id: achievement.id,
-        title: achievement.achievementType.name,
-        description: achievement.achievementType.description,
-        earnedDate: achievement.earnedDate,
-        iconUrl: achievement.achievementType.iconUrl
-      }))
+      connections: formattedConnections
     }
 
     return NextResponse.json({
