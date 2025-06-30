@@ -270,8 +270,9 @@ export default function EditSectionDialog({
         // Fetch existing interests for this child
         const response = await fetch(`/api/parent/child-profile/${childId}`)
         if (response.ok) {
-          const childData = await response.json()
-          const currentInterests = childData.profile.userInterests?.map((ui: any) => ({
+          const data = await response.json()
+          const childProfile = data.child || data // Handle both possible response structures
+          const currentInterests = childProfile?.profile?.userInterests?.map((ui: any) => ({
             id: ui.interest?.id || ui.interestId,
             name: ui.interest?.name || ui.name,
             category: ui.interest?.category?.name || ui.category
@@ -282,8 +283,9 @@ export default function EditSectionDialog({
         // Fetch existing skills for this child
         const response = await fetch(`/api/parent/child-profile/${childId}`)
         if (response.ok) {
-          const childData = await response.json()
-          const currentSkills = childData.profile.userSkills?.map((us: any) => ({
+          const data = await response.json()
+          const childProfile = data.child || data // Handle both possible response structures
+          const currentSkills = childProfile?.profile?.userSkills?.map((us: any) => ({
             id: us.skill?.id || us.skillId,
             name: us.skill?.name || us.name,
             level: us.proficiencyLevel || us.proficiency_level || 3,
