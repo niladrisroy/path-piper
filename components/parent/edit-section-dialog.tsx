@@ -4,18 +4,20 @@ import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { toast } from 'sonner'
+import { Save, X, Plus, Edit, Trash2 } from 'lucide-react'
+import { getPlaceholderText } from '@/data/institution-placeholders'
+import { MultiSelect } from "@/components/ui/multi-select"
 import { Slider } from '@/components/ui/slider'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { format } from 'date-fns'
-import { CalendarIcon, Plus, X, Search, Heart, Award } from 'lucide-react'
-import { toast } from 'sonner'
-import { getPlaceholderText } from '@/data/institution-placeholders'
-import { MultiSelect } from "@/components/ui/multi-select"
+import { CalendarIcon, Search, Heart, Award } from 'lucide-react'
 
 interface Interest {
   id: number
@@ -41,11 +43,11 @@ interface SkillCategory {
 }
 
 interface EditSectionDialogProps {
+  children?: React.ReactNode
   section: string
   childId: string
   currentData?: any
   onUpdate: () => void
-  children?: React.ReactNode
   isOpen?: boolean
   onClose?: () => void
   childProfile?: any
@@ -54,11 +56,11 @@ interface EditSectionDialogProps {
 }
 
 export default function EditSectionDialog({
+  children,
   section,
   childId,
   currentData,
   onUpdate,
-  children,
   isOpen: externalIsOpen,
   onClose: externalOnClose,
   childProfile,
@@ -66,14 +68,12 @@ export default function EditSectionDialog({
   editingItemData
 }: EditSectionDialogProps) {
   const [open, setOpen] = useState(false)
-  
-  // Handle external open state control
+  const [loading, setSaving] = useState(false)
+  const [formData, setFormData] = useState<any>({})
+  const [socialLinks, setSocialLinks] = useState<any[]>([])
   const isControlledExternally = externalIsOpen !== undefined
   const actualOpen = isControlledExternally ? externalIsOpen : open
   const actualOnClose = isControlledExternally ? externalOnClose : () => setOpen(false)
-  const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState<any>({})
-  const [socialLinks, setSocialLinks] = useState<any[]>([])
 
   // Interests state
   const [selectedInterests, setSelectedInterests] = useState<Interest[]>([])
@@ -82,7 +82,7 @@ export default function EditSectionDialog({
   const [interestSearchTerm, setInterestSearchTerm] = useState("")
   const [customInterest, setCustomInterest] = useState("")
 
-  // Skills state  
+  // Skills state
   const [selectedSkills, setSelectedSkills] = useState<Skill[]>([])
   const [skillCategories, setSkillCategories] = useState<SkillCategory[]>([])
   const [filteredSkillCategories, setFilteredSkillCategories] = useState<SkillCategory[]>([])
@@ -144,7 +144,7 @@ export default function EditSectionDialog({
 
   const fetchOptions = async () => {
     try {
-       if (section === 'interests') {
+      if (section === 'interests') {
         const response = await fetch(`/api/parent/child-profile/${childId}/interests`)
         if (response.ok) {
           const data = await response.json()
@@ -163,7 +163,7 @@ export default function EditSectionDialog({
         if (response.ok) {
           const data = await response.json()
           // Flatten the categories and types into a single array for the select dropdown
-          const flatTypes = data.data?.flatMap((category) => 
+          const flatTypes = data.data?.flatMap((category) =>
             category.types?.map((type) => ({
               id: type.id,
               name: type.name,
@@ -244,7 +244,7 @@ export default function EditSectionDialog({
           setSelectedInterests(currentInterests)
 
           // Add user's custom interests to the Custom category
-          const customInterests = currentInterests.filter(interest => 
+          const customInterests = currentInterests.filter(interest =>
             !interest.id || interest.id < 0 || interest.category === "Custom"
           )
 
@@ -289,7 +289,7 @@ export default function EditSectionDialog({
           setSelectedSkills(currentSkills)
 
           // Add user's custom skills to the Custom category
-          const customSkills = currentSkills.filter(skill => 
+          const customSkills = currentSkills.filter(skill =>
             !skill.id || skill.id < 0 || skill.category === "Custom"
           ).map(skill => ({
             id: skill.id || -Date.now(),
@@ -573,11 +573,17 @@ export default function EditSectionDialog({
     setSocialLinks(socialLinks.filter((_, i) => i !== index))
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
+  const handleInputChange = (field: string, value: any) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      [field]: value
+    }))
+  }
 
+  const handleSave = async () => {
     try {
+      setSaving(true)
+
       let data = {}
       let requestSection = section
 
@@ -593,15 +599,15 @@ export default function EditSectionDialog({
           break
         case 'interests':
           // Convert to interest IDs and names
-          data = { 
-            interests: selectedInterests.map(interest => 
+          data = {
+            interests: selectedInterests.map(interest =>
               interest.id > 0 ? interest.id : interest.name
             )
           }
           break
         case 'skills':
           // Convert to skills format expected by API
-          data = { 
+          data = {
             skills: selectedSkills.map(skill => ({
               skillId: skill.id && skill.id > 0 ? skill.id : null,
               name: skill.name,
@@ -634,7 +640,7 @@ export default function EditSectionDialog({
       // Determine if this is an edit or add operation
       const isEditing = formData.id !== undefined
       const method = isEditing ? 'PUT' : 'PUT' // We'll use PUT for both, but include ID for edits
-      
+
       const requestBody = {
         section: requestSection,
         data: isEditing ? { ...data, id: formData.id } : data
@@ -663,9 +669,9 @@ export default function EditSectionDialog({
       }
     } catch (error) {
       console.error('Error updating profile:', error)
-      toast.error('Failed to update profile')
+      toast.error(`Failed to update ${section}: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
-      setLoading(false)
+      setSaving(false)
     }
   }
 
@@ -948,7 +954,7 @@ export default function EditSectionDialog({
               <Textarea
                 id="bio"
                 value={formData.bio || ''}
-                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                onChange={(e) => handleInputChange('bio', e.target.value)}
                 placeholder="Tell us about yourself..."
                 rows={4}
               />
@@ -958,7 +964,7 @@ export default function EditSectionDialog({
               <Input
                 id="location"
                 value={formData.location || ''}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                onChange={(e) => handleInputChange('location', e.target.value)}
                 placeholder="Your location"
               />
             </div>
@@ -967,7 +973,7 @@ export default function EditSectionDialog({
               <Input
                 id="tagline"
                 value={formData.tagline || ''}
-                onChange={(e) => setFormData({ ...formData, tagline: e.target.value })}
+                onChange={(e) => handleInputChange('tagline', e.target.value)}
                 placeholder="A short tagline"
               />
             </div>
@@ -1034,7 +1040,7 @@ export default function EditSectionDialog({
               <Input
                 id="institutionName"
                 value={formData.institutionName || ''}
-                onChange={(e) => setFormData({ ...formData, institutionName: e.target.value })}
+                onChange={(e) => handleInputChange('institutionName', e.target.value)}
                 placeholder="Name of the institution"
               />
             </div>
@@ -1042,7 +1048,7 @@ export default function EditSectionDialog({
               <Label htmlFor="institutionType">Institution Type</Label>
               <Select
                 value={formData.institutionTypeId?.toString() || ''}
-                onValueChange={(value) => setFormData({ ...formData, institutionTypeId: parseInt(value) })}
+                onValueChange={(value) => handleInputChange('institutionTypeId', parseInt(value) )}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select institution type" />
@@ -1062,7 +1068,7 @@ export default function EditSectionDialog({
                 <Input
                   id="degreeProgram"
                   value={formData.degreeProgram || ''}
-                  onChange={(e) => setFormData({ ...formData, degreeProgram: e.target.value })}
+                  onChange={(e) => handleInputChange('degreeProgram', e.target.value)}
                   placeholder="e.g., Bachelor's in Computer Science"
                 />
               </div>
@@ -1071,7 +1077,7 @@ export default function EditSectionDialog({
                 <Input
                   id="fieldOfStudy"
                   value={formData.fieldOfStudy || ''}
-                  onChange={(e) => setFormData({ ...formData, fieldOfStudy: e.target.value })}
+                  onChange={(e) => handleInputChange('fieldOfStudy', e.target.value)}
                   placeholder="e.g., Computer Science"
                 />
               </div>
@@ -1081,7 +1087,7 @@ export default function EditSectionDialog({
               <Label htmlFor="subjects">Subjects/Courses <span className="text-red-500">*</span></Label>
               <MultiSelect
                 value={formData.subjects || []}
-                onChange={(value) => setFormData({ ...formData, subjects: value })}
+                onChange={(value) => handleInputChange('subjects', value)}
                 placeholder="Add subjects studied..."
                 suggestions={[
                   // General subjects
@@ -1102,7 +1108,7 @@ export default function EditSectionDialog({
               <Input
                 id="gradeLevel"
                 value={formData.gradeLevel || ''}
-                onChange={(e) => setFormData({ ...formData, gradeLevel: e.target.value })}
+                onChange={(e) => handleInputChange('gradeLevel', e.target.value)}
                 placeholder={
                   formData.institutionTypeId
                     ? getPlaceholderText(
@@ -1126,7 +1132,7 @@ export default function EditSectionDialog({
                   <Calendar
                     mode="single"
                     selected={formData.startDate ? new Date(formData.startDate) : undefined}
-                    onSelect={(date) => setFormData({ ...formData, startDate: date?.toISOString() })}
+                    onSelect={(date) => handleInputChange('startDate', date?.toISOString() )}
                     initialFocus
                   />
                 </PopoverContent>
@@ -1137,7 +1143,7 @@ export default function EditSectionDialog({
               <Textarea
                 id="description"
                 value={formData.description || ''}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) => handleInputChange('description', e.target.value)}
                 placeholder="Additional details about your education..."
                 rows={3}
               />
@@ -1155,7 +1161,7 @@ export default function EditSectionDialog({
               <Input
                 id="title"
                 value={formData.title || ''}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(e) => handleInputChange('title', e.target.value)}
                 placeholder="e.g., Learn Python Programming"
                 className="mt-1"
               />
@@ -1168,7 +1174,7 @@ export default function EditSectionDialog({
               <Textarea
                 id="description"
                 value={formData.description || ''}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) => handleInputChange('description', e.target.value)}
                 placeholder="Describe your goal in more detail..."
                 className="mt-1 h-24"
               />
@@ -1179,7 +1185,7 @@ export default function EditSectionDialog({
                 <Label className="text-gray-700 dark:text-gray-300">Category</Label>
                 <Select
                   value={formData.category || ''}
-                  onChange={(e) => setFormData({ ...formData, category: value })}
+                  onValueChange={(value) => handleInputChange('category', value)}
                 >
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Select a category" />
@@ -1198,7 +1204,7 @@ export default function EditSectionDialog({
                 <Label className="text-gray-700 dark:text-gray-300">Timeframe</Label>
                 <Select
                   value={formData.timeframe || ''}
-                  onChange={(e) => setFormData({ ...formData, timeframe: value })}
+                  onValueChange={(value) => handleInputChange('timeframe', value)}
                 >
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Select a timeframe" />
@@ -1224,7 +1230,7 @@ export default function EditSectionDialog({
               <Input
                 id="name"
                 value={formData.name || ''}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) => handleInputChange('name', e.target.value)}
                 placeholder="e.g., First Place in Science Fair"
                 required
               />
@@ -1235,7 +1241,7 @@ export default function EditSectionDialog({
               <Textarea
                 id="description"
                 value={formData.description || ''}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) => handleInputChange('description', e.target.value)}
                 placeholder="Describe your achievement..."
                 rows={3}
                 required
@@ -1269,7 +1275,7 @@ export default function EditSectionDialog({
                 <Label htmlFor="type">Achievement Type *</Label>
                 <Select
                   value={formData.achievementTypeId || ''}
-                  onChange={(value) => setFormData({ ...formData, achievementTypeId: value })}
+                  onChange={(value) => handleInputChange('achievementTypeId', value)}
                   disabled={!formData.categoryId}
                 >
                   <SelectTrigger className="mt-1">
@@ -1387,10 +1393,10 @@ export default function EditSectionDialog({
     }
   }
 
-  const getSectionTitle = () => {
+  const getDialogTitle = () => {
     const isEditing = editingItemData !== null && editingItemData !== undefined
     const prefix = isEditing ? 'Edit' : 'Add'
-    
+
     switch (section) {
       case 'about': return 'Edit About Information'
       case 'interests': return 'Edit Interests & Passions'
@@ -1424,7 +1430,7 @@ export default function EditSectionDialog({
   const isValid = getValidationStatus()
 
   return (
-    <Dialog open={actualOpen} onOpenChange={isControlledExternally ? externalOnClose : setOpen}>
+    <Dialog open={actualOpen} onOpenChange={isControlledExternally ? actualOnClose : setOpen}>
       {children && (
         <DialogTrigger asChild>
           {children}
@@ -1432,9 +1438,9 @@ export default function EditSectionDialog({
       )}
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{getSectionTitle()}</DialogTitle>
+          <DialogTitle>{getDialogTitle()}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSave}>
           {renderFormContent()}
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
