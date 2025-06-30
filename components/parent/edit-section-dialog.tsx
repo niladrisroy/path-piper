@@ -76,6 +76,9 @@ export default function EditSectionDialog({
   const [newSkillLevel, setNewSkillLevel] = useState(3)
 
   const [institutionTypes, setInstitutionTypes] = useState<any[]>([])
+  const [achievementCategories, setAchievementCategories] = useState<any[]>([])
+  const [achievementTypes, setAchievementTypes] = useState<any[]>([])
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   useEffect(() => {
     if (open) {
@@ -206,9 +209,58 @@ export default function EditSectionDialog({
           ) || []
           setInstitutionTypes(flatTypes)
         }
+      } else if (section === 'achievements') {
+        // Fetch achievement categories
+        const categoriesResponse = await fetch('/api/achievement-categories')
+        if (categoriesResponse.ok) {
+          const categoriesData = await categoriesResponse.json()
+          setAchievementCategories(categoriesData.categories || [])
+        }
       }
     } catch (error) {
       console.error('Error fetching options:', error)
+    }
+  }
+
+  const fetchAchievementTypes = async (categoryId: string) => {
+    try {
+      const response = await fetch(`/api/achievement-types?categoryId=${categoryId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setAchievementTypes(data.types || [])
+      }
+    } catch (error) {
+      console.error('Error fetching achievement types:', error)
+    }
+  }
+
+  const handleAchievementImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setUploadingImage(true)
+    try {
+      const formDataUpload = new FormData()
+      formDataUpload.append('file', file)
+
+      const response = await fetch('/api/upload/achievement-icon', {
+        method: 'POST',
+        body: formDataUpload,
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setFormData(prev => ({ ...prev, achievementImageIcon: data.url }))
+        toast.success('Image uploaded successfully!')
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Failed to upload image')
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      toast.error('Failed to upload image')
+    } finally {
+      setUploadingImage(false)
     }
   }
 
@@ -242,9 +294,25 @@ export default function EditSectionDialog({
         setSelectedSkills(currentSkills)
         break
       case 'education':
-      case 'goals':
-      case 'achievements':
         setFormData({})
+        break
+      case 'goals':
+        setFormData({
+          title: '',
+          description: '',
+          category: '',
+          timeframe: ''
+        })
+        break
+      case 'achievements':
+        setFormData({
+          name: '',
+          description: '',
+          categoryId: '',
+          achievementTypeId: '',
+          dateOfAchievement: '',
+          achievementImageIcon: ''
+        })
         break
     }
   }
@@ -384,9 +452,24 @@ export default function EditSectionDialog({
           }
           break
         case 'education':
-        case 'goals':
-        case 'achievements':
           data = formData
+          break
+        case 'goals':
+          data = {
+            title: formData.title,
+            description: formData.description,
+            category: formData.category,
+            timeframe: formData.timeframe
+          }
+          break
+        case 'achievements':
+          data = {
+            name: formData.name,
+            description: formData.description,
+            dateOfAchievement: formData.dateOfAchievement,
+            achievementTypeId: formData.achievementTypeId,
+            achievementImageIcon: formData.achievementImageIcon
+          }
           break
       }
 
@@ -893,42 +976,69 @@ export default function EditSectionDialog({
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="title">Goal Title</Label>
+              <Label htmlFor="title" className="text-gray-700 dark:text-gray-300">
+                Goal Title <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="title"
                 value={formData.title || ''}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="What do you want to achieve?"
+                placeholder="e.g., Learn Python Programming"
+                className="mt-1"
               />
             </div>
+
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description" className="text-gray-700 dark:text-gray-300">
+                Description
+              </Label>
               <Textarea
                 id="description"
                 value={formData.description || ''}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Describe your goal in detail..."
-                rows={4}
+                placeholder="Describe your goal in more detail..."
+                className="mt-1 h-24"
               />
             </div>
-            <div>
-              <Label htmlFor="targetDate">Target Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left font-normal">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.targetDate ? format(new Date(formData.targetDate), 'PPP') : 'Pick a target date'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={formData.targetDate ? new Date(formData.targetDate) : undefined}
-                    onSelect={(date) => setFormData({ ...formData, targetDate: date?.toISOString() })}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-gray-700 dark:text-gray-300">Category</Label>
+                <Select
+                  value={formData.category || ''}
+                  onValueChange={(value) => setFormData({ ...formData, category: value })}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["Academic", "Career", "Skill Development", "Personal Growth", "Extracurricular", "Other"].map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-gray-700 dark:text-gray-300">Timeframe</Label>
+                <Select
+                  value={formData.timeframe || ''}
+                  onValueChange={(value) => setFormData({ ...formData, timeframe: value })}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select a timeframe" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["1 month", "3 months", "6 months", "1 year", "2+ years", "Ongoing"].map((timeframe) => (
+                      <SelectItem key={timeframe} value={timeframe}>
+                        {timeframe}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         )
@@ -937,42 +1047,164 @@ export default function EditSectionDialog({
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="title">Achievement Title</Label>
+              <Label htmlFor="name">Achievement Name *</Label>
               <Input
-                id="title"
-                value={formData.title || ''}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Name of the achievement"
+                id="name"
+                value={formData.name || ''}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="e.g., First Place in Science Fair"
+                required
               />
             </div>
+
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Description *</Label>
               <Textarea
                 id="description"
                 value={formData.description || ''}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Describe the achievement..."
-                rows={4}
+                placeholder="Describe your achievement..."
+                rows={3}
+                required
               />
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="category">Category *</Label>
+                <Select
+                  value={formData.categoryId || ''}
+                  onValueChange={(value) => {
+                    setFormData({ ...formData, categoryId: value, achievementTypeId: '' })
+                    if (value) fetchAchievementTypes(value)
+                  }}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {achievementCategories.map((category) => (
+                      <SelectItem key={category.id} value={category.id.toString()}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="type">Achievement Type *</Label>
+                <Select
+                  value={formData.achievementTypeId || ''}
+                  onValueChange={(value) => setFormData({ ...formData, achievementTypeId: value })}
+                  disabled={!formData.categoryId}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder={formData.categoryId ? "Select achievement type" : "Select category first"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {achievementTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.id.toString()}>
+                        {type.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div>
-              <Label htmlFor="earnedDate">Date Earned</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left font-normal">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.earnedDate ? format(new Date(formData.earnedDate), 'PPP') : 'Pick a date'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={formData.earnedDate ? new Date(formData.earnedDate) : undefined}
-                    onSelect={(date) => setFormData({ ...formData, earnedDate: date?.toISOString() })}
-                    initialFocus
+              <Label htmlFor="dateOfAchievement">Date of Achievement *</Label>
+              <div className="grid grid-cols-2 gap-2 mt-1">
+                <Select
+                  value={formData.dateOfAchievement ? new Date(formData.dateOfAchievement).getMonth().toString() : ''}
+                  onValueChange={(value) => {
+                    const year = formData.dateOfAchievement ? new Date(formData.dateOfAchievement).getFullYear() : new Date().getFullYear()
+                    const newDate = `${year}-${String(parseInt(value) + 1).padStart(2, '0')}-01`
+                    setFormData({ ...formData, dateOfAchievement: newDate })
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["January", "February", "March", "April", "May", "June", 
+                      "July", "August", "September", "October", "November", "December"].map((month, index) => (
+                      <SelectItem key={index} value={index.toString()}>
+                        {month}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={formData.dateOfAchievement ? new Date(formData.dateOfAchievement).getFullYear().toString() : ''}
+                  onValueChange={(value) => {
+                    const month = formData.dateOfAchievement ? new Date(formData.dateOfAchievement).getMonth() : 0
+                    const newDate = `${value}-${String(month + 1).padStart(2, '0')}-01`
+                    setFormData({ ...formData, dateOfAchievement: newDate })
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 50 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Label htmlFor="achievementImage" className="text-sm font-medium">Achievement Icon</Label>
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Input
+                    id="achievementImage"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAchievementImageUpload}
+                    disabled={uploadingImage}
+                    className="hidden"
                   />
-                </PopoverContent>
-              </Popover>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById('achievementImage')?.click()}
+                    disabled={uploadingImage}
+                    className="flex items-center gap-2"
+                  >
+                    {uploadingImage ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-pathpiper-teal"></div>
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        Upload Image
+                      </>
+                    )}
+                  </Button>
+                </div>
+                
+                {formData.achievementImageIcon && (
+                  <div className="flex items-center gap-2">
+                    <img 
+                      src={formData.achievementImageIcon} 
+                      alt="Achievement icon preview" 
+                      className="h-8 w-8 object-cover rounded border"
+                    />
+                    <span className="text-sm text-green-600 font-medium">Uploaded</span>
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-gray-500">JPG, PNG up to 5MB (optional)</p>
             </div>
           </div>
         )
