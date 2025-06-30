@@ -80,8 +80,7 @@ export async function GET(request: NextRequest) {
     console.log('✅ Student email verified successfully for:', studentEmail)
 
     // Redirect to login page with success message
-    const baseUrl = 'https://pathpiper.replit.app'
-    return NextResponse.redirect(new URL('/login?email_verified=true', baseUrl))
+    return NextResponse.redirect(new URL('/login?email_verified=true', 'https://pathpiper.replit.app'))
 
   } catch (error) {
     console.error('Student email verification error:', error)

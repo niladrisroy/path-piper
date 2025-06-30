@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: provider.toLowerCase() as any,
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback`,
+        redirectTo: 'https://pathpiper.replit.app/api/auth/callback',
       },
     });
     
