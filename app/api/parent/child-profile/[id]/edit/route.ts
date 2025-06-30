@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@supabase/supabase-js'
@@ -70,7 +69,7 @@ export async function PUT(
         await prisma.userInterest.deleteMany({
           where: { userId: childId }
         })
-        
+
         // Add new interests
         if (data.interests && data.interests.length > 0) {
           await prisma.userInterest.createMany({
@@ -87,7 +86,7 @@ export async function PUT(
         await prisma.userSkill.deleteMany({
           where: { userId: childId }
         })
-        
+
         // Add new skills
         if (data.skills && data.skills.length > 0) {
           await prisma.userSkill.createMany({
@@ -165,27 +164,17 @@ export async function PUT(
         break
 
       case 'achievements':
-        if (data.badgeId) {
-          // Update existing badge
-          await prisma.customBadge.update({
-            where: { id: data.badgeId },
-            data: {
-              title: data.title,
-              description: data.description,
-              earnedDate: data.earnedDate
-            }
-          })
-        } else {
-          // Create new badge
-          await prisma.customBadge.create({
+          // Create a new achievement using the userAchievement table
+          await prisma.userAchievement.create({
             data: {
               userId: childId,
-              title: data.title,
+              name: data.name, // Using 'name' field as per schema
               description: data.description,
-              earnedDate: data.earnedDate
+              dateOfAchievement: data.dateOfAchievement ? new Date(data.dateOfAchievement) : new Date(),
+              achievementImageIcon: data.achievementImageIcon || null,
+              achievementTypeId: data.achievementTypeId ? parseInt(data.achievementTypeId) : null
             }
           })
-        }
         break
 
       case 'social-links':
@@ -193,7 +182,7 @@ export async function PUT(
         await prisma.socialLink.deleteMany({
           where: { userId: childId }
         })
-        
+
         // Add new social links
         if (data.socialLinks && data.socialLinks.length > 0) {
           await prisma.socialLink.createMany({

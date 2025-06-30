@@ -464,7 +464,7 @@ export default function EditSectionDialog({
           break
         case 'achievements':
           data = {
-            name: formData.name,
+            name: formData.name, // This matches the 'name' field in user_achievements table
             description: formData.description,
             dateOfAchievement: formData.dateOfAchievement,
             achievementTypeId: formData.achievementTypeId,
