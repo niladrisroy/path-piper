@@ -76,7 +76,7 @@ export default function EditSectionDialog({
   const [newSkillLevel, setNewSkillLevel] = useState(3)
 
   const [institutionTypes, setInstitutionTypes] = useState<any[]>([])
-  const [achievementCategories, setAchievementCategories] = useState<any[]>[])
+  const [achievementCategories, setAchievementCategories] = useState<any[]>([])
   const [achievementTypes, setAchievementTypes] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
 
