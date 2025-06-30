@@ -77,7 +77,7 @@ export default function EditSectionDialog({
 
   const [institutionTypes, setInstitutionTypes] = useState<any[]>([])
   const [achievementCategories, setAchievementCategories] = useState<any[]>([])
-  const [achievementTypes, setAchievementTypes] = useState(false)
+  const [achievementTypes, setAchievementTypes] = useState<any[]>([])
   const [uploadingImage, setUploadingImage] = useState(false)
 
   useEffect(() => {
@@ -1200,7 +1200,7 @@ export default function EditSectionDialog({
                     <SelectValue placeholder={formData.categoryId ? "Select achievement type" : "Select category first"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {achievementTypes.map((type) => (
+                    {(achievementTypes || []).map((type) => (
                       <SelectItem key={type.id} value={type.id.toString()}>
                         {type.name}
                       </SelectItem>
