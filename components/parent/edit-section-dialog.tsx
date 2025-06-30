@@ -940,8 +940,7 @@ export default function EditSectionDialog({
                         institutionTypes.find(t => t.id === formData.institutionTypeId)?.slug || 'default',
                         'grade'
                       )
-                    : 'e.g., Grade 10,```python
- 1st Year, Beginner Level'
+                    : 'e.g., Grade 10, 1st Year, Beginner Level'
                 }
               />
             </div>
