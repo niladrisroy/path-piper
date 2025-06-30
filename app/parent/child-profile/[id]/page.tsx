@@ -464,59 +464,69 @@ export default function ParentChildProfilePage() {
                 </CardHeader>
                 <CardContent>
                   {childData.educationHistory && childData.educationHistory.length > 0 ? (
-                    <div className="space-y-4">
-                      {childData.educationHistory.map((education) => (
-                        <div key={education.id} className="border rounded-lg p-4">
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-start space-x-3">
-                              <GraduationCap className="w-6 h-6 text-blue-600 mt-1" />
-                              <div>
-                                <h4 className="font-semibold text-lg">{education.institutionName}</h4>
-                                {education.institutionTypeName && (
-                                  <p className="text-sm text-gray-600">{education.institutionTypeName}</p>
-                                )}
-                                {education.degreeProgram && (
-                                  <p className="font-medium">{education.degreeProgram}</p>
-                                )}
-                                {education.fieldOfStudy && (
-                                  <p className="text-gray-700">{education.fieldOfStudy}</p>
-                                )}
-                                {education.gradeLevel && (
-                                  <p className="text-sm text-gray-600">Grade: {education.gradeLevel}</p>
-                                )}
-                                <p className="text-sm text-gray-500">
-                                  {new Date(education.startDate).getFullYear()} - {
-                                    education.isCurrent ? 'Present' : 
-                                    education.endDate ? new Date(education.endDate).getFullYear() : 'Present'
-                                  }
-                                </p>
+                    <div className="overflow-x-auto">
+                      <div className="flex space-x-4 pb-4" style={{ width: `${childData.educationHistory.length * 300}px`, minWidth: '100%' }}>
+                        {childData.educationHistory.map((education) => (
+                          <div key={education.id} className="flex-shrink-0 w-72 border rounded-lg p-4 bg-white">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-start space-x-3">
+                                <GraduationCap className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
+                                <div className="min-w-0 flex-1">
+                                  <h4 className="font-semibold text-base truncate">{education.institutionName}</h4>
+                                  {education.institutionTypeName && (
+                                    <p className="text-sm text-gray-600 truncate">{education.institutionTypeName}</p>
+                                  )}
+                                </div>
                               </div>
+                              {education.isCurrent && (
+                                <Badge variant="outline" className="text-green-600 border-green-600 text-xs flex-shrink-0">
+                                  Current
+                                </Badge>
+                              )}
                             </div>
-                            {education.isCurrent && (
-                              <Badge variant="outline" className="text-green-600 border-green-600">
-                                Current
-                              </Badge>
+
+                            <div className="space-y-2">
+                              {education.degreeProgram && (
+                                <p className="font-medium text-sm">{education.degreeProgram}</p>
+                              )}
+                              {education.fieldOfStudy && (
+                                <p className="text-gray-700 text-sm">{education.fieldOfStudy}</p>
+                              )}
+                              {education.gradeLevel && (
+                                <p className="text-sm text-gray-600">Grade: {education.gradeLevel}</p>
+                              )}
+                              <p className="text-sm text-gray-500">
+                                {new Date(education.startDate).getFullYear()} - {
+                                  education.isCurrent ? 'Present' : 
+                                  education.endDate ? new Date(education.endDate).getFullYear() : 'Present'
+                                }
+                              </p>
+                            </div>
+
+                            {education.subjects && education.subjects.length > 0 && (
+                              <div className="mt-3">
+                                <p className="text-xs font-medium mb-2">Subjects:</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {education.subjects.slice(0, 3).map((subject, index) => (
+                                    <Badge key={index} variant="outline" className="text-xs">
+                                      {subject}
+                                    </Badge>
+                                  ))}
+                                  {education.subjects.length > 3 && (
+                                    <Badge variant="outline" className="text-xs">
+                                      +{education.subjects.length - 3} more
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {education.description && (
+                              <p className="mt-3 text-xs text-gray-700 line-clamp-2">{education.description}</p>
                             )}
                           </div>
-
-                          {education.subjects && education.subjects.length > 0 && (
-                            <div className="mt-3">
-                              <p className="text-sm font-medium mb-2">Subjects:</p>
-                              <div className="flex flex-wrap gap-1">
-                                {education.subjects.map((subject, index) => (
-                                  <Badge key={index} variant="outline" className="text-xs">
-                                    {subject}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {education.description && (
-                            <p className="mt-3 text-sm text-gray-700">{education.description}</p>
-                          )}
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   ) : (
                     <p className="text-gray-500 italic">No education history added yet</p>
@@ -547,39 +557,48 @@ export default function ParentChildProfilePage() {
                 </CardHeader>
                 <CardContent>
                   {childData.profile.userAchievements && childData.profile.userAchievements.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {childData.profile.userAchievements.map((achievement) => (
-                        <div key={achievement.id} className="border rounded-lg p-4 flex items-start space-x-3">
-                          {achievement.achievementImageIcon ? (
-                            <img 
-                              src={achievement.achievementImageIcon} 
-                              alt={achievement.name}
-                              className="w-8 h-8 object-cover rounded mt-1"
-                            />
-                          ) : (
-                            <Trophy className="w-8 h-8 text-yellow-500 mt-1" />
-                          )}
-                          <div>
-                            <h4 className="font-semibold">{achievement.name}</h4>
-                            <p className="text-gray-600 text-sm mt-1">{achievement.description}</p>
-                            {achievement.achievementType && (
-                              <div className="flex flex-wrap gap-2 mt-2">
-                                <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">
-                                  {achievement.achievementType.name}
-                                </span>
-                                {achievement.achievementType.category && (
-                                  <span className="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded">
-                                    {achievement.achievementType.category.name}
-                                  </span>
-                                )}
+                    <div className="overflow-x-auto">
+                      <div className="flex space-x-4 pb-4" style={{ width: `${childData.profile.userAchievements.length * 300}px`, minWidth: '100%' }}>
+                        {childData.profile.userAchievements.map((achievement) => (
+                          <div key={achievement.id} className="flex-shrink-0 w-72 border rounded-lg p-4 bg-white">
+                            <div className="flex items-start space-x-3 mb-3">
+                              {achievement.achievementImageIcon ? (
+                                <img 
+                                  src={achievement.achievementImageIcon} 
+                                  alt={achievement.name}
+                                  className="w-10 h-10 object-cover rounded mt-1 flex-shrink-0"
+                                />
+                              ) : (
+                                <Trophy className="w-10 h-10 text-yellow-500 mt-1 flex-shrink-0" />
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <h4 className="font-semibold text-base truncate">{achievement.name}</h4>
                               </div>
-                            )}
-                            <p className="text-xs text-gray-500 mt-2">
-                              Achieved: {new Date(achievement.dateOfAchievement).toLocaleDateString()}
-                            </p>
+                            </div>
+
+                            <div className="space-y-3">
+                              <p className="text-gray-600 text-sm line-clamp-2">{achievement.description}</p>
+                              
+                              {achievement.achievementType && (
+                                <div className="flex flex-wrap gap-2">
+                                  <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded truncate">
+                                    {achievement.achievementType.name}
+                                  </span>
+                                  {achievement.achievementType.category && (
+                                    <span className="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded truncate">
+                                      {achievement.achievementType.category.name}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              
+                              <p className="text-xs text-gray-500">
+                                Achieved: {new Date(achievement.dateOfAchievement).toLocaleDateString()}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   ) : (
                     <p className="text-gray-500 italic">No achievements added yet</p>
@@ -610,28 +629,36 @@ export default function ParentChildProfilePage() {
                 </CardHeader>
                 <CardContent>
                   {childData.profile.goals && childData.profile.goals.length > 0 ? (
-                    <div className="space-y-4">
-                      {childData.profile.goals.map((goal) => (
-                        <div key={goal.id} className="border rounded-lg p-4">
-                          <h4 className="font-semibold text-lg">{goal.title}</h4>
-                          <p className="text-gray-700 mt-2">{goal.description}</p>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {goal.category && (
-                              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                                {goal.category}
-                              </span>
-                            )}
-                            {goal.timeframe && (
-                              <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
-                                {goal.timeframe}
-                              </span>
-                            )}
-                            <span className={`text-xs px-2 py-1 rounded ${goal.completed ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                              {goal.completed ? 'Completed' : 'In Progress'}
-                            </span>
+                    <div className="overflow-x-auto">
+                      <div className="flex space-x-4 pb-4" style={{ width: `${childData.profile.goals.length * 300}px`, minWidth: '100%' }}>
+                        {childData.profile.goals.map((goal) => (
+                          <div key={goal.id} className="flex-shrink-0 w-72 border rounded-lg p-4 bg-white">
+                            <div className="space-y-3">
+                              <h4 className="font-semibold text-base line-clamp-2">{goal.title}</h4>
+                              <p className="text-gray-700 text-sm line-clamp-3">{goal.description}</p>
+                              
+                              <div className="flex flex-wrap gap-2">
+                                {goal.category && (
+                                  <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded truncate">
+                                    {goal.category}
+                                  </span>
+                                )}
+                                {goal.timeframe && (
+                                  <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded truncate">
+                                    {goal.timeframe}
+                                  </span>
+                                )}
+                              </div>
+                              
+                              <div className="pt-2">
+                                <span className={`text-xs px-2 py-1 rounded ${goal.completed ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                  {goal.completed ? 'Completed' : 'In Progress'}
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   ) : (
                     <p className="text-gray-500 italic">No goals added yet</p>
