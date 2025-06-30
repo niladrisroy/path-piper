@@ -122,6 +122,13 @@ export default function ParentChildProfilePage() {
   const [parentName, setParentName] = useState("")
   const [activeTab, setActiveTab] = useState("about")
   const [editingSection, setEditingSection] = useState<string | null>(null)
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean
+    type: 'education' | 'achievement' | 'goal'
+    id: string | number
+    name: string
+  } | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const router = useRouter()
   const params = useParams()
   const childId = params.id as string
@@ -174,6 +181,91 @@ export default function ParentChildProfilePage() {
 
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
+  }
+
+  const handleEditEducation = (education: any) => {
+    // Open edit dialog for education
+    setEditingSection('education')
+    // You can pass education data to the EditSectionDialog component
+  }
+
+  const handleEditAchievement = (achievement: any) => {
+    // Open edit dialog for achievement
+    setEditingSection('achievements')
+    // You can pass achievement data to the EditSectionDialog component
+  }
+
+  const handleEditGoal = (goal: any) => {
+    // Open edit dialog for goal
+    setEditingSection('goals')
+    // You can pass goal data to the EditSectionDialog component
+  }
+
+  const handleDeleteEducation = (id: string, name: string) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      type: 'education',
+      id,
+      name
+    })
+  }
+
+  const handleDeleteAchievement = (id: string, name: string) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      type: 'achievement',
+      id,
+      name
+    })
+  }
+
+  const handleDeleteGoal = (id: string, name: string) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      type: 'goal',
+      id,
+      name
+    })
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmation) return
+
+    setIsDeleting(true)
+    try {
+      let endpoint = ''
+      switch (deleteConfirmation.type) {
+        case 'education':
+          endpoint = `/api/education/${deleteConfirmation.id}`
+          break
+        case 'achievement':
+          endpoint = `/api/achievements?id=${deleteConfirmation.id}`
+          break
+        case 'goal':
+          endpoint = `/api/goals/${deleteConfirmation.id}`
+          break
+      }
+
+      const response = await fetch(endpoint, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        toast.success(`${deleteConfirmation.type.charAt(0).toUpperCase() + deleteConfirmation.type.slice(1)} deleted successfully!`)
+        // Refresh the child profile data
+        await fetchChildProfile()
+      } else {
+        const error = await response.json()
+        toast.error(error.error || `Failed to delete ${deleteConfirmation.type}`)
+      }
+    } catch (error) {
+      console.error(`Error deleting ${deleteConfirmation.type}:`, error)
+      toast.error(`Failed to delete ${deleteConfirmation.type}`)
+    } finally {
+      setIsDeleting(false)
+      setDeleteConfirmation(null)
+    }
   }
 
   if (loading) {
@@ -478,11 +570,29 @@ export default function ParentChildProfilePage() {
                                   )}
                                 </div>
                               </div>
-                              {education.isCurrent && (
-                                <Badge variant="outline" className="text-green-600 border-green-600 text-xs flex-shrink-0">
-                                  Current
-                                </Badge>
-                              )}
+                              <div className="flex items-center space-x-1">
+                                {education.isCurrent && (
+                                  <Badge variant="outline" className="text-green-600 border-green-600 text-xs flex-shrink-0">
+                                    Current
+                                  </Badge>
+                                )}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditEducation(education)}
+                                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-1"
+                                >
+                                  <Edit3 className="w-3 h-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteEducation(education.id, education.institutionName)}
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </div>
                             </div>
 
                             <div className="space-y-2">
@@ -561,18 +671,38 @@ export default function ParentChildProfilePage() {
                       <div className="flex space-x-4 pb-4" style={{ width: `${childData.profile.userAchievements.length * 300}px`, minWidth: '100%' }}>
                         {childData.profile.userAchievements.map((achievement) => (
                           <div key={achievement.id} className="flex-shrink-0 w-72 border rounded-lg p-4 bg-white">
-                            <div className="flex items-start space-x-3 mb-3">
-                              {achievement.achievementImageIcon ? (
-                                <img 
-                                  src={achievement.achievementImageIcon} 
-                                  alt={achievement.name}
-                                  className="w-10 h-10 object-cover rounded mt-1 flex-shrink-0"
-                                />
-                              ) : (
-                                <Trophy className="w-10 h-10 text-yellow-500 mt-1 flex-shrink-0" />
-                              )}
-                              <div className="min-w-0 flex-1">
-                                <h4 className="font-semibold text-base truncate">{achievement.name}</h4>
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-start space-x-3">
+                                {achievement.achievementImageIcon ? (
+                                  <img 
+                                    src={achievement.achievementImageIcon} 
+                                    alt={achievement.name}
+                                    className="w-10 h-10 object-cover rounded mt-1 flex-shrink-0"
+                                  />
+                                ) : (
+                                  <Trophy className="w-10 h-10 text-yellow-500 mt-1 flex-shrink-0" />
+                                )}
+                                <div className="min-w-0 flex-1">
+                                  <h4 className="font-semibold text-base truncate">{achievement.name}</h4>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditAchievement(achievement)}
+                                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-1"
+                                >
+                                  <Edit3 className="w-3 h-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteAchievement(achievement.id, achievement.name)}
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
                               </div>
                             </div>
 
@@ -634,7 +764,27 @@ export default function ParentChildProfilePage() {
                         {childData.profile.goals.map((goal) => (
                           <div key={goal.id} className="flex-shrink-0 w-72 border rounded-lg p-4 bg-white">
                             <div className="space-y-3">
-                              <h4 className="font-semibold text-base line-clamp-2">{goal.title}</h4>
+                              <div className="flex items-start justify-between">
+                                <h4 className="font-semibold text-base line-clamp-2 flex-1">{goal.title}</h4>
+                                <div className="flex items-center space-x-1 ml-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEditGoal(goal)}
+                                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-1"
+                                  >
+                                    <Edit3 className="w-3 h-3" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeleteGoal(goal.id, goal.title)}
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              </div>
                               <p className="text-gray-700 text-sm line-clamp-3">{goal.description}</p>
                               
                               <div className="flex flex-wrap gap-2">
@@ -720,6 +870,59 @@ export default function ParentChildProfilePage() {
           onSave={fetchChildProfile}
           childId={childId}
         />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Delete {deleteConfirmation.type.charAt(0).toUpperCase() + deleteConfirmation.type.slice(1)}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  This action cannot be undone.
+                </p>
+              </div>
+            </div>
+            
+            <p className="text-gray-700 mb-6">
+              Are you sure you want to delete "<span className="font-medium">{deleteConfirmation.name}</span>"?
+            </p>
+            
+            <div className="flex justify-end space-x-3">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteConfirmation(null)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDelete}
+                disabled={isDeleting}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
