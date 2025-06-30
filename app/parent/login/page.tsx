@@ -50,7 +50,6 @@ function ParentLoginContent() {
   }, [])
 
   useEffect(() => {
-    // Check if parent is already logged in
     const checkExistingAuth = async () => {
       try {
         const response = await fetch('/api/parent/children', {
@@ -70,6 +69,13 @@ function ParentLoginContent() {
     checkExistingAuth()
 
     const urlParams = new URLSearchParams(window.location.search)
+
+    // Prefill email from URL parameter
+    const prefilledEmail = urlParams.get('email')
+    if (prefilledEmail) {
+      setEmail(prefilledEmail)
+    }
+
     if (urlParams.get('verified') === 'true') {
       setSuccessMessage('Email verified successfully! You can now log in.')
     }

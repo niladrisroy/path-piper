@@ -90,7 +90,9 @@ export async function GET(request: NextRequest) {
     
     // Use the specific PathPiper deployment domain for redirect
     const baseUrl = 'https://pathpiper.replit.app'
-    return NextResponse.redirect(new URL(redirectUrl, baseUrl))
+    const urlWithEmail = new URL(redirectUrl, baseUrl)
+    urlWithEmail.searchParams.set('email', parentEmail)
+    return NextResponse.redirect(urlWithEmail)
 
   } catch (error) {
     console.error('Parent verification error:', error)
