@@ -349,13 +349,13 @@ export async function DELETE(
 
       case 'goals':
         await prisma.goal.delete({
-          where: { id: itemId }
+          where: { id: parseInt(itemId) }
         })
         break
 
       case 'achievements':
         await prisma.userAchievement.delete({
-          where: { id: itemId }
+          where: { id: parseInt(itemId) }
         })
         break
 

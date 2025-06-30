@@ -233,22 +233,17 @@ export default function ParentChildProfilePage() {
 
     setIsDeleting(true)
     try {
-      let endpoint = ''
-      switch (deleteConfirmation.type) {
-        case 'education':
-          endpoint = `/api/education/${deleteConfirmation.id}`
-          break
-        case 'achievement':
-          endpoint = `/api/achievements?id=${deleteConfirmation.id}`
-          break
-        case 'goal':
-          endpoint = `/api/goals/${deleteConfirmation.id}`
-          break
-      }
-
-      const response = await fetch(endpoint, {
+      // Use the parent API endpoint for all deletions
+      const response = await fetch(`/api/parent/child-profile/${childId}/edit`, {
         method: 'DELETE',
-        credentials: 'include'
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          section: deleteConfirmation.type === 'achievement' ? 'achievements' : deleteConfirmation.type === 'education' ? 'education' : 'goals',
+          itemId: deleteConfirmation.id
+        })
       })
 
       if (response.ok) {
