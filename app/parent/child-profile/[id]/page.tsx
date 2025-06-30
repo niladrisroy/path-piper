@@ -697,6 +697,19 @@ export default function ParentChildProfilePage() {
           <p className="text-slate-500 text-sm">© {new Date().getFullYear()} PathPiper. All rights reserved.</p>
         </div>
       </footer>
+      {editingSection && childData && (
+        <EditSectionDialog
+          isOpen={!!editingSection}
+          onClose={() => setEditingSection(null)}
+          section={editingSection}
+          childProfile={{
+            ...childData.profile,
+            ageGroup: 'young_adult' //childData?.student?.ageGroup || 'young_adult'  //Assuming all children are young adults for now
+          }}
+          onSave={fetchChildProfile}
+          childId={childId}
+        />
+      )}
     </div>
   )
 }
