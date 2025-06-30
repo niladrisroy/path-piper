@@ -9,6 +9,61 @@ import Footer from "@/components/footer"
 import ProtectedLayout from "@/app/protected-layout"
 import ProfileEditForm from "@/components/profile/profile-edit-form"
 
+function StudentProfileEditContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { user, loading: authLoading } = useAuth()
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user) {
+        router.push('/login')
+        return
+      }
+
+      if (user.role !== 'student') {
+        router.push('/feed')
+        return
+      }
+
+      setLoading(false)
+    }
+  }, [user, authLoading, router])
+
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500"></div>
+      </div>
+    )
+  }
+
+  return (
+    <ProtectedLayout>
+      <div className="min-h-screen bg-gray-50">
+        <InternalNavbar />
+        <main className="pt-16 sm:pt-24">
+          <ProfileEditForm />
+        </main>
+        <Footer />
+      </div>
+    </ProtectedLayout>
+  )
+}
+
+export default function StudentProfileEditPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500"></div>
+      </div>
+    }>
+      <StudentProfileEditContent />
+    </Suspense>
+  )
+}
+
 function ProfileEditContent() {
   const { user, loading } = useAuth()
   const [error, setError] = useState<string | null>(null)
