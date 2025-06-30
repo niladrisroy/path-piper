@@ -27,6 +27,8 @@ import {
   Plus,
   Trash2
 } from "lucide-react"
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 
 interface ChildData {
   id: string
@@ -628,6 +630,10 @@ export default function ParentChildProfilePage() {
                             {education.description && (
                               <p className="mt-3 text-xs text-gray-700 line-clamp-2">{education.description}</p>
                             )}
+                            <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-3">
+                              <CalendarIcon className="h-4 w-4 mr-1" />
+                              {education.startDate && format(new Date(education.startDate), 'MMM yyyy')} - {education.isCurrent ? 'Present' : education.endDate ? format(new Date(education.endDate), 'MMM yyyy') : 'N/A'}
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -702,7 +708,7 @@ export default function ParentChildProfilePage() {
 
                             <div className="space-y-3">
                               <p className="text-gray-600 text-sm line-clamp-2">{achievement.description}</p>
-                              
+
                               {achievement.achievementType && (
                                 <div className="flex flex-wrap gap-2">
                                   <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded truncate">
@@ -715,10 +721,10 @@ export default function ParentChildProfilePage() {
                                   )}
                                 </div>
                               )}
-                              
-                              <p className="text-xs text-gray-500">
-                                Achieved: {new Date(achievement.dateOfAchievement).toLocaleDateString()}
-                              </p>
+                              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-3">
+                              <CalendarIcon className="h-4 w-4 mr-1" />
+                              {achievement.dateOfAchievement && format(new Date(achievement.dateOfAchievement), 'MMM yyyy')}
+                            </div>
                             </div>
                           </div>
                         ))}
@@ -780,7 +786,7 @@ export default function ParentChildProfilePage() {
                                 </div>
                               </div>
                               <p className="text-gray-700 text-sm line-clamp-3">{goal.description}</p>
-                              
+
                               <div className="flex flex-wrap gap-2">
                                 {goal.category && (
                                   <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded truncate">
@@ -793,7 +799,7 @@ export default function ParentChildProfilePage() {
                                   </span>
                                 )}
                               </div>
-                              
+
                               <div className="pt-2">
                                 <span className={`text-xs px-2 py-1 rounded ${goal.completed ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                                   {goal.completed ? 'Completed' : 'In Progress'}
@@ -887,11 +893,11 @@ export default function ParentChildProfilePage() {
                 </p>
               </div>
             </div>
-            
+
             <p className="text-gray-700 mb-6">
               Are you sure you want to delete "<span className="font-medium">{deleteConfirmation.name}</span>"?
             </p>
-            
+
             <div className="flex justify-end space-x-3">
               <Button
                 variant="outline"

@@ -1121,22 +1121,57 @@ export default function EditSectionDialog({
             </div>
             <div>
               <Label htmlFor="startDate">Start Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left font-normal">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.startDate ? format(new Date(formData.startDate), 'PPP') : 'Pick a date'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={formData.startDate ? new Date(formData.startDate) : undefined}
-                    onSelect={(date) => handleInputChange('startDate', date?.toISOString() )}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <div className="grid grid-cols-2 gap-2 mt-1">
+                <Select
+                  value={formData.startDate ? new Date(formData.startDate).getMonth().toString() : ''}
+                  onValueChange={(value) => {
+                    const year = formData.startDate ? new Date(formData.startDate).getFullYear() : new Date().getFullYear()
+                    const newDate = `${year}-${String(parseInt(value) + 1).padStart(2, '0')}-01`
+                    handleInputChange('startDate', newDate)
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["January", "February", "March", "April", "May", "June",
+                      "July", "August", "September", "October", "November", "December"].map((month, index) => {
+                      const currentDate = new Date()
+                      const currentYear = currentDate.getFullYear()
+                      const currentMonth = currentDate.getMonth()
+                      const selectedYear = formData.startDate ? new Date(formData.startDate).getFullYear() : currentYear
+                      
+                      // Disable future months in current year
+                      const isDisabled = selectedYear === currentYear && index > currentMonth
+                      
+                      return (
+                        <SelectItem key={index} value={index.toString()} disabled={isDisabled}>
+                          {month}
+                        </SelectItem>
+                      )
+                    })}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={formData.startDate ? new Date(formData.startDate).getFullYear().toString() : ''}
+                  onValueChange={(value) => {
+                    const month = formData.startDate ? new Date(formData.startDate).getMonth() : 0
+                    const newDate = `${value}-${String(month + 1).padStart(2, '0')}-01`
+                    handleInputChange('startDate', newDate)
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 50 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div>
               <Label htmlFor="description">Description</Label>
@@ -1308,11 +1343,21 @@ export default function EditSectionDialog({
                   </SelectTrigger>
                   <SelectContent>
                     {["January", "February", "March", "April", "May", "June",
-                      "July", "August", "September", "October", "November", "December"].map((month, index) => (
-                      <SelectItem key={index} value={index.toString()}>
-                        {month}
-                      </SelectItem>
-                    ))}
+                      "July", "August", "September", "October", "November", "December"].map((month, index) => {
+                      const currentDate = new Date()
+                      const currentYear = currentDate.getFullYear()
+                      const currentMonth = currentDate.getMonth()
+                      const selectedYear = formData.dateOfAchievement ? new Date(formData.dateOfAchievement).getFullYear() : currentYear
+                      
+                      // Disable future months in current year
+                      const isDisabled = selectedYear === currentYear && index > currentMonth
+                      
+                      return (
+                        <SelectItem key={index} value={index.toString()} disabled={isDisabled}>
+                          {month}
+                        </SelectItem>
+                      )
+                    })}
                   </SelectContent>
                 </Select>
                 <Select
