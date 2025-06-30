@@ -26,49 +26,105 @@ export default function ParentDashboard() {
   const [loading, setLoading] = useState(true)
   const [parentName, setParentName] = useState("")
   const router = useRouter()
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchChildren()
-  }, [])
+    const fetchParentData = async () => {
+      try {
+        setLoading(true)
 
-  const fetchChildren = async () => {
-    try {
-      const response = await fetch('/api/parent/children', {
-        credentials: 'include'
-      })
+        const childrenResponse = await fetch('/api/parent/children', {
+          credentials: 'include'
+        })
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          router.push('/parent/login')
-          return
+        if (!childrenResponse.ok) {
+          if (childrenResponse.status === 401) {
+            // Clear any stale local storage and redirect to login
+            try {
+              localStorage.removeItem('parent_session')
+              localStorage.removeItem('parent_id')
+              sessionStorage.removeItem('parent_session')
+              sessionStorage.removeItem('parent_id')
+            } catch (error) {
+              console.error('Error clearing storage:', error)
+            }
+            router.push('/parent/login')
+            return
+          }
+          throw new Error('Failed to fetch children')
         }
-        throw new Error('Failed to fetch children')
-      }
 
-      const data = await response.json()
-      console.log('🔍 Parent dashboard - received children data:', data.children)
-      console.log('🔍 Children verification status:', data.children?.map(child => ({
-        name: `${child.firstName} ${child.lastName}`,
-        parentVerified: child.parentVerified,
-        type: typeof child.parentVerified
-      })))
-      setChildren(data.children || [])
-      setParentName(data.parentName || "Parent")
-    } catch (error) {
-      console.error('Error fetching children:', error)
-      toast.error('Failed to load children profiles')
-    } finally {
-      setLoading(false)
+        const childrenData = await childrenResponse.json()
+        setChildren(childrenData.children || [])
+        setParentName(childrenData.parentName || 'Parent')
+
+      } catch (error) {
+        console.error('Error fetching parent data:', error)
+        setError('Failed to load dashboard data')
+      } finally {
+        setLoading(false)
+      }
     }
-  }
+
+    fetchParentData()
+  }, [router])
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/parent/logout', {
+      const response = await fetch('/api/parent/logout', {
         method: 'POST',
         credentials: 'include'
       })
-      router.push('/parent/login')
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Clear all client-side storage if indicated by server
+        if (data.clearStorage) {
+          try {
+            // Clear localStorage
+            localStorage.clear()
+
+            // Clear sessionStorage
+            sessionStorage.clear()
+
+            // Clear IndexedDB if it exists
+            if ('indexedDB' in window) {
+              indexedDB.databases?.().then(databases => {
+                databases.forEach(db => {
+                  if (db.name) {
+                    indexedDB.deleteDatabase(db.name)
+                  }
+                })
+              }).catch(() => {
+                // Ignore errors when clearing IndexedDB
+              })
+            }
+
+            // Clear any parent-specific storage
+            const parentKeys = [
+              'parent_session',
+              'parent_id',
+              'parent-auth-token',
+              'parent_access_token',
+              'parent_refresh_token'
+            ]
+
+            parentKeys.forEach(key => {
+              localStorage.removeItem(key)
+              sessionStorage.removeItem(key)
+            })
+
+            console.log('✅ All parent storage cleared')
+          } catch (error) {
+            console.error('Error clearing storage:', error)
+          }
+        }
+
+        router.push('/parent/login')
+      } else {
+        console.error('Logout failed')
+      }
     } catch (error) {
       console.error('Logout error:', error)
     }
@@ -261,7 +317,7 @@ export default function ParentDashboard() {
                           ✅ Account Approved
                         </div>
                       )}
-                      
+
                       <div className="pt-2">
                         <Link href={`/parent/child-profile/${child.id}`}>
                           <Button 

@@ -50,31 +50,36 @@ function ParentLoginContent() {
   }, [])
 
   useEffect(() => {
-    // Check for URL parameters
-    const verified = searchParams.get('verified')
-    const error = searchParams.get('error')
+    // Check if parent is already logged in
+    const checkExistingAuth = async () => {
+      try {
+        const response = await fetch('/api/parent/children', {
+          credentials: 'include'
+        })
 
-    if (verified === 'true') {
-      setSuccessMessage('Email verified successfully! You can now log in.')
-    } else if (error) {
-      switch (error) {
-        case 'invalid_token':
-          setError('Invalid verification link. Please try again.')
-          break
-        case 'token_expired':
-          setError('Verification link has expired. Please request a new one.')
-          break
-        case 'invalid_verification':
-          setError('Invalid verification. Please try again.')
-          break
-        case 'verification_failed':
-          setError('Email verification failed. Please try again.')
-          break
-        default:
-          setError('An error occurred. Please try again.')
+        if (response.ok) {
+          // Parent is already authenticated, redirect to dashboard
+          router.push('/parent/dashboard')
+          return
+        }
+      } catch (error) {
+        // Not authenticated, continue with login page
       }
     }
-  }, [searchParams])
+
+    checkExistingAuth()
+
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get('verified') === 'true') {
+      setSuccessMessage('Email verified successfully! You can now log in.')
+    }
+    if (urlParams.get('error') === 'invalid_verification') {
+      setError('Invalid or expired verification link.')
+    }
+    if (urlParams.get('error') === 'verification_failed') {
+      setError('Email verification failed. Please try again.')
+    }
+  }, [router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

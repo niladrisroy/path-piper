@@ -75,11 +75,37 @@ export function useAuth() {
               timestamp: Date.now()
             }
             
+            // Store user session info in localStorage for persistence
+            try {
+              localStorage.setItem('user_session_timestamp', Date.now().toString())
+              localStorage.setItem('user_role', userData.role)
+              localStorage.setItem('user_id', userData.id)
+            } catch (error) {
+              console.error('Error storing session info:', error)
+            }
+            
             return userData
+          } else {
+            // Clear any stale session data if request fails
+            try {
+              localStorage.removeItem('user_session_timestamp')
+              localStorage.removeItem('user_role')
+              localStorage.removeItem('user_id')
+            } catch (error) {
+              console.error('Error clearing session info:', error)
+            }
           }
           return null
         }).catch((error) => {
           console.error('Error fetching user:', error)
+          // Clear session data on error
+          try {
+            localStorage.removeItem('user_session_timestamp')
+            localStorage.removeItem('user_role')
+            localStorage.removeItem('user_id')
+          } catch (error) {
+            console.error('Error clearing session info:', error)
+          }
           return null
         }).finally(() => {
           globalUserPromise = null
