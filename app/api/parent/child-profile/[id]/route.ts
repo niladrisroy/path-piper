@@ -81,14 +81,21 @@ export async function GET(
               }
             },
             socialLinks: true,
-            careerGoals: {
+            goals: {
               orderBy: {
                 createdAt: 'desc'
               }
             },
-            customBadges: {
+            userAchievements: {
+              include: {
+                achievementType: {
+                  include: {
+                    category: true
+                  }
+                }
+              },
               orderBy: {
-                earnedDate: 'desc'
+                dateOfAchievement: 'desc'
               }
             }
           }
@@ -178,8 +185,8 @@ export async function GET(
         userInterests: childProfile.profile.userInterests,
         userSkills: childProfile.profile.userSkills,
         socialLinks: childProfile.profile.socialLinks,
-        careerGoals: childProfile.profile.careerGoals,
-        customBadges: childProfile.profile.customBadges
+        goals: childProfile.profile.goals,
+        userAchievements: childProfile.profile.userAchievements
       },
       educationHistory: childProfile.educationHistory.map(edu => ({
         id: edu.id,

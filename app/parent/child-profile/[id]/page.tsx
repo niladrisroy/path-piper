@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -61,18 +60,26 @@ interface ChildData {
       platform: string
       url: string
     }>
-    careerGoals: Array<{
+    goals: Array<{
       id: string
       title: string
       description: string
-      targetDate: string
+      category: string
+      timeframe: string
+      completed: boolean
     }>
-    customBadges: Array<{
+    userAchievements: Array<{
       id: string
-      title: string
+      name: string
       description: string
-      iconUrl?: string
-      earnedDate: string
+      achievementType: {
+        name: string
+        category: {
+          name: string
+        }
+      }
+      dateOfAchievement: string
+      achievementImageIcon: string
     }>
   }
   educationHistory: Array<{
@@ -281,7 +288,7 @@ export default function ParentChildProfilePage() {
                 {getInitials(childData.profile.firstName, childData.profile.lastName)}
               </AvatarFallback>
             </Avatar>
-            
+
             <div className="text-white mb-4">
               <h1 className="text-3xl font-bold">
                 {childData.profile.firstName} {childData.profile.lastName}
@@ -340,7 +347,7 @@ export default function ParentChildProfilePage() {
                   ) : (
                     <p className="text-gray-500 italic">No bio added yet</p>
                   )}
-                  
+
                   {childData.profile.socialLinks && childData.profile.socialLinks.length > 0 && (
                     <div>
                       <h4 className="font-semibold mb-2">Social Links</h4>
@@ -507,7 +514,7 @@ export default function ParentChildProfilePage() {
                               </Badge>
                             )}
                           </div>
-                          
+
                           {education.subjects && education.subjects.length > 0 && (
                             <div className="mt-3">
                               <p className="text-sm font-medium mb-2">Subjects:</p>
@@ -520,7 +527,7 @@ export default function ParentChildProfilePage() {
                               </div>
                             </div>
                           )}
-                          
+
                           {education.description && (
                             <p className="mt-3 text-sm text-gray-700">{education.description}</p>
                           )}
@@ -555,16 +562,36 @@ export default function ParentChildProfilePage() {
                   </EditSectionDialog>
                 </CardHeader>
                 <CardContent>
-                  {childData.profile.customBadges && childData.profile.customBadges.length > 0 ? (
+                  {childData.profile.userAchievements && childData.profile.userAchievements.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {childData.profile.customBadges.map((badge) => (
-                        <div key={badge.id} className="border rounded-lg p-4 flex items-start space-x-3">
-                          <Trophy className="w-8 h-8 text-yellow-500 mt-1" />
+                      {childData.profile.userAchievements.map((achievement) => (
+                        <div key={achievement.id} className="border rounded-lg p-4 flex items-start space-x-3">
+                          {achievement.achievementImageIcon ? (
+                            <img 
+                              src={achievement.achievementImageIcon} 
+                              alt={achievement.name}
+                              className="w-8 h-8 object-cover rounded mt-1"
+                            />
+                          ) : (
+                            <Trophy className="w-8 h-8 text-yellow-500 mt-1" />
+                          )}
                           <div>
-                            <h4 className="font-semibold">{badge.title}</h4>
-                            <p className="text-sm text-gray-600 mt-1">{badge.description}</p>
+                            <h4 className="font-semibold">{achievement.name}</h4>
+                            <p className="text-gray-600 text-sm mt-1">{achievement.description}</p>
+                            {achievement.achievementType && (
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">
+                                  {achievement.achievementType.name}
+                                </span>
+                                {achievement.achievementType.category && (
+                                  <span className="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded">
+                                    {achievement.achievementType.category.name}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                             <p className="text-xs text-gray-500 mt-2">
-                              Earned: {new Date(badge.earnedDate).toLocaleDateString()}
+                              Achieved: {new Date(achievement.dateOfAchievement).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
@@ -598,17 +625,27 @@ export default function ParentChildProfilePage() {
                   </EditSectionDialog>
                 </CardHeader>
                 <CardContent>
-                  {childData.profile.careerGoals && childData.profile.careerGoals.length > 0 ? (
+                  {childData.profile.goals && childData.profile.goals.length > 0 ? (
                     <div className="space-y-4">
-                      {childData.profile.careerGoals.map((goal) => (
+                      {childData.profile.goals.map((goal) => (
                         <div key={goal.id} className="border rounded-lg p-4">
                           <h4 className="font-semibold text-lg">{goal.title}</h4>
                           <p className="text-gray-700 mt-2">{goal.description}</p>
-                          {goal.targetDate && (
-                            <p className="text-sm text-gray-500 mt-2">
-                              Target Date: {new Date(goal.targetDate).toLocaleDateString()}
-                            </p>
-                          )}
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {goal.category && (
+                              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                                {goal.category}
+                              </span>
+                            )}
+                            {goal.timeframe && (
+                              <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                                {goal.timeframe}
+                              </span>
+                            )}
+                            <span className={`text-xs px-2 py-1 rounded ${goal.completed ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                              {goal.completed ? 'Completed' : 'In Progress'}
+                            </span>
+                          </div>
                         </div>
                       ))}
                     </div>
