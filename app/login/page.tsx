@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useRef, Suspense } from "react"
@@ -12,8 +11,8 @@ import { toast } from "sonner"
 import Link from "next/link"
 import Image from "next/image"
 import { invalidateUserCache } from '@/hooks/use-auth'
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Eye, EyeOff, Loader2, CheckCircle } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Eye, EyeOff, Loader2, CheckCircle, AlertCircle, Mail, Shield } from "lucide-react"
 
 function LoginPageContent() {
   const [email, setEmail] = useState("")
@@ -25,6 +24,11 @@ function LoginPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [successMessage, setSuccessMessage] = useState("")
+  const [verificationAlerts, setVerificationAlerts] = useState({
+    needsParentApproval: false,
+    needsEmailVerification: false,
+    message: ""
+  })
 
   // Track mouse position for interactive elements
   useEffect(() => {
@@ -61,6 +65,11 @@ function LoginPageContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setVerificationAlerts({
+      needsParentApproval: false,
+      needsEmailVerification: false,
+      message: ""
+    })
 
     try {
       // Clear any cached user data and storage before login
@@ -84,6 +93,19 @@ function LoginPageContent() {
       })
 
       const data = await response.json()
+
+      if (response.status === 403) {
+        const errorData = await response.json()
+        setVerificationAlerts({
+          needsParentApproval: errorData.needsParentApproval || false,
+          needsEmailVerification: errorData.needsEmailVerification || false,
+          message: errorData.error || "Verification required"
+        })
+        setEmail("")
+        setPassword("")
+        setLoading(false)
+        return
+      }
 
       if (data.success) {
         toast.success("Login successful!")
@@ -349,6 +371,38 @@ function LoginPageContent() {
                     <AlertDescription className="text-green-600">{successMessage}</AlertDescription>
                   </Alert>
                 )}
+
+                {(verificationAlerts.needsParentApproval || verificationAlerts.needsEmailVerification) && (
+                  <Alert className="border-amber-200 bg-amber-50 text-amber-800">
+                    <Shield className="h-4 w-4" />
+                    <AlertTitle className="text-amber-900 font-semibold mb-2">
+                      Account Verification Required
+                    </AlertTitle>
+                    <AlertDescription className="space-y-2">
+                      <p className="text-amber-700">
+                        Before you can log in, please complete the following verification steps:
+                      </p>
+                      <div className="space-y-1">
+                        {verificationAlerts.needsEmailVerification && (
+                          <div className="flex items-center space-x-2 text-amber-700">
+                            <Mail className="h-4 w-4" />
+                            <span>Verify your email address (check your inbox)</span>
+                          </div>
+                        )}
+                        {verificationAlerts.needsParentApproval && (
+                          <div className="flex items-center space-x-2 text-amber-700">
+                            <Shield className="h-4 w-4" />
+                            <span>Wait for parent/guardian approval</span>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-sm text-amber-600 mt-2">
+                        Both steps must be completed before you can access your account.
+                      </p>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
