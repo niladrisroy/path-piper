@@ -247,27 +247,30 @@ export default function ParentDashboard() {
                       )}
                     </div>
 
-                    <div className="pt-4 border-t space-y-2">
+                    <div className="pt-4 border-t space-y-4">
                       {child.parentVerified === false && (
                         <Button 
                           onClick={() => handleApproveAccount(child.id)}
-                          className="w-full bg-green-500 hover:bg-green-600 text-white"
+                          className="w-full bg-green-500 hover:bg-green-600 text-white py-2.5 font-medium"
                         >
                           Approve Account
                         </Button>
                       )}
                       {child.parentVerified === true && (
-                        <div className="w-full p-2 bg-green-50 border border-green-200 rounded text-center text-sm text-green-700">
+                        <div className="w-full p-3 bg-green-50 border border-green-200 rounded-lg text-center text-sm text-green-700 font-medium">
                           ✅ Account Approved
                         </div>
                       )}
-                      <Link href={`/parent/child-profile/${child.id}`}>
-                        <Button 
-                          className="w-full bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white"
-                        >
-                          View Profile
-                        </Button>
-                      </Link>
+                      
+                      <div className="pt-2">
+                        <Link href={`/parent/child-profile/${child.id}`}>
+                          <Button 
+                            className="w-full bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white py-2.5 font-medium"
+                          >
+                            View Profile
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
