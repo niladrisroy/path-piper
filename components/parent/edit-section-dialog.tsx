@@ -264,6 +264,39 @@ export default function EditSectionDialog({
     }
   }
 
+  const fetchExistingData = async () => {
+    try {
+      if (section === 'interests') {
+        // Fetch existing interests for this child
+        const response = await fetch(`/api/parent/child-profile/${childId}`)
+        if (response.ok) {
+          const childData = await response.json()
+          const currentInterests = childData.profile.userInterests?.map((ui: any) => ({
+            id: ui.interest?.id || ui.interestId,
+            name: ui.interest?.name || ui.name,
+            category: ui.interest?.category?.name || ui.category
+          })) || []
+          setSelectedInterests(currentInterests)
+        }
+      } else if (section === 'skills') {
+        // Fetch existing skills for this child
+        const response = await fetch(`/api/parent/child-profile/${childId}`)
+        if (response.ok) {
+          const childData = await response.json()
+          const currentSkills = childData.profile.userSkills?.map((us: any) => ({
+            id: us.skill?.id || us.skillId,
+            name: us.skill?.name || us.name,
+            level: us.proficiencyLevel || us.proficiency_level || 3,
+            category: us.skill?.category?.name || us.category
+          })) || []
+          setSelectedSkills(currentSkills)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching existing data:', error)
+    }
+  }
+
   const initializeFormData = () => {
     switch (section) {
       case 'about':
@@ -275,23 +308,10 @@ export default function EditSectionDialog({
         setSocialLinks(currentData.socialLinks || [])
         break
       case 'interests':
-        // Transform current interests to match our format
-        const currentInterests = currentData.userInterests?.map((ui: any) => ({
-          id: ui.interest?.id || ui.interestId,
-          name: ui.interest?.name || ui.name,
-          category: ui.interest?.category?.name || ui.category
-        })) || []
-        setSelectedInterests(currentInterests)
+        fetchExistingData()
         break
       case 'skills':
-        // Transform current skills to match our format
-        const currentSkills = currentData.userSkills?.map((us: any) => ({
-          id: us.skill?.id || us.skillId,
-          name: us.skill?.name || us.name,
-          level: us.proficiencyLevel || us.proficiency_level || 3,
-          category: us.skill?.category?.name || us.category
-        })) || []
-        setSelectedSkills(currentSkills)
+        fetchExistingData()
         break
       case 'education':
         setFormData({})
@@ -434,10 +454,10 @@ export default function EditSectionDialog({
           }
           break
         case 'interests':
-          // Convert to interest IDs
+          // Convert to interest IDs and names
           data = { 
             interests: selectedInterests.map(interest => 
-              interest.id > 0 ? interest.id.toString() : interest.name
+              interest.id > 0 ? interest.id : interest.name
             )
           }
           break
@@ -1230,7 +1250,26 @@ export default function EditSectionDialog({
     }
   }
 
-  const isValid = formData.institutionName && formData.institutionTypeId && formData.subjects && formData.subjects.length > 0
+  const getValidationStatus = () => {
+    switch (section) {
+      case 'education':
+        return formData.institutionName && formData.institutionTypeId && formData.subjects && formData.subjects.length > 0
+      case 'interests':
+        return selectedInterests.length > 0
+      case 'skills':
+        return selectedSkills.length > 0
+      case 'about':
+        return formData.bio || formData.location || formData.tagline || socialLinks.length > 0
+      case 'goals':
+        return formData.title && formData.title.trim().length > 0
+      case 'achievements':
+        return formData.name && formData.description && formData.categoryId && formData.achievementTypeId && formData.dateOfAchievement
+      default:
+        return true
+    }
+  }
+
+  const isValid = getValidationStatus()
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

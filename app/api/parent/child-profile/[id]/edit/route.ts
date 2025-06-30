@@ -74,31 +74,44 @@ export async function PUT(
         if (data.interests && data.interests.length > 0) {
           const interestRecords = []
 
-          for (const interestName of data.interests) {
-            // Check if interest exists in database
-            let existingInterest = await prisma.interest.findFirst({
-              where: { name: interestName }
-            })
+          for (const interestData of data.interests) {
+            let existingInterest = null
 
-            // If interest doesn't exist, create it
-            if (!existingInterest) {
-              existingInterest = await prisma.interest.create({
-                data: {
-                  name: interestName,
-                  categoryId: 1 // Default to first category or create custom category
-                }
+            // If it's a number, it's an existing interest ID
+            if (typeof interestData === 'number' || (typeof interestData === 'string' && !isNaN(parseInt(interestData)))) {
+              const interestId = typeof interestData === 'number' ? interestData : parseInt(interestData)
+              existingInterest = await prisma.interest.findUnique({
+                where: { id: interestId }
               })
+            } else {
+              // It's a custom interest name, check if it exists
+              existingInterest = await prisma.interest.findFirst({
+                where: { name: interestData }
+              })
+
+              // If interest doesn't exist, create it
+              if (!existingInterest) {
+                existingInterest = await prisma.interest.create({
+                  data: {
+                    name: interestData,
+                    categoryId: 1 // Default to first category or create custom category
+                  }
+                })
+              }
             }
 
-            interestRecords.push({
-              userId: childId,
-              interestId: existingInterest.id
-            })
+            if (existingInterest) {
+              interestRecords.push({
+                userId: childId,
+                interestId: existingInterest.id
+              })
+            }
           }
 
           if (interestRecords.length > 0) {
             await prisma.userInterest.createMany({
-              data: interestRecords
+              data: interestRecords,
+              skipDuplicates: true
             })
           }
         }
@@ -118,7 +131,7 @@ export async function PUT(
             let existingSkill = null
 
             // If skillId is provided, use existing skill
-            if (skillData.skillId) {
+            if (skillData.skillId && skillData.skillId > 0) {
               existingSkill = await prisma.skill.findUnique({
                 where: { id: skillData.skillId }
               })
@@ -148,7 +161,8 @@ export async function PUT(
 
           if (skillRecords.length > 0) {
             await prisma.userSkill.createMany({
-              data: skillRecords
+              data: skillRecords,
+              skipDuplicates: true
             })
           }
         }
