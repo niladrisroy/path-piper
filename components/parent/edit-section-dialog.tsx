@@ -580,7 +580,8 @@ export default function EditSectionDialog({
     }))
   }
 
-  const handleSave = async () => {
+  const handleSave = async (e) => {
+    e.preventDefault()
     try {
       setSaving(true)
 
@@ -929,7 +930,8 @@ export default function EditSectionDialog({
                         variant="ghost"
                         size="sm"
                         onClick={() => removeSkill(skill.name)}
-                        className="ml-2 p-0 h-auto text-blue-700 dark:text-blue-300 hover:text-red-500 hover:bg-transparent"
+                        className="ml-2 p-0 h-auto text-blue-700 dark:<replit_final_file>
+text-blue-300 hover:text-red-500 hover:bg-transparent"
                       >
                         <X size={14} />
                       </Button>
@@ -1140,10 +1142,10 @@ export default function EditSectionDialog({
                       const currentYear = currentDate.getFullYear()
                       const currentMonth = currentDate.getMonth()
                       const selectedYear = formData.startDate ? new Date(formData.startDate).getFullYear() : currentYear
-                      
+
                       // Disable future months in current year
                       const isDisabled = selectedYear === currentYear && index > currentMonth
-                      
+
                       return (
                         <SelectItem key={index} value={index.toString()} disabled={isDisabled}>
                           {month}
@@ -1288,7 +1290,7 @@ export default function EditSectionDialog({
                 <Label htmlFor="category">Category *</Label>
                 <Select
                   value={formData.categoryId || ''}
-                  onChange={(value) => {
+                  onValueChange={(value) => {
                     setFormData({ ...formData, categoryId: value, achievementTypeId: '' })
                     if (value) fetchAchievementTypes(value)
                   }}
@@ -1310,7 +1312,7 @@ export default function EditSectionDialog({
                 <Label htmlFor="type">Achievement Type *</Label>
                 <Select
                   value={formData.achievementTypeId || ''}
-                  onChange={(value) => handleInputChange('achievementTypeId', value)}
+                  onValueChange={(value) => handleInputChange('achievementTypeId', value)}
                   disabled={!formData.categoryId}
                 >
                   <SelectTrigger className="mt-1">
@@ -1348,10 +1350,10 @@ export default function EditSectionDialog({
                       const currentYear = currentDate.getFullYear()
                       const currentMonth = currentDate.getMonth()
                       const selectedYear = formData.dateOfAchievement ? new Date(formData.dateOfAchievement).getFullYear() : currentYear
-                      
+
                       // Disable future months in current year
                       const isDisabled = selectedYear === currentYear && index > currentMonth
-                      
+
                       return (
                         <SelectItem key={index} value={index.toString()} disabled={isDisabled}>
                           {month}
