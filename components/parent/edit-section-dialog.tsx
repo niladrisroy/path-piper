@@ -107,66 +107,15 @@ export default function EditSectionDialog({
 
   // Filter skills based on search
   useEffect(() => {
+    // Note: Custom skills are now managed in skillCategories directly from fetchExistingData
+    // so we don't need to manually add them here anymore
     if (skillSearchTerm.trim() === "") {
-      const categoriesWithCustom = [...skillCategories]
-
-      // Add custom skills from user's existing skills if any
-      const customSkills = selectedSkills.filter(skill => 
-        !skill.id || skill.id < 0 || skill.category === "Custom"
-      ).map(skill => ({
-        id: skill.id || -Date.now(),
-        name: skill.name
-      }))
-
-      if (customSkills.length > 0) {
-        const existingCustomCategory = categoriesWithCustom.find(cat => cat.name === "Custom")
-        if (existingCustomCategory) {
-          existingCustomCategory.skills = [
-            ...existingCustomCategory.skills,
-            ...customSkills.filter(customSkill => 
-              !existingCustomCategory.skills.some(existing => existing.name === customSkill.name)
-            )
-          ]
-        } else {
-          categoriesWithCustom.push({
-            name: "Custom",
-            skills: customSkills
-          })
-        }
-      }
-
-      setFilteredSkillCategories(categoriesWithCustom)
+      setFilteredSkillCategories(skillCategories)
       return
     }
 
     const term = skillSearchTerm.toLowerCase()
-
-    const categoriesWithCustom = [...skillCategories]
-    const customSkills = selectedSkills.filter(skill => 
-      !skill.id || skill.id < 0 || skill.category === "Custom"
-    ).map(skill => ({
-      id: skill.id || -Date.now(),
-      name: skill.name
-    }))
-
-    if (customSkills.length > 0) {
-      const existingCustomCategory = categoriesWithCustom.find(cat => cat.name === "Custom")
-      if (existingCustomCategory) {
-        existingCustomCategory.skills = [
-          ...existingCustomCategory.skills,
-          ...customSkills.filter(customSkill => 
-            !existingCustomCategory.skills.some(existing => existing.name === customSkill.name)
-          )
-        ]
-      } else {
-        categoriesWithCustom.push({
-          name: "Custom",
-          skills: customSkills
-        })
-      }
-    }
-
-    const filtered = categoriesWithCustom
+    const filtered = skillCategories
       .map((category) => ({
         name: category.name,
         skills: category.skills.filter((skill) =>
@@ -176,7 +125,7 @@ export default function EditSectionDialog({
       .filter((category) => category.skills.length > 0)
 
     setFilteredSkillCategories(filtered)
-  }, [skillSearchTerm, skillCategories, selectedSkills])
+  }, [skillSearchTerm, skillCategories])
 
   const fetchOptions = async () => {
     try {
@@ -278,6 +227,37 @@ export default function EditSectionDialog({
             category: ui.interest?.category?.name || ui.category
           })) || []
           setSelectedInterests(currentInterests)
+
+          // Add user's custom interests to the Custom category
+          const customInterests = currentInterests.filter(interest => 
+            !interest.id || interest.id < 0 || interest.category === "Custom"
+          )
+
+          if (customInterests.length > 0) {
+            setInterestCategories(prevCategories => {
+              const updatedCategories = [...prevCategories]
+              const existingCustomCategory = updatedCategories.find(cat => cat.name === "Custom")
+              
+              if (existingCustomCategory) {
+                // Only add custom interests that aren't already there
+                const newCustomInterests = customInterests.filter(customInterest =>
+                  !existingCustomCategory.interests.some(existing => existing.name === customInterest.name)
+                )
+                existingCustomCategory.interests = [
+                  ...existingCustomCategory.interests,
+                  ...newCustomInterests
+                ]
+              } else {
+                // Create new Custom category with user's custom interests
+                updatedCategories.push({
+                  name: "Custom",
+                  interests: customInterests
+                })
+              }
+              
+              return updatedCategories
+            })
+          }
         }
       } else if (section === 'skills') {
         // Fetch existing skills for this child
@@ -292,6 +272,40 @@ export default function EditSectionDialog({
             category: us.skill?.category?.name || us.category
           })) || []
           setSelectedSkills(currentSkills)
+
+          // Add user's custom skills to the Custom category
+          const customSkills = currentSkills.filter(skill => 
+            !skill.id || skill.id < 0 || skill.category === "Custom"
+          ).map(skill => ({
+            id: skill.id || -Date.now(),
+            name: skill.name
+          }))
+
+          if (customSkills.length > 0) {
+            setSkillCategories(prevCategories => {
+              const updatedCategories = [...prevCategories]
+              const existingCustomCategory = updatedCategories.find(cat => cat.name === "Custom")
+              
+              if (existingCustomCategory) {
+                // Only add custom skills that aren't already there
+                const newCustomSkills = customSkills.filter(customSkill =>
+                  !existingCustomCategory.skills.some(existing => existing.name === customSkill.name)
+                )
+                existingCustomCategory.skills = [
+                  ...existingCustomCategory.skills,
+                  ...newCustomSkills
+                ]
+              } else {
+                // Create new Custom category with user's custom skills
+                updatedCategories.push({
+                  name: "Custom",
+                  skills: customSkills
+                })
+              }
+              
+              return updatedCategories
+            })
+          }
         }
       }
     } catch (error) {
@@ -359,6 +373,33 @@ export default function EditSectionDialog({
     }
 
     setSelectedInterests([...selectedInterests, customInterestObj])
+
+    // Add the custom interest to the Custom category in interestCategories if it doesn't exist
+    setInterestCategories(prevCategories => {
+      const updatedCategories = prevCategories.map(category => {
+        if (category.name === 'Custom') {
+          // Add the new custom interest if it's not already there
+          if (!category.interests.some(interest => interest.name === trimmedInterest)) {
+            return {
+              ...category,
+              interests: [...category.interests, customInterestObj]
+            }
+          }
+        }
+        return category
+      })
+
+      // If no Custom category exists, create one
+      if (!updatedCategories.some(cat => cat.name === 'Custom')) {
+        updatedCategories.push({
+          name: 'Custom',
+          interests: [customInterestObj]
+        })
+      }
+
+      return updatedCategories
+    })
+
     setCustomInterest("")
   }
 
@@ -381,12 +422,42 @@ export default function EditSectionDialog({
   const addCustomSkill = () => {
     if (!newSkill.trim() || selectedSkills.some((s) => s.name === newSkill)) return
 
-    const newSkills = [...selectedSkills, {
+    const customSkillObj = {
+      id: -Date.now(),
       name: newSkill,
       level: newSkillLevel,
       category: "Custom"
-    }]
+    }
+
+    const newSkills = [...selectedSkills, customSkillObj]
     setSelectedSkills(newSkills)
+
+    // Add the custom skill to the Custom category in skillCategories if it doesn't exist
+    setSkillCategories(prevCategories => {
+      const updatedCategories = prevCategories.map(category => {
+        if (category.name === 'Custom') {
+          // Add the new custom skill if it's not already there
+          if (!category.skills.some(skill => skill.name === newSkill)) {
+            return {
+              ...category,
+              skills: [...category.skills, { id: customSkillObj.id, name: newSkill }]
+            }
+          }
+        }
+        return category
+      })
+
+      // If no Custom category exists, create one
+      if (!updatedCategories.some(cat => cat.name === 'Custom')) {
+        updatedCategories.push({
+          name: 'Custom',
+          skills: [{ id: customSkillObj.id, name: newSkill }]
+        })
+      }
+
+      return updatedCategories
+    })
+
     setNewSkill("")
   }
 
