@@ -435,20 +435,11 @@ export async function loginUser(data: LoginData) {
             const isParentVerified = profile.parentVerified || false;
             const isEmailVerified = profile.emailVerified || false;
             
-            // Build error message based on what's missing
-            let errorMessages = [];
-            if (!isParentVerified) {
-              errorMessages.push("please first let your parent verify");
-            }
-            if (!isEmailVerified) {
-              errorMessages.push("please verify your own email also first");
-            }
-            
-            if (errorMessages.length > 0) {
-              const errorMessage = errorMessages.join(" and ");
+            // Check verification status and return appropriate response
+            if (!isParentVerified || !isEmailVerified) {
               return {
                 success: false,
-                error: `Please complete verification: ${errorMessage}`,
+                error: "Verification required",
                 needsParentApproval: !isParentVerified,
                 needsEmailVerification: !isEmailVerified
               };

@@ -372,31 +372,86 @@ function LoginPageContent() {
                   </Alert>
                 )}
 
-                {(verificationAlerts.needsParentApproval || verificationAlerts.needsEmailVerification) && (
+                {verificationAlerts.needsEmailVerification && !verificationAlerts.needsParentApproval && (
+                  <Alert className="border-blue-200 bg-blue-50 text-blue-800">
+                    <Mail className="h-4 w-4 text-blue-600" />
+                    <AlertTitle className="text-blue-900 font-semibold mb-2">
+                      Email Verification Required
+                    </AlertTitle>
+                    <AlertDescription className="space-y-2">
+                      <p className="text-blue-700">
+                        Please verify your email address before logging in.
+                      </p>
+                      <div className="bg-blue-100 p-3 rounded-lg border border-blue-200">
+                        <div className="flex items-center space-x-2 text-blue-700">
+                          <Mail className="h-4 w-4" />
+                          <span className="font-medium">Check your inbox for a verification email</span>
+                        </div>
+                        <p className="text-sm text-blue-600 mt-1">
+                          Click the verification link in the email we sent you to activate your account.
+                        </p>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {verificationAlerts.needsParentApproval && !verificationAlerts.needsEmailVerification && (
+                  <Alert className="border-purple-200 bg-purple-50 text-purple-800">
+                    <Shield className="h-4 w-4 text-purple-600" />
+                    <AlertTitle className="text-purple-900 font-semibold mb-2">
+                      Parent Approval Required
+                    </AlertTitle>
+                    <AlertDescription className="space-y-2">
+                      <p className="text-purple-700">
+                        Your account is waiting for parent/guardian approval.
+                      </p>
+                      <div className="bg-purple-100 p-3 rounded-lg border border-purple-200">
+                        <div className="flex items-center space-x-2 text-purple-700">
+                          <Shield className="h-4 w-4" />
+                          <span className="font-medium">Your parent needs to approve your account</span>
+                        </div>
+                        <p className="text-sm text-purple-600 mt-1">
+                          We've sent an approval email to your parent/guardian. Please ask them to check their inbox.
+                        </p>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {verificationAlerts.needsParentApproval && verificationAlerts.needsEmailVerification && (
                   <Alert className="border-amber-200 bg-amber-50 text-amber-800">
                     <Shield className="h-4 w-4" />
                     <AlertTitle className="text-amber-900 font-semibold mb-2">
                       Account Verification Required
                     </AlertTitle>
-                    <AlertDescription className="space-y-2">
+                    <AlertDescription className="space-y-3">
                       <p className="text-amber-700">
-                        Before you can log in, please complete the following verification steps:
+                        Before you can log in, please complete both verification steps:
                       </p>
-                      <div className="space-y-1">
-                        {verificationAlerts.needsEmailVerification && (
+                      
+                      <div className="space-y-2">
+                        <div className="bg-amber-100 p-3 rounded-lg border border-amber-200">
                           <div className="flex items-center space-x-2 text-amber-700">
                             <Mail className="h-4 w-4" />
-                            <span>Verify your email address (check your inbox)</span>
+                            <span className="font-medium">1. Verify your email address</span>
                           </div>
-                        )}
-                        {verificationAlerts.needsParentApproval && (
+                          <p className="text-sm text-amber-600 mt-1">
+                            Check your inbox for a verification email and click the link.
+                          </p>
+                        </div>
+                        
+                        <div className="bg-amber-100 p-3 rounded-lg border border-amber-200">
                           <div className="flex items-center space-x-2 text-amber-700">
                             <Shield className="h-4 w-4" />
-                            <span>Wait for parent/guardian approval</span>
+                            <span className="font-medium">2. Wait for parent approval</span>
                           </div>
-                        )}
+                          <p className="text-sm text-amber-600 mt-1">
+                            Your parent/guardian needs to approve your account via email.
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-sm text-amber-600 mt-2">
+                      
+                      <p className="text-sm text-amber-600">
                         Both steps must be completed before you can access your account.
                       </p>
                     </AlertDescription>
