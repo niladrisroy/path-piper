@@ -172,6 +172,25 @@ export async function registerStudent(data: UserRegistrationData) {
         console.error('❌ Failed to send parent verification email:', emailError);
         // Continue with registration even if email fails
       }
+
+      // Send email verification to student (under 16)
+      try {
+        const studentVerificationToken = Buffer.from(`${data.email}:${authData.user.id}:${Date.now()}`).toString('base64');
+        const studentVerificationLink = `${baseUrl}/api/auth/verify-student-email?token=${studentVerificationToken}`;
+        
+        await sendEmail(
+          'student-email-verification',
+          data.email,
+          {
+            studentName: `${data.firstName} ${data.lastName}`,
+            verificationLink: studentVerificationLink
+          }
+        );
+        console.log('📧 Student email verification sent successfully');
+      } catch (emailError) {
+        console.error('❌ Failed to send student email verification:', emailError);
+        // Continue with registration even if email fails
+      }
     }
 
     // Create student profile
@@ -194,11 +213,21 @@ export async function registerStudent(data: UserRegistrationData) {
         data: {
           parentId: parentId,
           parentVerified: false,
+          email: data.email,
+          emailVerified: false, // Set to false for under-16 students requiring verification
         },
       });
       console.log('✅ Profile updated with parent_id:', updatedProfile.parentId);
     } else {
       console.log('ℹ️ No parent linking required');
+      // Still set email and email_verified for students who don't need parent approval
+      await prisma.profile.update({
+        where: { id: profile.id },
+        data: {
+          email: data.email,
+          emailVerified: true, // Auto-verify for students not requiring parent approval
+        },
+      });
       console.log('   - needsParentApproval:', needsParentApproval);
       console.log('   - parentEmail provided:', !!data.parentEmail);
       console.log('   - calculated age:', age);

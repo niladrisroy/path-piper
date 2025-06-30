@@ -26,7 +26,7 @@ async function mockSendEmail() {
   return { success: true, data: { messageId: 'mocked_id' } };
 }
 
-export type EmailTemplate = 'verification' | 'parent-approval' | 'parent-approval-existing' | 'parent-approval-new' | 'password-reset' | 'parent-email-verification';
+export type EmailTemplate = 'verification' | 'parent-approval' | 'parent-approval-existing' | 'parent-approval-new' | 'password-reset' | 'parent-email-verification' | 'student-email-verification';
 
 export async function sendEmail(
   template: EmailTemplate,
@@ -261,6 +261,45 @@ export async function sendEmail(
             </div>
             <p>This verification link will expire in 24 hours. If you didn't create this account, please ignore this email.</p>
             <p>Best regards,<br>The PathPiper Team</p>
+          </div>
+        `;
+        break;
+
+      case 'student-email-verification':
+        subject = 'Verify Your PathPiper Email Address';
+        html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #14b8a6; margin: 0;">PathPiper</h1>
+            </div>
+
+            <h2 style="color: #1f2937; margin-bottom: 20px;">Verify Your Email Address</h2>
+
+            <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
+              Hi ${data.studentName},
+            </p>
+
+            <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
+              We have sent an approval email to your parent. Meanwhile, please verify your email address by clicking the button below:
+            </p>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${data.verificationLink}" 
+                 style="display: inline-block; background-color: #14b8a6; color: white; padding: 12px 30px; 
+                        text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
+                Verify Email Address
+              </a>
+            </div>
+
+            <p style="color: #6b7280; font-size: 14px; line-height: 1.5;">
+              Once you verify your email and your parent approves your account, you'll be able to start your learning journey on PathPiper!
+            </p>
+
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+
+            <p style="color: #9ca3af; font-size: 12px; text-align: center;">
+              © ${new Date().getFullYear()} PathPiper. All rights reserved.
+            </p>
           </div>
         `;
         break;

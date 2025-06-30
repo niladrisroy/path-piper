@@ -58,6 +58,7 @@ model Profile {
   professionalSummary String?  @map("professional_summary")
   verificationStatus Boolean   @default(false) @map("verification_status")
   email              String?   // User's registered email for authentication
+  emailVerified      Boolean?  @default(false) @map("email_verified") // Email verification status
   phone              String?   // Direct contact phone number
   coverImageUrl      String?   @map("cover_image_url")
   themePreference    String    @default("default") @map("theme_preference")

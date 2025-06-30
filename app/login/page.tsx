@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,6 +11,8 @@ import { toast } from "sonner"
 import Link from "next/link"
 import Image from "next/image"
 import { invalidateUserCache } from '@/hooks/use-auth'
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Eye, EyeOff, Loader2, CheckCircle } from "lucide-react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -20,6 +22,8 @@ export default function LoginPage() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const [successMessage, setSuccessMessage] = useState("")
 
   // Track mouse position for interactive elements
   useEffect(() => {
@@ -45,6 +49,13 @@ export default function LoginPage() {
       }
     }
   }, [])
+
+  useEffect(() => {
+    const emailVerified = searchParams.get('email_verified')
+    if (emailVerified === 'true') {
+      setSuccessMessage("Your email has been verified! Now once your parent approves your account you will be able to login!")
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -129,7 +140,7 @@ export default function LoginPage() {
       }
     } catch (error) {
       console.error('Login error:', error)
-      
+
       // Check if it's a parent approval error
       if (error instanceof Error && error.message.includes('parent approve')) {
         // Show custom warning for parent approval
@@ -330,7 +341,13 @@ export default function LoginPage() {
                   Sign in to your PathPiper account
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-6">
+                {successMessage && (
+                  <Alert className="border-green-200 bg-green-50">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <AlertDescription className="text-green-600">{successMessage}</AlertDescription>
+                  </Alert>
+                )}
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
