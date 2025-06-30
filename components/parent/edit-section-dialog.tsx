@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from 'react'
@@ -16,6 +15,7 @@ import { format } from 'date-fns'
 import { CalendarIcon, Plus, X, Search, Heart, Award } from 'lucide-react'
 import { toast } from 'sonner'
 import { getPlaceholderText } from '@/data/institution-placeholders'
+import { MultiSelect } from "@/components/ui/multi-select"
 
 interface Interest {
   id: number
@@ -59,14 +59,14 @@ export default function EditSectionDialog({
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState<any>({})
   const [socialLinks, setSocialLinks] = useState<any[]>([])
-  
+
   // Interests state
   const [selectedInterests, setSelectedInterests] = useState<Interest[]>([])
   const [interestCategories, setInterestCategories] = useState<InterestCategory[]>([])
   const [filteredInterestCategories, setFilteredInterestCategories] = useState<InterestCategory[]>([])
   const [interestSearchTerm, setInterestSearchTerm] = useState("")
   const [customInterest, setCustomInterest] = useState("")
-  
+
   // Skills state  
   const [selectedSkills, setSelectedSkills] = useState<Skill[]>([])
   const [skillCategories, setSkillCategories] = useState<SkillCategory[]>([])
@@ -109,7 +109,7 @@ export default function EditSectionDialog({
   useEffect(() => {
     if (skillSearchTerm.trim() === "") {
       const categoriesWithCustom = [...skillCategories]
-      
+
       // Add custom skills from user's existing skills if any
       const customSkills = selectedSkills.filter(skill => 
         !skill.id || skill.id < 0 || skill.category === "Custom"
@@ -140,7 +140,7 @@ export default function EditSectionDialog({
     }
 
     const term = skillSearchTerm.toLowerCase()
-    
+
     const categoriesWithCustom = [...skillCategories]
     const customSkills = selectedSkills.filter(skill => 
       !skill.id || skill.id < 0 || skill.category === "Custom"
@@ -650,7 +650,7 @@ export default function EditSectionDialog({
                   <Plus size={16} />
                 </Button>
               </div>
-              
+
               {/* Default Level for New Skills */}
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
                 <Label className="text-sm font-medium mb-2 block">
@@ -908,22 +908,47 @@ export default function EditSectionDialog({
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label htmlFor="degreeProgram">Course/Program</Label>
-              <Input
-                id="degreeProgram"
-                value={formData.degreeProgram || ''}
-                onChange={(e) => setFormData({ ...formData, degreeProgram: e.target.value })}
-                placeholder={
-                  formData.institutionTypeId
-                    ? getPlaceholderText(
-                        institutionTypes.find(t => t.id === formData.institutionTypeId)?.slug || 'default',
-                        'course'
-                      )
-                    : 'e.g., Mathematics, Science, Computer Science'
-                }
-              />
-            </div>
+            <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="degreeProgram">Degree/Program</Label>
+                    <Input
+                      id="degreeProgram"
+                      value={formData.degreeProgram || ''}
+                      onChange={(e) => setFormData({ ...formData, degreeProgram: e.target.value })}
+                      placeholder="e.g., Bachelor's in Computer Science"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="fieldOfStudy">Field of Study</Label>
+                    <Input
+                      id="fieldOfStudy"
+                      value={formData.fieldOfStudy || ''}
+                      onChange={(e) => setFormData({ ...formData, fieldOfStudy: e.target.value })}
+                      placeholder="e.g., Computer Science"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="subjects">Subjects/Courses <span className="text-red-500">*</span></Label>
+                  <MultiSelect
+                    value={formData.subjects || []}
+                    onChange={(value) => setFormData({ ...formData, subjects: value })}
+                    placeholder="Add subjects studied..."
+                    suggestions={[
+                      // General subjects
+                      'Mathematics', 'English', 'Science', 'History', 'Geography', 'Physics', 'Chemistry', 'Biology',
+                      'Computer Science', 'Information Technology', 'Programming', 'Data Science', 'Web Development',
+                      'Art', 'Music', 'Physical Education', 'Foreign Languages', 'Literature', 'Economics',
+                      'Business Studies', 'Accounting', 'Psychology', 'Sociology', 'Philosophy', 'Environmental Science'
+                    ]}
+                    className="mt-1"
+                    maxItems={20}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Addthe subjects or courses studied at this institution
+                  </p>
+                </div>
             <div>
               <Label htmlFor="gradeLevel">Grade/Level</Label>
               <Input
@@ -1192,7 +1217,7 @@ export default function EditSectionDialog({
                     )}
                   </Button>
                 </div>
-                
+
                 {formData.achievementImageIcon && (
                   <div className="flex items-center gap-2">
                     <img 
@@ -1226,6 +1251,8 @@ export default function EditSectionDialog({
     }
   }
 
+  const isValid = formData.institutionName && formData.institutionTypeId && formData.subjects && formData.subjects.length > 0
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -1241,7 +1268,7 @@ export default function EditSectionDialog({
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading || !isValid}>
               {loading ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
