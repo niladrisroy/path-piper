@@ -2,27 +2,43 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 export async function GET() {
-  let prismaConnected = false
-
-  // Check Prisma connection
   try {
-    // Test query to check connection
-    await prisma.profile.count()
-    prismaConnected = true
-  } catch (error) {
-    console.error('Prisma connection failed:', error)
-    // Add more detailed error logging
-    if (error instanceof Error) {
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      })
-    }
-  }
+    // Test environment variables
+    const hasSupabaseUrl = !!process.env.NEXT_PUBLIC_SUPABASE_URL
+    const hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY
+    const hasDatabaseUrl = !!process.env.DATABASE_URL
 
-  return NextResponse.json({
-    prismaConnected,
-    timestamp: new Date().toISOString()
-  })
+    console.log('Environment check:', {
+      hasSupabaseUrl,
+      hasServiceKey,
+      hasDatabaseUrl,
+      databaseUrl: process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 50) + '...' : 'undefined'
+    })
+
+    // Test Prisma connection
+    const count = await prisma.profile.count()
+
+    return NextResponse.json({
+      prismaConnected: true,
+      profileCount: count,
+      environmentCheck: {
+        hasSupabaseUrl,
+        hasServiceKey,
+        hasDatabaseUrl
+      },
+      timestamp: new Date().toISOString()
+    })
+  } catch (error) {
+    console.error('Database connection error:', error)
+    return NextResponse.json({
+      prismaConnected: false,
+      error: (error as Error).message,
+      environmentCheck: {
+        hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+        hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+        hasDatabaseUrl: !!process.env.DATABASE_URL
+      },
+      timestamp: new Date().toISOString()
+    }, { status: 500 })
+  }
 }
