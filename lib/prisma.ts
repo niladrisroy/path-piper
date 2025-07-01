@@ -15,13 +15,6 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
       url: process.env.DATABASE_URL?.replace('.us-east-2', '-pooler.us-east-2') || process.env.DATABASE_URL,
     },
   },
-  // Add connection timeout and retry logic
-  __internal: {
-    engine: {
-      connectTimeout: 20000,
-      queryTimeout: 30000,
-    },
-  },
 })
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
