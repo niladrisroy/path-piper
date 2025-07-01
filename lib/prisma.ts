@@ -12,7 +12,7 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
   errorFormat: 'pretty',
   datasources: {
     db: {
-      url: process.env.DATABASE_URL?.replace('.us-east-2', '-pooler.us-east-2') || process.env.DATABASE_URL,
+      url: process.env.DATABASE_URL,
     },
   },
 })
