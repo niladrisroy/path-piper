@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@supabase/supabase-js'
@@ -35,7 +36,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if the current user is a student (only students can view student profiles)
+    // OPTIMIZED: Single query to get current user profile and check role
     const currentUserProfile = await prisma.profile.findUnique({
       where: { id: user.id },
       select: { role: true }
@@ -48,27 +49,7 @@ export async function GET(
       )
     }
 
-    // Check if the target profile exists and is a student
-    const targetProfile = await prisma.profile.findUnique({
-      where: { id: studentId },
-      select: { role: true }
-    })
-
-    if (!targetProfile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      )
-    }
-
-    if (targetProfile.role !== 'student') {
-      return NextResponse.json(
-        { error: 'Profile is not a student profile' },
-        { status: 403 }
-      )
-    }
-
-    // Fetch student profile with all related data
+    // OPTIMIZED: Single comprehensive query with all includes to fetch complete student profile
     const studentProfile = await prisma.studentProfile.findUnique({
       where: { id: studentId },
       include: {
@@ -124,6 +105,14 @@ export async function GET(
       return NextResponse.json(
         { error: 'Student profile not found' },
         { status: 404 }
+      )
+    }
+
+    // Check if target profile is a student (role validation)
+    if (studentProfile.profile.role !== 'student') {
+      return NextResponse.json(
+        { error: 'Profile is not a student profile' },
+        { status: 403 }
       )
     }
 
