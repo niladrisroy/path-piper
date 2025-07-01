@@ -71,13 +71,39 @@ export async function PUT(
 
     // If accepted, create a connection
     if (action === 'accept') {
-      await prisma.connection.create({
-        data: {
-          user1Id: connectionRequest.senderId,
-          user2Id: connectionRequest.receiverId,
-          connectionType: 'friend' // Default connection type
+      // Check if connection already exists to avoid duplicates
+      const existingConnection = await prisma.connection.findFirst({
+        where: {
+          OR: [
+            {
+              user1Id: connectionRequest.senderId,
+              user2Id: connectionRequest.receiverId
+            },
+            {
+              user1Id: connectionRequest.receiverId,
+              user2Id: connectionRequest.senderId
+            }
+          ]
         }
       })
+
+      if (!existingConnection) {
+        // Ensure user1Id is always the "smaller" UUID to maintain consistency
+        const user1Id = connectionRequest.senderId < connectionRequest.receiverId 
+          ? connectionRequest.senderId 
+          : connectionRequest.receiverId
+        const user2Id = connectionRequest.senderId < connectionRequest.receiverId 
+          ? connectionRequest.receiverId 
+          : connectionRequest.senderId
+
+        await prisma.connection.create({
+          data: {
+            user1Id,
+            user2Id,
+            connectionType: 'friend' // Default connection type
+          }
+        })
+      }
     }
 
     return NextResponse.json(updatedRequest)
