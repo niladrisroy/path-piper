@@ -35,13 +35,34 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
     parentName: "",
     agreeTerms: false,
   })
+  const [emailValidationError, setEmailValidationError] = useState<string | null>(null)
+
+  // Email validation function
+  const validateEmails = (studentEmail: string, parentEmail: string, isUnder16: boolean) => {
+    if (isUnder16 && studentEmail && parentEmail) {
+      if (studentEmail.toLowerCase() === parentEmail.toLowerCase()) {
+        setEmailValidationError("Student and parent/guardian emails cannot be the same")
+        return false
+      }
+    }
+    setEmailValidationError(null)
+    return true
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target
-    setFormData({
+    const newFormData = {
       ...formData,
       [name]: type === "checkbox" ? checked : value,
-    })
+    }
+    setFormData(newFormData)
+
+    // Validate emails when either email field changes
+    if (name === 'email' || name === 'parentEmail') {
+      const studentEmail = name === 'email' ? value : newFormData.email
+      const parentEmail = name === 'parentEmail' ? value : newFormData.parentEmail
+      validateEmails(studentEmail, parentEmail, isUnder16)
+    }
   }
 
   const handleSelectChange = (name: string, value: string) => {
@@ -91,6 +112,12 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
     e.preventDefault()
     setIsLoading(true)
     setError(null)
+
+    // Validate emails before proceeding
+    if (!validateEmails(formData.email, formData.parentEmail, isUnder16)) {
+      setIsLoading(false)
+      return
+    }
 
     try {
       const result = await registerStudent({
@@ -321,6 +348,24 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
           </div>
         )}
 
+        {emailValidationError && isUnder16 && (
+          <div className="p-4 rounded-lg bg-red-50 border border-red-200 shadow-sm">
+            <div className="flex items-start">
+              <div className="mr-3 mt-1 text-red-500">
+                <AlertCircle size={20} />
+              </div>
+              <div>
+                <div className="font-semibold text-red-800 mb-1">
+                  Email Validation Error
+                </div>
+                <p className="text-sm text-red-600">
+                  {emailValidationError}. Please use different email addresses for student and parent/guardian accounts.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {isUnder16 && (
           <div className="space-y-4">
             <div className="space-y-2">
@@ -361,7 +406,7 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
                 value={formData.parentEmail}
                 onChange={handleChange}
                 required={isUnder16}
-                className="rounded-lg border-slate-300"
+                className={`rounded-lg ${emailValidationError ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-slate-300'}`}
               />
               <p className="text-xs text-slate-500">Required for users under 16 years old</p>
             </div>
@@ -402,7 +447,7 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
 
         <Button
           type="submit"
-          disabled={isLoading || !formData.agreeTerms}
+          disabled={isLoading || !formData.agreeTerms || (isUnder16 && emailValidationError)}
           className="w-full bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full py-6"
         >
           {isLoading ? (
