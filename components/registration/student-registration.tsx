@@ -92,6 +92,13 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
     setIsLoading(true)
     setError(null)
 
+    // Validate that student and parent emails are different for under 16 users
+    if (isUnder16 && formData.email.toLowerCase() === formData.parentEmail.toLowerCase()) {
+      setError(null) // Clear general error since we'll show specific validation
+      setIsLoading(false)
+      return
+    }
+
     try {
       const result = await registerStudent({
         email: formData.email,
@@ -364,6 +371,26 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
                 className="rounded-lg border-slate-300"
               />
               <p className="text-xs text-slate-500">Required for users under 16 years old</p>
+              
+              {/* Email validation warning */}
+              {isUnder16 && formData.email && formData.parentEmail && 
+               formData.email.toLowerCase() === formData.parentEmail.toLowerCase() && (
+                <div className="mt-3 p-4 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-lg">
+                  <div className="flex items-start">
+                    <div className="mr-3 mt-1 text-red-500">
+                      <AlertCircle size={20} />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-red-800 mb-1">
+                        Different Email Required
+                      </div>
+                      <p className="text-sm text-red-700">
+                        Your email and your parent/guardian's email must be different. Please use your parent's actual email address for verification.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -402,8 +429,12 @@ export default function StudentRegistration({ onComplete }: StudentRegistrationP
 
         <Button
           type="submit"
-          disabled={isLoading || !formData.agreeTerms}
-          className="w-full bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full py-6"
+          disabled={
+            isLoading || 
+            !formData.agreeTerms || 
+            (isUnder16 && formData.email.toLowerCase() === formData.parentEmail.toLowerCase())
+          }
+          className="w-full bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full py-6 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <div className="flex items-center justify-center">
