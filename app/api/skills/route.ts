@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
     // Check if this is a parent or regular user request
     let isParentRequest = false
-    
+
     if (parentAuthTokenCookie) {
       // Parent authentication
       try {
@@ -19,11 +19,11 @@ export async function GET(request: NextRequest) {
         const parentProfile = await prisma.parentProfile.findUnique({
           where: { id: parentId }
         })
-        
+
         if (!parentProfile) {
           return NextResponse.json({ error: 'Invalid parent session' }, { status: 401 })
         }
-        
+
         isParentRequest = true
       } catch (error) {
         return NextResponse.json({ error: 'Invalid parent session' }, { status: 401 })

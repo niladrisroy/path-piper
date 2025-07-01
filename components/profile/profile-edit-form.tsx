@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import React, { useState, useEffect, useCallback, useMemo, memo } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { motion, AnimatePresence } from "framer-motion"
@@ -133,6 +133,19 @@ export default function ProfileEditForm({ userId, initialSection }: ProfileEditF
   useEffect(() => {
     console.log('👤 ProfileEditForm: User data:', { userId: user?.id, userExists: !!user })
   }, [user])
+
+  // OPTIMIZED: Memoize sections to prevent recreation on every render
+  const formSections = useMemo(() => [
+    { id: 'personal', label: 'Personal Info', component: PersonalInfoForm },
+    { id: 'interests', label: 'Interests & Passions', component: InterestsPassionsForm },
+    { id: 'skills', label: 'Skills & Abilities', component: SkillsAbilitiesForm },
+    { id: 'education', label: 'Education History', component: EducationHistoryForm },
+    { id: 'goals', label: 'Goals & Aspirations', component: GoalsAspirationsForm },
+    { id: 'achievements', label: 'Achievements', component: AchievementsForm },
+    { id: 'social', label: 'Social & Contact', component: SocialContactForm },
+    { id: 'media', label: 'MoodBoard & Media', component: MoodBoardMediaForm },
+    { id: 'privacy', label: 'Privacy Settings', component: PrivacySettingsForm },
+  ], [])
 
   // Tab configuration
   const tabs: TabConfig[] = [

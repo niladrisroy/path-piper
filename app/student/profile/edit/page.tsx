@@ -6,7 +6,17 @@ import { useAuth } from "@/hooks/use-auth"
 import InternalNavbar from "@/components/internal-navbar"
 import Footer from "@/components/footer"
 import ProtectedLayout from "@/app/protected-layout"
-import ProfileEditForm from "@/components/profile/profile-edit-form"
+import dynamic from "next/dynamic"
+
+// OPTIMIZED: Dynamic import for better code splitting
+const ProfileEditForm = dynamic(() => import("@/components/profile/profile-edit-form"), {
+  loading: () => (
+    <div className="flex items-center justify-center min-h-96">
+      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-pathpiper-teal"></div>
+    </div>
+  ),
+  ssr: false
+})
 
 function StudentProfileEditContent() {
   const router = useRouter()

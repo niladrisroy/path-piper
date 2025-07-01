@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
     // Check if this is a parent or regular user request
     let user, isParentRequest = false
-    
+
     if (parentAuthTokenCookie) {
       // Parent authentication
       try {
@@ -19,11 +19,11 @@ export async function GET(request: NextRequest) {
         const parentProfile = await prisma.parentProfile.findUnique({
           where: { id: parentId }
         })
-        
+
         if (!parentProfile) {
           return NextResponse.json({ error: 'Invalid parent session' }, { status: 401 })
         }
-        
+
         isParentRequest = true
         // For parent requests, we'll use the age group from query params
       } catch (error) {
@@ -132,5 +132,28 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching interests:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+export async function GET() {
+  try {
+    const interests = await prisma.interest.findMany({
+      include: {
+        category: true,
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
+
+    // OPTIMIZED: Add caching headers for static data
+    const response = NextResponse.json(interests);
+    response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+    return response;
+  } catch (error) {
+    console.error('Error fetching interests:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch interests' },
+      { status: 500 }
+    );
   }
 }
