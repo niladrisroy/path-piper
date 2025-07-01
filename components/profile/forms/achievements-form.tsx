@@ -509,8 +509,19 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                   <Select
                     value={formData.dateOfAchievement ? new Date(formData.dateOfAchievement).getMonth().toString() : ''}
                     onValueChange={(value) => {
-                      const year = formData.dateOfAchievement ? new Date(formData.dateOfAchievement).getFullYear() : new Date().getFullYear()
-                      const newDate = `${year}-${String(parseInt(value) + 1).padStart(2, '0')}-01`
+                      const currentDate = new Date()
+                      const currentYear = currentDate.getFullYear()
+                      const currentMonth = currentDate.getMonth()
+                      const selectedYear = formData.dateOfAchievement ? new Date(formData.dateOfAchievement).getFullYear() : currentYear
+                      
+                      let selectedMonth = parseInt(value)
+                      
+                      // If current year and trying to select future month, reset to current month
+                      if (selectedYear === currentYear && selectedMonth > currentMonth) {
+                        selectedMonth = currentMonth
+                      }
+                      
+                      const newDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-01`
                       setFormData({ ...formData, dateOfAchievement: newDate })
                     }}
                   >
@@ -519,18 +530,38 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                     </SelectTrigger>
                     <SelectContent>
                       {["January", "February", "March", "April", "May", "June", 
-                        "July", "August", "September", "October", "November", "December"].map((month, index) => (
-                        <SelectItem key={index} value={index.toString()}>
-                          {month}
-                        </SelectItem>
-                      ))}
+                        "July", "August", "September", "October", "November", "December"].map((month, index) => {
+                        const currentDate = new Date()
+                        const currentYear = currentDate.getFullYear()
+                        const currentMonth = currentDate.getMonth()
+                        const selectedYear = formData.dateOfAchievement ? new Date(formData.dateOfAchievement).getFullYear() : currentYear
+                        
+                        // Disable future months in current year
+                        const isDisabled = selectedYear === currentYear && index > currentMonth
+                        
+                        return (
+                          <SelectItem key={index} value={index.toString()} disabled={isDisabled}>
+                            {month}
+                          </SelectItem>
+                        )
+                      })}
                     </SelectContent>
                   </Select>
                   <Select
                     value={formData.dateOfAchievement ? new Date(formData.dateOfAchievement).getFullYear().toString() : ''}
                     onValueChange={(value) => {
-                      const month = formData.dateOfAchievement ? new Date(formData.dateOfAchievement).getMonth() : 0
-                      const newDate = `${value}-${String(month + 1).padStart(2, '0')}-01`
+                      const currentDate = new Date()
+                      const currentMonth = currentDate.getMonth()
+                      const selectedMonth = formData.dateOfAchievement ? new Date(formData.dateOfAchievement).getMonth() : currentMonth
+                      
+                      let finalMonth = selectedMonth
+                      
+                      // If switching to current year and selected month is in future, reset to current month
+                      if (parseInt(value) === currentDate.getFullYear() && selectedMonth > currentMonth) {
+                        finalMonth = currentMonth
+                      }
+                      
+                      const newDate = `${value}-${String(finalMonth + 1).padStart(2, '0')}-01`
                       setFormData({ ...formData, dateOfAchievement: newDate })
                     }}
                   >
@@ -565,18 +596,8 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                     <div className="flex-1">
                       <p className="text-sm font-medium">Default Icon</p>
                       <p className="text-xs text-gray-600 dark:text-gray-400">
-                        We've selected a default icon for this achievement type
+                        If you don't upload any image, this icon will be used as the default icon for this achievement
                       </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant={formData.useDefaultIcon ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setFormData(prev => ({ ...prev, useDefaultIcon: true, achievementImageIcon: '' }))}
-                      >
-                        Use Default
-                      </Button>
                     </div>
                   </div>
                 )}
@@ -594,7 +615,7 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                     />
                     <Button
                       type="button"
-                      variant={!formData.useDefaultIcon ? "default" : "outline"}
+                      variant="outline"
                       onClick={() => document.getElementById('achievementImage')?.click()}
                       disabled={uploadingImage}
                       className="flex items-center gap-2"
@@ -620,13 +641,13 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                         alt="Achievement icon preview" 
                         className="h-8 w-8 object-cover rounded border"
                       />
-                      <span className="text-sm text-green-600 font-medium">Custom Icon</span>
+                      <span className="text-sm text-green-600 font-medium">Custom Icon Uploaded</span>
                     </div>
                   )}
                 </div>
                 <p className="text-xs text-gray-500">
                   {formData.achievementTypeId 
-                    ? "Use our default icon or upload your own (JPG, PNG up to 5MB)" 
+                    ? "Upload your own custom icon (JPG, PNG up to 5MB) or leave blank to use the default icon" 
                     : "Select an achievement type first to see the default icon"}
                 </p>
               </div>
@@ -750,8 +771,19 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                         <Select
                           value={editFormData.dateOfAchievement ? new Date(editFormData.dateOfAchievement).getMonth().toString() : ''}
                           onValueChange={(value) => {
-                            const year = editFormData.dateOfAchievement ? new Date(editFormData.dateOfAchievement).getFullYear() : new Date().getFullYear()
-                            const newDate = `${year}-${String(parseInt(value) + 1).padStart(2, '0')}-01`
+                            const currentDate = new Date()
+                            const currentYear = currentDate.getFullYear()
+                            const currentMonth = currentDate.getMonth()
+                            const selectedYear = editFormData.dateOfAchievement ? new Date(editFormData.dateOfAchievement).getFullYear() : currentYear
+                            
+                            let selectedMonth = parseInt(value)
+                            
+                            // If current year and trying to select future month, reset to current month
+                            if (selectedYear === currentYear && selectedMonth > currentMonth) {
+                              selectedMonth = currentMonth
+                            }
+                            
+                            const newDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-01`
                             setEditFormData({ ...editFormData, dateOfAchievement: newDate })
                           }}
                         >
@@ -760,18 +792,38 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                           </SelectTrigger>
                           <SelectContent>
                             {["January", "February", "March", "April", "May", "June", 
-                              "July", "August", "September", "October", "November", "December"].map((month, index) => (
-                              <SelectItem key={index} value={index.toString()}>
-                                {month}
-                              </SelectItem>
-                            ))}
+                              "July", "August", "September", "October", "November", "December"].map((month, index) => {
+                              const currentDate = new Date()
+                              const currentYear = currentDate.getFullYear()
+                              const currentMonth = currentDate.getMonth()
+                              const selectedYear = editFormData.dateOfAchievement ? new Date(editFormData.dateOfAchievement).getFullYear() : currentYear
+                              
+                              // Disable future months in current year
+                              const isDisabled = selectedYear === currentYear && index > currentMonth
+                              
+                              return (
+                                <SelectItem key={index} value={index.toString()} disabled={isDisabled}>
+                                  {month}
+                                </SelectItem>
+                              )
+                            })}
                           </SelectContent>
                         </Select>
                         <Select
                           value={editFormData.dateOfAchievement ? new Date(editFormData.dateOfAchievement).getFullYear().toString() : ''}
                           onValueChange={(value) => {
-                            const month = editFormData.dateOfAchievement ? new Date(editFormData.dateOfAchievement).getMonth() : 0
-                            const newDate = `${value}-${String(month + 1).padStart(2, '0')}-01`
+                            const currentDate = new Date()
+                            const currentMonth = currentDate.getMonth()
+                            const selectedMonth = editFormData.dateOfAchievement ? new Date(editFormData.dateOfAchievement).getMonth() : currentMonth
+                            
+                            let finalMonth = selectedMonth
+                            
+                            // If switching to current year and selected month is in future, reset to current month
+                            if (parseInt(value) === currentDate.getFullYear() && selectedMonth > currentMonth) {
+                              finalMonth = currentMonth
+                            }
+                            
+                            const newDate = `${value}-${String(finalMonth + 1).padStart(2, '0')}-01`
                             setEditFormData({ ...editFormData, dateOfAchievement: newDate })
                           }}
                         >
@@ -806,18 +858,8 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                           <div className="flex-1">
                             <p className="text-sm font-medium">Default Icon</p>
                             <p className="text-xs text-gray-600 dark:text-gray-400">
-                              Default icon for this achievement type
+                              If you don't upload any image, this icon will be used as the default icon for this achievement
                             </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              type="button"
-                              variant={editFormData.useDefaultIcon ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => setEditFormData(prev => ({ ...prev, useDefaultIcon: true, achievementImageIcon: '' }))}
-                            >
-                              Use Default
-                            </Button>
                           </div>
                         </div>
                       )}
@@ -835,7 +877,7 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                           />
                           <Button
                             type="button"
-                            variant={!editFormData.useDefaultIcon ? "default" : "outline"}
+                            variant="outline"
                             onClick={() => document.getElementById(`edit-image-${achievement.id}`)?.click()}
                             disabled={uploadingImage}
                             className="flex items-center gap-2"
@@ -861,11 +903,11 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                               alt="Achievement icon preview" 
                               className="h-8 w-8 object-cover rounded border"
                             />
-                            <span className="text-sm text-green-600 font-medium">Custom Icon</span>
+                            <span className="text-sm text-green-600 font-medium">Custom Icon Uploaded</span>
                           </div>
                         )}
                       </div>
-                      <p className="text-xs text-gray-500">Use default icon or upload your own (JPG, PNG up to 5MB)</p>
+                      <p className="text-xs text-gray-500">Upload your own custom icon (JPG, PNG up to 5MB) or leave blank to use the default icon</p>
                     </div>
 
                     <div className="flex gap-2 pt-6 border-t border-gray-200 dark:border-gray-700">
