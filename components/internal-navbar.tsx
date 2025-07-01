@@ -501,12 +501,28 @@ export function InternalNavbar() {
               >
                 <div className="py-4 flex flex-col space-y-4">
                   <div className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-r from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold">
-                      A
+                    <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-gray-200">
+                      {user?.profileImageUrl ? (
+                        <Image
+                          src={user.profileImageUrl}
+                          alt={user ? `${user.firstName} ${user.lastName}` : "Profile"}
+                          width={40}
+                          height={40}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-full w-full bg-gradient-to-r from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold">
+                          {user ? `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}` : 'U'}
+                        </div>
+                      )}
                     </div>
                     <div>
-                      <p className="font-medium">Alex Johnson</p>
-                      <p className="text-sm text-gray-500">Student</p>
+                      <p className="font-medium">
+                        {user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User' : 'Loading...'}
+                      </p>
+                      <p className="text-sm text-gray-500 capitalize">
+                        {user?.role || 'Student'}
+                      </p>
                     </div>
                   </div>
                   <div className="relative">
