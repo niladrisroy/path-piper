@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CalendarIcon, Plus, Trash2, Trophy, Upload, Image } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
+import { getDefaultIcon } from "@/lib/achievement-icons"
 
 interface Achievement {
   id: number
@@ -54,7 +55,8 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
     dateOfAchievement: '',
     categoryId: '',
     achievementTypeId: '',
-    achievementImageIcon: ''
+    achievementImageIcon: '',
+    useDefaultIcon: true
   })
   const [editFormData, setEditFormData] = useState({
     name: '',
@@ -62,7 +64,8 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
     dateOfAchievement: '',
     categoryId: '',
     achievementTypeId: '',
-    achievementImageIcon: ''
+    achievementImageIcon: '',
+    useDefaultIcon: true
   })
 
   useEffect(() => {
@@ -75,9 +78,16 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
       fetchTypes(formData.categoryId)
     } else {
       setTypes([])
-      setFormData(prev => ({ ...prev, achievementTypeId: '' }))
+      setFormData(prev => ({ ...prev, achievementTypeId: '', useDefaultIcon: true, achievementImageIcon: '' }))
     }
   }, [formData.categoryId])
+
+  // Reset to default icon when achievement type changes
+  useEffect(() => {
+    if (formData.achievementTypeId) {
+      setFormData(prev => ({ ...prev, useDefaultIcon: true, achievementImageIcon: '' }))
+    }
+  }, [formData.achievementTypeId])
 
   const fetchAchievements = async () => {
     try {
@@ -148,7 +158,7 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
 
       if (response.ok) {
         const data = await response.json()
-        setFormData(prev => ({ ...prev, achievementImageIcon: data.url }))
+        setFormData(prev => ({ ...prev, achievementImageIcon: data.url, useDefaultIcon: false }))
         toast.success('Image uploaded successfully!')
       } else {
         const error = await response.json()
@@ -184,7 +194,7 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
           description: formData.description,
           dateOfAchievement: formData.dateOfAchievement,
           achievementTypeId: formData.achievementTypeId,
-          achievementImageIcon: formData.achievementImageIcon
+          achievementImageIcon: formData.useDefaultIcon ? null : formData.achievementImageIcon
         })
       })
 
@@ -196,7 +206,8 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
           dateOfAchievement: '', 
           categoryId: '', 
           achievementTypeId: '', 
-          achievementImageIcon: '' 
+          achievementImageIcon: '',
+          useDefaultIcon: true
         })
         setShowAddForm(false)
         await fetchAchievements()
@@ -252,7 +263,8 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
       dateOfAchievement: formattedDate,
       categoryId: categoryId,
       achievementTypeId: achievement.achievementTypeId?.toString() || '',
-      achievementImageIcon: achievement.achievementImageIcon || ''
+      achievementImageIcon: achievement.achievementImageIcon || '',
+      useDefaultIcon: !achievement.achievementImageIcon
     })
     
     // Fetch types for the category if we have one
@@ -301,7 +313,8 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
       dateOfAchievement: '',
       categoryId: '',
       achievementTypeId: '',
-      achievementImageIcon: ''
+      achievementImageIcon: '',
+      useDefaultIcon: true
     })
   }
 
@@ -321,7 +334,7 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
 
       if (response.ok) {
         const data = await response.json()
-        setEditFormData(prev => ({ ...prev, achievementImageIcon: data.url }))
+        setEditFormData(prev => ({ ...prev, achievementImageIcon: data.url, useDefaultIcon: false }))
         toast.success('Image uploaded successfully!')
       } else {
         const error = await response.json()
@@ -355,7 +368,7 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
           description: editFormData.description,
           dateOfAchievement: editFormData.dateOfAchievement,
           achievementTypeId: editFormData.achievementTypeId,
-          achievementImageIcon: editFormData.achievementImageIcon
+          achievementImageIcon: editFormData.useDefaultIcon ? null : editFormData.achievementImageIcon
         })
       })
 
@@ -368,7 +381,8 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
           dateOfAchievement: '', 
           categoryId: '', 
           achievementTypeId: '', 
-          achievementImageIcon: '' 
+          achievementImageIcon: '',
+          useDefaultIcon: true
         })
         await fetchAchievements()
       } else {
@@ -535,7 +549,34 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
               </div>
 
               <div className="space-y-3">
-                <Label htmlFor="achievementImage" className="text-sm font-medium">Achievement Icon</Label>
+                <Label className="text-sm font-medium">Achievement Icon</Label>
+                
+                {/* Default Icon Preview */}
+                {formData.achievementTypeId && (
+                  <div className="flex items-center gap-3 p-3 border rounded-lg bg-gray-50 dark:bg-gray-800">
+                    <div className="text-2xl">
+                      {getDefaultIcon(parseInt(formData.achievementTypeId))}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Default Icon</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        We've selected a default icon for this achievement type
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant={formData.useDefaultIcon ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setFormData(prev => ({ ...prev, useDefaultIcon: true, achievementImageIcon: '' }))}
+                      >
+                        Use Default
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Custom Icon Upload */}
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <Input
@@ -548,7 +589,7 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                     />
                     <Button
                       type="button"
-                      variant="outline"
+                      variant={!formData.useDefaultIcon ? "default" : "outline"}
                       onClick={() => document.getElementById('achievementImage')?.click()}
                       disabled={uploadingImage}
                       className="flex items-center gap-2"
@@ -561,24 +602,28 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                       ) : (
                         <>
                           <Upload className="h-4 w-4" />
-                          Upload Image
+                          Upload Custom Icon
                         </>
                       )}
                     </Button>
                   </div>
                   
-                  {formData.achievementImageIcon && (
+                  {!formData.useDefaultIcon && formData.achievementImageIcon && (
                     <div className="flex items-center gap-2">
                       <img 
                         src={formData.achievementImageIcon} 
                         alt="Achievement icon preview" 
                         className="h-8 w-8 object-cover rounded border"
                       />
-                      <span className="text-sm text-green-600 font-medium">Uploaded</span>
+                      <span className="text-sm text-green-600 font-medium">Custom Icon</span>
                     </div>
                   )}
                 </div>
-                <p className="text-xs text-gray-500">JPG, PNG up to 5MB (optional)</p>
+                <p className="text-xs text-gray-500">
+                  {formData.achievementTypeId 
+                    ? "Use our default icon or upload your own (JPG, PNG up to 5MB)" 
+                    : "Select an achievement type first to see the default icon"}
+                </p>
               </div>
 
               <div className="flex gap-2 pt-6 border-t border-gray-200 dark:border-gray-700">
@@ -740,7 +785,34 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                     </div>
 
                     <div className="space-y-3">
-                      <Label htmlFor={`edit-image-${achievement.id}`} className="text-sm font-medium">Achievement Icon</Label>
+                      <Label className="text-sm font-medium">Achievement Icon</Label>
+                      
+                      {/* Default Icon Preview */}
+                      {editFormData.achievementTypeId && (
+                        <div className="flex items-center gap-3 p-3 border rounded-lg bg-gray-50 dark:bg-gray-800">
+                          <div className="text-2xl">
+                            {getDefaultIcon(parseInt(editFormData.achievementTypeId))}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">Default Icon</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                              Default icon for this achievement type
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="button"
+                              variant={editFormData.useDefaultIcon ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setEditFormData(prev => ({ ...prev, useDefaultIcon: true, achievementImageIcon: '' }))}
+                            >
+                              Use Default
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Custom Icon Upload */}
                       <div className="flex items-center gap-3">
                         <div className="relative">
                           <Input
@@ -753,7 +825,7 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                           />
                           <Button
                             type="button"
-                            variant="outline"
+                            variant={!editFormData.useDefaultIcon ? "default" : "outline"}
                             onClick={() => document.getElementById(`edit-image-${achievement.id}`)?.click()}
                             disabled={uploadingImage}
                             className="flex items-center gap-2"
@@ -766,24 +838,24 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                             ) : (
                               <>
                                 <Upload className="h-4 w-4" />
-                                Upload Image
+                                Upload Custom Icon
                               </>
                             )}
                           </Button>
                         </div>
                         
-                        {editFormData.achievementImageIcon && (
+                        {!editFormData.useDefaultIcon && editFormData.achievementImageIcon && (
                           <div className="flex items-center gap-2">
                             <img 
                               src={editFormData.achievementImageIcon} 
                               alt="Achievement icon preview" 
                               className="h-8 w-8 object-cover rounded border"
                             />
-                            <span className="text-sm text-green-600 font-medium">Uploaded</span>
+                            <span className="text-sm text-green-600 font-medium">Custom Icon</span>
                           </div>
                         )}
                       </div>
-                      <p className="text-xs text-gray-500">JPG, PNG up to 5MB (optional)</p>
+                      <p className="text-xs text-gray-500">Use default icon or upload your own (JPG, PNG up to 5MB)</p>
                     </div>
 
                     <div className="flex gap-2 pt-6 border-t border-gray-200 dark:border-gray-700">
@@ -810,6 +882,10 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                             alt={achievement.name}
                             className="h-5 w-5 object-cover rounded"
                           />
+                        ) : achievement.achievementTypeId ? (
+                          <span className="text-lg">
+                            {getDefaultIcon(achievement.achievementTypeId)}
+                          </span>
                         ) : (
                           <Trophy className="h-5 w-5 text-pathpiper-teal" />
                         )}
