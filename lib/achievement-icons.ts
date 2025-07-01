@@ -1,110 +1,114 @@
 
-// Default achievement icons mapping
-export const ACHIEVEMENT_TYPE_ICONS: { [key: number]: string } = {
+// Achievement type data with SVG icons and colors
+export const ACHIEVEMENT_TYPE_DATA: { [key: number]: { icon: string; color: string; name: string } } = {
   // Academic (Category 1)
-  1: "🏆", // Honor Roll
-  2: "🎓", // Dean's List
-  3: "💰", // Academic Scholarship
-  4: "📅", // Perfect Attendance
-  5: "🥇", // Subject Topper
-  6: "📄", // Research Publication
-  7: "🏅", // Academic Award
-  8: "📜", // Merit Certificate
+  1: { icon: "🎓", color: "#3B82F6", name: "Honor Roll" }, // Blue
+  2: { icon: "🎓", color: "#3B82F6", name: "Dean's List" },
+  3: { icon: "💰", color: "#F59E0B", name: "Academic Scholarship" }, // Amber
+  4: { icon: "📅", color: "#10B981", name: "Perfect Attendance" }, // Emerald
+  5: { icon: "🥇", color: "#F59E0B", name: "Subject Topper" },
+  6: { icon: "📄", color: "#6366F1", name: "Research Publication" }, // Indigo
+  7: { icon: "🏅", color: "#F59E0B", name: "Academic Award" },
+  8: { icon: "📜", color: "#8B5CF6", name: "Merit Certificate" }, // Violet
   
   // Sports (Category 2)
-  9: "🏆", // Championship Winner
-  10: "🏃", // Tournament Participation
-  11: "💰", // Sports Scholarship
-  12: "👨‍💼", // Team Captain
-  13: "📈", // Personal Best Record
-  14: "🏅", // Sports Award
-  15: "⚽", // Athletic Achievement
-  16: "💪", // Fitness Milestone
+  9: { icon: "🏆", color: "#F59E0B", name: "Championship Winner" },
+  10: { icon: "🏃", color: "#10B981", name: "Tournament Participation" },
+  11: { icon: "💰", color: "#F59E0B", name: "Sports Scholarship" },
+  12: { icon: "👨‍💼", color: "#EF4444", name: "Team Captain" }, // Red
+  13: { icon: "📈", color: "#10B981", name: "Personal Best Record" },
+  14: { icon: "🏅", color: "#F59E0B", name: "Sports Award" },
+  15: { icon: "⚽", color: "#10B981", name: "Athletic Achievement" },
+  16: { icon: "💪", color: "#EF4444", name: "Fitness Milestone" },
   
   // Arts & Creativity (Category 3)
-  17: "🎨", // Art Competition Winner
-  18: "🖼️", // Creative Project
-  19: "🎭", // Performance Award
-  20: "🖼️", // Art Exhibition
-  21: "🎵", // Music Competition
-  22: "💃", // Dance Performance
-  23: "✍️", // Creative Writing
-  24: "📸", // Photography Award
+  17: { icon: "🎨", color: "#EC4899", name: "Art Competition Winner" }, // Pink
+  18: { icon: "🖼️", color: "#8B5CF6", name: "Creative Project" },
+  19: { icon: "🎭", color: "#EC4899", name: "Performance Award" },
+  20: { icon: "🖼️", color: "#8B5CF6", name: "Art Exhibition" },
+  21: { icon: "🎵", color: "#EC4899", name: "Music Competition" },
+  22: { icon: "💃", color: "#EC4899", name: "Dance Performance" },
+  23: { icon: "✍️", color: "#6366F1", name: "Creative Writing" },
+  24: { icon: "📸", color: "#8B5CF6", name: "Photography Award" },
   
   // Leadership (Category 4)
-  25: "🏛️", // Student Council
-  26: "👑", // Club President
-  27: "🤝", // Volunteer Service
-  28: "👥", // Community Leader
-  29: "🎯", // Mentorship Award
-  30: "⏰", // Service Hours
-  31: "📋", // Leadership Certificate
-  32: "💡", // Social Initiative
+  25: { icon: "🏛️", color: "#EF4444", name: "Student Council" },
+  26: { icon: "👑", color: "#F59E0B", name: "Club President" },
+  27: { icon: "🤝", color: "#10B981", name: "Volunteer Service" },
+  28: { icon: "👥", color: "#3B82F6", name: "Community Leader" },
+  29: { icon: "🎯", color: "#EF4444", name: "Mentorship Award" },
+  30: { icon: "⏰", color: "#10B981", name: "Service Hours" },
+  31: { icon: "📋", color: "#6366F1", name: "Leadership Certificate" },
+  32: { icon: "💡", color: "#F59E0B", name: "Social Initiative" },
   
   // Professional Skills (Category 5)
-  33: "📊", // Professional Certification
-  34: "📝", // Skill Assessment
-  35: "✅", // Course Completion
-  36: "📚", // Training Certificate
-  37: "🆔", // License Achievement
-  38: "🔖", // Competency Badge
-  39: "🛠️", // Workshop Completion
-  40: "👍", // Skill Endorsement
+  33: { icon: "📊", color: "#3B82F6", name: "Professional Certification" },
+  34: { icon: "📝", color: "#6366F1", name: "Skill Assessment" },
+  35: { icon: "✅", color: "#10B981", name: "Course Completion" },
+  36: { icon: "📚", color: "#8B5CF6", name: "Training Certificate" },
+  37: { icon: "🆔", color: "#EF4444", name: "License Achievement" },
+  38: { icon: "🔖", color: "#EC4899", name: "Competency Badge" },
+  39: { icon: "🛠️", color: "#F59E0B", name: "Workshop Completion" },
+  40: { icon: "👍", color: "#10B981", name: "Skill Endorsement" },
   
   // Competitions (Category 6)
-  41: "❓", // Quiz Competition
-  42: "🗣️", // Debate Winner
-  43: "🔬", // Science Fair
-  44: "💻", // Hackathon Winner
-  45: "🥇", // Olympiad Medal
-  46: "🎪", // Contest Participation
-  47: "🏆", // Competition Award
-  48: "🎯", // Challenge Winner
+  41: { icon: "❓", color: "#6366F1", name: "Quiz Competition" },
+  42: { icon: "🗣️", color: "#EF4444", name: "Debate Winner" },
+  43: { icon: "🔬", color: "#10B981", name: "Science Fair" },
+  44: { icon: "💻", color: "#8B5CF6", name: "Hackathon Winner" },
+  45: { icon: "🥇", color: "#F59E0B", name: "Olympiad Medal" },
+  46: { icon: "🎪", color: "#EC4899", name: "Contest Participation" },
+  47: { icon: "🏆", color: "#F59E0B", name: "Competition Award" },
+  48: { icon: "🎯", color: "#EF4444", name: "Challenge Winner" },
   
   // Personal Development (Category 7)
-  49: "🎯", // Goal Achievement
-  50: "📍", // Personal Milestone
-  51: "🔄", // Habit Formation
-  52: "📈", // Self Improvement
-  53: "🎓", // Learning Goal
-  54: "💪", // Personal Challenge
-  55: "🌱", // Growth Milestone
-  56: "🔓", // Achievement Unlocked
+  49: { icon: "🎯", color: "#EF4444", name: "Goal Achievement" },
+  50: { icon: "📍", color: "#10B981", name: "Personal Milestone" },
+  51: { icon: "🔄", color: "#3B82F6", name: "Habit Formation" },
+  52: { icon: "📈", color: "#10B981", name: "Self Improvement" },
+  53: { icon: "🎓", color: "#6366F1", name: "Learning Goal" },
+  54: { icon: "💪", color: "#EF4444", name: "Personal Challenge" },
+  55: { icon: "🌱", color: "#10B981", name: "Growth Milestone" },
+  56: { icon: "🔓", color: "#F59E0B", name: "Achievement Unlocked" },
   
   // Technology & Innovation (Category 8)
-  57: "💻", // Coding Project
-  58: "📱", // App Development
-  59: "💡", // Innovation Award
-  60: "🖥️", // Tech Competition
-  61: "📄", // Patent Filed
-  62: "📊", // Technical Presentation
-  63: "⌨️", // Programming Achievement
-  64: "🎨", // Digital Creation
-  
-  // Social Impact (Category 9)
-  65: "🤝", // Social Project
-  66: "❤️", // Community Service
-  67: "💰", // Fundraising Success
-  68: "📢", // Awareness Campaign
-  69: "🌱", // Environmental Initiative
-  70: "🌟", // Social Impact Award
-  71: "💝", // Charity Work
-  72: "🏆", // Community Recognition
-  
-  // Cultural & Language (Category 10)
-  73: "🗣️", // Language Proficiency
-  74: "🎭", // Cultural Performance
-  75: "🗣️", // Language Competition
-  76: "🏆", // Cultural Award
-  77: "📖", // Translation Work
-  78: "🌍", // Cultural Exchange
-  79: "🏛️", // Heritage Project
-  80: "🌐", // Multilingual Achievement
+  57: { icon: "💻", color: "#8B5CF6", name: "Coding Project" },
+  58: { icon: "📱", color: "#6366F1", name: "App Development" },
+  59: { icon: "💡", color: "#F59E0B", name: "Innovation Award" },
+  60: { icon: "🖥️", color: "#3B82F6", name: "Tech Competition" },
 }
 
-// Function to get default icon for achievement type
+// Function to get default icon data for achievement type
+export function getDefaultIconData(achievementTypeId: number): { icon: string; color: string; name: string } {
+  return ACHIEVEMENT_TYPE_DATA[achievementTypeId] || { icon: "🏆", color: "#F59E0B", name: "Achievement" }
+}
+
+// Function to get just the icon (for backward compatibility)
 export function getDefaultIcon(achievementTypeId: number): string {
-  return ACHIEVEMENT_TYPE_ICONS[achievementTypeId] || "🏆"
+  return getDefaultIconData(achievementTypeId).icon
+}
+
+// Function to create a circular badge component
+export function createCircularBadge(achievementTypeId: number, size: number = 40): string {
+  const data = getDefaultIconData(achievementTypeId)
+  const fontSize = Math.floor(size * 0.5)
+  
+  return `
+    <div style="
+      width: ${size}px;
+      height: ${size}px;
+      background: linear-gradient(135deg, ${data.color}20, ${data.color}40);
+      border: 2px solid ${data.color}30;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: ${fontSize}px;
+      box-shadow: 0 2px 8px ${data.color}20;
+    ">
+      ${data.icon}
+    </div>
+  `
 }
 
 // Function to convert emoji to SVG data URL for consistent display

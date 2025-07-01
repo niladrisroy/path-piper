@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CalendarIcon, Plus, Trash2, Trophy, Upload, Image } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
-import { getDefaultIcon } from "@/lib/achievement-icons"
+import { getDefaultIcon, getDefaultIconData } from "@/lib/achievement-icons"
 
 interface Achievement {
   id: number
@@ -554,7 +554,12 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                 {/* Default Icon Preview */}
                 {formData.achievementTypeId && (
                   <div className="flex items-center gap-3 p-3 border rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <div className="text-2xl">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-xl"
+                         style={{
+                           background: `linear-gradient(135deg, ${getDefaultIconData(parseInt(formData.achievementTypeId)).color}20, ${getDefaultIconData(parseInt(formData.achievementTypeId)).color}40)`,
+                           border: `2px solid ${getDefaultIconData(parseInt(formData.achievementTypeId)).color}30`,
+                           boxShadow: `0 2px 8px ${getDefaultIconData(parseInt(formData.achievementTypeId)).color}20`
+                         }}>
                       {getDefaultIcon(parseInt(formData.achievementTypeId))}
                     </div>
                     <div className="flex-1">
@@ -790,7 +795,12 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                       {/* Default Icon Preview */}
                       {editFormData.achievementTypeId && (
                         <div className="flex items-center gap-3 p-3 border rounded-lg bg-gray-50 dark:bg-gray-800">
-                          <div className="text-2xl">
+                          <div className="w-12 h-12 rounded-full flex items-center justify-center text-xl"
+                               style={{
+                                 background: `linear-gradient(135deg, ${getDefaultIconData(parseInt(editFormData.achievementTypeId)).color}20, ${getDefaultIconData(parseInt(editFormData.achievementTypeId)).color}40)`,
+                                 border: `2px solid ${getDefaultIconData(parseInt(editFormData.achievementTypeId)).color}30`,
+                                 boxShadow: `0 2px 8px ${getDefaultIconData(parseInt(editFormData.achievementTypeId)).color}20`
+                               }}>
                             {getDefaultIcon(parseInt(editFormData.achievementTypeId))}
                           </div>
                           <div className="flex-1">
@@ -880,14 +890,21 @@ export default function AchievementsForm({ userId }: AchievementsFormProps) {
                           <img 
                             src={achievement.achievementImageIcon} 
                             alt={achievement.name}
-                            className="h-5 w-5 object-cover rounded"
+                            className="h-6 w-6 object-cover rounded-full"
                           />
                         ) : achievement.achievementTypeId ? (
-                          <span className="text-lg">
+                          <div className="w-6 h-6 rounded-full flex items-center justify-center text-sm"
+                               style={{
+                                 background: `linear-gradient(135deg, ${getDefaultIconData(achievement.achievementTypeId).color}20, ${getDefaultIconData(achievement.achievementTypeId).color}40)`,
+                                 border: `1px solid ${getDefaultIconData(achievement.achievementTypeId).color}30`,
+                                 boxShadow: `0 1px 4px ${getDefaultIconData(achievement.achievementTypeId).color}20`
+                               }}>
                             {getDefaultIcon(achievement.achievementTypeId)}
-                          </span>
+                          </div>
                         ) : (
-                          <Trophy className="h-5 w-5 text-pathpiper-teal" />
+                          <div className="w-6 h-6 rounded-full bg-pathpiper-teal/20 border border-pathpiper-teal/30 flex items-center justify-center">
+                            <Trophy className="h-3 w-3 text-pathpiper-teal" />
+                          </div>
                         )}
                         <h4 className="text-lg font-semibold">{achievement.name}</h4>
                       </div>

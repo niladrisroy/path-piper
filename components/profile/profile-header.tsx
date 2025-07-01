@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Settings, Plus, Users, MessageSquare, Share2, Calendar, MapPin, Briefcase, GraduationCap, Mail, Phone, Globe, Instagram, Twitter, Linkedin, Github, Youtube, Facebook, UserPlus, BadgeCheck, Edit, MessageCircle, UserIcon, FolderKanban, Award, BrainIcon, UserCheck, UserX } from "lucide-react"
+import { getDefaultIcon, getDefaultIconData } from "@/lib/achievement-icons"
 import { format } from "date-fns"
 import CircleManagementDialog from "./circle-management-dialog"
 
@@ -744,11 +745,20 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                                     <img
                                       src={achievement.achievementImageIcon}
                                       alt={achievement.name}
-                                      className="h-8 w-8 rounded object-cover"
+                                      className="h-8 w-8 rounded-full object-cover"
                                     />
+                                  ) : achievement.achievementTypeId ? (
+                                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm"
+                                         style={{
+                                           background: `linear-gradient(135deg, ${getDefaultIconData(achievement.achievementTypeId).color}20, ${getDefaultIconData(achievement.achievementTypeId).color}40)`,
+                                           border: `1px solid ${getDefaultIconData(achievement.achievementTypeId).color}30`,
+                                           boxShadow: `0 1px 4px ${getDefaultIconData(achievement.achievementTypeId).color}20`
+                                         }}>
+                                      {getDefaultIcon(achievement.achievementTypeId)}
+                                    </div>
                                   ) : (
                                     <div 
-                                      className={`h-8 w-8 rounded flex items-center justify-center ${
+                                      className={`h-8 w-8 rounded-full flex items-center justify-center ${
                                         index % 4 === 0
                                           ? "bg-yellow-100 dark:bg-yellow-900/40"
                                           : index % 4 === 1
