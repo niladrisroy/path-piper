@@ -33,7 +33,7 @@ export async function registerStudent(data: UserRegistrationData) {
     const age = (data.birthYear && data.birthMonth) ? 
       Math.floor(calculateAge(parseInt(data.birthMonth), parseInt(data.birthYear)) / 12) : null;
     const needsParentApproval = age !== null && age < 16;
-    
+
     console.log('🔍 Registration Debug Info:');
     console.log('   - Birth Year:', data.birthYear);
     console.log('   - Calculated Age:', age);
@@ -58,15 +58,29 @@ export async function registerStudent(data: UserRegistrationData) {
     }
 
     // Step 2: Use Prisma for all database operations
-    // Create user profile with the Supabase user ID
-    const profile = await prisma.profile.create({
-      data: {
-        id: authData.user.id,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        role: "student",
-      },
-    });
+    // Create user profile with the Supabase user ID (with retry logic)
+    let profile;
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        profile = await prisma.profile.create({
+          data: {
+            id: authData.user.id,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            role: "student",
+          },
+        });
+        break; // If successful, exit the retry loop
+      } catch (error) {
+        console.error(`Attempt ${4 - retries} failed:`, error);
+        retries--;
+        if (retries === 0) {
+          throw error; // If all retries failed, throw the error
+        }
+        // Optional: Add a delay before the next retry (e.g., await new Promise(resolve => setTimeout(resolve, 1000));)
+      }
+    }
 
     // Calculate age group from birth data
     const calculateAgeGroup = (birthMonth: string | null, birthYear: string | null): string => {
@@ -104,15 +118,15 @@ export async function registerStudent(data: UserRegistrationData) {
     // Handle parent profile creation for students under 16 - ALWAYS create/update parent first
     if (needsParentApproval && data.parentEmail) {
       console.log('🔄 Student needs parent approval - Age:', age, 'Parent Email:', data.parentEmail);
-      
+
       // Check if parent email exists in Supabase auth.users
       const { data: existingUsers } = await supabase.auth.admin.listUsers();
       const isParentRegistered = existingUsers.users?.some(user => user.email === data.parentEmail) || false;
       console.log('🔍 Parent registered in auth.users:', isParentRegistered);
-      
+
       // Generate verification token with registration status
       const verificationToken = Buffer.from(`${data.parentEmail}:${authData.user.id}:${Date.now()}:${isParentRegistered}`).toString('base64');
-      
+
       // Check if parent profile already exists
       let parentProfile = await prisma.parentProfile.findFirst({
         where: { email: data.parentEmail }
@@ -151,14 +165,14 @@ export async function registerStudent(data: UserRegistrationData) {
       try {
         // Use the specific PathPiper deployment domain
         const baseUrl = 'https://pathpiper.replit.app';
-        
+
         const verificationLink = `${baseUrl}/api/auth/verify-parent?token=${verificationToken}`;
         console.log('🔗 Base URL:', baseUrl);
         console.log('🔗 Verification link:', verificationLink);
-        
+
         // Use different email template based on parent registration status
         const emailTemplate = isParentRegistered ? 'parent-approval-existing' : 'parent-approval-new';
-        
+
         await sendEmail(
           emailTemplate,
           data.parentEmail,
@@ -179,7 +193,7 @@ export async function registerStudent(data: UserRegistrationData) {
         const baseUrl = 'https://pathpiper.replit.app';
         const studentVerificationToken = Buffer.from(`${data.email}:${authData.user.id}:${Date.now()}`).toString('base64');
         const studentVerificationLink = `${baseUrl}/api/auth/verify-student-email?token=${studentVerificationToken}`;
-        
+
         await sendEmail(
           'student-email-verification',
           data.email,
@@ -271,15 +285,29 @@ export async function registerMentor(data: UserRegistrationData) {
     }
 
     // Step 2: Use Prisma for all database operations
-    // Create user profile with the Supabase user ID
-    const profile = await prisma.profile.create({
-      data: {
-        id: authData.user.id,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        role: "mentor",
-      },
-    });
+    // Create user profile with the Supabase user ID (with retry logic)
+    let profile;
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        profile = await prisma.profile.create({
+          data: {
+            id: authData.user.id,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            role: "mentor",
+          },
+        });
+        break; // If successful, exit the retry loop
+      } catch (error) {
+        console.error(`Attempt ${4 - retries} failed:`, error);
+        retries--;
+        if (retries === 0) {
+          throw error; // If all retries failed, throw the error
+        }
+        // Optional: Add a delay before the next retry (e.g., await new Promise(resolve => setTimeout(resolve, 1000));)
+      }
+    }
 
     // Create mentor profile
     await prisma.mentorProfile.create({
@@ -333,15 +361,29 @@ export async function registerInstitution(data: InstitutionRegistrationData) {
 
     // Step 2: Use Prisma for all database operations
     // Create user profile with the Supabase user ID
-    const profile = await prisma.profile.create({
-      data: {
-        id: authData.user.id,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        role: "institution",
-        bio: data.institutionData.description || null,
-      },
-    });
+    let profile;
+    let retries = 3;
+    while (retries > 0) {
+      try {
+                profile = await prisma.profile.create({
+                  data: {
+                    id: authData.user.id,
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    role: "institution",
+                    bio: data.institutionData.description || null,
+                  },
+                });
+                  break; // If successful, exit the retry loop
+              } catch (error) {
+                console.error(`Attempt ${4 - retries} failed:`, error);
+                retries--;
+                if (retries === 0) {
+                  throw error; // If all retries failed, throw the error
+                }
+                // Optional: Add a delay before the next retry (e.g., await new Promise(resolve => setTimeout(resolve, 1000));)
+              }
+    }
 
     // Create institution profile with all required fields
     await prisma.institutionProfile.create({
@@ -421,20 +463,20 @@ export async function loginUser(data: LoginData) {
           const currentDate = new Date();
           const currentYear = currentDate.getFullYear();
           const currentMonth = currentDate.getMonth() + 1;
-          
+
           const birthYear = parseInt(profile.student.birthYear);
           const birthMonth = parseInt(profile.student.birthMonth);
-          
+
           let ageInYears = currentYear - birthYear;
           if (currentMonth < birthMonth) {
             ageInYears--;
           }
-          
+
           // Check if student is under 16 and verification status
           if (ageInYears < 16) {
             const isParentVerified = profile.parentVerified || false;
             const isEmailVerified = profile.emailVerified || false;
-            
+
             // Check verification status and return appropriate response
             if (!isParentVerified || !isEmailVerified) {
               return {
@@ -449,21 +491,21 @@ export async function loginUser(data: LoginData) {
 
         // Check if user has minimum required data for all three essential sections
         const hasBasicInfo = !!(profile.firstName && profile.lastName && profile.bio);
-        
+
         // Check interests
         const interests = await prisma.userInterest.findMany({
           where: { userId: profile.id }
         });
         const hasInterests = !!(interests.length > 0);
-        
+
         // Check education
         const education = await prisma.studentEducationHistory.findMany({
           where: { studentId: profile.id }
         });
         const hasEducation = !!(education.length > 0);
-        
+
         onboardingCompleted = hasBasicInfo && hasInterests && hasEducation;
-        
+
         console.log('🔍 Onboarding completion check:', {
           userId: profile.id,
           hasBasicInfo,
