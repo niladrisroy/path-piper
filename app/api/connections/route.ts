@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     // Get user ID from auth if not provided
     let currentUserId = userId;
     if (!currentUserId) {
-      const cookieStore = cookies();
+      const cookieStore = await cookies();
       const authToken = cookieStore.get('sb-access-token')?.value;
 
       if (!authToken) {

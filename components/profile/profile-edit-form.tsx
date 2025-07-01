@@ -232,11 +232,30 @@ export default function ProfileEditForm({ userId, initialSection }: ProfileEditF
       try {
         setLoading(true)
 
-        // Fetch from the new personal info endpoint for more complete data
-        const response = await fetch('/api/profile/personal-info')
-        if (!response.ok) throw new Error('Failed to load profile')
+        // OPTIMIZED: Batch multiple API calls for initial data loading
+        const [profileResponse, connectionsResponse, achievementsResponse] = await Promise.all([
+          fetch('/api/profile/personal-info'),
+          fetch('/api/connections'),
+          fetch('/api/achievements')
+        ]);
 
-        const userData = await response.json()
+        if (!profileResponse.ok) throw new Error('Failed to load profile')
+
+        const userData = await profileResponse.json()
+        
+        // Optional: Pre-load other data for faster form switching
+        const [connectionsData, achievementsData] = await Promise.all([
+          connectionsResponse.ok ? connectionsResponse.json() : [],
+          achievementsResponse.ok ? achievementsResponse.json() : []
+        ]);
+
+        // Store pre-loaded data for faster form switching
+        setFormData(prev => ({
+          ...prev,
+          connections: connectionsData,
+          achievements: achievementsData
+        }))
+
         setProfileData(userData)
 
         // Calculate completion status for each section

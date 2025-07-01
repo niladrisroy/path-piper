@@ -275,6 +275,51 @@ export function InternalNavbar() {
     { name: "Profile", href: "/student/profile", icon: <User size={20} /> },
   ];
 
+  useEffect(() => {
+    const fetchNavbarData = async () => {
+      try {
+        if (!user) return;
+
+        // OPTIMIZED: Batch all navbar-related API calls
+        const [notificationsRes, connectionsRes, circleInvitesRes] = await Promise.all([
+          fetch('/api/connections/requests?type=received'),
+          fetch(`/api/connections?userId=${user.id}`), // Add explicit userId to avoid cookie lookup
+          fetch('/api/circles/invitations?type=received')
+        ]);
+
+        if (notificationsRes.ok) {
+          // const notificationsData = await notificationsRes.json();
+          // setNotifications(notificationsData); // Assuming you have a setNotifications state
+        } else {
+          console.error("Error fetching notifications:", notificationsRes.status);
+        }
+
+        if (connectionsRes.ok) {
+          const connectionsData = await connectionsRes.json();
+          setConnections(connectionsData);
+        } else {
+          console.error("Error fetching connections:", connectionsRes.status);
+        }
+
+        if (circleInvitesRes.ok) {
+          // const circleInvitesData = await circleInvitesRes.json();
+          // setCircleInvites(circleInvitesData); // Assuming you have a setCircleInvites state
+        } else {
+          console.error("Error fetching circle invites:", circleInvitesRes.status);
+        }
+
+      } catch (error) {
+        console.error("Error fetching navbar data:", error);
+      }
+    };
+
+    if (user) {
+      fetchNavbarData();
+    }
+
+  }, [user]);
+
+
   return (
     <>
       {/* Top navigation for desktop and tablet */}
