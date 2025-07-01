@@ -518,7 +518,11 @@ export function InternalNavbar() {
                     </div>
                     <div>
                       <p className="font-medium">
-                        {user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User' : 'Loading...'}
+                        {user ? (
+                          user.firstName || user.lastName ? 
+                            `${user.firstName || ''} ${user.lastName || ''}`.trim() : 
+                            'User'
+                        ) : 'Loading...'}
                       </p>
                       <p className="text-sm text-gray-500 capitalize">
                         {user?.role || 'Student'}
