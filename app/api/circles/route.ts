@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
     console.log('API: Authenticated user found:', user.id)
 
-    // OPTIMIZED: Single comprehensive query with all related data
+    // Get user's circle badges with member counts
     const circles = await prisma.circleBadge.findMany({
       where: {
         OR: [
@@ -68,11 +68,12 @@ export async function GET(request: NextRequest) {
                 firstName: true,
                 lastName: true,
                 profileImageUrl: true,
-                role: true
+                role: true,
+                bio: true,
+                availabilityStatus: true
               }
             }
-          },
-          take: 10 // Limit members to avoid over-fetching
+          }
         },
         _count: {
           select: {
@@ -82,7 +83,7 @@ export async function GET(request: NextRequest) {
               }
             }
           }
-        }
+        },
       },
       orderBy: [
         { isDefault: 'desc' },

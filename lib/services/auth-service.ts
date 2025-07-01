@@ -389,18 +389,14 @@ export async function loginUser(data: LoginData) {
       throw new Error("No user returned from login");
     }
 
-    // OPTIMIZED: Single comprehensive query with all includes for complete profile data
+    // Get user's profile with a single optimized query
+    // Include the specific profile type based on role to get onboarding status in one query
     const profile = await prisma.profile.findUnique({
       where: { id: authData.user.id },
       include: {
-        student: {
-          include: {
-            educationHistory: true
-          }
-        },
+        student: true,
         mentor: true,
         institution: true,
-        userInterests: true,
       },
     });
 
@@ -451,18 +447,28 @@ export async function loginUser(data: LoginData) {
           }
         }
 
-        // OPTIMIZED: Use data already fetched in the single query instead of separate queries
+        // Check if user has minimum required data for all three essential sections
         const hasBasicInfo = !!(profile.firstName && profile.lastName && profile.bio);
-        const hasInterests = !!(profile.userInterests && profile.userInterests.length > 0);
-        const hasEducation = !!(profile.student?.educationHistory && profile.student.educationHistory.length > 0);
+        
+        // Check interests
+        const interests = await prisma.userInterest.findMany({
+          where: { userId: profile.id }
+        });
+        const hasInterests = !!(interests.length > 0);
+        
+        // Check education
+        const education = await prisma.studentEducationHistory.findMany({
+          where: { studentId: profile.id }
+        });
+        const hasEducation = !!(education.length > 0);
         
         onboardingCompleted = hasBasicInfo && hasInterests && hasEducation;
         
         console.log('🔍 Onboarding completion check:', {
           userId: profile.id,
           hasBasicInfo,
-          hasInterests: `${profile.userInterests?.length || 0} interests`,
-          hasEducation: `${profile.student?.educationHistory?.length || 0} education entries`,
+          hasInterests: `${interests.length} interests`,
+          hasEducation: `${education.length} education entries`,
           onboardingCompleted
         });
       } catch (error) {

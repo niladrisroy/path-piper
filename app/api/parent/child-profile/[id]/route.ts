@@ -1,6 +1,11 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function GET(
   request: NextRequest,
@@ -29,21 +34,14 @@ export async function GET(
       )
     }
 
-    // OPTIMIZED: Single query to verify parent-child relationship and get parent info
-    const [child, parentProfile] = await Promise.all([
-      prisma.profile.findFirst({
-        where: {
-          id: childId,
-          parentId: parseInt(parentId),
-          role: 'student'
-        },
-        select: { id: true }
-      }),
-      prisma.parentProfile.findUnique({
-        where: { id: parseInt(parentId) },
-        select: { name: true }
-      })
-    ])
+    // Verify parent-child relationship
+    const child = await prisma.profile.findFirst({
+      where: {
+        id: childId,
+        parentId: parseInt(parentId),
+        role: 'student'
+      }
+    })
 
     if (!child) {
       return NextResponse.json(
@@ -52,14 +50,13 @@ export async function GET(
       )
     }
 
-    if (!parentProfile) {
-      return NextResponse.json(
-        { success: false, error: 'Parent profile not found' },
-        { status: 404 }
-      )
-    }
+    // Get parent name
+    const parentProfile = await prisma.parentProfile.findUnique({
+      where: { id: parseInt(parentId) },
+      select: { name: true }
+    })
 
-    // OPTIMIZED: Single comprehensive query to fetch complete child profile data
+    // Fetch complete child profile data using service role key
     const childProfile = await prisma.studentProfile.findUnique({
       where: { id: childId },
       include: {
@@ -125,17 +122,47 @@ export async function GET(
       )
     }
 
-    // OPTIMIZED: Single query to get connections instead of separate relationship check
+    // Get child's connections
     const connections = await prisma.connection.findMany({
       where: {
         OR: [
           { user1Id: childId },
           { user2Id: childId }
         ]
+      },
+      include: {
+        user1: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            profileImageUrl: true,
+            role: true
+          }
+        },
+        user2: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            profileImageUrl: true,
+            role: true
+          }
+        }
       }
     })
 
-    // Format the complete response
+    // Format connections to show the other user
+    const formattedConnections = connections.map(connection => {
+      const otherUser = connection.user1Id === childId ? connection.user2 : connection.user1
+      return {
+        id: connection.id,
+        user: otherUser
+      }
+    })
+
+    // Note: Achievements will be handled through custom badges which are already included above
+
     const formattedProfile = {
       id: childProfile.id,
       ageGroup: childProfile.age_group,
@@ -152,31 +179,14 @@ export async function GET(
         location: childProfile.profile.location,
         profileImageUrl: childProfile.profile.profileImageUrl,
         coverImageUrl: childProfile.profile.coverImageUrl,
+        tagline: childProfile.profile.tagline,
         verificationStatus: childProfile.profile.verificationStatus,
         role: childProfile.profile.role,
-        userInterests: childProfile.profile.userInterests.map(ui => ({
-          ...ui,
-          interest: {
-            ...ui.interest,
-            category: ui.interest.category
-          }
-        })),
-        userSkills: childProfile.profile.userSkills.map(us => ({
-          ...us,
-          skill: {
-            ...us.skill,
-            category: us.skill.category
-          }
-        })),
+        userInterests: childProfile.profile.userInterests,
+        userSkills: childProfile.profile.userSkills,
         socialLinks: childProfile.profile.socialLinks,
         goals: childProfile.profile.goals,
-        achievements: childProfile.profile.achievements.map(achievement => ({
-          ...achievement,
-          achievementType: achievement.achievementType ? {
-            ...achievement.achievementType,
-            category: achievement.achievementType.category
-          } : null
-        }))
+        userAchievements: childProfile.profile.achievements
       },
       educationHistory: childProfile.educationHistory.map(edu => ({
         id: edu.id,
@@ -195,15 +205,13 @@ export async function GET(
         achievements: edu.achievements,
         description: edu.description
       })),
-      connections: connections.length,
-      parentInfo: {
-        name: parentProfile.name
-      }
+      connections: formattedConnections
     }
 
     return NextResponse.json({
       success: true,
-      data: formattedProfile
+      child: formattedProfile,
+      parentName: parentProfile?.name || "Parent"
     })
 
   } catch (error) {

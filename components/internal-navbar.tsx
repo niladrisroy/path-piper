@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, memo, useMemo, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -274,51 +274,6 @@ export function InternalNavbar() {
     { name: "Messages", href: "/messages", icon: <MessageCircle size={20} /> },
     { name: "Profile", href: "/student/profile", icon: <User size={20} /> },
   ];
-
-  useEffect(() => {
-    const fetchNavbarData = async () => {
-      try {
-        if (!user) return;
-
-        // OPTIMIZED: Batch all navbar-related API calls
-        const [notificationsRes, connectionsRes, circleInvitesRes] = await Promise.all([
-          fetch('/api/connections/requests?type=received'),
-          fetch(`/api/connections?userId=${user.id}`), // Add explicit userId to avoid cookie lookup
-          fetch('/api/circles/invitations?type=received')
-        ]);
-
-        if (notificationsRes.ok) {
-          // const notificationsData = await notificationsRes.json();
-          // setNotifications(notificationsData); // Assuming you have a setNotifications state
-        } else {
-          console.error("Error fetching notifications:", notificationsRes.status);
-        }
-
-        if (connectionsRes.ok) {
-          const connectionsData = await connectionsRes.json();
-          setConnections(connectionsData);
-        } else {
-          console.error("Error fetching connections:", connectionsRes.status);
-        }
-
-        if (circleInvitesRes.ok) {
-          // const circleInvitesData = await circleInvitesRes.json();
-          // setCircleInvites(circleInvitesData); // Assuming you have a setCircleInvites state
-        } else {
-          console.error("Error fetching circle invites:", circleInvitesRes.status);
-        }
-
-      } catch (error) {
-        console.error("Error fetching navbar data:", error);
-      }
-    };
-
-    if (user) {
-      fetchNavbarData();
-    }
-
-  }, [user]);
-
 
   return (
     <>

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useCallback, useMemo, memo } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { motion, AnimatePresence } from "framer-motion"
@@ -134,19 +134,6 @@ export default function ProfileEditForm({ userId, initialSection }: ProfileEditF
     console.log('👤 ProfileEditForm: User data:', { userId: user?.id, userExists: !!user })
   }, [user])
 
-  // OPTIMIZED: Memoize sections to prevent recreation on every render
-  const formSections = useMemo(() => [
-    { id: 'personal', label: 'Personal Info', component: PersonalInfoForm },
-    { id: 'interests', label: 'Interests & Passions', component: InterestsPassionsForm },
-    { id: 'skills', label: 'Skills & Abilities', component: SkillsAbilitiesForm },
-    { id: 'education', label: 'Education History', component: EducationHistoryForm },
-    { id: 'goals', label: 'Goals & Aspirations', component: GoalsAspirationsForm },
-    { id: 'achievements', label: 'Achievements', component: AchievementsForm },
-    { id: 'social', label: 'Social & Contact', component: SocialContactForm },
-    { id: 'media', label: 'MoodBoard & Media', component: MoodBoardMediaForm },
-    { id: 'privacy', label: 'Privacy Settings', component: PrivacySettingsForm },
-  ], [])
-
   // Tab configuration
   const tabs: TabConfig[] = [
     {
@@ -232,30 +219,11 @@ export default function ProfileEditForm({ userId, initialSection }: ProfileEditF
       try {
         setLoading(true)
 
-        // OPTIMIZED: Batch multiple API calls for initial data loading
-        const [profileResponse, connectionsResponse, achievementsResponse] = await Promise.all([
-          fetch('/api/profile/personal-info'),
-          fetch('/api/connections'),
-          fetch('/api/achievements')
-        ]);
+        // Fetch from the new personal info endpoint for more complete data
+        const response = await fetch('/api/profile/personal-info')
+        if (!response.ok) throw new Error('Failed to load profile')
 
-        if (!profileResponse.ok) throw new Error('Failed to load profile')
-
-        const userData = await profileResponse.json()
-        
-        // Optional: Pre-load other data for faster form switching
-        const [connectionsData, achievementsData] = await Promise.all([
-          connectionsResponse.ok ? connectionsResponse.json() : [],
-          achievementsResponse.ok ? achievementsResponse.json() : []
-        ]);
-
-        // Store pre-loaded data for faster form switching
-        setFormData(prev => ({
-          ...prev,
-          connections: connectionsData,
-          achievements: achievementsData
-        }))
-
+        const userData = await response.json()
         setProfileData(userData)
 
         // Calculate completion status for each section
