@@ -379,7 +379,7 @@ export async function registerInstitution(data: InstitutionRegistrationData) {
         logoUrl: data.institutionData.logoUrl || null,
         coverImageUrl: data.institutionData.coverImageUrl || null,
         verified: false,
-        onboardingCompleted: false,
+        onboardingCompleted: true, // Skip onboarding for institutions
       },
     });
 

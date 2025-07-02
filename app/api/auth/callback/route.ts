@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
           if (existingProfile.role === 'mentor') {
             return NextResponse.redirect('https://pathpiper.replit.app/mentor-onboarding');
           } else if (existingProfile.role === 'institution') {
-            return NextResponse.redirect('https://pathpiper.replit.app/institution-onboarding');
+            return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/institution/profile`);
           } else {
             return NextResponse.redirect('https://pathpiper.replit.app/onboarding');
           }

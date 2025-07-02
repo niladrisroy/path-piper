@@ -88,7 +88,17 @@ export async function getCurrentUserInstitution(userId: string) {
       tagline: institution.profile.bio || 'Empowering students to achieve their goals',
       overview: institution.overview || '',
       mission: institution.mission || '',
-      coreValues: institution.coreValues ? JSON.parse(institution.coreValues as string) : []
+      coreValues: institution.coreValues ? 
+        (typeof institution.coreValues === 'string' ? 
+          (() => {
+            try {
+              return JSON.parse(institution.coreValues as string);
+            } catch {
+              return [institution.coreValues]; // If not valid JSON, treat as single value
+            }
+          })() : 
+          (Array.isArray(institution.coreValues) ? institution.coreValues : [])
+        ) : []
     }
   } catch (error) {
     console.error(`Error fetching current user institution ${userId}:`, error)
