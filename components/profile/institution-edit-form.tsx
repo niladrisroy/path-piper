@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useRef } from "react"
@@ -159,18 +158,18 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
       const filteredCoreValues = formData.coreValues.filter(value => value.trim() !== "")
 
       // Update institution profile
-      const response = await fetch(`/api/institution/profile`, {
+      const response = await fetch('/api/institution/profile', {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           overview: formData.overview,
           mission: formData.mission,
           coreValues: filteredCoreValues,
-          logoUrl,
+          logoUrl: logoUrl,
           coverImageUrl: coverUrl
-        })
+        }),
       })
 
       if (!response.ok) {
@@ -179,10 +178,10 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
 
       toast({
         title: "Success",
-        description: "Institution profile updated successfully"
+        description: "Institution profile updated successfully",
       })
 
-      router.push('/institution/profile')
+      // Stay on the edit page after saving
     } catch (error) {
       console.error('Error updating profile:', error)
       toast({
