@@ -2,325 +2,142 @@
 import Image from "next/image"
 import { BadgeCheckIcon, Award, Users, BookOpen, Building, MapPin, Globe } from "lucide-react"
 
-export default function InstitutionProfileHeader() {
-  // Mock institution data
-  const institution = {
-    name: "Stanford University",
-    tagline: "Empowering students to change the world",
-    location: "Stanford, California",
-    website: "stanford.edu",
-    founded: 1885,
-    type: "Private Research University",
-    students: 16500,
-    faculty: 1200,
-    programs: 195,
-    bannerColor: "from-blue-600 to-blue-800",
-    profileImage: "/institution-profile.png",
-    verified: true,
-    specialties: ["Computer Science", "Engineering", "Business", "Medicine", "Law"],
+interface InstitutionData {
+  id: string
+  institutionName: string
+  institutionType: string | null
+  category: string | null
+  website: string | null
+  logoUrl: string | null
+  coverImageUrl: string | null
+  verified: boolean
+  profile?: {
+    firstName: string
+    lastName: string
+    bio: string | null
+    location: string | null
+    profileImageUrl: string | null
+    email: string | null
+    phone: string | null
   }
+}
 
-  // Mock circles data
-  const academicCommunities = [
-    {
-      id: 1,
-      name: "Computer Science",
-      count: 1250,
-      image: "/multiple-monitor-coding.png",
-      color: "from-blue-400 to-cyan-500",
-    },
-    {
-      id: 2,
-      name: "Engineering",
-      count: 980,
-      image: "/university-laboratory.png",
-      color: "from-purple-400 to-indigo-500",
-    },
-    {
-      id: 3,
-      name: "Business",
-      count: 750,
-      image: "/bustling-university-campus.png",
-      color: "from-amber-400 to-orange-500",
-    },
-    {
-      id: 4,
-      name: "Medicine",
-      count: 620,
-      image: "/college-library.png",
-      color: "from-teal-400 to-emerald-500",
-    },
-    {
-      id: 5,
-      name: "Law",
-      count: 480,
-      image: "/placeholder.svg?key=law-school",
-      color: "from-red-400 to-rose-500",
-    },
-    {
-      id: 6,
-      name: "Arts",
-      count: 350,
-      image: "/placeholder.svg?key=arts-department",
-      color: "from-green-400 to-emerald-500",
-    },
-  ]
+interface InstitutionProfileHeaderProps {
+  institutionData: InstitutionData
+}
 
-  // Custom tooltip styles
-  const scrollbarHideStyle = `
-  .hide-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  .hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  
-  /* Custom tooltip styles */
-  [data-tooltip] {
-    position: relative;
-    cursor: pointer;
-  }
-  
-  [data-tooltip]:hover::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 10px;
-    white-space: nowrap;
-    z-index: 10;
-    pointer-events: none;
-    margin-bottom: 4px;
-  }
-  `
+export default function InstitutionProfileHeader({ institutionData }: InstitutionProfileHeaderProps) {
+  const displayName = institutionData.institutionName
+  const tagline = institutionData.profile?.bio || "Empowering students to reach their potential"
+  const location = institutionData.profile?.location || "Location not specified"
+  const website = institutionData.website
+  const profileImage = institutionData.logoUrl || institutionData.profile?.profileImageUrl || "/placeholder-logo.png"
+  const coverImage = institutionData.coverImageUrl || "/university-classroom.png"
+  const verified = institutionData.verified
+  const institutionType = institutionData.institutionType || "Educational Institution"
+  const category = institutionData.category || "Education"
 
   return (
-    <>
-      <style jsx>{scrollbarHideStyle}</style>
-      <div className="relative">
-        {/* Customizable banner */}
-        <div className={`h-48 w-full bg-gradient-to-r ${institution.bannerColor}`}></div>
+    <div className="relative">
+      {/* Cover Image */}
+      <div className="h-64 sm:h-80 lg:h-96 overflow-hidden">
+        <Image
+          src={coverImage}
+          alt={`${displayName} cover`}
+          className="w-full h-full object-cover"
+          width={1200}
+          height={400}
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+      </div>
 
-        <div className="container mx-auto px-4 max-w-7xl">
-          <div className="relative -mt-24 sm:-mt-16 mb-6">
-            {/* Profile info - With profile pic inside */}
-            <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sm:p-6">
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-                {/* Left column - Profile details with profile pic */}
-                <div className="md:col-span-3">
-                  <div className="flex flex-row gap-4 mb-4">
-                    {/* Profile image */}
-                    <div className="relative z-10 flex-shrink-0">
-                      <div className="rounded-full border-4 border-white dark:border-gray-800 overflow-hidden h-20 w-20 sm:h-28 sm:w-28 shadow-md bg-white flex items-center justify-center">
-                        <Image
-                          src="/images/pathpiper-logo.png"
-                          alt="Path Piper Co Logo"
-                          width={112}
-                          height={112}
-                          className="object-contain p-2"
-                        />
-                      </div>
-                    </div>
+      {/* Profile Content */}
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col md:flex-row items-start md:items-end gap-6 -mt-16 sm:-mt-20 lg:-mt-24">
+          {/* Profile Image */}
+          <div className="relative">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-full border-4 border-white dark:border-gray-800 shadow-lg overflow-hidden bg-white">
+              <Image
+                src={profileImage}
+                alt={displayName}
+                className="w-full h-full object-cover"
+                width={160}
+                height={160}
+              />
+            </div>
+            {verified && (
+              <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                <BadgeCheckIcon className="h-5 w-5 text-white" />
+              </div>
+            )}
+          </div>
 
-                    {/* Name and tagline */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h1 className="text-xl sm:text-3xl font-bold truncate">{institution.name}</h1>
-                        {institution.verified && <BadgeCheckIcon className="h-6 w-6 text-blue-600" />}
-                      </div>
-                      <p className="text-gray-600 dark:text-gray-300 mt-1 text-sm sm:text-base truncate">
-                        {institution.tagline}
-                      </p>
-                      <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
-                        {institution.type} • Est. {institution.founded}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Quick Stats - Horizontal display with icons and pastel backgrounds */}
-                  <div className="flex flex-wrap gap-3 text-xs font-medium mt-4">
-                    <div className="flex items-center gap-1.5 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 text-blue-600 dark:text-blue-300 px-3 py-1.5 rounded-full">
-                      <Users className="h-3.5 w-3.5 text-blue-500" data-tooltip="Total students enrolled" />
-                      <span data-tooltip="Total students enrolled">
-                        {institution.students.toLocaleString()} Students
-                      </span>
-                      <div className="ml-1.5 flex items-center gap-1 border-l border-blue-200 dark:border-blue-800/30 pl-1.5">
-                        <div className="flex items-center" data-tooltip="Undergraduate students">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="h-3 w-3 text-blue-500"
-                            data-tooltip="Undergraduate"
-                          >
-                            <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
-                            <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
-                          </svg>
-                          <span className="text-[10px] ml-0.5" data-tooltip="Undergraduate students">
-                            7,645
-                          </span>
-                        </div>
-                        <div className="flex items-center" data-tooltip="Graduate students">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="h-3 w-3 text-blue-500"
-                            data-tooltip="Graduate"
-                          >
-                            <path d="M8 14v7H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h4"></path>
-                            <path d="M16 14v7h4a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1h-4"></path>
-                            <path d="M12 14v7"></path>
-                            <path d="M12 4v10"></path>
-                            <path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"></path>
-                          </svg>
-                          <span className="text-[10px] ml-0.5" data-tooltip="Graduate students">
-                            9,292
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1.5 bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 text-purple-600 dark:text-purple-300 px-3 py-1.5 rounded-full">
-                      <Users className="h-3.5 w-3.5 text-purple-500" data-tooltip="Faculty members" />
-                      <span data-tooltip="Faculty members">Faculty: {institution.faculty.toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 text-amber-600 dark:text-amber-300 px-3 py-1.5 rounded-full">
-                      <BookOpen className="h-3.5 w-3.5 text-amber-500" data-tooltip="Academic programs offered" />
-                      <span data-tooltip="Academic programs offered">Programs: {institution.programs}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 bg-gradient-to-r from-teal-50 to-green-50 dark:from-teal-900/20 dark:to-green-900/20 text-teal-600 dark:text-teal-300 px-3 py-1.5 rounded-full">
-                      <Award className="h-3.5 w-3.5 text-teal-500" data-tooltip="Global ranking" />
-                      <span data-tooltip="Global ranking">Top 5 Globally</span>
-                    </div>
-                  </div>
-
-                  {/* Academic Communities - Instagram-style story highlights with horizontal scroll */}
-                  <div className="mt-4">
-                    <div className="flex justify-between items-center mb-3">
-                      <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Academic Communities</h3>
-                    </div>
-
-                    <div className="relative">
-                      <div className="flex overflow-x-auto pb-2 hide-scrollbar gap-4">
-                        {academicCommunities.map((community) => (
-                          <div key={community.id} className="flex flex-col items-center min-w-[72px]">
-                            <div className="relative mb-1">
-                              <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${community.color} p-[3px]`}>
-                                <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
-                                  <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
-                                    <Image
-                                      src={community.image || "/placeholder.svg"}
-                                      alt={community.name}
-                                      width={64}
-                                      height={64}
-                                      className="object-cover"
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                            <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
-                              {community.name}
-                            </span>
-                            <span className="text-[10px] text-center text-gray-500 dark:text-gray-500 truncate w-full">
-                              {community.count} members
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+          {/* Institution Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
+                    {displayName}
+                  </h1>
+                  {verified && (
+                    <BadgeCheckIcon className="h-6 w-6 sm:h-7 sm:w-7 text-blue-400" />
+                  )}
                 </div>
+                <p className="text-gray-200 text-sm sm:text-base mb-3 max-w-2xl">
+                  {tagline}
+                </p>
 
-                {/* Right column - Institution highlights */}
-                <div className="md:col-span-2 md:border-l md:border-gray-200 md:dark:border-gray-700 md:pl-6">
-                  {/* Top Departments section */}
-                  <div>
-                    <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Top Departments</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {institution.specialties.map((specialty, index) => (
-                        <span
-                          key={index}
-                          className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full text-xs"
-                        >
-                          {specialty}
-                        </span>
-                      ))}
-                    </div>
+                {/* Institution Details */}
+                <div className="flex flex-wrap items-center gap-4 text-gray-300 text-sm">
+                  <div className="flex items-center gap-1.5">
+                    <Building className="h-4 w-4" />
+                    <span>{institutionType}</span>
                   </div>
-
-                  {/* Quick Info section */}
-                  <div className="mt-3">
-                    <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Quick Info</h3>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <MapPin className="h-4 w-4 text-gray-500" />
-                        <span>{institution.location}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Globe className="h-4 w-4 text-gray-500" />
-                        <span>{institution.website}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Building className="h-4 w-4 text-gray-500" />
-                        <span>8,180 acres campus</span>
-                      </div>
-                    </div>
+                  <div className="flex items-center gap-1.5">
+                    <BookOpen className="h-4 w-4" />
+                    <span>{category}</span>
                   </div>
-
-                  {/* Upcoming Events section */}
-                  <div className="mt-3">
-                    <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Upcoming Events</h3>
-                    <div className="bg-sky-50 dark:bg-sky-900/20 p-2 rounded-lg flex items-center gap-3">
-                      <div className="bg-blue-100 dark:bg-blue-900/40 h-8 w-8 rounded-full flex items-center justify-center">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="h-4 w-4 text-blue-600 dark:text-blue-400"
-                        >
-                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                          <line x1="16" y1="2" x2="16" y2="6"></line>
-                          <line x1="8" y1="2" x2="8" y2="6"></line>
-                          <line x1="3" y1="10" x2="21" y2="10"></line>
-                        </svg>
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-medium">Spring Open House</h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">May 15, 2023</p>
-                      </div>
+                  {location && (
+                    <div className="flex items-center gap-1.5">
+                      <MapPin className="h-4 w-4" />
+                      <span>{location}</span>
                     </div>
-                  </div>
+                  )}
+                  {website && (
+                    <div className="flex items-center gap-1.5">
+                      <Globe className="h-4 w-4" />
+                      <a 
+                        href={website.startsWith('http') ? website : `https://${website}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-white transition-colors"
+                      >
+                        {website.replace(/^https?:\/\//, '')}
+                      </a>
+                    </div>
+                  )}
                 </div>
+              </div>
+
+              {/* Quick Stats */}
+              <div className="flex flex-wrap gap-2 sm:gap-3">
+                <div className="flex items-center gap-1.5 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 text-blue-600 dark:text-blue-300 px-3 py-1.5 rounded-full">
+                  <Users className="h-3.5 w-3.5 text-blue-500" />
+                  <span className="text-xs">Educational Institution</span>
+                </div>
+                {verified && (
+                  <div className="flex items-center gap-1.5 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 text-green-600 dark:text-green-300 px-3 py-1.5 rounded-full">
+                    <BadgeCheckIcon className="h-3.5 w-3.5 text-green-500" />
+                    <span className="text-xs">Verified</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   )
 }
