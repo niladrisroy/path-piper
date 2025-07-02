@@ -123,6 +123,8 @@ export default function ParentChildProfilePage() {
   const [error, setError] = useState<string | null>(null)
   const [parentName, setParentName] = useState("")
   const [activeTab, setActiveTab] = useState("about")
+  const [circles, setCircles] = useState<any[]>([])
+  const [circlesLoading, setCirclesLoading] = useState(false)
   const [editingSection, setEditingSection] = useState<string | null>(null)
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     isOpen: boolean
@@ -138,6 +140,12 @@ export default function ParentChildProfilePage() {
   useEffect(() => {
     fetchChildProfile()
   }, [childId])
+
+  useEffect(() => {
+    if (activeTab === 'circles' && childData && circles.length === 0) {
+      fetchChildCircles()
+    }
+  }, [activeTab, childData])
 
   const fetchChildProfile = async () => {
     try {
@@ -169,6 +177,24 @@ export default function ParentChildProfilePage() {
     }
   }
 
+  const fetchChildCircles = async () => {
+    try {
+      setCirclesLoading(true)
+      const response = await fetch(`/api/parent/child-profile/${childId}/circles`, {
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setCircles(data.circles || [])
+      }
+    } catch (error) {
+      console.error('Error fetching child circles:', error)
+    } finally {
+      setCirclesLoading(false)
+    }
+  }
+
   const handleLogout = async () => {
     try {
       await fetch('/api/parent/logout', {
@@ -183,6 +209,23 @@ export default function ParentChildProfilePage() {
 
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
+  }
+
+  const getIconComponent = (iconName: string) => {
+    switch (iconName) {
+      case "crown":
+        return <User className="h-4 w-4" />;
+      case "shield":
+        return <User className="h-4 w-4" />;
+      case "star":
+        return <User className="h-4 w-4" />;
+      case "graduation-cap":
+        return <GraduationCap className="h-4 w-4" />;
+      case "building":
+        return <User className="h-4 w-4" />;
+      default:
+        return <Users className="h-4 w-4" />;
+    }
   }
 
   const [editingItemData, setEditingItemData] = useState<any>(null)
@@ -399,13 +442,14 @@ export default function ParentChildProfilePage() {
       <main className="flex-grow">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-7">
+            <TabsList className="grid w-full grid-cols-8">
               <TabsTrigger value="about">About</TabsTrigger>
               <TabsTrigger value="interests">Interests</TabsTrigger>
               <TabsTrigger value="skills">Skills</TabsTrigger>
               <TabsTrigger value="education">Education</TabsTrigger>
               <TabsTrigger value="achievements">Achievements</TabsTrigger>
               <TabsTrigger value="goals">Goals</TabsTrigger>
+              <TabsTrigger value="circles">Circles</TabsTrigger>
               <TabsTrigger value="connections">Connections</TabsTrigger>
             </TabsList>
 
@@ -812,6 +856,146 @@ export default function ParentChildProfilePage() {
                     </div>
                   ) : (
                     <p className="text-gray-500 italic">No goals added yet</p>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Circles Tab */}
+            <TabsContent value="circles" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Circle Badges</CardTitle>
+                  <CardDescription>{childData.profile.firstName}'s circle memberships and badges</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {circlesLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                      <span className="ml-2 text-gray-500">Loading circles...</span>
+                    </div>
+                  ) : circles.length > 0 ? (
+                    <div className="space-y-6">
+                      {/* Circle Badges Display */}
+                      <div>
+                        <h4 className="text-sm font-medium mb-4 flex items-center gap-2">
+                          <Users className="h-4 w-4 text-blue-600" />
+                          Circle Badges ({circles.length})
+                        </h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
+                          {circles.map((circle) => (
+                            <div
+                              key={circle.id}
+                              className="flex flex-col items-center group cursor-pointer hover:scale-105 transition-transform"
+                            >
+                              {/* Circle Badge */}
+                              <div className="relative mb-2">
+                                <div
+                                  className="w-16 h-16 rounded-full flex items-center justify-center text-white shadow-lg group-hover:shadow-xl transition-all duration-200 overflow-hidden"
+                                  style={{ backgroundColor: circle.color }}
+                                >
+                                  {circle.icon && (circle.icon.startsWith('data:image') || circle.icon.startsWith('/uploads/')) ? (
+                                    <img
+                                      src={circle.icon}
+                                      alt={circle.name}
+                                      className="w-full h-full object-cover rounded-full"
+                                    />
+                                  ) : (
+                                    <div className="scale-90">
+                                      {getIconComponent(circle.icon)}
+                                    </div>
+                                  )}
+                                </div>
+                                {/* Member count indicator */}
+                                <div className="absolute -top-1 -right-1 bg-gray-900 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                  <span className="text-xs leading-none">
+                                    {(circle._count?.memberships || 0) + 1}
+                                  </span>
+                                </div>
+                                {/* Default badge indicator */}
+                                {circle.isDefault && (
+                                  <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full w-4 h-4 flex items-center justify-center">
+                                    <User className="h-2 w-2" />
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Circle Name */}
+                              <span className="text-xs text-center text-gray-700 dark:text-gray-300 font-medium truncate w-20">
+                                {circle.name}
+                              </span>
+                              
+                              {/* Circle Description */}
+                              {circle.description && (
+                                <span className="text-xs text-center text-gray-500 dark:text-gray-400 truncate w-20 mt-1">
+                                  {circle.description}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Circle Details */}
+                      <div className="space-y-4">
+                        <h4 className="text-sm font-medium">Circle Details</h4>
+                        <div className="space-y-3">
+                          {circles.map((circle) => (
+                            <div key={`detail-${circle.id}`} className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
+                              <div className="flex items-start gap-3">
+                                <div
+                                  className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-medium overflow-hidden flex-shrink-0"
+                                  style={{ backgroundColor: circle.color }}
+                                >
+                                  {circle.icon && (circle.icon.startsWith('data:image') || circle.icon.startsWith('/uploads/')) ? (
+                                    <img
+                                      src={circle.icon}
+                                      alt={circle.name}
+                                      className="w-full h-full object-cover rounded-full"
+                                    />
+                                  ) : (
+                                    <div className="scale-75">
+                                      {getIconComponent(circle.icon)}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <h5 className="font-medium text-gray-900 dark:text-white truncate">
+                                      {circle.name}
+                                    </h5>
+                                    {circle.isDefault && (
+                                      <Badge variant="secondary" className="text-xs">
+                                        Default
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  {circle.description && (
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                      {circle.description}
+                                    </p>
+                                  )}
+                                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                                    <span>{(circle._count?.memberships || 0) + 1} members</span>
+                                    {circle.creator && (
+                                      <span>
+                                        Created by {circle.creator.firstName} {circle.creator.lastName}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                      <p>No circles yet</p>
+                      <p className="text-sm">Your child hasn't joined any circles</p>
+                    </div>
                   )}
                 </CardContent>
               </Card>
