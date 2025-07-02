@@ -16,7 +16,7 @@ const supabase = createClient(
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const token = cookieStore.get('sb-access-token')?.value
     
     if (!token) {
@@ -50,7 +50,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function InstitutionProfilePage() {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const token = cookieStore.get('sb-access-token')?.value
   
   if (!token) {

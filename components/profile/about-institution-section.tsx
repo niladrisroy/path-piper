@@ -2,7 +2,29 @@ import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Award, BookOpen, Globe, Users, MapPin, Landmark, GraduationCap } from "lucide-react"
 
-export default function AboutInstitutionSection() {
+interface InstitutionData {
+  id: string
+  name: string
+  type: string
+  category?: string
+  location: string
+  bio: string
+  logo: string
+  coverImage: string
+  website: string
+  verified: boolean
+  founded?: number | null
+  tagline: string
+  overview?: string
+  mission?: string
+  coreValues?: string[]
+}
+
+interface AboutInstitutionSectionProps {
+  institutionData: InstitutionData
+}
+
+export default function AboutInstitutionSection({ institutionData }: AboutInstitutionSectionProps) {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -16,32 +38,28 @@ export default function AboutInstitutionSection() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p>
-                Stanford University, officially Leland Stanford Junior University, is a private research university in
-                Stanford, California. The university was founded in 1885 by Leland and Jane Stanford in memory of their
-                only child, Leland Stanford Jr., who had died of typhoid fever at age 15 the previous year.
-              </p>
-              <p>
-                Stanford is ranked among the top universities in the world by academic publications. It is known for its
-                academic strength, wealth, proximity to Silicon Valley, and ranking as one of the world's most
-                prestigious universities.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                <Image
-                  src="/university-classroom.png"
-                  alt="Stanford University Classroom"
-                  width={400}
-                  height={250}
-                  className="rounded-lg object-cover w-full h-48"
-                />
-                <Image
-                  src="/college-library.png"
-                  alt="Stanford University Library"
-                  width={400}
-                  height={250}
-                  className="rounded-lg object-cover w-full h-48"
-                />
-              </div>
+              {institutionData.overview ? (
+                <div className="space-y-4">
+                  <p className="text-gray-700 leading-relaxed">
+                    {institutionData.overview}
+                  </p>
+                  {institutionData.coverImage && (
+                    <div className="mt-6">
+                      <Image
+                        src={institutionData.coverImage}
+                        alt={`${institutionData.name} cover image`}
+                        width={800}
+                        height={300}
+                        className="rounded-lg object-cover w-full h-48"
+                      />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-gray-500 italic">
+                  No overview available. Please update your institution profile to add an overview.
+                </p>
+              )}
             </CardContent>
           </Card>
 
@@ -54,21 +72,38 @@ export default function AboutInstitutionSection() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <h3 className="font-semibold text-lg">Our Mission</h3>
-              <p>
-                Stanford University's mission is to discover and disseminate knowledge for the benefit of humanity. To
-                this end, the university's fundamental purpose is to promote learning, creativity, innovation, and
-                research.
-              </p>
-              <h3 className="font-semibold text-lg mt-4">Core Values</h3>
-              <ul className="list-disc pl-5 space-y-2">
-                <li>Academic Excellence</li>
-                <li>Diversity and Inclusion</li>
-                <li>Dedication to Research</li>
-                <li>Freedom of Inquiry and Expression</li>
-                <li>Respect for All Community Members</li>
-                <li>Commitment to Public Service</li>
-              </ul>
+              {institutionData.mission || (institutionData.coreValues && institutionData.coreValues.length > 0) ? (
+                <>
+                  {institutionData.mission && (
+                    <>
+                      <h3 className="font-semibold text-lg">Our Mission</h3>
+                      <p className="text-gray-700 leading-relaxed">
+                        {institutionData.mission}
+                      </p>
+                    </>
+                  )}
+                  
+                  {institutionData.coreValues && institutionData.coreValues.length > 0 && (
+                    <>
+                      <h3 className="font-semibold text-lg mt-4">Core Values</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {institutionData.coreValues.map((value, index) => (
+                          <div key={index} className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+                            <div className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                              {index + 1}
+                            </div>
+                            <span className="text-gray-700">{value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </>
+              ) : (
+                <p className="text-gray-500 italic">
+                  No mission or core values available. Please update your institution profile to add this information.
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>

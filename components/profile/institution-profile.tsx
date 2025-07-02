@@ -48,7 +48,7 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
       <HorizontalNavigation tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <div className="container mx-auto px-4 py-6">
-        {activeTab === "about" && <AboutInstitutionSection />}
+        {activeTab === "about" && <AboutInstitutionSection institutionData={institutionData} />}
         {activeTab === "programs" && <ProgramsSection />}
         {activeTab === "faculty" && <FacultySection />}
         {activeTab === "facilities" && <FacilitiesSection />}

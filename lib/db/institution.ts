@@ -80,12 +80,15 @@ export async function getCurrentUserInstitution(userId: string) {
       category: institution.category,
       location: institution.profile.location || 'Unknown location',
       bio: institution.profile.bio || '',
-      logo: institution.profile.profileImageUrl || '/images/pathpiper-logo.png',
+      logo: institution.logoUrl || institution.profile.profileImageUrl || '/images/pathpiper-logo.png',
       coverImage: institution.coverImageUrl || '/university-classroom.png',
       website: institution.website || '',
       verified: institution.verified,
       founded: null, // This would need to be added to the schema if needed
-      tagline: institution.profile.bio || 'Empowering students to achieve their goals'
+      tagline: institution.profile.bio || 'Empowering students to achieve their goals',
+      overview: institution.overview || '',
+      mission: institution.mission || '',
+      coreValues: institution.coreValues ? JSON.parse(institution.coreValues as string) : []
     }
   } catch (error) {
     console.error(`Error fetching current user institution ${userId}:`, error)

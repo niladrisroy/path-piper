@@ -1,6 +1,9 @@
 "use client"
 import Image from "next/image"
-import { BadgeCheckIcon, Award, Users, BookOpen, Building, MapPin, Globe } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Verified, Globe, Calendar, Users, GraduationCap, MapPin, ExternalLink, Edit } from "lucide-react"
+import Link from "next/link"
 
 interface InstitutionData {
   id: string
@@ -94,13 +97,13 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  
+
   /* Custom tooltip styles */
   [data-tooltip] {
     position: relative;
     cursor: pointer;
   }
-  
+
   [data-tooltip]:hover::after {
     content: attr(data-tooltip);
     position: absolute;
@@ -160,6 +163,24 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
                         {institution.type} • Est. {institution.founded}
                       </p>
                     </div>
+                  </div>
+
+                  {/* Action buttons - Connect, Visit Website, Share */}
+                  <div className="flex gap-3 mb-6">
+                    <Link href="/institution/profile/edit">
+                      <Button variant="outline" size="sm">
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit Profile
+                      </Button>
+                    </Link>
+                    <Button variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700">
+                      <Users className="h-4 w-4 mr-2" />
+                      Connect
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Visit Website
+                    </Button>
                   </div>
 
                   {/* Quick Stats - Horizontal display with icons and pastel backgrounds */}
