@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState, useRef } from 'react'
@@ -67,13 +68,13 @@ export function useAuth() {
           if (response.ok) {
             const data = await response.json()
             const userData = data.user
-
+            
             // Cache the result
             globalUserCache = {
               user: userData,
               timestamp: Date.now()
             }
-
+            
             // Store user session info in localStorage for persistence
             try {
               localStorage.setItem('user_session_timestamp', Date.now().toString())
@@ -82,7 +83,7 @@ export function useAuth() {
             } catch (error) {
               console.error('Error storing session info:', error)
             }
-
+            
             return userData
           } else {
             // Clear any stale session data if request fails
@@ -112,7 +113,7 @@ export function useAuth() {
 
         const userData = await globalUserPromise
         setUser(userData)
-
+        
         // If user is a student, fetch and cache their complete profile data
         if (userData && userData.role === 'student') {
           fetchProfileData(userData.id)
@@ -149,7 +150,7 @@ export function useAuth() {
         }).then(async (response) => {
           if (response.ok) {
             const data = await response.json()
-
+            
             const profileData: CachedProfileData = {
               profile: {
                 ...data.profile,
@@ -176,7 +177,7 @@ export function useAuth() {
               goals: profileData.goals.length,
               achievements: profileData.achievements.length
             })
-
+            
             return profileData
           }
           return null
@@ -214,16 +215,16 @@ export function invalidateUserCache() {
 export function clearAllUserData() {
   // Clear global caches
   invalidateUserCache()
-
+  
   // Clear localStorage
   if (typeof window !== 'undefined') {
     try {
       // Clear all localStorage
       localStorage.clear()
-
+      
       // Clear sessionStorage
       sessionStorage.clear()
-
+      
       // Clear IndexedDB if it exists
       if ('indexedDB' in window) {
         indexedDB.databases?.().then(databases => {
@@ -236,7 +237,7 @@ export function clearAllUserData() {
           // Ignore errors when clearing IndexedDB
         })
       }
-
+      
       // Clear any Supabase-specific storage
       const supabaseKeys = [
         'supabase.auth.token',
@@ -244,12 +245,12 @@ export function clearAllUserData() {
         'sb-refresh-token',
         'sb-user-id'
       ]
-
+      
       supabaseKeys.forEach(key => {
         localStorage.removeItem(key)
         sessionStorage.removeItem(key)
       })
-
+      
       console.log('✅ All user data and storage cleared')
     } catch (error) {
       console.error('Error clearing storage:', error)
