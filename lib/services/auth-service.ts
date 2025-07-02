@@ -359,12 +359,22 @@ export async function registerInstitution(data: InstitutionRegistrationData) {
 
     console.log('✅ Profile created:', profile.id);
 
+    // First, get the institution type name from the database
+    const institutionType = await prisma.institutionType.findUnique({
+      where: { id: data.institutionData.institutionTypeId }
+    });
+
+    if (!institutionType) {
+      throw new Error('Invalid institution type selected');
+    }
+
     // Create institution profile with all required fields matching schema
     await prisma.institutionProfile.create({
       data: {
         id: profile.id,
         institutionName: data.institutionData.institutionName,
-        institutionTypeId: data.institutionData.institutionTypeId,
+        institutionType: institutionType.name, // Store the actual type name
+        institutionTypeId: data.institutionData.institutionTypeId, // Store the foreign key ID
         website: data.institutionData.website || null,
         logoUrl: data.institutionData.logoUrl || null,
         coverImageUrl: data.institutionData.coverImageUrl || null,
