@@ -197,7 +197,6 @@ model InstitutionProfile {
   id                  String    @id @db.Uuid
   profile             Profile   @relation(fields: [id], references: [id])
   institutionName     String    @map("institution_name")
-  category            String?   @map("category")
   institutionType     String?   @map("institution_type")
   institutionTypeId   Int?      @map("institution_type_id")
   website            String?

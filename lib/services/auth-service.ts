@@ -359,12 +359,9 @@ export async function registerInstitution(data: InstitutionRegistrationData) {
 
     console.log('✅ Profile created:', profile.id);
 
-    // First, get the institution type with its category information
+    // First, get the institution type name from the database
     const institutionType = await prisma.institutionType.findUnique({
-      where: { id: data.institutionData.institutionTypeId },
-      include: {
-        category: true
-      }
+      where: { id: data.institutionData.institutionTypeId }
     });
 
     if (!institutionType) {
@@ -376,7 +373,6 @@ export async function registerInstitution(data: InstitutionRegistrationData) {
       data: {
         id: profile.id,
         institutionName: data.institutionData.institutionName,
-        category: institutionType.category.name, // Store the actual category name
         institutionType: institutionType.name, // Store the actual type name
         institutionTypeId: data.institutionData.institutionTypeId, // Store the foreign key ID
         website: data.institutionData.website || null,
