@@ -2,7 +2,7 @@
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Verified, Globe, Calendar, Users, GraduationCap, MapPin, ExternalLink, Edit } from "lucide-react"
+import { Verified, Globe, Calendar, Users, GraduationCap, MapPin, ExternalLink, Edit, BookOpen, Building, Award } from "lucide-react"
 import Link from "next/link"
 
 interface InstitutionData {
