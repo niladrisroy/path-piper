@@ -1034,13 +1034,61 @@ export default function ParentChildProfilePage() {
                                       {circle.description}
                                     </p>
                                   )}
-                                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                                  <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
                                     <span>{(circle._count?.memberships || 0) + 1} members</span>
                                     {circle.creator && (
                                       <span>
                                         Created by {circle.creator.firstName} {circle.creator.lastName}
                                       </span>
                                     )}
+                                  </div>
+                                  
+                                  {/* Circle Members - Horizontal Display */}
+                                  <div className="mt-3">
+                                    <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Members:</p>
+                                    <div className="flex flex-wrap gap-2">
+                                      {/* Show creator first */}
+                                      {circle.creator && (
+                                        <div className="flex items-center gap-1 bg-white dark:bg-gray-700 rounded-full px-2 py-1 border">
+                                          <Avatar className="w-5 h-5">
+                                            <AvatarImage src={circle.creator.profileImageUrl} />
+                                            <AvatarFallback className="text-xs bg-blue-500 text-white">
+                                              {getInitials(circle.creator.firstName, circle.creator.lastName)}
+                                            </AvatarFallback>
+                                          </Avatar>
+                                          <span className="text-xs text-gray-700 dark:text-gray-300 truncate max-w-16">
+                                            {circle.creator.firstName}
+                                          </span>
+                                          <Badge variant="outline" className="text-xs px-1 py-0 h-4">
+                                            Creator
+                                          </Badge>
+                                        </div>
+                                      )}
+                                      
+                                      {/* Show other members */}
+                                      {circle.memberships?.slice(0, 6).map((membership) => (
+                                        <div key={membership.user.id} className="flex items-center gap-1 bg-white dark:bg-gray-700 rounded-full px-2 py-1 border">
+                                          <Avatar className="w-5 h-5">
+                                            <AvatarImage src={membership.user.profileImageUrl} />
+                                            <AvatarFallback className="text-xs bg-gray-500 text-white">
+                                              {getInitials(membership.user.firstName, membership.user.lastName)}
+                                            </AvatarFallback>
+                                          </Avatar>
+                                          <span className="text-xs text-gray-700 dark:text-gray-300 truncate max-w-16">
+                                            {membership.user.firstName}
+                                          </span>
+                                        </div>
+                                      ))}
+                                      
+                                      {/* Show "more" indicator if there are additional members */}
+                                      {(circle.memberships?.length || 0) > 6 && (
+                                        <div className="flex items-center justify-center bg-gray-200 dark:bg-gray-600 rounded-full px-2 py-1 border">
+                                          <span className="text-xs text-gray-600 dark:text-gray-400">
+                                            +{(circle.memberships?.length || 0) - 6} more
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               </div>
