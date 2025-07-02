@@ -320,6 +320,11 @@ export async function registerInstitution(data: InstitutionRegistrationData) {
       institutionTypeId: data.institutionData.institutionTypeId
     });
 
+    // Validate required institution data
+    if (!data.institutionData.institutionTypeId) {
+      throw new Error('Institution type is required');
+    }
+
     // Step 1: Use Supabase for auth only - create user in Supabase Auth
     const { data: authData, error: authError } =
       await supabase.auth.admin.createUser({
@@ -359,7 +364,7 @@ export async function registerInstitution(data: InstitutionRegistrationData) {
       data: {
         id: profile.id,
         institutionName: data.institutionData.institutionName,
-        institutionTypeId: data.institutionData.institutionTypeId || null,
+        institutionTypeId: data.institutionData.institutionTypeId,
         website: data.institutionData.website || null,
         logoUrl: data.institutionData.logoUrl || null,
         coverImageUrl: data.institutionData.coverImageUrl || null,
