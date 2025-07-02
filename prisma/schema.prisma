@@ -202,6 +202,9 @@ model InstitutionProfile {
   website            String?
   logoUrl            String?   @map("logo_url")
   coverImageUrl      String?   @map("cover_image_url")
+  overview           String?
+  mission            String?
+  coreValues         Json?     @map("core_values")
   verified           Boolean   @default(false)
   onboardingCompleted Boolean  @default(false) @map("onboarding_completed")
   createdAt          DateTime  @default(now()) @map("created_at")
