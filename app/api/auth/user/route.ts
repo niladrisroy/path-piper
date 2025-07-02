@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
               mentor: true,
               institution: {
                 include: {
-                  institutionType: true
+                  institutionTypeRef: true,
                 }
               }
             }
