@@ -25,10 +25,20 @@ import {
   Globe,
   LogOut,
   Plus,
-  Trash2
+  Trash2,
+  Eye,
+  MessageCircle
 } from "lucide-react"
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 interface ChildData {
   id: string
@@ -136,6 +146,7 @@ export default function ParentChildProfilePage() {
   const router = useRouter()
   const params = useParams()
   const childId = params.id as string
+  const [selectedCircleMembers, setSelectedCircleMembers] = useState<any[] | null>(null);
 
   useEffect(() => {
     fetchChildProfile()
@@ -306,6 +317,24 @@ export default function ParentChildProfilePage() {
       setDeleteConfirmation(null)
     }
   }
+
+  const showCircleMembers = async (circleId: string) => {
+    try {
+      const response = await fetch(`/api/parent/child-profile/${childId}/circles/${circleId}/members`, {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedCircleMembers(data.members);
+      } else {
+        console.error('Failed to fetch circle members');
+        setSelectedCircleMembers([]);
+      }
+    } catch (error) {
+      console.error('Error fetching circle members:', error);
+      setSelectedCircleMembers([]);
+    }
+  };
 
   if (loading) {
     return (
@@ -837,7 +866,8 @@ export default function ParentChildProfilePage() {
                                     {goal.category}
                                   </span>
                                 )}
-                                {goal.timeframe && (
+                                {goal.time<replit_final_file>
+frame && (
                                   <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded truncate">
                                     {goal.timeframe}
                                   </span>
@@ -921,10 +951,40 @@ export default function ParentChildProfilePage() {
                               </div>
 
                               {/* Circle Name */}
-                              <span className="text-xs text-center text-gray-700 dark:text-gray-300 font-medium truncate w-20">
-                                {circle.name}
-                              </span>
-                              
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                <span onClick={() => showCircleMembers(circle.id)} className="text-xs text-center text-gray-700 dark:text-gray-300 font-medium truncate w-20 hover:underline cursor-pointer">
+                                  {circle.name}
+                                </span>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[425px]">
+                                  <DialogHeader>
+                                    <DialogTitle>{circle.name} Members</DialogTitle>
+                                    <DialogDescription>
+                                      A list of all members in {circle.name}.
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <div className="grid gap-4 py-4">
+                                      {selectedCircleMembers && selectedCircleMembers.length > 0 ? (
+                                        selectedCircleMembers.map((member) => (
+                                          <div key={member.id} className="flex items-center space-x-3">
+                                            <Avatar className="w-8 h-8">
+                                              <AvatarImage src={member.profileImageUrl} alt={member.firstName} />
+                                              <AvatarFallback>{getInitials(member.firstName, member.lastName)}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                              <p className="text-sm font-medium leading-none">{member.firstName} {member.lastName}</p>
+                                              <p className="text-sm text-gray-500 dark:text-gray-400">Role: {member.role}</p>
+                                            </div>
+                                          </div>
+                                        ))
+                                      ) : (
+                                        <p>No members in this circle yet.</p>
+                                      )}
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+
                               {/* Circle Description */}
                               {circle.description && (
                                 <span className="text-xs text-center text-gray-500 dark:text-gray-400 truncate w-20 mt-1">
