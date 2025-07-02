@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useRef, Suspense } from "react"
@@ -12,14 +13,18 @@ import Link from "next/link"
 import Image from "next/image"
 import { invalidateUserCache } from '@/hooks/use-auth'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Eye, EyeOff, Loader2, CheckCircle, AlertCircle, Mail, Shield } from "lucide-react"
+import { Eye, EyeOff, Loader2, CheckCircle, AlertCircle, Mail, Shield, GraduationCap, Building } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 function LoginPageContent() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [studentEmail, setStudentEmail] = useState("")
+  const [studentPassword, setStudentPassword] = useState("")
+  const [institutionEmail, setInstitutionEmail] = useState("")
+  const [institutionPassword, setInstitutionPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [isRedirecting, setIsRedirecting] = useState(false)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [activeTab, setActiveTab] = useState("student")
   const containerRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -62,14 +67,22 @@ function LoginPageContent() {
     }
   }, [searchParams])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleLogin = async (userType: 'student' | 'institution') => {
     setLoading(true)
     setVerificationAlerts({
       needsParentApproval: false,
       needsEmailVerification: false,
       message: ""
     })
+
+    const email = userType === 'student' ? studentEmail : institutionEmail
+    const password = userType === 'student' ? studentPassword : institutionPassword
+
+    if (!email || !password) {
+      toast.error("Please fill in all fields")
+      setLoading(false)
+      return
+    }
 
     try {
       // Clear any cached user data and storage before login
@@ -88,7 +101,7 @@ function LoginPageContent() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, expectedRole: userType }),
         credentials: 'include'
       })
 
@@ -101,22 +114,35 @@ function LoginPageContent() {
           needsEmailVerification: errorData.needsEmailVerification || false,
           message: errorData.error || "Verification required"
         })
-        setEmail("")
-        setPassword("")
+        
+        // Clear form fields
+        if (userType === 'student') {
+          setStudentEmail("")
+          setStudentPassword("")
+        } else {
+          setInstitutionEmail("")
+          setInstitutionPassword("")
+        }
         setLoading(false)
         return
       }
 
       if (data.success) {
-        toast.success("Login successful!")
+        // Verify the user role matches expected type
+        if (data.role !== userType) {
+          toast.error(`This account is registered as a ${data.role}, not a ${userType}. Please use the correct login section.`)
+          setLoading(false)
+          return
+        }
 
+        toast.success("Login successful!")
         setIsRedirecting(true)
 
         // Determine redirect path based on role and onboarding status
         let redirectPath = '/feed' // default
 
         if (data.role === 'student') {
-          redirectPath = data.onboardingCompleted ? '/feed' : '/onboarding'
+          redirectPath = data.onboardingCompleted ? '/student/profile' : '/onboarding'
         } else if (data.role === 'mentor') {
           redirectPath = data.onboardingCompleted ? '/mentor/profile' : '/mentor-onboarding'
         } else if (data.role === 'institution') {
@@ -190,6 +216,16 @@ function LoginPageContent() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleStudentSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    handleLogin('student')
+  }
+
+  const handleInstitutionSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    handleLogin('institution')
   }
 
   // Suppress hydration warnings for browser extension attributes
@@ -345,14 +381,14 @@ function LoginPageContent() {
           </div>
         </div>
 
-        {/* Right side - Login form */}
+        {/* Right side - Login forms */}
         <div className="w-full md:flex-1 flex items-center justify-center p-8 bg-white">
           <div className="w-full max-w-md mx-auto">
             <Card className="w-full border-0 shadow-none md:border md:shadow-sm">
               <CardHeader className="space-y-1 text-center">
                 <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
                 <CardDescription>
-                  Sign in to your PathPiper account
+                  Choose your account type to sign in
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -449,44 +485,106 @@ function LoginPageContent() {
                   </Alert>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      disabled={loading || isRedirecting}
-                      className="rounded-lg border-slate-300"
-                      suppressHydrationWarning
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      disabled={loading || isRedirecting}
-                      className="rounded-lg border-slate-300"
-                      suppressHydrationWarning
-                    />
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full py-6"
-                    disabled={loading || isRedirecting}
-                    suppressHydrationWarning
-                  >
-                    {loading ? "Signing in..." : isRedirecting ? "Redirecting..." : "Sign in"}
-                  </Button>
-                </form>
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="student" className="flex items-center space-x-2">
+                      <GraduationCap className="h-4 w-4" />
+                      <span>Student</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="institution" className="flex items-center space-x-2">
+                      <Building className="h-4 w-4" />
+                      <span>Institution</span>
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="student" className="space-y-4 mt-6">
+                    <div className="text-center mb-4">
+                      <p className="text-sm text-gray-600">Student Login</p>
+                    </div>
+                    <form onSubmit={handleStudentSubmit} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="student-email">Student Email</Label>
+                        <Input
+                          id="student-email"
+                          type="email"
+                          placeholder="Enter your student email"
+                          value={studentEmail}
+                          onChange={(e) => setStudentEmail(e.target.value)}
+                          required
+                          disabled={loading || isRedirecting}
+                          className="rounded-lg border-slate-300"
+                          suppressHydrationWarning
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="student-password">Password</Label>
+                        <Input
+                          id="student-password"
+                          type="password"
+                          placeholder="Enter your password"
+                          value={studentPassword}
+                          onChange={(e) => setStudentPassword(e.target.value)}
+                          required
+                          disabled={loading || isRedirecting}
+                          className="rounded-lg border-slate-300"
+                          suppressHydrationWarning
+                        />
+                      </div>
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full py-6"
+                        disabled={loading || isRedirecting}
+                        suppressHydrationWarning
+                      >
+                        {loading ? "Signing in..." : isRedirecting ? "Redirecting..." : "Sign in as Student"}
+                      </Button>
+                    </form>
+                  </TabsContent>
+
+                  <TabsContent value="institution" className="space-y-4 mt-6">
+                    <div className="text-center mb-4">
+                      <p className="text-sm text-gray-600">Institution Login</p>
+                    </div>
+                    <form onSubmit={handleInstitutionSubmit} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="institution-email">Institution Email</Label>
+                        <Input
+                          id="institution-email"
+                          type="email"
+                          placeholder="Enter your institution email"
+                          value={institutionEmail}
+                          onChange={(e) => setInstitutionEmail(e.target.value)}
+                          required
+                          disabled={loading || isRedirecting}
+                          className="rounded-lg border-slate-300"
+                          suppressHydrationWarning
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="institution-password">Password</Label>
+                        <Input
+                          id="institution-password"
+                          type="password"
+                          placeholder="Enter your password"
+                          value={institutionPassword}
+                          onChange={(e) => setInstitutionPassword(e.target.value)}
+                          required
+                          disabled={loading || isRedirecting}
+                          className="rounded-lg border-slate-300"
+                          suppressHydrationWarning
+                        />
+                      </div>
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-gradient-to-r from-purple-400 to-orange-500 hover:from-purple-500 hover:to-orange-600 text-white rounded-full py-6"
+                        disabled={loading || isRedirecting}
+                        suppressHydrationWarning
+                      >
+                        {loading ? "Signing in..." : isRedirecting ? "Redirecting..." : "Sign in as Institution"}
+                      </Button>
+                    </form>
+                  </TabsContent>
+                </Tabs>
 
                 <div className="mt-6 text-center text-sm">
                   <Link 

@@ -122,11 +122,7 @@ export async function GET(request: NextRequest) {
             include: {
               student: true,
               mentor: true,
-              institution: {
-                include: {
-                  institutionType: true
-                }
-              }
+              institution: true
             }
           });
 

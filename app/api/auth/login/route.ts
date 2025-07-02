@@ -4,7 +4,7 @@ import { loginUser } from '@/lib/services/auth-service';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const { email, password, expectedRole } = await request.json();
 
     // Validate input
     if (!email || !password) {
@@ -31,6 +31,17 @@ export async function POST(request: NextRequest) {
         console.log('Login API - Session refresh_token preview:', result.session.refresh_token?.substring(0, 20) + '...');
         console.log('Login API - Session expires_at:', result.session.expires_at);
         console.log('Login API - Session expires_in:', result.session.expires_in);
+      }
+
+      // Validate role if expectedRole is provided
+      if (expectedRole && result.role !== expectedRole) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: `This account is registered as a ${result.role}, not a ${expectedRole}. Please use the correct login section.` 
+          },
+          { status: 400 }
+        );
       }
 
       // Check if user has minimum required information for all three essential sections
