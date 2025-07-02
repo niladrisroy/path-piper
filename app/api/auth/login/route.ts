@@ -1,17 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { loginUser } from '@/lib/services/auth-service';
-import { prisma } from '@/lib/prisma';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error('Missing required environment variables for Supabase');
-}
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,100 +14,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if this email belongs to a parent first
-    const parentProfile = await prisma.parentProfile.findFirst({
-      where: { email: email }
-    });
-
-    if (parentProfile) {
-      console.log('🔍 Parent login detected for:', email);
-      
-      // Handle parent login
-      if (!parentProfile.auth_id) {
-        return NextResponse.json({
-          success: false,
-          error: 'Parent account not fully set up. Please complete registration first.',
-          isParent: true
-        }, { status: 400 });
-      }
-
-      if (!parentProfile.emailVerified) {
-        // Resend verification email if needed
-        try {
-          const verificationToken = Buffer.from(`${email}:${Date.now()}`).toString('base64');
-          
-          await prisma.parentProfile.update({
-            where: { id: parentProfile.id },
-            data: { verificationToken }
-          });
-
-          const baseUrl = 'https://pathpiper.replit.app';
-          const verificationLink = `${baseUrl}/api/parent/verify-email?token=${verificationToken}`;
-          
-          const { sendEmail } = await import('@/lib/email');
-          await sendEmail(
-            'parent-email-verification',
-            email,
-            {
-              parentName: parentProfile.name,
-              verificationLink: verificationLink
-            }
-          );
-          console.log('📧 Parent verification email resent successfully');
-        } catch (emailError) {
-          console.error('❌ Failed to send parent verification email:', emailError);
-        }
-
-        return NextResponse.json({
-          success: false,
-          error: 'Your email is not verified. We have sent an email for verification. Please click the link and verify to proceed with login.',
-          needsVerification: true,
-          isParent: true
-        }, { status: 403 });
-      }
-
-      // Authenticate parent with Supabase
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
-
-      if (authError || !authData.user) {
-        return NextResponse.json({
-          success: false,
-          error: 'Invalid credentials',
-          isParent: true
-        }, { status: 401 });
-      }
-
-      // Set parent authentication cookies
-      const cookieStore = await cookies();
-      cookieStore.set('parent_session', authData.session?.access_token || '', {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'lax',
-        maxAge: 24 * 60 * 60 // 24 hours
-      });
-
-      cookieStore.set('parent_id', parentProfile.id.toString(), {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'lax',
-        maxAge: 24 * 60 * 60 // 24 hours
-      });
-
-      console.log('✅ Parent login successful through main login');
-
-      return NextResponse.json({
-        success: true,
-        isParent: true,
-        parentId: parentProfile.id.toString(),
-        parentName: parentProfile.name,
-        redirectTo: '/parent/dashboard'
-      });
-    }
-
-    // If not a parent, proceed with regular user login
+    // Call login service
     const result = await loginUser({ email, password });
 
     console.log('Login API - Result success:', result.success);

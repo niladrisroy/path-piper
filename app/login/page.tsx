@@ -109,17 +109,11 @@ function LoginPageContent() {
 
       if (data.success) {
         toast.success("Login successful!")
+
         setIsRedirecting(true)
 
         // Determine redirect path based on role and onboarding status
         let redirectPath = '/feed' // default
-
-        if (data.isParent) {
-          setTimeout(() => {
-            window.location.href = '/parent/dashboard'
-          }, 1000)
-          return
-        }
 
         if (data.role === 'student') {
           redirectPath = data.onboardingCompleted ? '/feed' : '/onboarding'
@@ -212,7 +206,7 @@ function LoginPageContent() {
           <div className="bg-white rounded-lg p-6 shadow-lg max-w-sm w-full mx-4">
             <div className="flex items-center justify-center space-x-3">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-pathpiper-teal"></div>
-              <p className="text-gray-700 font-medium">Redirecting to your dashboard...</p>
+              <p className="text-gray-700 font-medium">Setting up your profile...</p>
             </div>
           </div>
         </div>
@@ -425,7 +419,7 @@ function LoginPageContent() {
                       <p className="text-amber-700">
                         Before you can log in, please complete both verification steps:
                       </p>
-
+                      
                       <div className="space-y-2">
                         <div className="bg-amber-100 p-3 rounded-lg border border-amber-200">
                           <div className="flex items-center space-x-2 text-amber-700">
@@ -436,7 +430,7 @@ function LoginPageContent() {
                             Check your inbox for a verification email and click the link.
                           </p>
                         </div>
-
+                        
                         <div className="bg-amber-100 p-3 rounded-lg border border-amber-200">
                           <div className="flex items-center space-x-2 text-amber-700">
                             <Shield className="h-4 w-4" />
@@ -447,7 +441,7 @@ function LoginPageContent() {
                           </p>
                         </div>
                       </div>
-
+                      
                       <p className="text-sm text-amber-600">
                         Both steps must be completed before you can access your account.
                       </p>
