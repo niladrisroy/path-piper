@@ -13,7 +13,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { invalidateUserCache } from '@/hooks/use-auth'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Eye, EyeOff, Loader2, CheckCircle, AlertCircle, Mail, Shield, GraduationCap, Building } from "lucide-react"
+import { Eye, EyeOff, Loader2, CheckCircle, AlertCircle, Mail, Shield, GraduationCap, Building, Users } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 function LoginPageContent() {
@@ -21,6 +21,8 @@ function LoginPageContent() {
   const [studentPassword, setStudentPassword] = useState("")
   const [institutionEmail, setInstitutionEmail] = useState("")
   const [institutionPassword, setInstitutionPassword] = useState("")
+  const [parentEmail, setParentEmail] = useState("")
+  const [parentPassword, setParentPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [isRedirecting, setIsRedirecting] = useState(false)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -67,7 +69,7 @@ function LoginPageContent() {
     }
   }, [searchParams])
 
-  const handleLogin = async (userType: 'student' | 'institution') => {
+  const handleLogin = async (userType: 'student' | 'institution' | 'parent') => {
     setLoading(true)
     setVerificationAlerts({
       needsParentApproval: false,
@@ -75,8 +77,18 @@ function LoginPageContent() {
       message: ""
     })
 
-    const email = userType === 'student' ? studentEmail : institutionEmail
-    const password = userType === 'student' ? studentPassword : institutionPassword
+    let email, password
+    
+    if (userType === 'student') {
+      email = studentEmail
+      password = studentPassword
+    } else if (userType === 'institution') {
+      email = institutionEmail
+      password = institutionPassword
+    } else {
+      email = parentEmail
+      password = parentPassword
+    }
 
     if (!email || !password) {
       toast.error("Please fill in all fields")
@@ -96,12 +108,18 @@ function LoginPageContent() {
         console.log('Storage clear error:', error)
       }
 
-      const response = await fetch('/api/auth/login', {
+      // Use different API endpoints for parent login
+      const apiEndpoint = userType === 'parent' ? '/api/parent/login' : '/api/auth/login'
+      const requestBody = userType === 'parent' 
+        ? { email, password }
+        : { email, password, expectedRole: userType }
+
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password, expectedRole: userType }),
+        body: JSON.stringify(requestBody),
         credentials: 'include'
       })
 
@@ -119,16 +137,29 @@ function LoginPageContent() {
         if (userType === 'student') {
           setStudentEmail("")
           setStudentPassword("")
-        } else {
+        } else if (userType === 'institution') {
           setInstitutionEmail("")
           setInstitutionPassword("")
+        } else {
+          setParentEmail("")
+          setParentPassword("")
         }
         setLoading(false)
         return
       }
 
       if (data.success) {
-        // Verify the user role matches expected type
+        // For parent login, redirect to parent dashboard
+        if (userType === 'parent') {
+          toast.success("Login successful!")
+          setIsRedirecting(true)
+          setTimeout(() => {
+            window.location.href = '/parent/dashboard'
+          }, 1000)
+          return
+        }
+
+        // Verify the user role matches expected type for student/institution
         if (data.role !== userType) {
           toast.error(`This account is registered as a ${data.role}, not a ${userType}. Please use the correct login section.`)
           setLoading(false)
@@ -226,6 +257,11 @@ function LoginPageContent() {
   const handleInstitutionSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     handleLogin('institution')
+  }
+
+  const handleParentSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    handleLogin('parent')
   }
 
   // Suppress hydration warnings for browser extension attributes
@@ -486,14 +522,18 @@ function LoginPageContent() {
                 )}
 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="student" className="flex items-center space-x-2">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="student" className="flex items-center space-x-2 text-xs">
                       <GraduationCap className="h-4 w-4" />
                       <span>Student</span>
                     </TabsTrigger>
-                    <TabsTrigger value="institution" className="flex items-center space-x-2">
+                    <TabsTrigger value="institution" className="flex items-center space-x-2 text-xs">
                       <Building className="h-4 w-4" />
                       <span>Institution</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="parent" className="flex items-center space-x-2 text-xs">
+                      <Users className="h-4 w-4" />
+                      <span>Parent</span>
                     </TabsTrigger>
                   </TabsList>
 
@@ -581,6 +621,50 @@ function LoginPageContent() {
                         suppressHydrationWarning
                       >
                         {loading ? "Signing in..." : isRedirecting ? "Redirecting..." : "Sign in as Institution"}
+                      </Button>
+                    </form>
+                  </TabsContent>
+
+                  <TabsContent value="parent" className="space-y-4 mt-6">
+                    <div className="text-center mb-4">
+                      <p className="text-sm text-gray-600">Parent/Guardian Login</p>
+                    </div>
+                    <form onSubmit={handleParentSubmit} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="parent-email">Parent Email</Label>
+                        <Input
+                          id="parent-email"
+                          type="email"
+                          placeholder="Enter your parent email"
+                          value={parentEmail}
+                          onChange={(e) => setParentEmail(e.target.value)}
+                          required
+                          disabled={loading || isRedirecting}
+                          className="rounded-lg border-slate-300"
+                          suppressHydrationWarning
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="parent-password">Password</Label>
+                        <Input
+                          id="parent-password"
+                          type="password"
+                          placeholder="Enter your password"
+                          value={parentPassword}
+                          onChange={(e) => setParentPassword(e.target.value)}
+                          required
+                          disabled={loading || isRedirecting}
+                          className="rounded-lg border-slate-300"
+                          suppressHydrationWarning
+                        />
+                      </div>
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white rounded-full py-6"
+                        disabled={loading || isRedirecting}
+                        suppressHydrationWarning
+                      >
+                        {loading ? "Signing in..." : isRedirecting ? "Redirecting..." : "Sign in as Parent"}
                       </Button>
                     </form>
                   </TabsContent>
