@@ -314,6 +314,12 @@ export interface InstitutionRegistrationData extends UserRegistrationData {
 
 export async function registerInstitution(data: InstitutionRegistrationData) {
   try {
+    console.log('🏛️ Starting institution registration:', {
+      email: data.email,
+      institutionName: data.institutionData.institutionName,
+      institutionTypeId: data.institutionData.institutionTypeId
+    });
+
     // Step 1: Use Supabase for auth only - create user in Supabase Auth
     const { data: authData, error: authError } =
       await supabase.auth.admin.createUser({
@@ -331,6 +337,8 @@ export async function registerInstitution(data: InstitutionRegistrationData) {
       throw new Error(authError?.message || "Failed to create user account");
     }
 
+    console.log('✅ Supabase user created:', authData.user.id);
+
     // Step 2: Use Prisma for all database operations
     // Create user profile with the Supabase user ID
     const profile = await prisma.profile.create({
@@ -339,16 +347,19 @@ export async function registerInstitution(data: InstitutionRegistrationData) {
         firstName: data.firstName,
         lastName: data.lastName,
         role: "institution",
+        email: data.email,
         bio: data.institutionData.description || null,
       },
     });
 
-    // Create institution profile with all required fields
+    console.log('✅ Profile created:', profile.id);
+
+    // Create institution profile with all required fields matching schema
     await prisma.institutionProfile.create({
       data: {
         id: profile.id,
         institutionName: data.institutionData.institutionName,
-        institutionTypeId: data.institutionData.institutionTypeId,
+        institutionTypeId: data.institutionData.institutionTypeId || null,
         website: data.institutionData.website || null,
         logoUrl: data.institutionData.logoUrl || null,
         coverImageUrl: data.institutionData.coverImageUrl || null,
@@ -357,9 +368,11 @@ export async function registerInstitution(data: InstitutionRegistrationData) {
       },
     });
 
+    console.log('✅ Institution profile created successfully');
+
     return { success: true, userId: authData.user.id };
   } catch (error) {
-    console.error("Registration failed:", error);
+    console.error("❌ Institution registration failed:", error);
     return {
       success: false,
       error: (error as Error).message || "Registration failed",
