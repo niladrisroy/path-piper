@@ -1,21 +1,80 @@
 import type { Metadata } from "next"
+import { redirect } from "next/navigation"
+import { createClient } from "@supabase/supabase-js"
+import { cookies } from "next/headers"
 import InstitutionProfile from "@/components/profile/institution-profile"
 import InternalNavbar from "@/components/internal-navbar"
 import Footer from "@/components/footer"
 import ProtectedLayout from "../../protected-layout"
+import { getCurrentUserInstitution } from "@/lib/db/institution"
 
-export const metadata: Metadata = {
-  title: "Stanford University | PathPiper",
-  description: "Stanford University profile on PathPiper - Connecting students with educational opportunities",
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const cookieStore = cookies()
+    const token = cookieStore.get('sb-access-token')?.value
+    
+    if (!token) {
+      return {
+        title: "Institution Profile | PathPiper",
+        description: "Institution profile on PathPiper"
+      }
+    }
+
+    const { data: { user } } = await supabase.auth.getUser(token)
+    
+    if (!user) {
+      return {
+        title: "Institution Profile | PathPiper", 
+        description: "Institution profile on PathPiper"
+      }
+    }
+
+    const institution = await getCurrentUserInstitution(user.id)
+    
+    return {
+      title: `${institution?.name || 'Institution'} | PathPiper`,
+      description: `${institution?.name || 'Institution'} profile on PathPiper - Connecting students with educational opportunities`,
+    }
+  } catch (error) {
+    return {
+      title: "Institution Profile | PathPiper",
+      description: "Institution profile on PathPiper"
+    }
+  }
 }
 
-export default function InstitutionProfilePage() {
+export default async function InstitutionProfilePage() {
+  const cookieStore = cookies()
+  const token = cookieStore.get('sb-access-token')?.value
+  
+  if (!token) {
+    redirect('/login')
+  }
+
+  const { data: { user } } = await supabase.auth.getUser(token)
+  
+  if (!user) {
+    redirect('/login')
+  }
+
+  const institution = await getCurrentUserInstitution(user.id)
+  
+  if (!institution) {
+    redirect('/institution-onboarding')
+  }
+
   return (
     <ProtectedLayout>
       <div className="min-h-screen bg-white">
         <InternalNavbar />
         <main className="pt-16 sm:pt-24">
-          <InstitutionProfile />
+          <InstitutionProfile institutionData={institution} />
         </main>
         <Footer />
       </div>

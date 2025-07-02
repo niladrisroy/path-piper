@@ -2,22 +2,41 @@
 import Image from "next/image"
 import { BadgeCheckIcon, Award, Users, BookOpen, Building, MapPin, Globe } from "lucide-react"
 
-export default function InstitutionProfileHeader() {
-  // Mock institution data
+interface InstitutionData {
+  id: string
+  name: string
+  type: string
+  category?: string
+  location: string
+  bio: string
+  logo: string
+  coverImage: string
+  website: string
+  verified: boolean
+  founded?: number | null
+  tagline: string
+}
+
+interface InstitutionProfileHeaderProps {
+  institutionData: InstitutionData
+}
+
+export default function InstitutionProfileHeader({ institutionData }: InstitutionProfileHeaderProps) {
+  // Use real institution data
   const institution = {
-    name: "Stanford University",
-    tagline: "Empowering students to change the world",
-    location: "Stanford, California",
-    website: "stanford.edu",
-    founded: 1885,
-    type: "Private Research University",
-    students: 16500,
+    name: institutionData.name,
+    tagline: institutionData.tagline,
+    location: institutionData.location,
+    website: institutionData.website,
+    founded: institutionData.founded || new Date().getFullYear() - 50, // Default if not provided
+    type: institutionData.type,
+    students: 16500, // Default values - these could be added to database schema
     faculty: 1200,
     programs: 195,
     bannerColor: "from-blue-600 to-blue-800",
-    profileImage: "/institution-profile.png",
-    verified: true,
-    specialties: ["Computer Science", "Engineering", "Business", "Medicine", "Law"],
+    profileImage: institutionData.logo,
+    verified: institutionData.verified,
+    specialties: ["Computer Science", "Engineering", "Business", "Medicine", "Law"], // Default - could be dynamic
   }
 
   // Mock circles data

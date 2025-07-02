@@ -10,7 +10,26 @@ import EventsSection from "./events-section"
 import HorizontalNavigation from "./horizontal-navigation"
 import GallerySection from "./gallery-section"
 
-export default function InstitutionProfile() {
+interface InstitutionData {
+  id: string
+  name: string
+  type: string
+  category?: string
+  location: string
+  bio: string
+  logo: string
+  coverImage: string
+  website: string
+  verified: boolean
+  founded?: number | null
+  tagline: string
+}
+
+interface InstitutionProfileProps {
+  institutionData: InstitutionData
+}
+
+export default function InstitutionProfile({ institutionData }: InstitutionProfileProps) {
   const [activeTab, setActiveTab] = useState("about")
 
   const tabs = [
@@ -24,7 +43,7 @@ export default function InstitutionProfile() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <InstitutionProfileHeader />
+      <InstitutionProfileHeader institutionData={institutionData} />
 
       <HorizontalNavigation tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
 
