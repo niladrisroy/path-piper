@@ -795,9 +795,9 @@ export default function ParentChildProfilePage() {
                                 </div>
                               )}
                               <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-3">
-                              <CalendarIcon className="h-4 w-4 mr-1" />
-                              {achievement.dateOfAchievement && format(new Date(achievement.dateOfAchievement), 'MMM yyyy')}
-                            </div>
+                                <CalendarIcon className="h-4 w-4 mr-1" />
+                                {achievement.dateOfAchievement && format(new Date(achievement.dateOfAchievement), 'MMM yyyy')}
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -866,8 +866,7 @@ export default function ParentChildProfilePage() {
                                     {goal.category}
                                   </span>
                                 )}
-                                {goal.time<replit_final_file>
-frame && (
+                                {goal.timeframe && (
                                   <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded truncate">
                                     {goal.timeframe}
                                   </span>
