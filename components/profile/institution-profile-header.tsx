@@ -133,13 +133,13 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
           <div className="relative -mt-24 sm:-mt-16 mb-6">
             {/* Profile info - With profile pic inside */}
             <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sm:p-6">
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                 {/* Left column - Profile details with profile pic */}
-                <div className="md:col-span-3">
-                  <div className="flex flex-row gap-4 mb-4">
+                <div className="lg:col-span-3">
+                  <div className="flex flex-col sm:flex-row gap-4 mb-4">
                     {/* Profile image */}
-                    <div className="relative z-10 flex-shrink-0">
-                      <div className="rounded-full border-4 border-white dark:border-gray-800 overflow-hidden h-20 w-20 sm:h-28 sm:w-28 shadow-md bg-white flex items-center justify-center">
+                    <div className="relative z-10 flex-shrink-0 self-center sm:self-start">
+                      <div className="rounded-full border-4 border-white dark:border-gray-800 overflow-hidden h-24 w-24 sm:h-28 sm:w-28 shadow-md bg-white flex items-center justify-center">
                         <Image
                           src="/images/pathpiper-logo.png"
                           alt="Path Piper Co Logo"
@@ -151,12 +151,12 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
                     </div>
 
                     {/* Name and tagline */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h1 className="text-xl sm:text-3xl font-bold truncate">{institution.name}</h1>
-                        {institution.verified && <BadgeCheckIcon className="h-6 w-6 text-blue-600" />}
+                    <div className="flex-1 min-w-0 text-center sm:text-left">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">{institution.name}</h1>
+                        {institution.verified && <BadgeCheckIcon className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 self-center" />}
                       </div>
-                      <p className="text-gray-600 dark:text-gray-300 mt-1 text-sm sm:text-base truncate">
+                      <p className="text-gray-600 dark:text-gray-300 mt-1 text-sm sm:text-base">
                         {institution.tagline}
                       </p>
                       <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
@@ -166,25 +166,25 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
                   </div>
 
                   {/* Action buttons - Connect, Visit Website, Share */}
-                  <div className="flex gap-3 mb-6">
-                    <Link href="/institution/profile/edit">
-                      <Button variant="outline" size="sm">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-6">
+                    <Link href="/institution/profile/edit" className="flex-1 sm:flex-none">
+                      <Button variant="outline" size="sm" className="w-full sm:w-auto">
                         <Edit className="h-4 w-4 mr-2" />
                         Edit Profile
                       </Button>
                     </Link>
-                    <Button variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700">
+                    <Button variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none">
                       <Users className="h-4 w-4 mr-2" />
                       Connect
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
                       <ExternalLink className="h-4 w-4 mr-2" />
                       Visit Website
                     </Button>
                   </div>
 
                   {/* Quick Stats - Horizontal display with icons and pastel backgrounds */}
-                  <div className="flex flex-wrap gap-3 text-xs font-medium mt-4">
+                  <div className="flex flex-wrap gap-2 sm:gap-3 text-xs font-medium mt-4">
                     <div className="flex items-center gap-1.5 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 text-blue-600 dark:text-blue-300 px-3 py-1.5 rounded-full">
                       <Users className="h-3.5 w-3.5 text-blue-500" data-tooltip="Total students enrolled" />
                       <span data-tooltip="Total students enrolled">
@@ -291,7 +291,7 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
                 </div>
 
                 {/* Right column - Institution highlights */}
-                <div className="md:col-span-2 md:border-l md:border-gray-200 md:dark:border-gray-700 md:pl-6">
+                <div className="lg:col-span-2 lg:border-l lg:border-gray-200 lg:dark:border-gray-700 lg:pl-6 mt-6 lg:mt-0">
                   {/* Top Departments section */}
                   <div>
                     <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Top Departments</h3>
