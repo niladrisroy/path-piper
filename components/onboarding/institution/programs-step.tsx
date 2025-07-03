@@ -166,9 +166,26 @@ export default function ProgramsStep({ initialData = [], onComplete, onNext, onS
     }
   }
 
-  const handleSave = () => {
-    onComplete(programs)
-    onNext()
+  const handleSave = async () => {
+    try {
+      const response = await fetch('/api/institution/programs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ programs }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save programs')
+      }
+
+      onComplete(programs)
+      onNext()
+    } catch (error) {
+      console.error('Error saving programs:', error)
+      // You might want to show a toast notification here
+    }
   }
 
   const handleEditProgram = (program: Program) => {
