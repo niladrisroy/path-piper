@@ -50,10 +50,11 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
 
       const scrollTop = containerRef.current.scrollTop
       const containerHeight = containerRef.current.clientHeight
+      const centerPoint = containerHeight / 2
 
-      // Find which section is currently most visible
+      // Find which section is closest to the center of the viewport
       let currentSection = "about"
-      let maxVisibleArea = 0
+      let minDistance = Infinity
 
       sections.forEach(({ id }) => {
         const element = sectionRefs.current[id]
@@ -62,13 +63,14 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
         const rect = element.getBoundingClientRect()
         const containerRect = containerRef.current!.getBoundingClientRect()
         
-        // Calculate how much of the section is visible
-        const visibleTop = Math.max(rect.top, containerRect.top)
-        const visibleBottom = Math.min(rect.bottom, containerRect.bottom)
-        const visibleHeight = Math.max(0, visibleBottom - visibleTop)
+        // Calculate distance from section center to viewport center
+        const sectionTop = rect.top - containerRect.top
+        const sectionBottom = rect.bottom - containerRect.top
+        const sectionCenter = (sectionTop + sectionBottom) / 2
+        const distance = Math.abs(sectionCenter - centerPoint)
         
-        if (visibleHeight > maxVisibleArea) {
-          maxVisibleArea = visibleHeight
+        if (distance < minDistance) {
+          minDistance = distance
           currentSection = id
         }
       })
@@ -79,6 +81,8 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
     const container = containerRef.current
     if (container) {
       container.addEventListener('scroll', handleScroll)
+      // Call initially to set correct active section
+      handleScroll()
       return () => container.removeEventListener('scroll', handleScroll)
     }
   }, [])
@@ -90,10 +94,14 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
       const containerRect = containerRef.current.getBoundingClientRect()
       const elementRect = element.getBoundingClientRect()
       const scrollTop = containerRef.current.scrollTop
-      const targetScrollTop = scrollTop + elementRect.top - containerRect.top - 20
+      const containerHeight = containerRef.current.clientHeight
+      
+      // Calculate scroll position to center the section in viewport
+      const elementHeight = elementRect.height
+      const targetScrollTop = scrollTop + elementRect.top - containerRect.top - (containerHeight / 2) + (elementHeight / 2)
 
       containerRef.current.scrollTo({
-        top: targetScrollTop,
+        top: Math.max(0, targetScrollTop),
         behavior: 'smooth'
       })
     }
@@ -157,7 +165,7 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
           <div className="flex-1">
             <div 
               ref={containerRef}
-              className="h-[calc(100vh-200px)] lg:h-[calc(100vh-200px)] overflow-y-auto scrollbar-hide"
+              className="h-[calc(100vh-280px)] lg:h-[calc(100vh-200px)] overflow-y-auto scrollbar-hide"
               style={{
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none',
