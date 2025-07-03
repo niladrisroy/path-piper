@@ -126,8 +126,21 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
     <>
       <style jsx>{scrollbarHideStyle}</style>
       <div className="relative">
-        {/* Customizable banner */}
-        <div className={`h-48 w-full bg-gradient-to-r ${institution.bannerColor}`}></div>
+        {/* Customizable banner with cover image */}
+        <div className={`h-48 w-full bg-gradient-to-r ${institution.bannerColor} relative overflow-hidden`}>
+          {institutionData.coverImage && (
+            <>
+              <Image
+                src={institutionData.coverImage}
+                alt={`${institutionData.name} Cover`}
+                fill
+                className="object-cover"
+                priority
+              />
+              <div className="absolute inset-0 bg-black/20"></div>
+            </>
+          )}
+        </div>
 
         <div className="container mx-auto px-4 max-w-7xl">
           <div className="relative -mt-24 sm:-mt-16 mb-6">
