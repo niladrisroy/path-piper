@@ -1,15 +1,81 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import FeedItem from "./feed-item"
 import CreatePost from "./create-post"
 import FeedFilter from "./feed-filter"
 import { Bell, Sparkles, Clock, Users, Bookmark } from "lucide-react"
+import PostWithTrails from "./post-with-trails"
 
 export default function Feed() {
+  const [posts, setPosts] = useState([])
+  const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("for-you")
   const [feedItems, setFeedItems] = useState(mockFeedItems)
+
+  const fetchPosts = async () => {
+    try {
+      const response = await fetch('/api/feed/posts')
+      const data = await response.json()
+      if (response.ok) {
+        setPosts(data.posts)
+      }
+    } catch (error) {
+      console.error('Error fetching posts:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchPosts()
+  }, [])
+
+  const handlePostUpdate = () => {
+    fetchPosts()
+  }
+
+  if (loading) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-6">
+        {/* Feed Header with Tabs */}
+        <div className="mb-6">
+          <Tabs defaultValue="for-you" className="w-full" onValueChange={setActiveTab}>
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-2xl font-bold text-gray-800">Feed</h1>
+              <Bell className="h-5 w-5 text-gray-500 cursor-pointer hover:text-pathpiper-teal transition-colors" />
+            </div>
+            <TabsList className="grid grid-cols-4 mb-4">
+              <TabsTrigger value="for-you" className="flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">For You</span>
+              </TabsTrigger>
+              <TabsTrigger value="following" className="flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Following</span>
+              </TabsTrigger>
+              <TabsTrigger value="recent" className="flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Recent</span>
+              </TabsTrigger>
+              <TabsTrigger value="saved" className="flex items-center gap-1.5">
+                <Bookmark className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Saved</span>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {/* Filters */}
+          <FeedFilter />
+        </div>
+        <CreatePost onPostCreated={handlePostUpdate} />
+        <div className="flex justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pathpiper-teal"></div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
@@ -46,13 +112,13 @@ export default function Feed() {
 
       {/* Create Post */}
       <div className="mb-6">
-        <CreatePost />
+        <CreatePost onPostCreated={handlePostUpdate} />
       </div>
 
       {/* Feed Items */}
       <div className="space-y-6">
-        {feedItems.map((item) => (
-          <FeedItem key={item.id} item={item} />
+        {posts.map((post) => (
+          <PostWithTrails key={post.id} post={post} onPostUpdate={handlePostUpdate} />
         ))}
       </div>
     </div>

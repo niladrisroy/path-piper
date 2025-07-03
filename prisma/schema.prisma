@@ -494,9 +494,14 @@ model FeedPost {
   imageUrl      String?  @map("image_url")
   likesCount    Int      @default(0) @map("likes_count")
   commentsCount Int      @default(0) @map("comments_count")
+  isTrail       Boolean  @default(false) @map("is_trail")
+  parentPostId  String?  @map("parent_post_id") @db.Uuid
+  trailOrder    Int?     @map("trail_order")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
   author        Profile  @relation(fields: [userId], references: [id])
+  parentPost    FeedPost? @relation("PostTrails", fields: [parentPostId], references: [id])
+  trails        FeedPost[] @relation("PostTrails")
 
   @@map("feed_posts")
 }
