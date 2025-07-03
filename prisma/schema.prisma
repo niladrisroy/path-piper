@@ -234,21 +234,24 @@ model InstitutionProfile {
 }
 
 model InstitutionProgram {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  institutionId    String    @map("institution_id") @db.Uuid
-  name             String
-  type             String
-  level            String
-  durationValue    Int       @map("duration_value")
-  durationType     String    @map("duration_type")
-  description      String
-  eligibility      String?
-  learningOutcomes String?   @map("learning_outcomes")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  institutionId  String    @map("institution_id") @db.Uuid
+  name           String
+  type           String
+  level          String
+  duration       String
+  durationType   String    @map("duration_type")
+  description    String
+  eligibility    String?
+  outcomes       String?
+  assessment     String?
+  certification  String?
+  schedule       String?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   // Relations
-  institution      InstitutionProfile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  institution    InstitutionProfile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
 
   @@map("institution_programs")
   @@schema("public")
