@@ -83,7 +83,7 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
     }
   }, [])
 
-  // Handle sidebar navigation click
+  // Handle navigation click
   const scrollToSection = (sectionId: string) => {
     const element = sectionRefs.current[sectionId]
     if (element && containerRef.current) {
@@ -104,9 +104,34 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
       <InstitutionProfileHeader institutionData={institutionData} />
 
       <div className="container mx-auto px-4 py-6">
+        {/* Mobile: Sticky Top Navigation */}
+        <div className="lg:hidden sticky top-0 z-10 bg-white shadow-sm border-b border-gray-200 mb-6 -mx-4 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900 capitalize">
+              {sections.find(s => s.id === activeSection)?.label || "About"}
+            </h2>
+            <div className="flex gap-1 overflow-x-auto">
+              {sections.map(({ id, label }) => (
+                <button
+                  key={id}
+                  onClick={() => scrollToSection(id)}
+                  className={`px-3 py-1 rounded-full text-sm whitespace-nowrap transition-all ${
+                    activeSection === id
+                      ? 'bg-blue-100 text-blue-700 font-medium'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop and Mobile Layout */}
         <div className="flex gap-8">
-          {/* Sidebar Navigation */}
-          <div className="w-64 flex-shrink-0">
+          {/* Desktop Sidebar Navigation */}
+          <div className="hidden lg:block w-64 flex-shrink-0">
             <div className="sticky top-6">
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <nav className="space-y-2">
@@ -132,13 +157,13 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
           <div className="flex-1">
             <div 
               ref={containerRef}
-              className="h-[calc(100vh-200px)] overflow-y-auto scrollbar-hide"
+              className="h-[calc(100vh-200px)] lg:h-[calc(100vh-200px)] overflow-y-auto scrollbar-hide"
               style={{
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none',
               }}
             >
-              <div className="space-y-8 pr-4">
+              <div className="space-y-8 lg:pr-4">
                 <div 
                   ref={(el) => sectionRefs.current['about'] = el}
                   id="about"
