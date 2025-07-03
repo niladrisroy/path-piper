@@ -118,12 +118,12 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
             <h2 className="text-lg font-semibold text-gray-900 capitalize">
               {sections.find(s => s.id === activeSection)?.label || "About"}
             </h2>
-            <div className="flex gap-1 overflow-x-auto">
+            <div className="flex gap-1">
               {sections.map(({ id, label }) => (
                 <button
                   key={id}
                   onClick={() => scrollToSection(id)}
-                  className={`px-3 py-1 rounded-full text-sm whitespace-nowrap transition-all ${
+                  className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-all ${
                     activeSection === id
                       ? 'bg-blue-100 text-blue-700 font-medium'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
