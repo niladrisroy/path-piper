@@ -761,11 +761,12 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
               <div className="space-y-2">
                 <Label>Duration</Label>
                 <div className="flex gap-2">
-                  <Input
+                  <input
+                    type="number"
+                    placeholder="e.g., 3"
                     value={program.duration}
                     onChange={(e) => updateProgram(index, 'duration', e.target.value)}
-                    placeholder="e.g., 4"
-                    className="flex-1"
+                    className="flex-1 p-2 border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
                   <Select
                     value={program.durationType}

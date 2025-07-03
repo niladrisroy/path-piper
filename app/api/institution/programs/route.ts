@@ -75,14 +75,11 @@ export async function POST(request: NextRequest) {
           name: program.name,
           type: program.type === 'other' ? program.typeCustom : program.type,
           level: program.level === 'custom' ? program.levelCustom : program.level,
-          duration: program.duration,
+          durationValue: parseInt(program.duration) || 1,
           durationType: program.durationType === 'custom' ? program.durationCustom : program.durationType,
           description: program.description,
           eligibility: program.eligibility || null,
-          outcomes: program.outcomes || null,
-          assessment: program.assessment || null,
-          certification: program.certification || null,
-          schedule: program.schedule || null
+          learningOutcomes: program.outcomes || null
         }
       })
       createdPrograms.push(createdProgram)

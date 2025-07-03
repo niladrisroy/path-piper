@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -11,11 +10,11 @@ interface Program {
   name: string
   type: string
   level: string
-  duration: string
+  durationValue: number
   durationType: string
   description: string
   eligibility?: string | null
-  outcomes?: string | null
+  learningOutcomes?: string | null
   assessment?: string | null
   certification?: string | null
   schedule?: string | null
@@ -146,7 +145,7 @@ export default function ProgramsSection({ institutionId, isOwner = false }: Prog
                       <span className="mx-2">•</span>
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        {program.duration} {program.durationType}
+                        {program.durationValue} {program.durationType}
                       </span>
                     </div>
                   </div>
@@ -186,10 +185,10 @@ export default function ProgramsSection({ institutionId, isOwner = false }: Prog
                     </div>
                   )}
 
-                  {program.outcomes && (
+                  {program.learningOutcomes && (
                     <div className="mt-4">
                       <h5 className="text-sm font-medium text-gray-700 mb-2">Learning Outcomes</h5>
-                      <p className="text-sm text-gray-600">{program.outcomes}</p>
+                      <p className="text-sm text-gray-600">{program.learningOutcomes}</p>
                     </div>
                   )}
 
