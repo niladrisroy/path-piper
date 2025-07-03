@@ -141,8 +141,8 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
                     <div className="relative z-10 flex-shrink-0 self-center sm:self-start">
                       <div className="rounded-full border-4 border-white dark:border-gray-800 overflow-hidden h-24 w-24 sm:h-28 sm:w-28 shadow-md bg-white flex items-center justify-center">
                         <Image
-                          src="/images/pathpiper-logo.png"
-                          alt="Path Piper Co Logo"
+                          src={institutionData.logo || "/images/pathpiper-logo.png"}
+                          alt={`${institutionData.name} Logo`}
                           width={112}
                           height={112}
                           className="object-contain p-2"
