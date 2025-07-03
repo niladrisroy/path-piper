@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
         isTrail,
         parentPostId,
         trailOrder,
-        postType,
+        postType: postType as any,
         tags,
         subjects,
         ageGroup,
