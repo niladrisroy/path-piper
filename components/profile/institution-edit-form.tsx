@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -126,6 +126,17 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
+  // Refs for scroll-to-section functionality
+  const containerRef = useRef<HTMLDivElement>(null)
+  const sectionRefs = {
+    about: useRef<HTMLDivElement>(null),
+    programs: useRef<HTMLDivElement>(null),
+    faculty: useRef<HTMLDivElement>(null),
+    facilities: useRef<HTMLDivElement>(null),
+    events: useRef<HTMLDivElement>(null),
+    gallery: useRef<HTMLDivElement>(null)
+  }
+
   const sections = [
     { id: "about", label: "About", icon: Building },
     { id: "programs", label: "Programs", icon: Book },
@@ -134,6 +145,66 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     { id: "events", label: "Events", icon: Calendar },
     { id: "gallery", label: "Gallery", icon: ImageIcon }
   ]
+
+  // Auto-scroll detection
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!containerRef.current) return
+
+      const container = containerRef.current
+      const containerRect = container.getBoundingClientRect()
+      const centerPoint = containerRect.height / 2
+
+      let currentSection = "about"
+      let minDistance = Infinity
+
+      sections.forEach(({ id }) => {
+        const element = sectionRefs[id as keyof typeof sectionRefs]?.current
+        if (!element) return
+
+        const rect = element.getBoundingClientRect()
+        const containerRect = containerRef.current!.getBoundingClientRect()
+        
+        // Calculate distance from section center to viewport center
+        const sectionTop = rect.top - containerRect.top
+        const sectionBottom = rect.bottom - containerRect.top
+        const sectionCenter = (sectionTop + sectionBottom) / 2
+        const distance = Math.abs(sectionCenter - centerPoint)
+        
+        if (distance < minDistance) {
+          minDistance = distance
+          currentSection = id
+        }
+      })
+
+      setActiveSection(currentSection)
+    }
+
+    const container = containerRef.current
+    if (container) {
+      container.addEventListener('scroll', handleScroll)
+      // Call initially to set correct active section
+      handleScroll()
+      return () => container.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
+
+  // Scroll to section when clicking navigation
+  const scrollToSection = (sectionId: string) => {
+    const element = sectionRefs[sectionId as keyof typeof sectionRefs]?.current
+    if (element && containerRef.current) {
+      const container = containerRef.current
+      const containerRect = container.getBoundingClientRect()
+      const elementRect = element.getBoundingClientRect()
+      
+      const offsetTop = elementRect.top - containerRect.top + container.scrollTop - 100 // 100px offset from top
+      
+      container.scrollTo({
+        top: offsetTop,
+        behavior: 'smooth'
+      })
+    }
+  }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -459,7 +530,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   }
 
   const renderAboutSection = () => (
-    <Card>
+    <Card ref={sectionRefs.about}>
       <CardHeader>
         <CardTitle>About Section</CardTitle>
       </CardHeader>
@@ -595,7 +666,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   )
 
   const renderProgramsSection = () => (
-    <Card>
+    <Card ref={sectionRefs.programs}>
       <CardHeader>
         <CardTitle>Programs & Courses</CardTitle>
       </CardHeader>
@@ -738,7 +809,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   )
 
   const renderFacultySection = () => (
-    <Card>
+    <Card ref={sectionRefs.faculty}>
       <CardHeader>
         <CardTitle>Faculty & Staff</CardTitle>
       </CardHeader>
@@ -842,7 +913,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   )
 
   const renderFacilitiesSection = () => (
-    <Card>
+    <Card ref={sectionRefs.facilities}>
       <CardHeader>
         <CardTitle>Facilities & Infrastructure</CardTitle>
       </CardHeader>
@@ -940,7 +1011,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   )
 
   const renderEventsSection = () => (
-    <Card>
+    <Card ref={sectionRefs.events}>
       <CardHeader>
         <CardTitle>Events & Activities</CardTitle>
       </CardHeader>
@@ -1055,7 +1126,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   )
 
   const renderGallerySection = () => (
-    <Card>
+    <Card ref={sectionRefs.gallery}>
       <CardHeader>
         <CardTitle>Photo Gallery</CardTitle>
       </CardHeader>
@@ -1139,7 +1210,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
               {sections.map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
-                  onClick={() => setActiveSection(id)}
+                  onClick={() => scrollToSection(id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 ${
                     activeSection === id
                       ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
@@ -1157,29 +1228,46 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
 
       {/* Form Content */}
       <div className="flex-1">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {activeSection === "about" && renderAboutSection()}
-          {activeSection === "programs" && renderProgramsSection()}
-          {activeSection === "faculty" && renderFacultySection()}
-          {activeSection === "facilities" && renderFacilitiesSection()}
-          {activeSection === "events" && renderEventsSection()}
-          {activeSection === "gallery" && renderGallerySection()}
+        <div 
+          ref={containerRef}
+          className="h-[calc(100vh-200px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+        >
+          <form onSubmit={handleSubmit} className="space-y-6 p-6">
+            <div ref={sectionRefs.about}>
+              {renderAboutSection()}
+            </div>
+            <div ref={sectionRefs.programs}>
+              {renderProgramsSection()}
+            </div>
+            <div ref={sectionRefs.faculty}>
+              {renderFacultySection()}
+            </div>
+            <div ref={sectionRefs.facilities}>
+              {renderFacilitiesSection()}
+            </div>
+            <div ref={sectionRefs.events}>
+              {renderEventsSection()}
+            </div>
+            <div ref={sectionRefs.gallery}>
+              {renderGallerySection()}
+            </div>
 
           {/* Save Button */}
-          <div className="flex justify-end space-x-4 sticky bottom-6 bg-white p-4 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push('/institution/profile')}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              <Save className="h-4 w-4 mr-2" />
-              {isLoading ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </div>
-        </form>
+            <div className="flex justify-end space-x-4 sticky bottom-6 bg-white p-4 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.push('/institution/profile')}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                <Save className="h-4 w-4 mr-2" />
+                {isLoading ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   )
