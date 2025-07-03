@@ -145,7 +145,7 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
                           alt={`${institutionData.name} Logo`}
                           width={112}
                           height={112}
-                          className="object-contain p-2"
+                          className="object-cover w-full h-full"
                         />
                       </div>
                     </div>
