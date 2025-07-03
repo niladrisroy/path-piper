@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Camera, ImagePlus, Plus, Trash2, Save, Calendar, MapPin, Users, Book, Building, Image as ImageIcon } from "lucide-react"
+import { Camera, ImagePlus, Plus, Trash2, Save, Calendar, MapPin, Users, Book, Building, Image as ImageIcon, Menu, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 interface InstitutionData {
@@ -42,6 +42,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   const coverInputRef = useRef<HTMLInputElement>(null)
 
   const [activeSection, setActiveSection] = useState("about")
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [formData, setFormData] = useState({
     // About section
     overview: institutionData.overview || "",
@@ -204,6 +205,8 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         behavior: 'smooth'
       })
     }
+    // Close sidebar on mobile after selection
+    setIsSidebarOpen(false)
   }
 
   const handleInputChange = (field: string, value: string) => {
@@ -1198,75 +1201,125 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   )
 
   return (
-    <div className="flex gap-6">
-      {/* Side Navigation */}
-      <div className="w-64 flex-shrink-0">
-        <Card className="sticky top-6">
-          <CardHeader>
-            <CardTitle className="text-lg">Edit Sections</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <nav className="space-y-1">
-              {sections.map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  onClick={() => scrollToSection(id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 ${
-                    activeSection === id
-                      ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                      : 'text-gray-700'
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {label}
-                </button>
-              ))}
-            </nav>
-          </CardContent>
-        </Card>
+    <div className="relative">
+      {/* Mobile Menu Button */}
+      <div className="lg:hidden mb-4">
+        <Button
+          variant="outline"
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="w-full"
+        >
+          <Menu className="h-4 w-4 mr-2" />
+          Edit Sections
+        </Button>
       </div>
 
-      {/* Form Content */}
-      <div className="flex-1">
-        <div 
-          ref={containerRef}
-          className="h-[calc(100vh-200px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
-        >
-          <form onSubmit={handleSubmit} className="space-y-6 p-6">
-            <div ref={sectionRefs.about}>
-              {renderAboutSection()}
-            </div>
-            <div ref={sectionRefs.programs}>
-              {renderProgramsSection()}
-            </div>
-            <div ref={sectionRefs.faculty}>
-              {renderFacultySection()}
-            </div>
-            <div ref={sectionRefs.facilities}>
-              {renderFacilitiesSection()}
-            </div>
-            <div ref={sectionRefs.events}>
-              {renderEventsSection()}
-            </div>
-            <div ref={sectionRefs.gallery}>
-              {renderGallerySection()}
-            </div>
+      <div className="flex gap-6">
+        {/* Side Navigation - Desktop */}
+        <div className="hidden lg:block w-64 flex-shrink-0">
+          <Card className="sticky top-6">
+            <CardHeader>
+              <CardTitle className="text-lg">Edit Sections</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <nav className="space-y-1">
+                {sections.map(({ id, label, icon: Icon }) => (
+                  <button
+                    key={id}
+                    onClick={() => scrollToSection(id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 ${
+                      activeSection === id
+                        ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                        : 'text-gray-700'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {label}
+                  </button>
+                ))}
+              </nav>
+            </CardContent>
+          </Card>
+        </div>
 
-          {/* Save Button */}
-            <div className="flex justify-end space-x-4 sticky bottom-6 bg-white p-4 border-t">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.push('/institution/profile')}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                <Save className="h-4 w-4 mr-2" />
-                {isLoading ? 'Saving...' : 'Save Changes'}
-              </Button>
+        {/* Mobile Sidebar Overlay */}
+        {isSidebarOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsSidebarOpen(false)} />
+            <div className="fixed left-0 top-0 h-full w-80 bg-white p-6 shadow-lg">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-semibold">Edit Sections</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsSidebarOpen(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <nav className="space-y-1">
+                {sections.map(({ id, label, icon: Icon }) => (
+                  <button
+                    key={id}
+                    onClick={() => scrollToSection(id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 rounded-lg ${
+                      activeSection === id
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-gray-700'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {label}
+                  </button>
+                ))}
+              </nav>
             </div>
-          </form>
+          </div>
+        )}
+
+        {/* Form Content */}
+        <div className="flex-1 min-w-0">
+          <div 
+            ref={containerRef}
+            className="h-[calc(100vh-200px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+          >
+            <form onSubmit={handleSubmit} className="space-y-6 p-2 lg:p-6">
+              <div ref={sectionRefs.about}>
+                {renderAboutSection()}
+              </div>
+              <div ref={sectionRefs.programs}>
+                {renderProgramsSection()}
+              </div>
+              <div ref={sectionRefs.faculty}>
+                {renderFacultySection()}
+              </div>
+              <div ref={sectionRefs.facilities}>
+                {renderFacilitiesSection()}
+              </div>
+              <div ref={sectionRefs.events}>
+                {renderEventsSection()}
+              </div>
+              <div ref={sectionRefs.gallery}>
+                {renderGallerySection()}
+              </div>
+
+              {/* Save Button */}
+              <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 sticky bottom-0 bg-white p-4 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.push('/institution/profile')}
+                  className="w-full sm:w-auto"
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
+                  <Save className="h-4 w-4 mr-2" />
+                  {isLoading ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>
