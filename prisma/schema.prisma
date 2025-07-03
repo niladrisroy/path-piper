@@ -17,6 +17,7 @@ enum UserRole {
   institution
 
   @@map("user_role")
+  @@schema("public")
 }
 
 /// This model maps to the enum in the database
@@ -24,6 +25,7 @@ model UserRoleEnum {
   name String @id @map("name")
 
   @@map("user_role")
+  @@schema("public")
 }
 
 enum AgeGroup {
@@ -34,6 +36,7 @@ enum AgeGroup {
   young_adult
 
   @@map("age_group")
+  @@schema("public")
 }
 
 enum EducationLevel {
@@ -46,6 +49,7 @@ enum EducationLevel {
   phd
 
   @@map("education_level")
+  @@schema("public")
 }
 
 model Profile {
@@ -105,6 +109,7 @@ model Profile {
 
 
   @@map("profiles")
+  @@schema("public")
 }
 
 model StudentProfile {
@@ -124,6 +129,7 @@ model StudentProfile {
   educationHistory   StudentEducationHistory[]
 
   @@map("student_profiles")
+  @@schema("public")
 }
 
 model StudentEducationHistory {
@@ -150,6 +156,7 @@ model StudentEducationHistory {
   institutionType     InstitutionType?    @relation(fields: [institutionTypeId], references: [id])
 
   @@map("student_education_history")
+  @@schema("public")
 }
 
 model MentorProfile {
@@ -166,6 +173,7 @@ model MentorProfile {
   updatedAt           DateTime  @updatedAt @map("updated_at")
 
   @@map("mentor_profiles")
+  @@schema("public")
 }
 
 model InstitutionCategory {
@@ -179,6 +187,7 @@ model InstitutionCategory {
   types        InstitutionType[]
 
   @@map("institution_categories")
+  @@schema("public")
 }
 
 model InstitutionType {
@@ -196,6 +205,7 @@ model InstitutionType {
 
   @@unique([categoryId, slug])
   @@map("institution_types")
+  @@schema("public")
 }
 
 model InstitutionProfile {
@@ -219,6 +229,7 @@ model InstitutionProfile {
   studentEducationHistory     StudentEducationHistory[]
 
   @@map("institution_profiles")
+  @@schema("public")
 }
 
 model InterestCategory {
@@ -230,6 +241,7 @@ model InterestCategory {
   interests   Interest[]
 
   @@map("interest_categories")
+  @@schema("public")
 }
 
 model Interest {
@@ -242,6 +254,7 @@ model Interest {
   userInterests     UserInterest[]
 
   @@map("interests")
+  @@schema("public")
 }
 
 model UserInterest {
@@ -255,6 +268,7 @@ model UserInterest {
 
   @@unique([userId, interestId])
   @@map("user_interests")
+  @@schema("public")
 }
 
 model SkillCategory {
@@ -266,6 +280,7 @@ model SkillCategory {
   skills      Skill[]
 
   @@map("skill_categories")
+  @@schema("public")
 }
 
 model Skill {
@@ -279,6 +294,7 @@ model Skill {
   endorsements      SkillEndorsement[]
 
   @@map("skills")
+  @@schema("public")
 }
 
 model UserSkill {
@@ -293,6 +309,7 @@ model UserSkill {
 
   @@unique([userId, skillId])
   @@map("user_skills")
+  @@schema("public")
 }
 
 model SocialLink {
@@ -307,6 +324,7 @@ model SocialLink {
 
   @@unique([userId, platform])
   @@map("social_links")
+  @@schema("public")
 }
 
 model Language {
@@ -317,6 +335,7 @@ model Language {
   createdAt     DateTime       @default(now()) @map("created_at")
 
   @@map("languages")
+  @@schema("public")
 }
 
 model UserLanguage {
@@ -331,6 +350,7 @@ model UserLanguage {
 
   @@unique([userId, languageId])
   @@map("user_languages")
+  @@schema("public")
 }
 
 model Hobby {
@@ -341,6 +361,7 @@ model Hobby {
   createdAt   DateTime    @default(now()) @map("created_at")
 
   @@map("hobbies")
+  @@schema("public")
 }
 
 model UserHobby {
@@ -353,6 +374,7 @@ model UserHobby {
 
   @@unique([userId, hobbyId])
   @@map("user_hobbies")
+  @@schema("public")
 }
 
 model CareerGoal {
@@ -368,6 +390,7 @@ model CareerGoal {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("career_goals")
+  @@schema("public")
 }
 
 model MoodBoard {
@@ -381,6 +404,7 @@ model MoodBoard {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("mood_board")
+  @@schema("public")
 }
 
 model CustomBadge {
@@ -398,6 +422,7 @@ model CustomBadge {
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
   @@map("custom_badges")
+  @@schema("public")
 }
 
 model ConnectionRequest {
@@ -413,6 +438,7 @@ model ConnectionRequest {
 
   @@unique([senderId, receiverId])
   @@map("connection_requests")
+  @@schema("public")
 }
 
 model Connection {
@@ -426,6 +452,7 @@ model Connection {
 
   @@unique([user1Id, user2Id])
   @@map("connections")
+  @@schema("public")
 }
 
 model SkillEndorsement {
@@ -441,6 +468,7 @@ model SkillEndorsement {
 
   @@unique([endorserId, endorsedUserId, skillId])
   @@map("skill_endorsements")
+  @@schema("public")
 }
 
 model CircleBadge {
@@ -458,6 +486,7 @@ model CircleBadge {
   updatedAt       DateTime            @updatedAt @map("updated_at")
 
   @@map("circle_badges")
+  @@schema("public")
 }
 
 model CircleMembership {
@@ -473,6 +502,7 @@ model CircleMembership {
 
   @@unique([circleId, userId])
   @@map("circle_memberships")
+  @@schema("public")
 }
 
 model CircleInvitation {
@@ -490,6 +520,7 @@ model CircleInvitation {
 
   @@unique([circleId, inviteeId])
   @@map("circle_invitations")
+  @@schema("public")
 }
 
 model FeedPost {
@@ -534,6 +565,7 @@ model FeedPost {
   bookmarks    PostBookmark[]
 
   @@map("feed_posts")
+  @@schema("public")
 }
 
 enum PostType {
@@ -547,6 +579,7 @@ enum PostType {
   EVENT_ANNOUNCEMENT
 
   @@map("post_type")
+  @@schema("public")
 }
 
 model PostLike {
@@ -560,6 +593,7 @@ model PostLike {
 
   @@unique([userId, postId])
   @@map("post_likes")
+  @@schema("public")
 }
 
 model PostComment {
@@ -577,6 +611,7 @@ model PostComment {
   replies  PostComment[] @relation("CommentReplies")
 
   @@map("post_comments")
+  @@schema("public")
 }
 
 model PostBookmark {
@@ -590,6 +625,7 @@ model PostBookmark {
 
   @@unique([userId, postId])
   @@map("post_bookmarks")
+  @@schema("public")
 }
 
 model Goal {
@@ -606,6 +642,7 @@ model Goal {
   user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("goals")
+  @@schema("public")
 }
 
 model AchievementCategory {
@@ -616,6 +653,7 @@ model AchievementCategory {
   types AchievementType[]
 
   @@map("achievement_categories")
+  @@schema("public")
 }
 
 model AchievementType {
@@ -629,6 +667,7 @@ model AchievementType {
 
   @@unique([categoryId, name])
   @@map("achievement_types")
+  @@schema("public")
 }
 
 model UserAchievement {
@@ -646,6 +685,7 @@ model UserAchievement {
   achievementType AchievementType? @relation(fields: [achievementTypeId], references: [id])
 
   @@map("user_achievements")
+  @@schema("public")
 }
 
 model ParentProfile {
@@ -661,6 +701,7 @@ model ParentProfile {
   children          Profile[]
 
   @@map("parent_profile")
+  @@schema("public")
 }
 
 model ChatbotTheme {
@@ -675,4 +716,5 @@ model ChatbotTheme {
   updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@map("chatbot_themes")
+  @@schema("public")
 }
