@@ -98,6 +98,9 @@ model Profile {
   goals                 Goal[]
   achievements          UserAchievement[]
   parent                 ParentProfile?        @relation(fields: [parentId], references: [id])
+  postLikes         PostLike[]
+  postComments      PostComment[]
+  postBookmarks     PostBookmark[]
 
 
   @@map("profiles")
@@ -495,16 +498,97 @@ model FeedPost {
   imageUrl      String?  @map("image_url")
   likesCount    Int      @default(0) @map("likes_count")
   commentsCount Int      @default(0) @map("comments_count")
+  sharesCount   Int      @default(0) @map("shares_count")
   isTrail       Boolean  @default(false) @map("is_trail")
-  parentPostId  String?  @map("parent_post_id") @db.Uuid
+  parentPostId  String?  @map("parent_post_id")
   trailOrder    Int?     @map("trail_order")
+
+  // Advanced features
+  postType      PostType @default(GENERAL) @map("post_type")
+  tags          String[] @default([])
+  subjects      String[] @default([])
+  ageGroup      String?  @map("age_group")
+  difficultyLevel String? @map("difficulty_level")
+  isQuestion    Boolean  @default(false) @map("is_question")
+  isAchievement Boolean  @default(false) @map("is_achievement")
+  achievementType String? @map("achievement_type")
+  projectCategory String? @map("project_category")
+
+  // Moderation & Analytics
+  moderationStatus String @default("approved") @map("moderation_status")
+  viewsCount    Int      @default(0) @map("views_count")
+  engagementScore Float  @default(0) @map("engagement_score")
+  isPinned      Boolean  @default(false) @map("is_pinned")
+  isPromoted    Boolean  @default(false) @map("is_promoted")
+
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
-  author        Profile  @relation(fields: [userId], references: [id])
-  parentPost    FeedPost? @relation("PostTrails", fields: [parentPostId], references: [id])
-  trails        FeedPost[] @relation("PostTrails")
+
+  // Relations
+  author       Profile     @relation(fields: [userId], references: [id])
+  parentPost   FeedPost?   @relation("PostTrails", fields: [parentPostId], references: [id])
+  trails       FeedPost[]  @relation("PostTrails")
+  likes        PostLike[]
+  comments     PostComment[]
+  bookmarks    PostBookmark[]
 
   @@map("feed_posts")
+}
+
+enum PostType {
+  GENERAL
+  ACHIEVEMENT
+  PROJECT
+  QUESTION
+  DISCUSSION
+  TUTORIAL
+  RESOURCE_SHARE
+  EVENT_ANNOUNCEMENT
+
+  @@map("post_type")
+}
+
+model PostLike {
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  postId String @map("post_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post FeedPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@map("post_likes")
+}
+
+model PostComment {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  postId    String   @map("post_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  content   String
+  parentId  String?  @map("parent_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  post     FeedPost      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author   Profile       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent   PostComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  PostComment[] @relation("CommentReplies")
+
+  @@map("post_comments")
+}
+
+model PostBookmark {
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  postId String @map("post_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post FeedPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@map("post_bookmarks")
 }
 
 model Goal {

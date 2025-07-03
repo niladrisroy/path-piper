@@ -1,28 +1,123 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import FeedItem from "./feed-item"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import CreatePost from "./create-post"
-import FeedFilter from "./feed-filter"
-import { Bell, Sparkles, Clock, Users, Bookmark } from "lucide-react"
-import PostWithTrails from "./post-with-trails"
+import { 
+  Heart, 
+  MessageCircle, 
+  Share2, 
+  Bookmark, 
+  TrendingUp,
+  Trophy,
+  Code,
+  HelpCircle,
+  MessageSquare,
+  BookOpen,
+  Calendar,
+  Filter,
+  SortDesc
+} from "lucide-react"
+import { useAuth } from "@/hooks/use-auth"
+import { toast } from "sonner"
+import Image from "next/image"
+import { formatDistanceToNow } from "date-fns"
+
+interface FeedPost {
+  id: string
+  content: string
+  imageUrl?: string
+  postType: string
+  tags: string[]
+  subjects: string[]
+  isQuestion: boolean
+  isAchievement: boolean
+  achievementType?: string
+  projectCategory?: string
+  difficultyLevel?: string
+  engagementScore: number
+  viewsCount: number
+  createdAt: string
+  author: {
+    id: string
+    firstName: string
+    lastName: string
+    profileImageUrl?: string
+    role: string
+  }
+  trails: any[]
+  _count: {
+    likes: number
+    comments: number
+    bookmarks: number
+  }
+}
+
+const POST_TYPE_ICONS = {
+  GENERAL: MessageSquare,
+  ACHIEVEMENT: Trophy,
+  PROJECT: Code,
+  QUESTION: HelpCircle,
+  DISCUSSION: MessageSquare,
+  TUTORIAL: BookOpen,
+  RESOURCE_SHARE: Share2,
+  EVENT_ANNOUNCEMENT: Calendar,
+}
+
+const POST_TYPE_COLORS = {
+  GENERAL: "bg-blue-500",
+  ACHIEVEMENT: "bg-yellow-500",
+  PROJECT: "bg-green-500",
+  QUESTION: "bg-purple-500",
+  DISCUSSION: "bg-indigo-500",
+  TUTORIAL: "bg-orange-500",
+  RESOURCE_SHARE: "bg-teal-500",
+  EVENT_ANNOUNCEMENT: "bg-red-500",
+}
 
 export default function Feed() {
-  const [posts, setPosts] = useState([])
+  const [posts, setPosts] = useState<FeedPost[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState("for-you")
-  const [feedItems, setFeedItems] = useState(mockFeedItems)
+  const [filter, setFilter] = useState('all')
+  const [postTypeFilter, setPostTypeFilter] = useState('all')
+  const [subjectFilter, setSubjectFilter] = useState('all')
+  const [difficultyFilter, setDifficultyFilter] = useState('all')
+  const [availableSubjects, setAvailableSubjects] = useState<string[]>([])
+  const { user } = useAuth()
 
   const fetchPosts = async () => {
     try {
-      const response = await fetch('/api/feed/posts')
+      setLoading(true)
+      const params = new URLSearchParams({
+        filter,
+        ...(postTypeFilter !== 'all' && { type: postTypeFilter }),
+        ...(subjectFilter !== 'all' && { subject: subjectFilter }),
+        ...(difficultyFilter !== 'all' && { difficulty: difficultyFilter }),
+      })
+
+      const response = await fetch(`/api/feed/posts?${params}`)
       const data = await response.json()
+      
       if (response.ok) {
         setPosts(data.posts)
+        
+        // Extract unique subjects for filter
+        const subjects = new Set<string>()
+        data.posts.forEach((post: FeedPost) => {
+          post.subjects.forEach(subject => subjects.add(subject))
+        })
+        setAvailableSubjects(Array.from(subjects))
+      } else {
+        toast.error("Failed to load posts")
       }
     } catch (error) {
       console.error('Error fetching posts:', error)
+      toast.error("Failed to load posts")
     } finally {
       setLoading(false)
     }
@@ -30,217 +125,289 @@ export default function Feed() {
 
   useEffect(() => {
     fetchPosts()
-  }, [])
+  }, [filter, postTypeFilter, subjectFilter, difficultyFilter])
 
-  const handlePostUpdate = () => {
-    fetchPosts()
+  const handleLike = async (postId: string) => {
+    try {
+      const response = await fetch(`/api/feed/posts/${postId}/like`, {
+        method: 'POST'
+      })
+      
+      if (response.ok) {
+        fetchPosts() // Refresh to get updated counts
+      }
+    } catch (error) {
+      console.error('Error liking post:', error)
+      toast.error("Failed to like post")
+    }
   }
 
-  if (loading) {
-    return (
-      <div className="max-w-3xl mx-auto px-4 py-6">
-        {/* Feed Header with Tabs */}
-        <div className="mb-6">
-          <Tabs defaultValue="for-you" className="w-full" onValueChange={setActiveTab}>
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-bold text-gray-800">Feed</h1>
-              <Bell className="h-5 w-5 text-gray-500 cursor-pointer hover:text-pathpiper-teal transition-colors" />
-            </div>
-            <TabsList className="grid grid-cols-4 mb-4">
-              <TabsTrigger value="for-you" className="flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">For You</span>
-              </TabsTrigger>
-              <TabsTrigger value="following" className="flex items-center gap-1.5">
-                <Users className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Following</span>
-              </TabsTrigger>
-              <TabsTrigger value="recent" className="flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Recent</span>
-              </TabsTrigger>
-              <TabsTrigger value="saved" className="flex items-center gap-1.5">
-                <Bookmark className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Saved</span>
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+  const handleBookmark = async (postId: string) => {
+    try {
+      const response = await fetch(`/api/feed/posts/${postId}/bookmark`, {
+        method: 'POST'
+      })
+      
+      if (response.ok) {
+        toast.success("Post bookmarked!")
+      }
+    } catch (error) {
+      console.error('Error bookmarking post:', error)
+      toast.error("Failed to bookmark post")
+    }
+  }
 
-          {/* Filters */}
-          <FeedFilter />
-        </div>
-        <CreatePost onPostCreated={handlePostUpdate} />
-        <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pathpiper-teal"></div>
-        </div>
-      </div>
+  const PostCard = ({ post }: { post: FeedPost }) => {
+    const PostTypeIcon = POST_TYPE_ICONS[post.postType as keyof typeof POST_TYPE_ICONS] || MessageSquare
+    const postTypeColor = POST_TYPE_COLORS[post.postType as keyof typeof POST_TYPE_COLORS] || "bg-blue-500"
+
+    return (
+      <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+        <CardHeader className="pb-3">
+          <div className="flex items-start gap-3">
+            <div className="h-12 w-12 rounded-full overflow-hidden flex-shrink-0">
+              <Image
+                src={post.author.profileImageUrl || "/images/student-profile.png"}
+                alt={`${post.author.firstName} ${post.author.lastName}`}
+                width={48}
+                height={48}
+                className="object-cover"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="font-medium text-gray-900">
+                  {post.author.firstName} {post.author.lastName}
+                </h3>
+                <Badge variant="outline" className="text-xs">
+                  {post.author.role}
+                </Badge>
+                <div className={`p-1 rounded-full ${postTypeColor}`}>
+                  <PostTypeIcon className="h-3 w-3 text-white" />
+                </div>
+              </div>
+              <p className="text-sm text-gray-500">
+                {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+              </p>
+            </div>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="space-y-3">
+          {/* Achievement/Project specific info */}
+          {post.isAchievement && post.achievementType && (
+            <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+              <Trophy className="h-3 w-3 mr-1" />
+              {post.achievementType}
+            </Badge>
+          )}
+          
+          {post.postType === "PROJECT" && post.projectCategory && (
+            <Badge className="bg-green-100 text-green-800 border-green-200">
+              <Code className="h-3 w-3 mr-1" />
+              {post.projectCategory}
+            </Badge>
+          )}
+
+          {post.difficultyLevel && (
+            <Badge variant="outline" className="text-xs">
+              {post.difficultyLevel} level
+            </Badge>
+          )}
+
+          {/* Content */}
+          <div className="prose prose-sm max-w-none">
+            <p className="whitespace-pre-wrap">{post.content}</p>
+          </div>
+
+          {/* Image */}
+          {post.imageUrl && (
+            <div className="rounded-lg overflow-hidden">
+              <Image
+                src={post.imageUrl}
+                alt="Post image"
+                width={500}
+                height={300}
+                className="w-full h-auto object-cover"
+              />
+            </div>
+          )}
+
+          {/* Tags and Subjects */}
+          {(post.tags.length > 0 || post.subjects.length > 0) && (
+            <div className="flex flex-wrap gap-1">
+              {post.tags.map((tag) => (
+                <Badge key={tag} variant="secondary" className="text-xs">
+                  #{tag}
+                </Badge>
+              ))}
+              {post.subjects.map((subject) => (
+                <Badge key={subject} variant="outline" className="text-xs">
+                  {subject}
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          {/* Trails */}
+          {post.trails.length > 0 && (
+            <div className="border-l-2 border-gray-200 pl-4 space-y-2">
+              {post.trails.map((trail) => (
+                <div key={trail.id} className="text-sm">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="h-6 w-6 rounded-full overflow-hidden">
+                      <Image
+                        src={trail.author.profileImageUrl || "/images/student-profile.png"}
+                        alt={`${trail.author.firstName} ${trail.author.lastName}`}
+                        width={24}
+                        height={24}
+                        className="object-cover"
+                      />
+                    </div>
+                    <span className="font-medium">{trail.author.firstName}</span>
+                  </div>
+                  <p className="text-gray-700">{trail.content}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Engagement Stats */}
+          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleLike(post.id)}
+                className="text-gray-500 hover:text-red-500"
+              >
+                <Heart className="h-4 w-4 mr-1" />
+                {post._count.likes}
+              </Button>
+              <Button variant="ghost" size="sm" className="text-gray-500">
+                <MessageCircle className="h-4 w-4 mr-1" />
+                {post._count.comments}
+              </Button>
+              <Button variant="ghost" size="sm" className="text-gray-500">
+                <Share2 className="h-4 w-4 mr-1" />
+                Share
+              </Button>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400">
+                {post.viewsCount} views
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleBookmark(post.id)}
+                className="text-gray-500 hover:text-blue-500"
+              >
+                <Bookmark className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6">
-      {/* Feed Header with Tabs */}
-      <div className="mb-6">
-        <Tabs defaultValue="for-you" className="w-full" onValueChange={setActiveTab}>
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold text-gray-800">Feed</h1>
-            <Bell className="h-5 w-5 text-gray-500 cursor-pointer hover:text-pathpiper-teal transition-colors" />
-          </div>
-          <TabsList className="grid grid-cols-4 mb-4">
-            <TabsTrigger value="for-you" className="flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">For You</span>
-            </TabsTrigger>
-            <TabsTrigger value="following" className="flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Following</span>
-            </TabsTrigger>
-            <TabsTrigger value="recent" className="flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Recent</span>
-            </TabsTrigger>
-            <TabsTrigger value="saved" className="flex items-center gap-1.5">
-              <Bookmark className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Saved</span>
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-
-        {/* Filters */}
-        <FeedFilter />
-      </div>
-
+    <div className="max-w-2xl mx-auto space-y-6">
       {/* Create Post */}
-      <div className="mb-6">
-        <CreatePost onPostCreated={handlePostUpdate} />
-      </div>
+      <CreatePost onPostCreated={fetchPosts} />
 
-      {/* Feed Items */}
-      <div className="space-y-6">
-        {posts.map((post) => (
-          <PostWithTrails key={post.id} post={post} onPostUpdate={handlePostUpdate} />
-        ))}
+      {/* Feed Filters */}
+      <Card>
+        <CardContent className="p-4">
+          <Tabs value={filter} onValueChange={setFilter} className="space-y-4">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="trending">
+                <TrendingUp className="h-4 w-4 mr-1" />
+                Trending
+              </TabsTrigger>
+              <TabsTrigger value="achievements">
+                <Trophy className="h-4 w-4 mr-1" />
+                Achievements
+              </TabsTrigger>
+              <TabsTrigger value="projects">
+                <Code className="h-4 w-4 mr-1" />
+                Projects
+              </TabsTrigger>
+              <TabsTrigger value="questions">
+                <HelpCircle className="h-4 w-4 mr-1" />
+                Questions
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Advanced Filters */}
+            <div className="flex gap-2 flex-wrap">
+              <Select value={postTypeFilter} onValueChange={setPostTypeFilter}>
+                <SelectTrigger className="w-[140px]">
+                  <Filter className="h-4 w-4 mr-1" />
+                  <SelectValue placeholder="Post Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="GENERAL">General</SelectItem>
+                  <SelectItem value="ACHIEVEMENT">Achievement</SelectItem>
+                  <SelectItem value="PROJECT">Project</SelectItem>
+                  <SelectItem value="QUESTION">Question</SelectItem>
+                  <SelectItem value="DISCUSSION">Discussion</SelectItem>
+                  <SelectItem value="TUTORIAL">Tutorial</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {availableSubjects.length > 0 && (
+                <Select value={subjectFilter} onValueChange={setSubjectFilter}>
+                  <SelectTrigger className="w-[120px]">
+                    <SelectValue placeholder="Subject" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Subjects</SelectItem>
+                    {availableSubjects.map(subject => (
+                      <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
+              <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="Difficulty" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Levels</SelectItem>
+                  <SelectItem value="beginner">Beginner</SelectItem>
+                  <SelectItem value="intermediate">Intermediate</SelectItem>
+                  <SelectItem value="advanced">Advanced</SelectItem>
+                  <SelectItem value="expert">Expert</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* Posts */}
+      <div className="space-y-4">
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pathpiper-teal mx-auto"></div>
+            <p className="mt-2 text-gray-600">Loading posts...</p>
+          </div>
+        ) : posts.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <p className="text-gray-500">No posts found. Be the first to share something!</p>
+            </CardContent>
+          </Card>
+        ) : (
+          posts.map((post) => <PostCard key={post.id} post={post} />)
+        )}
       </div>
     </div>
   )
 }
-
-// Mock data for feed items
-const mockFeedItems = [
-  {
-    id: "1",
-    type: "post",
-    author: {
-      id: "user1",
-      name: "Alex Johnson",
-      role: "student",
-      avatar: "/images/student-profile.png",
-      verified: true,
-      school: "Westlake High School",
-    },
-    content:
-      "Just finished my science project on renewable energy! 🔬 Check out the solar panel model I built for the science fair next week.",
-    media: ["/robotics-competition.png"],
-    tags: ["Science", "RenewableEnergy", "ProjectShowcase"],
-    likes: 24,
-    comments: 5,
-    shares: 2,
-    timestamp: "2 hours ago",
-    isPinned: false,
-  },
-  {
-    id: "2",
-    type: "achievement",
-    author: {
-      id: "user2",
-      name: "Emma Wilson",
-      role: "student",
-      avatar: "/diverse-female-student.png",
-      verified: false,
-      school: "Riverdale High",
-    },
-    content:
-      "I'm excited to share that I won first place in the regional math competition! Thanks to everyone who helped me prepare, especially my math teacher Ms. Chen.",
-    achievement: {
-      title: "First Place - Regional Math Competition",
-      icon: "trophy",
-      color: "amber",
-    },
-    likes: 56,
-    comments: 12,
-    shares: 8,
-    timestamp: "5 hours ago",
-    isPinned: false,
-  },
-  {
-    id: "3",
-    type: "event",
-    author: {
-      id: "inst1",
-      name: "Stanford University",
-      role: "institution",
-      avatar: "/images/pathpiper-logo.png",
-      verified: true,
-      location: "Stanford, CA",
-    },
-    content:
-      "Join us for our annual Computer Science Innovation Conference! Featuring guest speakers from leading tech companies and research presentations from our faculty.",
-    event: {
-      title: "Computer Science Innovation Conference",
-      date: "June 15, 2023",
-      time: "9:00 AM - 5:00 PM",
-      location: "Stanford Campus, Building 380",
-      image: "/computer-science-research-presentation.png",
-    },
-    likes: 89,
-    comments: 15,
-    shares: 32,
-    timestamp: "1 day ago",
-    isPinned: true,
-  },
-  {
-    id: "4",
-    type: "question",
-    author: {
-      id: "user3",
-      name: "Noah Taylor",
-      role: "student",
-      avatar: "/placeholder.svg?key=hwap2",
-      verified: false,
-      school: "Eastside Prep",
-    },
-    content:
-      "I'm struggling with calculus derivatives. Can anyone recommend good online resources or tutorials that explain this concept clearly?",
-    tags: ["Math", "Calculus", "StudyHelp"],
-    likes: 8,
-    comments: 14,
-    shares: 1,
-    timestamp: "3 hours ago",
-    isPinned: false,
-  },
-  {
-    id: "5",
-    type: "resource",
-    author: {
-      id: "mentor1",
-      name: "Dr. James Chen",
-      role: "mentor",
-      avatar: "/asian-professor.png",
-      verified: true,
-      expertise: "Computer Science",
-    },
-    content:
-      "I've created a new tutorial series on machine learning fundamentals for beginners. This covers basic concepts and includes practical exercises to help you get started.",
-    resource: {
-      title: "Machine Learning Fundamentals",
-      type: "Tutorial Series",
-      link: "#",
-      thumbnail: "/ai-ethics.png",
-    },
-    likes: 112,
-    comments: 23,
-    shares: 45,
-    timestamp: "2 days ago",
-    isPinned: false,
-  },
-]

@@ -7,6 +7,41 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+// Function to calculate engagement score
+function calculateEngagementScore(likes: number, comments: number, shares: number, views: number): number {
+  const likeWeight = 1
+  const commentWeight = 2
+  const shareWeight = 3
+  const viewWeight = 0.1
+  
+  return (likes * likeWeight + comments * commentWeight + shares * shareWeight + views * viewWeight)
+}
+
+// Function to determine age group from user data
+async function getUserAgeGroup(userId: string): Promise<string | null> {
+  try {
+    const profile = await prisma.profile.findUnique({
+      where: { id: userId },
+      include: { student: true }
+    })
+    
+    if (profile?.student?.birthYear && profile?.student?.birthMonth) {
+      const currentYear = new Date().getFullYear()
+      const birthYear = parseInt(profile.student.birthYear)
+      const age = currentYear - birthYear
+      
+      if (age < 13) return "elementary"
+      if (age < 16) return "middle_school"
+      if (age < 18) return "high_school"
+      return "young_adult"
+    }
+    
+    return "young_adult" // Default
+  } catch {
+    return "young_adult"
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = request.cookies
@@ -23,7 +58,20 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { content, imageUrl, parentPostId, isTrail = false } = body
+    const { 
+      content, 
+      imageUrl, 
+      parentPostId, 
+      isTrail = false,
+      postType = "GENERAL",
+      tags = [],
+      subjects = [],
+      achievementType,
+      projectCategory,
+      difficultyLevel,
+      isQuestion = false,
+      isAchievement = false
+    } = body
 
     if (!content || content.trim().length === 0) {
       return NextResponse.json({ error: 'Content is required' }, { status: 400 })
@@ -37,6 +85,9 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
+    // Get user's age group for content targeting
+    const ageGroup = await getUserAgeGroup(user.id)
+
     // If it's a trail, get the next trail order
     let trailOrder = null
     if (isTrail && parentPostId) {
@@ -47,6 +98,9 @@ export async function POST(request: NextRequest) {
       trailOrder = (lastTrail?.trailOrder || 0) + 1
     }
 
+    // Content moderation - simple keyword filtering
+    const moderationStatus = await moderateContent(content)
+
     const post = await prisma.feedPost.create({
       data: {
         userId: user.id,
@@ -55,15 +109,69 @@ export async function POST(request: NextRequest) {
         isTrail,
         parentPostId,
         trailOrder,
+        postType,
+        tags,
+        subjects,
+        ageGroup,
+        difficultyLevel,
+        isQuestion,
+        isAchievement,
+        achievementType: isAchievement ? achievementType : null,
+        projectCategory: postType === "PROJECT" ? projectCategory : null,
+        moderationStatus,
+        engagementScore: 0,
       },
       include: {
-        author: true,
+        author: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            profileImageUrl: true,
+            role: true,
+            student: {
+              select: {
+                age_group: true
+              }
+            }
+          }
+        },
         trails: {
           orderBy: { trailOrder: 'asc' },
-          include: { author: true }
+          include: { 
+            author: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                profileImageUrl: true,
+                role: true
+              }
+            }
+          }
+        },
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+            bookmarks: true
+          }
         }
       }
     })
+
+    // Update engagement score based on post type and content
+    let initialEngagementBoost = 0
+    if (postType === "ACHIEVEMENT") initialEngagementBoost = 5
+    if (postType === "PROJECT") initialEngagementBoost = 3
+    if (postType === "QUESTION") initialEngagementBoost = 2
+
+    if (initialEngagementBoost > 0) {
+      await prisma.feedPost.update({
+        where: { id: post.id },
+        data: { engagementScore: initialEngagementBoost }
+      })
+    }
 
     return NextResponse.json({ success: true, post })
   } catch (error) {
@@ -74,21 +182,123 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const filter = searchParams.get('filter') || 'all'
+    const postType = searchParams.get('type')
+    const subject = searchParams.get('subject')
+    const difficulty = searchParams.get('difficulty')
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const offset = parseInt(searchParams.get('offset') || '0')
+
+    // Build where clause based on filters
+    const whereClause: any = { 
+      isTrail: false,
+      moderationStatus: 'approved'
+    }
+
+    if (postType && postType !== 'all') {
+      whereClause.postType = postType
+    }
+
+    if (subject) {
+      whereClause.subjects = {
+        has: subject
+      }
+    }
+
+    if (difficulty) {
+      whereClause.difficultyLevel = difficulty
+    }
+
+    // Additional filtering based on filter type
+    if (filter === 'achievements') {
+      whereClause.isAchievement = true
+    } else if (filter === 'projects') {
+      whereClause.postType = 'PROJECT'
+    } else if (filter === 'questions') {
+      whereClause.isQuestion = true
+    }
+
+    // Order by engagement score and recency
+    const orderBy = filter === 'trending' 
+      ? [{ engagementScore: 'desc' as const }, { createdAt: 'desc' as const }]
+      : [{ createdAt: 'desc' as const }]
+
     const posts = await prisma.feedPost.findMany({
-      where: { isTrail: false }, // Only get main posts, not trails
+      where: whereClause,
       include: {
-        author: true,
+        author: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            profileImageUrl: true,
+            role: true,
+            student: {
+              select: {
+                age_group: true
+              }
+            }
+          }
+        },
         trails: {
           orderBy: { trailOrder: 'asc' },
-          include: { author: true }
+          include: { 
+            author: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                profileImageUrl: true,
+                role: true
+              }
+            }
+          }
+        },
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+            bookmarks: true
+          }
         }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy,
+      take: limit,
+      skip: offset
     })
+
+    // Update view counts for returned posts
+    const postIds = posts.map(post => post.id)
+    if (postIds.length > 0) {
+      await prisma.feedPost.updateMany({
+        where: { id: { in: postIds } },
+        data: { viewsCount: { increment: 1 } }
+      })
+    }
 
     return NextResponse.json({ posts })
   } catch (error) {
     console.error('Error fetching posts:', error)
     return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 })
   }
+}
+
+// Simple content moderation function
+async function moderateContent(content: string): Promise<string> {
+  const inappropriateWords = [
+    'spam', 'fake', 'scam', 'cheat', 'hack', 'illegal'
+    // Add more words as needed
+  ]
+  
+  const lowerContent = content.toLowerCase()
+  const hasInappropriateContent = inappropriateWords.some(word => 
+    lowerContent.includes(word)
+  )
+  
+  if (hasInappropriateContent) {
+    return 'pending_review'
+  }
+  
+  return 'approved'
 }
