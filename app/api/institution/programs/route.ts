@@ -28,21 +28,7 @@ export async function GET(request: NextRequest) {
     // Get programs for this institution
     const programs = await prisma.institutionProgram.findMany({
       where: { institutionId: user.id },
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        institutionId: true,
-        name: true,
-        type: true,
-        level: true,
-        durationValue: true,
-        durationType: true,
-        description: true,
-        eligibility: true,
-        learningOutcomes: true,
-        createdAt: true,
-        updatedAt: true
-      }
+      orderBy: { createdAt: 'desc' }
     })
 
     return NextResponse.json({ success: true, programs })
@@ -89,7 +75,7 @@ export async function POST(request: NextRequest) {
           name: program.name,
           type: program.type === 'other' ? program.typeCustom : program.type,
           level: program.level === 'custom' ? program.levelCustom : program.level,
-          durationValue: parseInt(program.durationValue || program.duration) || 1,
+          durationValue: parseInt(program.duration) || 1,
           durationType: program.durationType === 'custom' ? program.durationCustom : program.durationType,
           description: program.description,
           eligibility: program.eligibility || null,
