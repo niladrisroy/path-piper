@@ -576,3 +576,17 @@ model ParentProfile {
 
   @@map("parent_profile")
 }
+
+model ChatbotTheme {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String
+  primaryColor   String?  @map("primary_color")
+  secondaryColor String?  @map("secondary_color")
+  fontFamily     String?  @map("font_family")
+  allowedDomains Json     @default("{\"links\": []}") @map("allowed_domains")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("chatbot_themes")
+}
