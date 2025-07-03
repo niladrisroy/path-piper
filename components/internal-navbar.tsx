@@ -267,26 +267,20 @@ export function InternalNavbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Navigation items for logged-in users
-  const getProfileHref = () => {
-    if (!user) return "/student/profile";
-    
-    switch (user.role) {
-      case "institution":
-        return "/institution/profile";
-      case "mentor":
-        return "/mentor/profile";
-      case "student":
-      default:
-        return "/student/profile";
-    }
-  };
-
+  // Navigation items for logged-in users - use dynamic href for profile
   const navItems = [
     { name: "Feed", href: "/feed", icon: <Home size={20} /> },
     { name: "Explore", href: "/explore", icon: <Search size={20} /> },
     { name: "Messages", href: "/messages", icon: <MessageCircle size={20} /> },
-    { name: "Profile", href: getProfileHref(), icon: <User size={20} /> },
+    { 
+      name: "Profile", 
+      href: user ? (
+        user.role === "institution" ? "/institution/profile" :
+        user.role === "mentor" ? "/mentor/profile" :
+        "/student/profile"
+      ) : "/student/profile", 
+      icon: <User size={20} /> 
+    },
   ];
 
   return (
@@ -458,18 +452,51 @@ export function InternalNavbar() {
                 )}
               </div>
 
-              {navItems.map((link) => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  className={`text-slate-700 hover:text-teal-500 transition-colors font-medium flex items-center gap-1 ${
-                    pathname === link.href ? "text-teal-500" : ""
-                  }`}
-                >
-                  {link.icon}
-                  <span>{link.name}</span>
-                </Link>
-              ))}
+              {navItems.map((link) => {
+                if (link.name === "Profile") {
+                  return (
+                    <button
+                      key={link.name}
+                      onClick={() => {
+                        if (user) {
+                          switch (user.role) {
+                            case "institution":
+                              router.push("/institution/profile");
+                              break;
+                            case "mentor":
+                              router.push("/mentor/profile");
+                              break;
+                            case "student":
+                            default:
+                              router.push("/student/profile");
+                              break;
+                          }
+                        } else {
+                          router.push("/student/profile");
+                        }
+                      }}
+                      className={`text-slate-700 hover:text-teal-500 transition-colors font-medium flex items-center gap-1 ${
+                        pathname === link.href ? "text-teal-500" : ""
+                      }`}
+                    >
+                      {link.icon}
+                      <span>{link.name}</span>
+                    </button>
+                  );
+                }
+                return (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    className={`text-slate-700 hover:text-teal-500 transition-colors font-medium flex items-center gap-1 ${
+                      pathname === link.href ? "text-teal-500" : ""
+                    }`}
+                  >
+                    {link.icon}
+                    <span>{link.name}</span>
+                  </Link>
+                );
+              })}
 
               <Link href="/notifications" className="relative">
                 <Bell
@@ -583,20 +610,55 @@ export function InternalNavbar() {
       {/* Bottom navigation for mobile */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
         <div className="flex justify-around items-center py-2">
-          {navItems.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`flex flex-col items-center p-2 ${
-                pathname === item.href
-                  ? "text-teal-500"
-                  : "text-gray-500 hover:text-teal-500"
-              }`}
-            >
-              {item.icon}
-              <span className="text-xs mt-1">{item.name}</span>
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            if (item.name === "Profile") {
+              return (
+                <button
+                  key={item.name}
+                  onClick={() => {
+                    if (user) {
+                      switch (user.role) {
+                        case "institution":
+                          router.push("/institution/profile");
+                          break;
+                        case "mentor":
+                          router.push("/mentor/profile");
+                          break;
+                        case "student":
+                        default:
+                          router.push("/student/profile");
+                          break;
+                      }
+                    } else {
+                      router.push("/student/profile");
+                    }
+                  }}
+                  className={`flex flex-col items-center p-2 ${
+                    pathname === item.href
+                      ? "text-teal-500"
+                      : "text-gray-500 hover:text-teal-500"
+                  }`}
+                >
+                  {item.icon}
+                  <span className="text-xs mt-1">{item.name}</span>
+                </button>
+              );
+            }
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`flex flex-col items-center p-2 ${
+                  pathname === item.href
+                    ? "text-teal-500"
+                    : "text-gray-500 hover:text-teal-500"
+                }`}
+              >
+                {item.icon}
+                <span className="text-xs mt-1">{item.name}</span>
+              </Link>
+            );
+          })}
           <Link href="/notifications" className="relative flex flex-col items-center p-2 text-gray-500 hover:text-teal-500">
             <Bell size={20} />
             {notificationCount > 0 && (
