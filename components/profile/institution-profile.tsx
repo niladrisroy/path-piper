@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useRef } from "react"
@@ -61,13 +62,13 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
 
         const rect = element.getBoundingClientRect()
         const containerRect = containerRef.current!.getBoundingClientRect()
-
+        
         // Calculate distance from section center to viewport center
         const sectionTop = rect.top - containerRect.top
         const sectionBottom = rect.bottom - containerRect.top
         const sectionCenter = (sectionTop + sectionBottom) / 2
         const distance = Math.abs(sectionCenter - centerPoint)
-
+        
         if (distance < minDistance) {
           minDistance = distance
           currentSection = id
@@ -94,7 +95,7 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
       const elementRect = element.getBoundingClientRect()
       const scrollTop = containerRef.current.scrollTop
       const containerHeight = containerRef.current.clientHeight
-
+      
       // Calculate scroll position to center the section in viewport
       const elementHeight = elementRect.height
       const targetScrollTop = scrollTop + elementRect.top - containerRect.top - (containerHeight / 2) + (elementHeight / 2)
@@ -105,11 +106,6 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
       })
     }
   }
-
-    // Ref to set section ref dynamically
-    const setSectionRef = (section: string, element: HTMLElement | null) => {
-        sectionRefs.current[section] = element;
-    };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -177,7 +173,7 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
             >
               <div className="space-y-8 lg:pr-4">
                 <div 
-                  ref={(el) => setSectionRef('about', el)}
+                  ref={(el) => sectionRefs.current['about'] = el}
                   id="about"
                   className="scroll-mt-6"
                 >
@@ -185,15 +181,15 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
                 </div>
 
                 <div 
-                  ref={(el) => setSectionRef('programs', el)}
+                  ref={(el) => sectionRefs.current['programs'] = el}
                   id="programs"
                   className="scroll-mt-6"
                 >
-                  <ProgramsSection institutionId={institutionData.id} isOwner={true} />
+                  <ProgramsSection />
                 </div>
 
                 <div 
-                  ref={(el) => setSectionRef('faculty', el)}
+                  ref={(el) => sectionRefs.current['faculty'] = el}
                   id="faculty"
                   className="scroll-mt-6"
                 >
@@ -201,7 +197,7 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
                 </div>
 
                 <div 
-                  ref={(el) => setSectionRef('facilities', el)}
+                  ref={(el) => sectionRefs.current['facilities'] = el}
                   id="facilities"
                   className="scroll-mt-6"
                 >
@@ -209,7 +205,7 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
                 </div>
 
                 <div 
-                  ref={(el) => setSectionRef('events', el)}
+                  ref={(el) => sectionRefs.current['events'] = el}
                   id="events"
                   className="scroll-mt-6"
                 >
@@ -217,7 +213,7 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
                 </div>
 
                 <div 
-                  ref={(el) => setSectionRef('gallery', el)}
+                  ref={(el) => sectionRefs.current['gallery'] = el}
                   id="gallery"
                   className="scroll-mt-6"
                 >

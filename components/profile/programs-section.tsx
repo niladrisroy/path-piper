@@ -1,224 +1,195 @@
-
-"use client"
-
-import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { BookOpen, Clock, Users, Award, ArrowRight, Plus, Edit, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { BookOpen, Clock, Users, Award, ArrowRight } from "lucide-react"
 
-interface Program {
-  id: string
-  name: string
-  type: string
-  level: string
-  duration: string
-  durationType: string
-  description: string
-  eligibility?: string | null
-  outcomes?: string | null
-  assessment?: string | null
-  certification?: string | null
-  schedule?: string | null
-}
-
-interface ProgramsSectionProps {
-  institutionId?: string
-  isOwner?: boolean
-}
-
-export default function ProgramsSection({ institutionId, isOwner = false }: ProgramsSectionProps) {
-  const [programs, setPrograms] = useState<Program[]>([])
-  const [loading, setLoading] = useState(true)
-  const [expandedProgram, setExpandedProgram] = useState<string | null>(null)
-
-  useEffect(() => {
-    const fetchPrograms = async () => {
-      try {
-        const response = await fetch('/api/institution/programs')
-        if (response.ok) {
-          const data = await response.json()
-          if (data.success) {
-            setPrograms(data.programs)
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching programs:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchPrograms()
-  }, [])
-
-  const toggleProgramExpansion = (id: string) => {
-    setExpandedProgram(expandedProgram === id ? null : id)
-  }
-
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-blue-600" />
-              Programs
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
-  if (programs.length === 0) {
-    return (
-      <div className="max-w-7xl mx-auto">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-blue-600" />
-              Programs
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8">
-              <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Programs Added Yet</h3>
-              <p className="text-gray-500 mb-4">
-                {isOwner 
-                  ? "Start by adding your first program to showcase what your institution offers."
-                  : "This institution hasn't added any programs yet."
-                }
-              </p>
-              {isOwner && (
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Your First Program
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+export default function ProgramsSection() {
+  const programs = [
+    {
+      id: 1,
+      name: "Computer Science",
+      level: "Undergraduate",
+      duration: "4 years",
+      students: 850,
+      description:
+        "Stanford's Computer Science program prepares students for careers in software development, artificial intelligence, and more.",
+      tags: ["AI", "Machine Learning", "Software Engineering", "Data Science"],
+      featured: true,
+    },
+    {
+      id: 2,
+      name: "Business Administration",
+      level: "Graduate",
+      duration: "2 years",
+      students: 420,
+      description:
+        "The MBA program at Stanford Graduate School of Business is a full-time, two-year general management program.",
+      tags: ["Finance", "Marketing", "Entrepreneurship", "Leadership"],
+      featured: true,
+    },
+    {
+      id: 3,
+      name: "Electrical Engineering",
+      level: "Undergraduate",
+      duration: "4 years",
+      students: 620,
+      description:
+        "The Electrical Engineering program focuses on the fundamentals of physics, computer science, and engineering design.",
+      tags: ["Circuits", "Signal Processing", "Robotics", "Energy Systems"],
+      featured: false,
+    },
+    {
+      id: 4,
+      name: "Psychology",
+      level: "Undergraduate",
+      duration: "4 years",
+      students: 580,
+      description: "Stanford's Psychology program explores human behavior, mental processes, and social interactions.",
+      tags: ["Clinical Psychology", "Cognitive Science", "Developmental Psychology"],
+      featured: false,
+    },
+    {
+      id: 5,
+      name: "Medicine",
+      level: "Graduate",
+      duration: "4 years",
+      students: 480,
+      description:
+        "The Stanford School of Medicine offers a four-year MD program that prepares students for leadership in medicine.",
+      tags: ["Clinical Practice", "Medical Research", "Public Health"],
+      featured: true,
+    },
+  ]
 
   return (
     <div className="max-w-7xl mx-auto">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-xl flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-blue-600" />
-            Programs ({programs.length})
-          </CardTitle>
-          {isOwner && (
-            <Button variant="outline" size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Program
-            </Button>
-          )}
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {programs.map((program) => (
-            <div key={program.id} className="border border-gray-200 rounded-lg overflow-hidden">
-              {/* Program header */}
-              <div
-                className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
-                onClick={() => toggleProgramExpansion(program.id)}
-              >
-                <div className="flex items-center space-x-3">
-                  <BookOpen className="h-5 w-5 text-blue-500" />
-                  <div>
-                    <h4 className="font-medium text-gray-900">{program.name}</h4>
-                    <div className="flex items-center text-sm text-gray-500 mt-1">
-                      <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
-                        {program.type}
-                      </span>
-                      <span className="mx-2">•</span>
-                      <span className="inline-flex items-center rounded-full border border-green-200 bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700">
-                        {program.level}
-                      </span>
-                      <span className="mx-2">•</span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {program.duration} {program.durationType}
-                      </span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-blue-600" />
+                Featured Programs
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {programs
+                .filter((program) => program.featured)
+                .map((program) => (
+                  <div key={program.id} className="border-b border-gray-100 last:border-0 pb-4 last:pb-0">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-lg font-bold">{program.name}</h3>
+                        <div className="flex items-center gap-2 text-gray-500 text-sm mt-1">
+                          <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+                            {program.level}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {program.duration}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            {program.students} students
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {isOwner && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        // Handle edit
-                      }}
-                      className="text-gray-500 hover:text-blue-500"
+                    <p className="text-gray-600 my-2">{program.description}</p>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {program.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center rounded-full border border-gray-200 bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-700"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    <a
+                      href="#"
+                      className="text-blue-600 hover:text-blue-800 inline-flex items-center gap-1 text-sm font-medium"
                     >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <ArrowRight className={`h-5 w-5 text-gray-400 transition-transform ${
-                    expandedProgram === program.id ? 'rotate-90' : ''
-                  }`} />
+                      Learn more <ArrowRight className="h-3 w-3" />
+                    </a>
+                  </div>
+                ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <Award className="h-5 w-5 text-blue-600" />
+                Program Stats
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Undergraduate Programs</span>
+                  <span className="font-semibold">65+</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Graduate Programs</span>
+                  <span className="font-semibold">90+</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Professional Certificates</span>
+                  <span className="font-semibold">40+</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Online Courses</span>
+                  <span className="font-semibold">200+</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Student-Faculty Ratio</span>
+                  <span className="font-semibold">5:1</span>
                 </div>
               </div>
 
-              {/* Expanded program details */}
-              {expandedProgram === program.id && (
-                <div className="px-4 pb-4 border-t border-gray-100">
-                  <div className="mt-4">
-                    <h5 className="text-sm font-medium text-gray-700 mb-2">Description</h5>
-                    <p className="text-sm text-gray-600 whitespace-pre-line">{program.description}</p>
-                  </div>
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <h4 className="font-medium text-sm mb-2">Schools & Colleges</h4>
+                <ul className="space-y-1 text-sm text-gray-600">
+                  <li>School of Engineering</li>
+                  <li>School of Humanities & Sciences</li>
+                  <li>Graduate School of Business</li>
+                  <li>School of Medicine</li>
+                  <li>School of Law</li>
+                  <li>School of Education</li>
+                  <li>School of Earth, Energy & Environmental Sciences</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
 
-                  {program.eligibility && (
-                    <div className="mt-4">
-                      <h5 className="text-sm font-medium text-gray-700 mb-2">Eligibility/Prerequisites</h5>
-                      <p className="text-sm text-gray-600">{program.eligibility}</p>
-                    </div>
-                  )}
-
-                  {program.outcomes && (
-                    <div className="mt-4">
-                      <h5 className="text-sm font-medium text-gray-700 mb-2">Learning Outcomes</h5>
-                      <p className="text-sm text-gray-600">{program.outcomes}</p>
-                    </div>
-                  )}
-
-                  {program.assessment && (
-                    <div className="mt-4">
-                      <h5 className="text-sm font-medium text-gray-700 mb-2">Assessment Methods</h5>
-                      <p className="text-sm text-gray-600">{program.assessment}</p>
-                    </div>
-                  )}
-
-                  {program.certification && (
-                    <div className="mt-4">
-                      <h5 className="text-sm font-medium text-gray-700 mb-2">Certification/Qualification</h5>
-                      <p className="text-sm text-gray-600">{program.certification}</p>
-                    </div>
-                  )}
-
-                  {program.schedule && (
-                    <div className="mt-4">
-                      <h5 className="text-sm font-medium text-gray-700 mb-2">Schedule Information</h5>
-                      <p className="text-sm text-gray-600">{program.schedule}</p>
-                    </div>
-                  )}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-blue-600" />
+                Application Deadlines
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div>
+                  <h4 className="font-medium">Undergraduate</h4>
+                  <p className="text-gray-600 text-sm">Early Action: November 1</p>
+                  <p className="text-gray-600 text-sm">Regular Decision: January 5</p>
                 </div>
-              )}
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+                <div>
+                  <h4 className="font-medium">Graduate</h4>
+                  <p className="text-gray-600 text-sm">Varies by program</p>
+                  <p className="text-gray-600 text-sm">Most deadlines: December - January</p>
+                </div>
+                <a href="#" className="text-blue-600 hover:underline text-sm block mt-2">
+                  View All Application Deadlines
+                </a>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }

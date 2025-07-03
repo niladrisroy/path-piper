@@ -126,21 +126,8 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
     <>
       <style jsx>{scrollbarHideStyle}</style>
       <div className="relative">
-        {/* Customizable banner with cover image */}
-        <div className={`h-48 w-full bg-gradient-to-r ${institution.bannerColor} relative overflow-hidden`}>
-          {institutionData.coverImage && (
-            <>
-              <Image
-                src={institutionData.coverImage}
-                alt={`${institutionData.name} Cover`}
-                fill
-                className="object-cover"
-                priority
-              />
-              <div className="absolute inset-0 bg-black/20"></div>
-            </>
-          )}
-        </div>
+        {/* Customizable banner */}
+        <div className={`h-48 w-full bg-gradient-to-r ${institution.bannerColor}`}></div>
 
         <div className="container mx-auto px-4 max-w-7xl">
           <div className="relative -mt-24 sm:-mt-16 mb-6">
@@ -154,11 +141,11 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
                     <div className="relative z-10 flex-shrink-0 self-center sm:self-start">
                       <div className="rounded-full border-4 border-white dark:border-gray-800 overflow-hidden h-24 w-24 sm:h-28 sm:w-28 shadow-md bg-white flex items-center justify-center">
                         <Image
-                          src={institutionData.logo || "/images/pathpiper-logo.png"}
-                          alt={`${institutionData.name} Logo`}
+                          src="/images/pathpiper-logo.png"
+                          alt="Path Piper Co Logo"
                           width={112}
                           height={112}
-                          className="object-cover w-full h-full"
+                          className="object-contain p-2"
                         />
                       </div>
                     </div>

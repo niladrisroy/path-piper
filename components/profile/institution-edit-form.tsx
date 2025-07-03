@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -47,7 +48,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     overview: institutionData.overview || "",
     mission: institutionData.mission || "",
     coreValues: institutionData.coreValues || [""],
-
+    
     // Programs section
     programs: [
       {
@@ -65,7 +66,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         schedule: ""
       }
     ],
-
+    
     // Faculty section
     faculty: [
       {
@@ -80,7 +81,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         bio: ""
       }
     ],
-
+    
     // Facilities section
     facilities: [
       {
@@ -94,7 +95,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         availability: ""
       }
     ],
-
+    
     // Events section
     events: [
       {
@@ -109,7 +110,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         registrationUrl: ""
       }
     ],
-
+    
     // Gallery section
     gallery: [
       {
@@ -125,28 +126,6 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [successMessage, setSuccessMessage] = useState("")
-
-  // Fetch programs on component mount
-  useEffect(() => {
-    const fetchPrograms = async () => {
-      try {
-        const response = await fetch('/api/institution/programs')
-        if (response.ok) {
-          const data = await response.json()
-          if (data.success) {
-            setFormData(prev => ({ ...prev, programs: data.programs }))
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching programs:', error)
-      }
-    }
-
-    fetchPrograms()
-  }, [])
 
   // Refs for scroll-to-section functionality
   const containerRef = useRef<HTMLDivElement>(null)
@@ -186,13 +165,13 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
 
         const rect = element.getBoundingClientRect()
         const containerRect = containerRef.current!.getBoundingClientRect()
-
+        
         // Calculate distance from section center to viewport center
         const sectionTop = rect.top - containerRect.top
         const sectionBottom = rect.bottom - containerRect.top
         const sectionCenter = (sectionTop + sectionBottom) / 2
         const distance = Math.abs(sectionCenter - centerPoint)
-
+        
         if (distance < minDistance) {
           minDistance = distance
           currentSection = id
@@ -218,9 +197,9 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
       const container = containerRef.current
       const containerRect = container.getBoundingClientRect()
       const elementRect = element.getBoundingClientRect()
-
+      
       const offsetTop = elementRect.top - containerRect.top + container.scrollTop - 100 // 100px offset from top
-
+      
       container.scrollTo({
         top: offsetTop,
         behavior: 'smooth'
@@ -710,7 +689,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                 </Button>
               )}
             </div>
-
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Program Name</Label>
@@ -720,7 +699,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                   placeholder="e.g., Bachelor of Computer Science"
                 />
               </div>
-
+              
               <div className="space-y-2">
                 <Label>Program Type</Label>
                 <Select
@@ -738,7 +717,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                   </SelectContent>
                 </Select>
               </div>
-
+              
               <div className="space-y-2">
                 <Label>Level</Label>
                 <Select
@@ -757,7 +736,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                   </SelectContent>
                 </Select>
               </div>
-
+              
               <div className="space-y-2">
                 <Label>Duration</Label>
                 <div className="flex gap-2">
@@ -784,7 +763,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                 </div>
               </div>
             </div>
-
+            
             <div className="space-y-2">
               <Label>Description</Label>
               <Textarea
@@ -794,7 +773,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                 className="min-h-[80px]"
               />
             </div>
-
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Eligibility</Label>
@@ -805,7 +784,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                   className="min-h-[60px]"
                 />
               </div>
-
+              
               <div className="space-y-2">
                 <Label>Learning Outcomes</Label>
                 <Textarea
@@ -818,7 +797,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
             </div>
           </div>
         ))}
-
+        
         <Button
           type="button"
           variant="outline"
@@ -853,7 +832,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                 </Button>
               )}
             </div>
-
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Full Name</Label>
@@ -863,7 +842,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                   placeholder="e.g., Dr. Jane Smith"
                 />
               </div>
-
+              
               <div className="space-y-2">
                 <Label>Position</Label>
                 <Input
@@ -872,7 +851,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                   placeholder="e.g., Professor, Assistant Professor"
                 />
               </div>
-
+              
               <div className="space-y-2">
                 <Label>Department</Label>
                 <Input
@@ -881,7 +860,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                   placeholder="e.g., Computer Science"
                 />
               </div>
-
+              
               <div className="space-y-2">
                 <Label>Experience (Years)</Label>
                 <Input
@@ -892,7 +871,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                 />
               </div>
             </div>
-
+            
             <div className="space-y-2">
               <Label>Qualifications</Label>
               <Input
@@ -901,7 +880,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                 placeholder="e.g., PhD in Computer Science, MIT"
               />
             </div>
-
+            
             <div className="space-y-2">
               <Label>Specialization</Label>
               <Input
@@ -910,7 +889,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                 placeholder="e.g., Machine Learning, Data Science"
               />
             </div>
-
+            
             <div className="space-y-2">
               <Label>Bio</Label>
               <Textarea
@@ -922,7 +901,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
             </div>
           </div>
         ))}
-
+        
         <Button
           type="button"
           variant="outline"
@@ -957,7 +936,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                 </Button>
               )}
             </div>
-
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Facility Name</Label>
@@ -967,7 +946,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                   placeholder="e.g., Computer Lab, Library"
                 />
               </div>
-
+              
               <div className="space-y-2">
                 <Label>Type</Label>
                 <Select
@@ -989,7 +968,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                   </SelectContent>
                 </Select>
               </div>
-
+              
               <div className="space-y-2">
                 <Label>Capacity</Label>
                 <Input
@@ -998,7 +977,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                   placeholder="e.g., 50 students"
                 />
               </div>
-
+              
               <div className="space-y-2">
                 <Label>Availability</Label>
                 <Input
@@ -1008,7 +987,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                 />
               </div>
             </div>
-
+            
             <div className="space-y-2">
               <Label>Description</Label>
               <Textarea
@@ -1020,7 +999,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
             </div>
           </div>
         ))}
-
+        
         <Button
           type="button"
           variant="outline"
@@ -1049,13 +1028,13 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={()=> removeEvent(index)}
+                  onClick={() => removeEvent(index)}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               )}
             </div>
-
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Event Title</Label>
@@ -1065,7 +1044,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                   placeholder="e.g., Annual Tech Fest"
                 />
               </div>
-
+              
               <div className="space-y-2">
                 <Label>Event Type</Label>
                 <Select
@@ -1086,7 +1065,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                   </SelectContent>
                 </Select>
               </div>
-
+              
               <div className="space-y-2">
                 <Label>Start Date</Label>
                 <Input
@@ -1095,7 +1074,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                   type="datetime-local"
                 />
               </div>
-
+              
               <div className="space-y-2">
                 <Label>End Date</Label>
                 <Input
@@ -1104,7 +1083,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                   type="datetime-local"
                 />
               </div>
-
+              
               <div className="space-y-2">
                 <Label>Location</Label>
                 <Input
@@ -1113,7 +1092,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                   placeholder="e.g., Main Auditorium"
                 />
               </div>
-
+              
               <div className="space-y-2">
                 <Label>Registration URL</Label>
                 <Input
@@ -1123,7 +1102,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                 />
               </div>
             </div>
-
+            
             <div className="space-y-2">
               <Label>Description</Label>
               <Textarea
@@ -1135,7 +1114,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
             </div>
           </div>
         ))}
-
+        
         <Button
           type="button"
           variant="outline"
@@ -1170,7 +1149,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                 </Button>
               )}
             </div>
-
+            
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Image URL</Label>
@@ -1180,7 +1159,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                   placeholder="https://... or upload an image"
                 />
               </div>
-
+              
               <div className="space-y-2">
                 <Label>Caption</Label>
                 <Input
@@ -1189,7 +1168,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                   placeholder="Describe the image"
                 />
               </div>
-
+              
               {item.imageUrl && (
                 <div className="w-full h-48 rounded-lg overflow-hidden border">
                   <Image
@@ -1207,7 +1186,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
             </div>
           </div>
         ))}
-
+        
         <Button
           type="button"
           variant="outline"
