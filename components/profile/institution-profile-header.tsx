@@ -168,16 +168,16 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
                   {/* Action buttons - Connect, Visit Website, Share */}
                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-6">
                     <Link href="/institution/profile/edit" className="flex-1 sm:flex-none">
-                      <Button variant="outline" size="sm" className="w-full sm:w-auto h-9">
+                      <Button variant="outline" size="sm" className="w-full sm:w-auto h-9 px-4 text-sm font-medium">
                         <Edit className="h-4 w-4 mr-2" />
                         Edit Profile
                       </Button>
                     </Link>
-                    <Button variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none h-9">
+                    <Button variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none w-full sm:w-auto h-9 px-4 text-sm font-medium">
                       <Users className="h-4 w-4 mr-2" />
                       Connect
                     </Button>
-                    <Button variant="outline" size="sm" className="flex-1 sm:flex-none h-9">
+                    <Button variant="outline" size="sm" className="flex-1 sm:flex-none w-full sm:w-auto h-9 px-4 text-sm font-medium">
                       <ExternalLink className="h-4 w-4 mr-2" />
                       Visit Website
                     </Button>
