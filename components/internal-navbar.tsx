@@ -268,11 +268,25 @@ export function InternalNavbar() {
   }, []);
 
   // Navigation items for logged-in users
+  const getProfileHref = () => {
+    if (!user) return "/student/profile";
+    
+    switch (user.role) {
+      case "institution":
+        return "/institution/profile";
+      case "mentor":
+        return "/mentor/profile";
+      case "student":
+      default:
+        return "/student/profile";
+    }
+  };
+
   const navItems = [
     { name: "Feed", href: "/feed", icon: <Home size={20} /> },
     { name: "Explore", href: "/explore", icon: <Search size={20} /> },
     { name: "Messages", href: "/messages", icon: <MessageCircle size={20} /> },
-    { name: "Profile", href: "/student/profile", icon: <User size={20} /> },
+    { name: "Profile", href: getProfileHref(), icon: <User size={20} /> },
   ];
 
   return (
