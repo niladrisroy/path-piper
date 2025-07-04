@@ -106,17 +106,26 @@ export async function POST(request: NextRequest) {
 
       console.log('Faculty data to insert:', JSON.stringify(facultyData, null, 2))
 
-      // Insert faculty members one by one to avoid connection issues
-      for (const facultyMember of facultyData) {
-        try {
-          await prisma.institutionFaculty.create({
-            data: facultyMember
-          })
-        } catch (error) {
-          console.error('Error inserting faculty member:', facultyMember.name, error)
-          throw new Error(`Failed to insert faculty member: ${facultyMember.name}`)
+      // Use a transaction for better reliability
+      await prisma.$transaction(async (tx) => {
+        for (const facultyMember of facultyData) {
+          try {
+            // Add a small delay between insertions to prevent connection issues
+            await new Promise(resolve => setTimeout(resolve, 100))
+            
+            await tx.institutionFaculty.create({
+              data: facultyMember
+            })
+            console.log(`✅ Successfully inserted faculty member: ${facultyMember.name}`)
+          } catch (error) {
+            console.error('❌ Error inserting faculty member:', facultyMember.name, error)
+            throw new Error(`Failed to insert faculty member: ${facultyMember.name}`)
+          }
         }
-      }
+      }, {
+        maxWait: 10000, // 10 seconds
+        timeout: 30000, // 30 seconds
+      })
     }
 
     return NextResponse.json({ success: true })
