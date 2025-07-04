@@ -1040,7 +1040,6 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                   value={facility.availability}
                   onChange={(e) => updateFacility(index, 'availability', e.target.value)}
                   placeholder="e.g., 24/7, Mon-Fri 9AM-6PM"
-                ```text
                 />
               </div>
             </div>
