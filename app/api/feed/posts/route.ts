@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@supabase/supabase-js'
@@ -13,7 +12,7 @@ function calculateEngagementScore(likes: number, comments: number, shares: numbe
   const commentWeight = 2
   const shareWeight = 3
   const viewWeight = 0.1
-  
+
   return (likes * likeWeight + comments * commentWeight + shares * shareWeight + views * viewWeight)
 }
 
@@ -24,18 +23,18 @@ async function getUserAgeGroup(userId: string): Promise<string | null> {
       where: { id: userId },
       include: { student: true }
     })
-    
+
     if (profile?.student?.birthYear && profile?.student?.birthMonth) {
       const currentYear = new Date().getFullYear()
       const birthYear = parseInt(profile.student.birthYear)
       const age = currentYear - birthYear
-      
+
       if (age < 13) return "elementary"
       if (age < 16) return "middle_school"
       if (age < 18) return "high_school"
       return "young_adult"
     }
-    
+
     return "young_adult" // Default
   } catch {
     return "young_adult"
@@ -105,7 +104,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId: user.id,
         content,
-        imageUrl,
+        imageUrl: imageUrl || null,
         isTrail,
         parentPostId,
         trailOrder,
@@ -290,15 +289,15 @@ async function moderateContent(content: string): Promise<string> {
     'spam', 'fake', 'scam', 'cheat', 'hack', 'illegal'
     // Add more words as needed
   ]
-  
+
   const lowerContent = content.toLowerCase()
   const hasInappropriateContent = inappropriateWords.some(word => 
     lowerContent.includes(word)
   )
-  
+
   if (hasInappropriateContent) {
     return 'pending_review'
   }
-  
+
   return 'approved'
 }

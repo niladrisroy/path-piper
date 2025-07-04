@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from "react"
@@ -81,6 +80,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
   const [projectCategory, setProjectCategory] = useState("")
   const [difficultyLevel, setDifficultyLevel] = useState("")
   const { user } = useAuth()
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
 
   const selectedPostType = POST_TYPES.find(type => type.value === postType)
 
@@ -130,6 +130,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
           difficultyLevel,
           isQuestion: postType === "QUESTION",
           isAchievement: postType === "ACHIEVEMENT",
+          image_url: imageUrl,
         }),
       })
 
@@ -144,6 +145,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
         setDifficultyLevel("")
         setPostType("GENERAL")
         setShowTrailOption(false)
+        setImageUrl(null)
         toast.success(isTrail ? "Trail added successfully!" : "Post created successfully!")
         onPostCreated?.()
       } else if (data.suggestTrail) {
@@ -170,19 +172,19 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     try {
       const chunks = []
       let remainingText = postText
-      
+
       while (remainingText.length > 0) {
         if (remainingText.length <= 300) {
           chunks.push(remainingText)
           break
         }
-        
+
         let breakPoint = 300
         while (breakPoint > 0 && remainingText[breakPoint] !== ' ') {
           breakPoint--
         }
         if (breakPoint === 0) breakPoint = 300
-        
+
         chunks.push(remainingText.substring(0, breakPoint))
         remainingText = remainingText.substring(breakPoint).trim()
       }
@@ -203,11 +205,12 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
           difficultyLevel,
           isQuestion: postType === "QUESTION",
           isAchievement: postType === "ACHIEVEMENT",
+          image_url: imageUrl,
         }),
       })
 
       const mainPostData = await mainPostResponse.json()
-      
+
       if (!mainPostResponse.ok) {
         throw new Error(mainPostData.error)
       }
@@ -222,6 +225,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
             content: chunks[i],
             parentPostId: mainPostData.post.id,
             isTrail: true,
+            image_url: null,
           }),
         })
       }
@@ -234,6 +238,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
       setDifficultyLevel("")
       setPostType("GENERAL")
       setShowTrailOption(false)
+      setImageUrl(null)
       toast.success("Trail created successfully!")
       onPostCreated?.()
     } catch (error) {
@@ -241,6 +246,28 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
       toast.error("Failed to create trail")
     } finally {
       setIsPosting(false)
+    }
+  }
+
+  const handleImageUpload = async (file: File) => {
+    const formData = new FormData()
+    formData.append('image', file)
+
+    try {
+      const response = await fetch('/api/upload/feed-image', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image')
+      }
+
+      const data = await response.json()
+      setImageUrl(data.imageUrl)
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      toast.error('Failed to upload image')
     }
   }
 
@@ -306,7 +333,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                 <TabsTrigger value="compose">Compose</TabsTrigger>
                 <TabsTrigger value="settings">Settings</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="compose" className="space-y-4">
                 {/* Post Type Selection */}
                 <div className="flex gap-2 flex-wrap">
@@ -345,7 +372,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                     }`}
                     disabled={isPosting}
                   />
-                  
+
                   <div className={`absolute bottom-2 right-2 text-xs ${
                     isOverLimit ? 'text-red-500' : characterCount > 250 ? 'text-orange-500' : 'text-gray-400'
                   }`}>
@@ -500,8 +527,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                           toast.error("Image size should be less than 5MB")
                           return
                         }
-                        // Handle image upload here
-                        console.log("Image selected:", file)
+                        handleImageUpload(file)
                       }
                     }}
                     className="hidden"
@@ -524,7 +550,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex gap-2">
                 {(showTrailOption || isOverLimit) && (
                   <Button
@@ -536,7 +562,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                     Create Trail
                   </Button>
                 )}
-                
+
                 <Button
                   onClick={handlePost}
                   disabled={!postText.trim() || isOverLimit || isPosting}
