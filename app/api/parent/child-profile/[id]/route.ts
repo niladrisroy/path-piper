@@ -52,7 +52,7 @@ export async function GET(
 
     // Get parent name
     const parentProfile = await prisma.parentProfile.findUnique({
-      where: { id: parseInt(parentId) },
+      where: { id: parentId },
       select: { name: true }
     })
 
