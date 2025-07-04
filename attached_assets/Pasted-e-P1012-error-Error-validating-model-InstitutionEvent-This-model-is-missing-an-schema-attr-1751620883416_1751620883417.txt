@@ -1,0 +1,72 @@
+e: P1012
+error: Error validating model "InstitutionEvent": This model is missing an `@@schema` attribute.
+  -->  prisma/schema.prisma:730
+   | 
+729 | 
+730 | model InstitutionEvent {
+731 |   id            String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+732 |   institutionId String             @map("institution_id") @db.Uuid
+733 |   name          String
+734 |   description   String?
+735 |   date          DateTime           @map("date") @db.Timestamptz(6)
+736 |   location      String?
+737 |   imageUrl      String?            @map("image_url")
+738 |   createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+739 |   updatedAt     DateTime           @default(now()) @map("updated_at") @db.Timestamptz(6)
+740 |   institution   InstitutionProfile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+741 | 
+742 |   @@map("institution_events")
+743 | }
+   | 
+error: Error validating model "InstitutionGallery": This model is missing an `@@schema` attribute.
+  -->  prisma/schema.prisma:745
+   | 
+744 | 
+745 | model InstitutionGallery {
+746 |   id            String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+747 |   institutionId String             @map("institution_id") @db.Uuid
+748 |   imageUrl      String             @map("image_url")
+749 |   caption       String?
+750 |   createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+751 |   institution   InstitutionProfile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+752 | 
+753 |   @@map("institution_gallery")
+754 | }
+   | 
+error: Error validating model "InstitutionFaculty": This model is missing an `@@schema` attribute.
+  -->  prisma/schema.prisma:756
+   | 
+755 | 
+756 | model InstitutionFaculty {
+757 |   id                  String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+758 |   institutionId       String             @map("institution_id") @db.Uuid
+759 |   name                String
+760 |   position            String
+761 |   department          String?
+762 |   qualifications      String?
+763 |   experience          Int?
+764 |   specialization      String?
+765 |   profileImage        String?            @map("profile_image")
+766 |   bio                 String?
+767 |   email               String?
+768 |   phone               String?
+769 |   website             String?
+770 |   linkedin            String?
+771 |   researchInterests   String?            @map("research_interests")
+772 |   publicationsCount   Int?               @map("publications_count")
+773 |   yearsAtInstitution  Int?               @map("years_at_institution")
+774 |   officeLocation      String?            @map("office_location")
+775 |   officeHours         String?            @map("office_hours")
+776 |   isFeatured          Boolean            @default(false) @map("is_featured")
+777 |   displayOrder        Int                @map("display_order")
+778 |   status              String             @default("active")
+779 |   createdAt           DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+780 |   updatedAt           DateTime           @default(now()) @map("updated_at") @db.Timestamptz(6)
+781 |   institution         InstitutionProfile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+782 | 
+783 |   @@map("institution_faculty")
+784 | }
+   | 
+
+Validation Error Count: 3
+[Context: getDmmf]
