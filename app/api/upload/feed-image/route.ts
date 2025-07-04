@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
@@ -13,7 +12,7 @@ export async function POST(request: NextRequest) {
     // Check authentication
     const cookieStore = await cookies()
     const authToken = cookieStore.get('sb-access-token')
-    
+
     if (!authToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -26,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData()
     const file = formData.get('image') as File
-    
+
     if (!file) {
       return NextResponse.json({ error: 'No image file provided' }, { status: 400 })
     }
@@ -51,21 +50,37 @@ export async function POST(request: NextRequest) {
     const fileBuffer = new Uint8Array(arrayBuffer)
 
     // Upload to Supabase Storage
+    const fileName = `${user.id}_${Date.now()}.${fileExtension}`
+
+    // Try to create bucket if it doesn't exist
+    const { data: bucketExists } = await supabase.storage.getBucket('feed-images')
+    if (!bucketExists) {
+      const { error: bucketError } = await supabase.storage.createBucket('feed-images', {
+        public: true
+      })
+      if (bucketError) {
+        console.error('Bucket creation error:', bucketError)
+      }
+    }
+
     const { data, error } = await supabase.storage
-      .from('uploads')
-      .upload(filePath, fileBuffer, {
+      .from('feed-images')
+      .upload(fileName, fileBuffer, {
         contentType: file.type,
         upsert: false
       })
 
     if (error) {
       console.error('Upload error:', error)
-      return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 })
+      return NextResponse.json({ 
+        error: 'Upload failed', 
+        details: error.message 
+      }, { status: 500 })
     }
 
     // Get public URL
     const { data: { publicUrl } } = supabase.storage
-      .from('uploads')
+      .from('feed-images')
       .getPublicUrl(filePath)
 
     return NextResponse.json({ 
