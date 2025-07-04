@@ -49,9 +49,6 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer()
     const fileBuffer = new Uint8Array(arrayBuffer)
 
-    // Upload to Supabase Storage
-    const fileName = `${user.id}_${Date.now()}.${fileExtension}`
-
     // Try to create bucket if it doesn't exist
     const { data: bucketExists } = await supabase.storage.getBucket('feed-images')
     if (!bucketExists) {
@@ -81,7 +78,7 @@ export async function POST(request: NextRequest) {
     // Get public URL
     const { data: { publicUrl } } = supabase.storage
       .from('feed-images')
-      .getPublicUrl(filePath)
+      .getPublicUrl(fileName)
 
     return NextResponse.json({ 
       success: true, 
