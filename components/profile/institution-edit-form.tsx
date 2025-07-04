@@ -46,7 +46,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     // About section
     overview: institutionData.overview || "",
     mission: institutionData.mission || "",
-    coreValues: institutionData.coreValues || [""],
+    coreValues: Array.isArray(institutionData.coreValues) ? institutionData.coreValues : [""],
 
     // Programs section
     programs: [
@@ -259,14 +259,12 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
 
   useEffect(() => {
     if (institutionData) {
-      setFormData({
-        institutionName: institutionData.name || '',
+      setFormData(prev => ({
+        ...prev,
         overview: institutionData.overview || '',
         mission: institutionData.mission || '',
-        coreValues: institutionData.coreValues || [''],
-        logoUrl: institutionData.logoUrl || '',
-        coverImageUrl: institutionData.coverImageUrl || '',
-      })
+        coreValues: Array.isArray(institutionData.coreValues) ? institutionData.coreValues : [''],
+      }))
 
       // Fetch existing programs
       fetchPrograms()
