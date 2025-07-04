@@ -64,29 +64,47 @@ export async function POST(request: NextRequest) {
 
     // Insert new faculty members
     if (faculty && faculty.length > 0) {
-      const facultyData = faculty.map((member: any, index: number) => ({
-        institutionId: user.id,
-        name: member.name,
-        position: member.position,
-        department: member.department || null,
-        qualifications: member.qualifications || null,
-        experience: member.experience ? parseInt(member.experience) : null,
-        specialization: member.specialization || null,
-        profileImage: member.profileImage || null,
-        bio: member.bio || null,
-        email: member.email || null,
-        phone: member.phone || null,
-        website: member.website || null,
-        linkedin: member.linkedin || null,
-        researchInterests: member.researchInterests || null,
-        publicationsCount: member.publicationsCount ? parseInt(member.publicationsCount) : null,
-        yearsAtInstitution: member.yearsAtInstitution ? parseInt(member.yearsAtInstitution) : null,
-        officeLocation: member.officeLocation || null,
-        officeHours: member.officeHours || null,
-        isFeatured: member.isFeatured || false,
-        displayOrder: index + 1,
-        status: 'active'
-      }))
+      const facultyData = faculty.map((member: any, index: number) => {
+        // Helper function to safely parse integers
+        const safeParseInt = (value: any): number | null => {
+          if (value === null || value === undefined || value === '') return null
+          const parsed = parseInt(String(value))
+          return isNaN(parsed) ? null : parsed
+        }
+
+        // Helper function to safely handle string fields
+        const safeString = (value: any): string | null => {
+          if (value === null || value === undefined) return null
+          const str = String(value).trim()
+          return str === '' ? null : str
+        }
+
+        return {
+          institutionId: user.id,
+          name: safeString(member.name) || 'Unknown',
+          position: safeString(member.position) || 'Staff',
+          department: safeString(member.department),
+          qualifications: safeString(member.qualifications),
+          experience: safeParseInt(member.experience),
+          specialization: safeString(member.specialization),
+          profileImage: safeString(member.profileImage),
+          bio: safeString(member.bio),
+          email: safeString(member.email),
+          phone: safeString(member.phone),
+          website: safeString(member.website),
+          linkedin: safeString(member.linkedin),
+          researchInterests: safeString(member.researchInterests),
+          publicationsCount: safeParseInt(member.publicationsCount),
+          yearsAtInstitution: safeParseInt(member.yearsAtInstitution),
+          officeLocation: safeString(member.officeLocation),
+          officeHours: safeString(member.officeHours),
+          isFeatured: Boolean(member.isFeatured),
+          displayOrder: index + 1,
+          status: 'active'
+        }
+      })
+
+      console.log('Faculty data to insert:', JSON.stringify(facultyData, null, 2))
 
       await prisma.institutionFaculty.createMany({
         data: facultyData
