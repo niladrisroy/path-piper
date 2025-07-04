@@ -37,7 +37,7 @@ export async function PUT(
     const child = await prisma.profile.findFirst({
       where: {
         id: childId,
-        parentId: parseInt(parentId),
+        parentId: parentId,
         role: 'student'
       }
     })
@@ -337,7 +337,7 @@ export async function DELETE(
     const child = await prisma.profile.findFirst({
       where: {
         id: childId,
-        parentId: parseInt(parentId),
+        parentId: parentId,
         role: 'student'
       }
     })

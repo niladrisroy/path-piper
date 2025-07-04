@@ -38,7 +38,7 @@ export async function GET(
     const child = await prisma.profile.findFirst({
       where: {
         id: childId,
-        parentId: parseInt(parentId),
+        parentId: parentId,
         role: 'student'
       }
     })

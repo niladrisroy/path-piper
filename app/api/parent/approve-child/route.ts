@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     const child = await prisma.profile.findFirst({
       where: {
         id: childId,
-        parentId: parseInt(parentId),
+        parentId: parentId,
         role: 'student'
       }
     })
