@@ -106,9 +106,17 @@ export async function POST(request: NextRequest) {
 
       console.log('Faculty data to insert:', JSON.stringify(facultyData, null, 2))
 
-      await prisma.institutionFaculty.createMany({
-        data: facultyData
-      })
+      // Insert faculty members one by one to avoid connection issues
+      for (const facultyMember of facultyData) {
+        try {
+          await prisma.institutionFaculty.create({
+            data: facultyMember
+          })
+        } catch (error) {
+          console.error('Error inserting faculty member:', facultyMember.name, error)
+          throw new Error(`Failed to insert faculty member: ${facultyMember.name}`)
+        }
+      }
     }
 
     return NextResponse.json({ success: true })
