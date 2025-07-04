@@ -126,8 +126,16 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
     <>
       <style jsx>{scrollbarHideStyle}</style>
       <div className="relative">
-        {/* Customizable banner */}
-        <div className={`h-48 w-full bg-gradient-to-r ${institution.bannerColor}`}></div>
+        {/* Customizable banner with cover image or gradient fallback */}
+        <div 
+          className={`h-48 w-full ${institutionData.coverImage ? 'bg-cover bg-center bg-no-repeat' : `bg-gradient-to-r ${institution.bannerColor}`}`}
+          style={institutionData.coverImage ? {
+            backgroundImage: `url(${institutionData.coverImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          } : undefined}
+        ></div>
 
         <div className="container mx-auto px-4 max-w-7xl">
           <div className="relative -mt-24 sm:-mt-16 mb-6">
