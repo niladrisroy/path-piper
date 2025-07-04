@@ -28,6 +28,11 @@ interface InstitutionData {
   overview?: string
   mission?: string
   coreValues?: string[]
+  gallery?: Array<{
+    id: string
+    url: string
+    caption: string
+  }>
 }
 
 interface InstitutionEditFormProps {
@@ -1184,13 +1189,17 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     </Card>
   )
 
-  const [galleryImages, setGalleryImages] = useState([
-    {
-      id: 1,
-      url: '',
-      caption: '',
-    },
-  ])
+  const [galleryImages, setGalleryImages] = useState(() => {
+    // Initialize with existing gallery data or empty array
+    if (institutionData.gallery && institutionData.gallery.length > 0) {
+      return institutionData.gallery.map((item, index) => ({
+        id: index + 1,
+        url: item.url,
+        caption: item.caption || '',
+      }))
+    }
+    return [{ id: 1, url: '', caption: '' }]
+  })
   const [isAddingGalleryImage, setIsAddingGalleryImage] = useState(false)
   const [currentGalleryImage, setCurrentGalleryImage] = useState({
     url: '',
@@ -1211,31 +1220,66 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   }
 
   const addGalleryImage = () => {
-    setGalleryImages([
-      ...galleryImages,
-      {
-        id: galleryImages.length + 1,
-        url: currentGalleryImage.url,
-        caption: currentGalleryImage.caption,
-      },
-    ])
-    setCurrentGalleryImage({ url: '', caption: '' })
-    setGalleryFile(null)
-    setIsAddingGalleryImage(false)
+    if (currentGalleryImage.url) {
+      setGalleryImages([
+        ...galleryImages,
+        {
+          id: galleryImages.length + 1,
+          url: currentGalleryImage.url,
+          caption: currentGalleryImage.caption,
+        },
+      ])
+      setCurrentGalleryImage({ url: '', caption: '' })
+      setGalleryFile(null)
+      setIsAddingGalleryImage(false)
+    }
   }
 
-  const removeGalleryImage = (index: number) => {
-    const updatedGalleryImages = [...galleryImages]
-    updatedGalleryImages.splice(index, 1)
+  const removeGalleryImage = (imageId: number) => {
+    const updatedGalleryImages = galleryImages.filter(image => image.id !== imageId)
     setGalleryImages(updatedGalleryImages)
   }
 
-  const saveGalleryImages = () => {
-    // TODO: Save gallery images to database
-    toast({
-      title: 'Success',
-      description: 'Gallery images saved successfully!',
-    })
+  const saveGalleryImages = async () => {
+    try {
+      setIsLoading(true)
+      
+      // Filter out empty gallery items
+      const validGalleryImages = galleryImages.filter(image => 
+        image.url && image.url.trim() !== ''
+      )
+
+      const response = await fetch('/api/institution/gallery', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          images: validGalleryImages.map(image => ({
+            url: image.url,
+            caption: image.caption || ''
+          }))
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save gallery images')
+      }
+
+      toast({
+        title: 'Success',
+        description: 'Gallery images saved successfully!',
+      })
+    } catch (error) {
+      console.error('Error saving gallery images:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to save gallery images. Please try again.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const renderGallerySection = () => (
@@ -1257,9 +1301,9 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
           </div>
 
           {/* Gallery Grid */}
-          {galleryImages.length > 0 && (
+          {galleryImages.length > 0 && galleryImages.some(image => image.url) && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {galleryImages.map((image) => (
+              {galleryImages.filter(image => image.url).map((image) => (
                 <div key={image.id} className="group relative rounded-lg overflow-hidden border border-gray-200">
                   <img src={image.url || "/placeholder.svg"} alt={image.caption} className="w-full h-48 object-cover" />
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200">
