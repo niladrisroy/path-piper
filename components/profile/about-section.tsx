@@ -412,9 +412,9 @@ export default function AboutSection({ student: studentProp, currentUser, isView
                       }`}>
                         {goal.status}
                       </span>
-                      {goal.targetDate && (
+                      {goal.timeframe && (
                         <span className="text-xs text-gray-500 dark:text-gray-400">
-                          Target: {new Date(goal.targetDate).toLocaleDateString()}
+                          Timeframe: {goal.timeframe}
                         </span>
                       )}
                     </div>

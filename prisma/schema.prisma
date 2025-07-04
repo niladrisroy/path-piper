@@ -87,7 +87,6 @@ model Profile {
   socialLinks         SocialLink[]
   userLanguages       UserLanguage[]
   userHobbies         UserHobby[]
-  careerGoals         CareerGoal[]
   moodBoard           MoodBoard[]
   customBadges        CustomBadge[]
   sentConnections     ConnectionRequest[] @relation("SentConnections")
@@ -377,19 +376,20 @@ model UserHobby {
   @@schema("public")
 }
 
-model CareerGoal {
+model Goal {
   id          Int      @id @default(autoincrement())
   userId      String   @map("user_id") @db.Uuid
   title       String
   description String?
-  targetDate  DateTime? @map("target_date") @db.Date
-  priority    Int      @default(1) // 1-5 priority level
-  status      String   @default("active") // 'active', 'completed', 'paused', 'cancelled'
-  user        Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    String?
+  timeframe   String?
+  completed   Boolean  @default(false)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  @@map("career_goals")
+  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("goals")
   @@schema("public")
 }
 

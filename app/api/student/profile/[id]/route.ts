@@ -93,7 +93,7 @@ export async function GET(
               }
             },
             socialLinks: true,
-            careerGoals: {
+            goals: {
               orderBy: {
                 createdAt: 'desc'
               }
@@ -160,7 +160,7 @@ export async function GET(
         })),
         // Only show sensitive contact info for own profile
         socialLinks: isOwnProfile ? studentProfile.profile.socialLinks : [],
-        careerGoals: studentProfile.profile.careerGoals,
+        goals: studentProfile.profile.goals,
         customBadges: studentProfile.profile.customBadges
       },
       educationHistory: studentProfile.educationHistory.map(edu => ({
