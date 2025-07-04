@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import { createClient } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
 import InstitutionProfile from "@/components/profile/institution-profile"
-import InternalNavbar from "@/components/internal-navbar"
+import InstitutionNavbar from "@/components/institution-navbar"
 import Footer from "@/components/footer"
 import ProtectedLayout from "../../protected-layout"
 import { getCurrentUserInstitution } from "@/lib/db/institution"
@@ -72,7 +72,7 @@ export default async function InstitutionProfilePage() {
   return (
     <ProtectedLayout>
       <div className="min-h-screen bg-white">
-        <InternalNavbar />
+        <InstitutionNavbar />
         <main className="pt-16 sm:pt-24">
           <InstitutionProfile institutionData={institution} />
         </main>
