@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     // Get parent profile
     const parentProfile = await prisma.parentProfile.findUnique({
-      where: { id: parseInt(parentId) }
+      where: { id: parentId }
     })
 
     if (!parentProfile) {
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     // Find all children linked to this parent
     const children = await prisma.profile.findMany({
       where: {
-        parentId: parseInt(parentId),
+        parentId: parentId,
       },
       select: {
         id: true,
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     const serializedChildren = children.map(child => ({
       ...child,
       id: child.id.toString(),
-      parentId: parseInt(parentId).toString(), // Ensure parentId is always a string
+      parentId: parentId, // parentId is already a string UUID
       parentVerified: child.parentVerified // Preserve the parentVerified value
     }))
 
