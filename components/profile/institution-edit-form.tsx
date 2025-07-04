@@ -266,9 +266,8 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         coreValues: Array.isArray(institutionData.coreValues) ? institutionData.coreValues : [''],
       }))
 
-      // Fetch existing programs and faculty
+      // Fetch existing programs
       fetchPrograms()
-      fetchFaculty()
     }
   }, [institutionData])
 
@@ -330,73 +329,10 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   }
 
   // Faculty handlers
-  const [faculty, setFaculty] = useState([
-    {
-      id: "",
-      name: "",
-      position: "",
-      department: "",
-      qualifications: "",
-      experience: "",
-      specialization: "",
-      profileImage: "",
-      bio: "",
-      email: "",
-      phone: "",
-      website: "",
-      linkedin: "",
-      researchInterests: "",
-      publicationsCount: "",
-      yearsAtInstitution: "",
-      officeLocation: "",
-      officeHours: "",
-      isFeatured: false
-    }
-  ])
-  const [isLoadingFaculty, setIsLoadingFaculty] = useState(false)
-
-  const fetchFaculty = async () => {
-    try {
-      setIsLoadingFaculty(true)
-      const response = await fetch('/api/institution/faculty')
-      if (response.ok) {
-        const data = await response.json()
-        if (data.faculty && data.faculty.length > 0) {
-          const formattedFaculty = data.faculty.map((member: any) => ({
-            id: member.id || "",
-            name: member.name || "",
-            position: member.position || "",
-            department: member.department || "",
-            qualifications: member.qualifications || "",
-            experience: member.experience?.toString() || "",
-            specialization: member.specialization || "",
-            profileImage: member.profileImage || "",
-            bio: member.bio || "",
-            email: member.email || "",
-            phone: member.phone || "",
-            website: member.website || "",
-            linkedin: member.linkedin || "",
-            researchInterests: member.researchInterests || "",
-            publicationsCount: member.publicationsCount?.toString() || "",
-            yearsAtInstitution: member.yearsAtInstitution?.toString() || "",
-            officeLocation: member.officeLocation || "",
-            officeHours: member.officeHours || "",
-            isFeatured: member.isFeatured || false
-          }))
-          setFaculty(formattedFaculty)
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching faculty:', error)
-    } finally {
-      setIsLoadingFaculty(false)
-    }
-  }
-
   const addFaculty = () => {
-    setFaculty([
-      ...faculty,
-      {
+    setFormData(prev => ({
+      ...prev,
+      faculty: [...prev.faculty, {
         id: "",
         name: "",
         position: "",
@@ -405,33 +341,28 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         experience: "",
         specialization: "",
         profileImage: "",
-        bio: "",
-        email: "",
-        phone: "",
-        website: "",
-        linkedin: "",
-        researchInterests: "",
-        publicationsCount: "",
-        yearsAtInstitution: "",
-        officeLocation: "",
-        officeHours: "",
-        isFeatured: false
-      }
-    ])
+        bio: ""
+      }]
+    }))
   }
 
   const removeFaculty = (index: number) => {
-    if (faculty.length > 1) {
-      const updatedFaculty = [...faculty]
-      updatedFaculty.splice(index, 1)
-      setFaculty(updatedFaculty)
+    if (formData.faculty.length > 1) {
+      const newFaculty = formData.faculty.filter((_, i) => i !== index)
+      setFormData(prev => ({
+        ...prev,
+        faculty: newFaculty
+      }))
     }
   }
 
-  const updateFaculty = (index: number, field: string, value: string | boolean) => {
-    const updatedFaculty = [...faculty]
-    updatedFaculty[index] = { ...updatedFaculty[index], [field]: value }
-    setFaculty(updatedFaculty)
+  const updateFaculty = (index: number, field: string, value: string) => {
+    const newFaculty = [...formData.faculty]
+    newFaculty[index] = { ...newFaculty[index], [field]: value }
+    setFormData(prev => ({
+      ...prev,
+      faculty: newFaculty
+    }))
   }
 
   // Facility handlers
@@ -640,48 +571,9 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         throw new Error('Failed to save programs')
       }
 
-      // Save faculty with proper formatting
-      const validFaculty = faculty.filter(member =>
-        member.name.trim() !== '' &&
-        member.position.trim() !== ''
-      )
-
-      const facultyResponse = await fetch('/api/institution/faculty', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          faculty: validFaculty.map(member => ({
-            name: member.name,
-            position: member.position,
-            department: member.department,
-            qualifications: member.qualifications,
-            experience: member.experience,
-            specialization: member.specialization,
-            profileImage: member.profileImage,
-            bio: member.bio,
-            email: member.email,
-            phone: member.phone,
-            website: member.website,
-            linkedin: member.linkedin,
-            researchInterests: member.researchInterests,
-            publicationsCount: member.publicationsCount,
-            yearsAtInstitution: member.yearsAtInstitution,
-            officeLocation: member.officeLocation,
-            officeHours: member.officeHours,
-            isFeatured: member.isFeatured
-          }))
-        }),
-      })
-
-      if (!facultyResponse.ok) {
-        throw new Error('Failed to save faculty')
-      }
-
       toast({
         title: "Success",
-        description: "Profile, programs, and faculty updated successfully!",
+        description: "Profile and programs updated successfully!",
       })
       router.push('/institution/profile')
     } catch (error) {
@@ -981,11 +873,11 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         <CardTitle>Faculty & Staff</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {faculty.map((member, index) => (
+        {formData.faculty.map((member, index) => (
           <div key={index} className="p-4 border rounded-lg space-y-4">
             <div className="flex justify-between items-center">
               <h4 className="font-medium">Faculty Member {index + 1}</h4>
-              {faculty.length > 1 && (
+              {formData.faculty.length > 1 && (
                 <Button
                   type="button"
                   variant="outline"
@@ -999,7 +891,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Full Name <span className="text-red-500">*</span></Label>
+                <Label>Full Name</Label>
                 <Input
                   value={member.name}
                   onChange={(e) => updateFaculty(index, 'name', e.target.value)}
@@ -1008,7 +900,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
               </div>
 
               <div className="space-y-2">
-                <Label>Position <span className="text-red-500">*</span></Label>
+                <Label>Position</Label>
                 <Input
                   value={member.position}
                   onChange={(e) => updateFaculty(index, 'position', e.target.value)}
@@ -1034,44 +926,6 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                   type="number"
                 />
               </div>
-
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input
-                  value={member.email}
-                  onChange={(e) => updateFaculty(index, 'email', e.target.value)}
-                  placeholder="e.g., jane.smith@university.edu"
-                  type="email"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Phone</Label>
-                <Input
-                  value={member.phone}
-                  onChange={(e) => updateFaculty(index, 'phone', e.target.value)}
-                  placeholder="e.g., +1 (555) 123-4567"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Office Location</Label>
-                <Input
-                  value={member.officeLocation}
-                  onChange={(e) => updateFaculty(index, 'officeLocation', e.target.value)}
-                  placeholder="e.g., Room 301, CS Building"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Years at Institution</Label>
-                <Input
-                  value={member.yearsAtInstitution}
-                  onChange={(e) => updateFaculty(index, 'yearsAtInstitution', e.target.value)}
-                  placeholder="e.g., 5"
-                  type="number"
-                />
-              </div>
             </div>
 
             <div className="space-y-2">
@@ -1093,55 +947,6 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
             </div>
 
             <div className="space-y-2">
-              <Label>Research Interests</Label>
-              <Textarea
-                value={member.researchInterests}
-                onChange={(e) => updateFaculty(index, 'researchInterests', e.target.value)}
-                placeholder="Research areas and interests"
-                className="min-h-[60px]"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Office Hours</Label>
-                <Input
-                  value={member.officeHours}
-                  onChange={(e) => updateFaculty(index, 'officeHours', e.target.value)}
-                  placeholder="e.g., Mon-Wed 2-4 PM"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Publications Count</Label>
-                <Input
-                  value={member.publicationsCount}
-                  onChange={(e) => updateFaculty(index, 'publicationsCount', e.target.value)}
-                  placeholder="e.g., 25"
-                  type="number"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Website</Label>
-                <Input
-                  value={member.website}
-                  onChange={(e) => updateFaculty(index, 'website', e.target.value)}
-                  placeholder="https://..."
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>LinkedIn</Label>
-                <Input
-                  value={member.linkedin}
-                  onChange={(e) => updateFaculty(index, 'linkedin', e.target.value)}
-                  placeholder="https://linkedin.com/in/..."
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
               <Label>Bio</Label>
               <Textarea
                 value={member.bio}
@@ -1149,19 +954,6 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                 placeholder="Brief biography and achievements"
                 className="min-h-[80px]"
               />
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id={`featured-${index}`}
-                checked={member.isFeatured}
-                onChange={(e) => updateFaculty(index, 'isFeatured', e.target.checked)}
-                className="rounded"
-              />
-              <label htmlFor={`featured-${index}`} className="text-sm">
-                Feature this faculty member (will be highlighted on profile)
-              </label>
             </div>
           </div>
         ))}
