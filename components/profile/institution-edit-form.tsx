@@ -1402,11 +1402,37 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         </Button>
       </div>
 
-      {/* Mobile Layout - Keep existing */}
-      <div className="lg:hidden">
+      <div className="flex gap-6">
+        {/* Side Navigation - Desktop */}
+        <div className="hidden lg:block w-64 flex-shrink-0">
+          <Card className="sticky top-6">
+            <CardHeader>
+              <CardTitle className="text-lg">Edit Sections</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <nav className="space-y-1">
+                {sections.map(({ id, label, icon: Icon }) => (
+                  <button
+                    key={id}
+                    onClick={() => scrollToSection(id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 ${
+                      activeSection === id
+                        ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                        : 'text-gray-700'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {label}
+                  </button>
+                ))}
+              </nav>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Mobile Sidebar Overlay */}
         {isSidebarOpen && (
-          <div className="fixed inset-0 z-50">
+          <div className="fixed inset-0 z-50 lg:hidden">
             <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsSidebarOpen(false)} />
             <div className="fixed left-0 top-0 h-full w-80 bg-white p-6 shadow-lg">
               <div className="flex items-center justify-between mb-6">
@@ -1439,162 +1465,51 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
           </div>
         )}
 
-        {/* Mobile Form Content */}
-        <div className="min-h-screen">
-          <form onSubmit={handleSubmit} className="space-y-6 p-2">
-            <div ref={sectionRefs.about}>
-              {renderAboutSection()}
-            </div>
-            <div ref={sectionRefs.programs}>
-              {renderProgramsSection()}
-            </div>
-            <div ref={sectionRefs.faculty}>
-              {renderFacultySection()}
-            </div>
-            <div ref={sectionRefs.facilities}>
-              {renderFacilitiesSection()}
-            </div>
-            <div ref={sectionRefs.events}>
-              {renderEventsSection()}
-            </div>
-            <div ref={sectionRefs.gallery}>
-              {renderGallerySection()}
-            </div>
-
-            {/* Save Button */}
-            <div className="flex flex-col space-y-2 sticky bottom-0 bg-white p-4 border-t">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.push('/institution/profile')}
-                className="w-full"
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isLoading} className="w-full">
-                <Save className="h-4 w-4 mr-2" />
-                {isLoading ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      {/* Desktop Layout - Match institution profile page */}
-      <div className="hidden lg:block">
-        <div className="container mx-auto px-4 py-6 max-w-7xl">
-          <div className="flex gap-8">
-            {/* Desktop Sidebar Navigation */}
-            <div className="w-64 flex-shrink-0">
-              <div className="sticky top-6">
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                  <nav className="space-y-2">
-                    {sections.map(({ id, label, icon: Icon }) => (
-                      <button
-                        key={id}
-                        onClick={() => scrollToSection(id)}
-                        className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
-                          activeSection === id
-                            ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-700 font-medium'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Icon className="h-4 w-4" />
-                          {label}
-                        </div>
-                      </button>
-                    ))}
-                  </nav>
-                </div>
+        {/* Form Content */}
+        <div className="flex-1 min-w-0">
+          <div
+            ref={containerRef}
+            className="h-[calc(100vh-200px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+          >
+            <form onSubmit={handleSubmit} className="space-y-6 p-2 lg:p-6">
+              <div ref={sectionRefs.about}>
+                {renderAboutSection()}
               </div>
-            </div>
-
-            {/* Main Content - Scrollable */}
-            <div className="flex-1 max-w-5xl">
-              <div 
-                ref={containerRef}
-                className="h-[calc(100vh-200px)] overflow-y-auto scrollbar-hide"
-                style={{
-                  scrollbarWidth: 'none',
-                  msOverflowStyle: 'none',
-                }}
-              >
-                <form onSubmit={handleSubmit} className="space-y-8 pr-4">
-                  <div 
-                    ref={(el) => sectionRefs.about = el}
-                    id="about"
-                    className="scroll-mt-6"
-                  >
-                    {renderAboutSection()}
-                  </div>
-
-                  <div 
-                    ref={(el) => sectionRefs.programs = el}
-                    id="programs"
-                    className="scroll-mt-6"
-                  >
-                    {renderProgramsSection()}
-                  </div>
-
-                  <div 
-                    ref={(el) => sectionRefs.faculty = el}
-                    id="faculty"
-                    className="scroll-mt-6"
-                  >
-                    {renderFacultySection()}
-                  </div>
-
-                  <div 
-                    ref={(el) => sectionRefs.facilities = el}
-                    id="facilities"
-                    className="scroll-mt-6"
-                  >
-                    {renderFacilitiesSection()}
-                  </div>
-
-                  <div 
-                    ref={(el) => sectionRefs.events = el}
-                    id="events"
-                    className="scroll-mt-6"
-                  >
-                    {renderEventsSection()}
-                  </div>
-
-                  <div 
-                    ref={(el) => sectionRefs.gallery = el}
-                    id="gallery"
-                    className="scroll-mt-6"
-                  >
-                    {renderGallerySection()}
-                  </div>
-
-                  {/* Save Button */}
-                  <div className="flex justify-end space-x-4 sticky bottom-0 bg-white p-4 border-t">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => router.push('/institution/profile')}
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit" disabled={isLoading}>
-                      <Save className="h-4 w-4 mr-2" />
-                      {isLoading ? 'Saving...' : 'Save Changes'}
-                    </Button>
-                  </div>
-                </form>
+              <div ref={sectionRefs.programs}>
+                {renderProgramsSection()}
               </div>
-            </div>
+              <div ref={sectionRefs.faculty}>
+                {renderFacultySection()}
+              </div>
+              <div ref={sectionRefs.facilities}>
+                {renderFacilitiesSection()}
+              </div>
+              <div ref={sectionRefs.events}>
+                {renderEventsSection()}
+              </div>
+              <div ref={sectionRefs.gallery}>
+                {renderGallerySection()}
+              </div>
+
+              {/* Save Button */}
+              <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 sticky bottom-0 bg-white p-4 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.push('/institution/profile')}
+                  className="w-full sm:w-auto"
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
+                  <Save className="h-4 w-4 mr-2" />
+                  {isLoading ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
     </div>
   )
 }
