@@ -11,8 +11,8 @@ const supabase = createClient(
 export async function POST(request: NextRequest) {
   try {
     // Check authentication
-    const cookieStore = cookies()
-    const authToken = cookieStore.get('auth-token')
+    const cookieStore = await cookies()
+    const authToken = cookieStore.get('sb-access-token')
     
     if (!authToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

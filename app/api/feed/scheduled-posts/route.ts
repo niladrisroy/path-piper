@@ -11,8 +11,8 @@ const supabase = createClient(
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = cookies()
-    const authToken = cookieStore.get('auth-token')
+    const cookieStore = await cookies()
+    const authToken = cookieStore.get('sb-access-token')
     
     if (!authToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -69,8 +69,8 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = cookies()
-    const authToken = cookieStore.get('auth-token')
+    const cookieStore = await cookies()
+    const authToken = cookieStore.get('sb-access-token')
     
     if (!authToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
