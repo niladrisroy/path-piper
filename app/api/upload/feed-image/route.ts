@@ -43,7 +43,6 @@ export async function POST(request: NextRequest) {
     // Generate unique filename
     const fileExtension = file.name.split('.').pop()
     const fileName = `${user.id}_${Date.now()}.${fileExtension}`
-    const filePath = `feed-images/${fileName}`
 
     // Convert File to ArrayBuffer
     const arrayBuffer = await file.arrayBuffer()
