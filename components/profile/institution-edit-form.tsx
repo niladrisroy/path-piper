@@ -1482,7 +1482,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
 
       {/* Desktop Layout - Match institution profile page */}
       <div className="hidden lg:block">
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-4 py-6 max-w-7xl">
           <div className="flex gap-8">
             {/* Desktop Sidebar Navigation */}
             <div className="w-64 flex-shrink-0">
@@ -1511,7 +1511,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
             </div>
 
             {/* Main Content - Scrollable */}
-            <div className="flex-1">
+            <div className="flex-1 max-w-5xl">
               <div 
                 ref={containerRef}
                 className="h-[calc(100vh-200px)] overflow-y-auto scrollbar-hide"
