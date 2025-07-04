@@ -1492,7 +1492,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
               </div>
 
               {/* Save Button */}
-              <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 sticky bottom-0 bg-white p-4 border-t">
+              <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 sticky bottom-0 bg-white p-4 pb-6 sm:pb-4 border-t mb-20 sm:mb-0">
                 <Button
                   type="button"
                   variant="outline"
