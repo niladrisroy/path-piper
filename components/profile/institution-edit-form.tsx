@@ -1536,10 +1536,5 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         </div>
       </div>
     </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
   )
 }
