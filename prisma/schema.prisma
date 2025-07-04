@@ -658,9 +658,12 @@ model PostDraft {
   postType        PostType  @default(GENERAL) @map("post_type")
   tags            String[]  @default([])
   subjects        String[]  @default([])
+  ageGroup        String?   @map("age_group")
+  difficultyLevel String?   @map("difficulty_level")
+  isQuestion      Boolean   @default(false) @map("is_question")
+  isAchievement   Boolean   @default(false) @map("is_achievement")
   achievementType String?   @map("achievement_type")
   projectCategory String?   @map("project_category")
-  difficultyLevel String?   @map("difficulty_level")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 

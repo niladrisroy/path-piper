@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
@@ -13,7 +12,7 @@ export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies()
     const authToken = cookieStore.get('sb-access-token')
-    
+
     if (!authToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -63,7 +62,7 @@ export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies()
     const authToken = cookieStore.get('sb-access-token')
-    
+
     if (!authToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -78,17 +77,20 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json({ draft })
-  } catch (error) {
-    console.error('Draft fetch error:', error)
-    return NextResponse.json({ error: 'Failed to fetch draft' }, { status: 500 })
-  }
+    } catch (error) {
+      console.error('Draft save error:', error)
+      return NextResponse.json(
+        { error: 'Failed to save draft' },
+        { status: 500 }
+      )
+    }
 }
 
 export async function DELETE(request: NextRequest) {
   try {
     const cookieStore = await cookies()
     const authToken = cookieStore.get('sb-access-token')
-    
+
     if (!authToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
