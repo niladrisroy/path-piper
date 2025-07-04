@@ -1469,7 +1469,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         <div className="flex-1 min-w-0">
           <div
             ref={containerRef}
-            className="h-[calc(100vh-200px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+            className="max-h-[calc(100vh-280px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
           >
             <form onSubmit={handleSubmit} className="space-y-6 p-2 lg:p-6">
               <div ref={sectionRefs.about}>
