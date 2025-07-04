@@ -1491,21 +1491,51 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                 {renderGallerySection()}
               </div>
 
-              {/* Save Button */}
-              <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 sticky bottom-0 bg-white p-4 pb-8 sm:pb-4 border-t mb-24 sm:mb-0">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.push('/institution/profile')}
-                  className="w-full sm:w-auto"
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
-                  <Save className="h-4 w-4 mr-2" />
-                  {isLoading ? 'Saving...' : 'Save Changes'}
-                </Button>
-              </div>
+              </form>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Sticky Footer for Save Button */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
+        <div className="flex flex-col space-y-2">
+          <Button
+            type="submit"
+            disabled={isLoading}
+            onClick={handleSubmit}
+            className="w-full"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {isLoading ? 'Saving...' : 'Save Changes'}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push('/institution/profile')}
+            className="w-full"
+          >
+            Cancel
+          </Button>
+        </div>
+      </div>
+
+      {/* Desktop Save Button */}
+      <div className="hidden lg:block">
+        <div className="flex flex-row justify-end space-x-4 sticky bottom-0 bg-white p-4 border-t">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push('/institution/profile')}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isLoading} onClick={handleSubmit}>
+            <Save className="h-4 w-4 mr-2" />
+            {isLoading ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
+      </div>
+    </div>
             </form>
           </div>
         </div>
