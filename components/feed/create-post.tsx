@@ -130,7 +130,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
           difficultyLevel,
           isQuestion: postType === "QUESTION",
           isAchievement: postType === "ACHIEVEMENT",
-          image_url: imageUrl,
+          imageUrl: imageUrl,
         }),
       })
 
@@ -205,7 +205,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
           difficultyLevel,
           isQuestion: postType === "QUESTION",
           isAchievement: postType === "ACHIEVEMENT",
-          image_url: imageUrl,
+          imageUrl: imageUrl,
         }),
       })
 
@@ -225,7 +225,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
             content: chunks[i],
             parentPostId: mainPostData.post.id,
             isTrail: true,
-            image_url: null,
+            imageUrl: null,
           }),
         })
       }

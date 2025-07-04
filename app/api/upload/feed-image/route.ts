@@ -1,5 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
+import { writeFile } from 'fs/promises'
+import { join } from 'path'
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -40,25 +42,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File too large. Maximum size is 10MB.' }, { status: 400 })
     }
 
+    // Convert File to buffer
+    const bytes = await file.arrayBuffer()
+    const buffer = Buffer.from(bytes)
+
     // Generate unique filename
     const fileExtension = file.name.split('.').pop()
     const fileName = `${user.id}_${Date.now()}.${fileExtension}`
-    const filePath = `feed-images/${fileName}`
+    
+    // Create uploads directory if it doesn't exist
+    const uploadsDir = join(process.cwd(), 'public/uploads/feed-images')
+    const { mkdir } = await import('fs/promises')
+    await mkdir(uploadsDir, { recursive: true })
 
-    // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('feed-images')
-      .upload(filePath, file)
+    // Save file to local directory
+    const filePath = join(uploadsDir, fileName)
+    await writeFile(filePath, buffer)
 
-    if (uploadError) {
-      console.error('Upload error:', uploadError)
-      return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 })
-    }
-
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('feed-images')
-      .getPublicUrl(filePath)
+    // Create public URL
+    const publicUrl = `/uploads/feed-images/${fileName}`
 
     return NextResponse.json({ 
       success: true, 
