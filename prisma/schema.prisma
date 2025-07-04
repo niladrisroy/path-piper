@@ -1,3 +1,4 @@
+prisma
 // This is your Prisma schema file
 datasource db {
   provider = "postgresql"
@@ -227,6 +228,9 @@ model InstitutionProfile {
   institutionTypeRef          InstitutionType? @relation(fields: [institutionTypeId], references: [id])
   studentEducationHistory     StudentEducationHistory[]
   programs              InstitutionProgram[]
+  events      InstitutionEvent[]
+  gallery     InstitutionGallery[]
+  faculty     InstitutionFaculty[]
 
   @@map("institution_profiles")
   @@schema("public")
@@ -721,4 +725,60 @@ model ChatbotTheme {
 
   @@map("chatbot_themes")
   @@schema("public")
+}
+
+model InstitutionEvent {
+  id            String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  institutionId String             @map("institution_id") @db.Uuid
+  name          String
+  description   String?
+  date          DateTime           @map("date") @db.Timestamptz(6)
+  location      String?
+  imageUrl      String?            @map("image_url")
+  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime           @default(now()) @map("updated_at") @db.Timestamptz(6)
+  institution   InstitutionProfile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  @@map("institution_events")
+}
+
+model InstitutionGallery {
+  id            String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  institutionId String             @map("institution_id") @db.Uuid
+  imageUrl      String             @map("image_url")
+  caption       String?
+  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  institution   InstitutionProfile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  @@map("institution_gallery")
+}
+
+model InstitutionFaculty {
+  id                  String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  institutionId       String             @map("institution_id") @db.Uuid
+  name                String
+  position            String
+  department          String?
+  qualifications      String?
+  experience          Int?
+  specialization      String?
+  profileImage        String?            @map("profile_image")
+  bio                 String?
+  email               String?
+  phone               String?
+  website             String?
+  linkedin            String?
+  researchInterests   String?            @map("research_interests")
+  publicationsCount   Int?               @map("publications_count")
+  yearsAtInstitution  Int?               @map("years_at_institution")
+  officeLocation      String?            @map("office_location")
+  officeHours         String?            @map("office_hours")
+  isFeatured          Boolean            @default(false) @map("is_featured")
+  displayOrder        Int                @map("display_order")
+  status              String             @default("active")
+  createdAt           DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime           @default(now()) @map("updated_at") @db.Timestamptz(6)
+  institution         InstitutionProfile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  @@map("institution_faculty")
 }
