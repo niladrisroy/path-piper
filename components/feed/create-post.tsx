@@ -251,7 +251,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
   const handleImageUpload = async (file: File) => {
     const formData = new FormData()
-    formData.append('image', file)
+    formData.append('image', file, file.name)
 
     try {
       const response = await fetch('/api/upload/feed-image', {
@@ -516,6 +516,25 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
             {/* Action Buttons */}
             <div className="flex items-center justify-between mt-4">
               <div className="flex items-center gap-2">
+                {/* Image Preview */}
+                {imageUrl && (
+                  <div className="relative mt-2">
+                    <img 
+                      src={imageUrl} 
+                      alt="Post image" 
+                      className="max-w-full h-auto rounded-lg border border-gray-200"
+                      style={{ maxHeight: '300px' }}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setImageUrl(null)}
+                      className="absolute top-2 right-2 bg-black/50 text-white hover:bg-black/70 rounded-full w-8 h-8 p-0"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
                 <div className="relative">
                   <input
                     type="file"
