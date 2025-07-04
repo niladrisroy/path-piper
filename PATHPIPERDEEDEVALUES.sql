@@ -452,18 +452,17 @@ INSERT INTO skills (name, category_id) VALUES
 ('Sustainable Living', (SELECT id FROM skill_categories WHERE name = 'Life & Wellness' AND age_group = 'young_adult')),
 ('Personal Finance', (SELECT id FROM skill_categories WHERE name = 'Life & Wellness' AND age_group = 'young_adult'));
 
--- Achievement Categories (included for completeness)
-INSERT INTO achievement_categories (name, description) VALUES
-('Academic Excellence', 'Academic achievements and scholastic accomplishments'),
-('Sports & Athletics', 'Physical fitness and sports-related achievements'),
-('Arts & Creativity', 'Creative and artistic accomplishments'),
-('Leadership & Service', 'Leadership roles and community service'),
-('Skills & Certifications', 'Professional skills and certifications'),
-('Competition & Contest', 'Competitive achievements and contest participation'),
-('Personal Development', 'Personal growth and self-improvement'),
-('Technology & Innovation', 'Technical and innovation-related achievements'),
-('Community & Social Impact', 'Community involvement and social contributions'),
-('Cultural & Language', 'Cultural activities and language proficiency');
+INSERT INTO achievement_categories (name) VALUES
+('Academic Excellence'),
+('Sports & Athletics'),
+('Arts & Creativity'),
+('Leadership & Service'),
+('Skills & Certifications'),
+('Competition & Contest'),
+('Personal Development'),
+('Technology & Innovation'),
+('Community & Social Impact'),
+('Cultural & Language');
 
 -- Achievement Types (80 total achievements)
 INSERT INTO achievement_types (category_id, name, description) VALUES
@@ -567,7 +566,9 @@ INSERT INTO achievement_types (category_id, name, description) VALUES
 (10, 'Heritage Project', 'Cultural heritage preservation'),
 (10, 'Multilingual Achievement', 'Multiple language proficiency');
 
--- Institution Categories
+
+
+-- Insert Institution Categories
 INSERT INTO institution_categories (name, slug, description) VALUES
 ('Traditional Educational Institutions', 'traditional-educational', 'Formal educational institutions following conventional academic structures'),
 ('Specialized Training & Coaching', 'specialized-training-coaching', 'Institutions focused on specific skill development and professional training'),
@@ -578,58 +579,79 @@ INSERT INTO institution_categories (name, slug, description) VALUES
 ('Modern Learning Environments', 'modern-learning', 'Technology-enabled and contemporary learning platforms'),
 ('Other Educational Institutions', 'other-educational', 'Miscellaneous educational institutions not covered in other categories');
 
--- Institution Types (using category_id references)
+-- Insert Institution Types
 INSERT INTO institution_types (category_id, name, slug, description) VALUES
--- Traditional Educational Institutions (Category ID: 1)
-(1, 'Preschool & Kindergarten', 'preschool-kindergarten', 'Early childhood education institutions'),
+-- Traditional Educational Institutions (category_id = 1)
+(1, 'Preschool/Kindergarten', 'preschool-kindergarten', 'Early childhood education institutions'),
 (1, 'Primary School', 'primary-school', 'Elementary education institutions'),
-(1, 'Secondary & High School', 'secondary-high-school', 'Secondary education institutions'),
+(1, 'Secondary/High School', 'secondary-high-school', 'Secondary education institutions'),
 (1, 'University', 'university', 'Higher education institutions offering undergraduate and graduate degrees'),
 (1, 'College', 'college', 'Higher education institutions offering undergraduate programs'),
+(1, 'Community/Junior College', 'community-junior-college', 'Two-year higher education institutions'),
 (1, 'Polytechnic', 'polytechnic', 'Technical education institutions'),
-(1, 'Vocational & Trade School', 'vocational-trade-school', 'Institutions focused on practical skills training'),
+(1, 'Vocational/Trade School', 'vocational-trade-school', 'Institutions focused on practical skills training'),
 
--- Specialized Training & Coaching (Category ID: 2)
+-- Specialized Training & Coaching (category_id = 2)
+(2, 'Career Coaching Center', 'career-coaching-center', 'Professional career development and coaching services'),
+(2, 'Professional Skills Training', 'professional-skills-training', 'Workplace and professional skills development'),
+(2, 'IT/Technical Training Institute', 'it-technical-training', 'Information technology and technical skills training'),
 (2, 'Competitive Exam Coaching', 'competitive-exam-coaching', 'Preparation for competitive examinations'),
-(2, 'IT & Technical Training', 'it-technical-training', 'Information technology and technical skills training'),
-(2, 'Language Institute', 'language-institute', 'Foreign and native language learning'),
 (2, 'Test Preparation Center', 'test-preparation-center', 'Standardized test preparation services'),
+(2, 'Subject Tutoring Center', 'subject-tutoring-center', 'Academic subject-specific tutoring'),
+(2, 'Language Institute', 'language-institute', 'Foreign and native language learning'),
+(2, 'Soft Skills Development Center', 'soft-skills-development', 'Communication and interpersonal skills training'),
 
--- Arts, Sports & Performance Education (Category ID: 3)
-(3, 'Sports Academy', 'sports-academy', 'Athletic and sports training institutions'),
-(3, 'Music School', 'music-school', 'Musical education and performance training'),
+-- Arts, Sports & Performance Education (category_id = 3)
+(3, 'Sports Academy/Athletic Training', 'sports-academy', 'Athletic and sports training institutions'),
+(3, 'Music School/Conservatory', 'music-school', 'Musical education and performance training'),
 (3, 'Dance Academy', 'dance-academy', 'Dance and choreography training'),
-(3, 'Fine Arts', 'fine-arts', 'Visual and fine arts education'),
+(3, 'Fine Arts Institution', 'fine-arts-institution', 'Visual and fine arts education'),
+(3, 'Drama/Theater School', 'drama-theater-school', 'Theatrical and dramatic arts training'),
+(3, 'Film and Media Academy', 'film-media-academy', 'Film production and media arts education'),
+(3, 'Martial Arts/Physical Training', 'martial-arts-training', 'Martial arts and physical fitness training'),
+(3, 'Yoga and Wellness Academy', 'yoga-wellness-academy', 'Yoga, meditation, and wellness training'),
 
--- Special & Alternative Education (Category ID: 4)
-(4, 'Special Education School', 'special-education-school', 'Education for students with special needs'),
-(4, 'Homeschooling Cooperative', 'homeschooling-cooperative', 'Support services for homeschooling families'),
-(4, 'Montessori School', 'montessori-school', 'Montessori educational methodology'),
-(4, 'Waldorf School', 'waldorf-school', 'Waldorf educational methodology'),
+-- Special & Alternative Education (category_id = 4)
+(4, 'Special Needs Education Center', 'special-needs-education', 'Education for students with special needs'),
+(4, 'Remedial Education Institution', 'remedial-education', 'Remedial and supplementary education'),
+(4, 'Gifted Education Program', 'gifted-education-program', 'Education for gifted and talented students'),
+(4, 'Therapeutic Education Center', 'therapeutic-education', 'Education combined with therapeutic services'),
+(4, 'Montessori/Waldorf School', 'montessori-waldorf-school', 'Alternative education methodologies'),
+(4, 'Homeschooling Support Center', 'homeschooling-support', 'Support services for homeschooling families'),
+(4, 'Alternative Education School', 'alternative-education', 'Non-traditional educational approaches'),
 
--- Government Educational Institutions (Category ID: 5)
-(5, 'Government School', 'government-school', 'Government-operated school systems'),
-(5, 'Public University', 'public-university', 'Government-funded higher education institutions'),
-(5, 'Municipal College', 'municipal-college', 'Municipal government colleges'),
-(5, 'State Board School', 'state-board-school', 'State government board schools'),
+-- Government Educational Institutions (category_id = 5)
+(5, 'Public School System Administration', 'public-admin', 'Government-operated school systems'),
+(5, 'Government University/College', 'govt-university', 'Government-funded higher education institutions'),
+(5, 'Military/Defense Training Academy', 'military-academy', 'Military and defense training institutions'),
+(5, 'Civil Service Training Institute', 'civil-service', 'Training for government employees'),
+(5, 'Government Research Institution', 'govt-research', 'Government-funded research institutions'),
+(5, 'Public Vocational Training Center', 'public-vocational', 'Government-operated vocational training'),
+(5, 'Government Sports Authority', 'govt-sports', 'Government sports and athletics programs'),
 
--- Non-Governmental Organizations (Category ID: 6)
-(6, 'Educational NGO', 'educational-ngo', 'Non-profit educational organizations'),
-(6, 'Community Learning Center', 'community-learning-center', 'Community-based learning initiatives'),
-(6, 'Non-Profit Training Institute', 'non-profit-training-institute', 'Non-profit training organizations'),
+-- Non-Governmental Organizations (category_id = 6)
+(6, 'Educational NGO', 'edu-ngo', 'Non-profit educational organizations'),
+(6, 'Skill Development Organization', 'skill-dev', 'NGOs focused on skill development'),
+(6, 'Literacy Program Provider', 'literacy', 'Organizations promoting literacy'),
+(6, 'Educational Resource Provider', 'resource', 'NGOs providing educational resources'),
+(6, 'Community Learning Center', 'community', 'Community-based learning initiatives'),
+(6, 'International Education Organization', 'international', 'International educational NGOs'),
+(6, 'Special Needs Support Organization', 'special-needs-ngo', 'NGOs supporting special needs education'),
 
--- Modern Learning Environments (Category ID: 7)
-(7, 'Online', 'online', 'Digital and online education platforms'),
-(7, 'EdTech', 'edtech', 'Technology-focused educational services'),
-(7, 'Virtual Reality Learning', 'virtual-reality-learning', 'VR-based educational platforms'),
-(7, 'Hybrid Learning Center', 'hybrid-learning-center', 'Hybrid online and offline learning'),
+-- Modern Learning Environments (category_id = 7)
+(7, 'Online Learning Platform', 'online', 'Digital and online education platforms'),
+(7, 'Blended Learning Provider', 'blended', 'Hybrid online and offline learning'),
+(7, 'Continuing Education Center', 'continuing-ed', 'Lifelong learning and continuing education'),
+(7, 'Educational Technology Provider', 'edtech', 'Technology-focused educational services'),
+(7, 'Massive Open Online Course (MOOC) Provider', 'mooc', 'Large-scale online course platforms'),
+(7, 'Virtual School', 'virtual-school', 'Fully virtual educational institutions'),
+(7, 'Microlearning Platform', 'microlearning', 'Short-form, focused learning modules'),
 
--- Other Educational Institutions (Category ID: 8)
-(8, 'Library & Resource Center', 'library-resource-center', 'Educational libraries and resource centers'),
-(8, 'Research Institute', 'research-institute', 'Independent research organizations'),
-(8, 'Think Tank', 'think-tank', 'Policy and research think tanks'),
-(8, 'Corporate Training Center', 'corporate-training-center', 'Corporate internal training programs');
-
-
-
+-- Other Educational Institutions (category_id = 8)
+(8, 'Corporate Training Department', 'corporate-training', 'Corporate internal training programs'),
+(8, 'Independent Research Institute', 'research-institute', 'Independent research organizations'),
+(8, 'Educational Think Tank', 'think-tank', 'Policy and research think tanks'),
+(8, 'Educational Publishing Organization', 'publishing', 'Educational content publishers'),
+(8, 'Educational Assessment Provider', 'assessment', 'Testing and assessment organizations'),
+(8, 'Other (Not Listed)', 'other-type', 'Educational institutions not covered in other categories');
 
