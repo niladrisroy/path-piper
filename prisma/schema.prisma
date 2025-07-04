@@ -740,6 +740,7 @@ model InstitutionEvent {
   institution   InstitutionProfile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
 
   @@map("institution_events")
+  @@schema("public")
 }
 
 model InstitutionGallery {
@@ -751,6 +752,7 @@ model InstitutionGallery {
   institution   InstitutionProfile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
 
   @@map("institution_gallery")
+  @@schema("public")
 }
 
 model InstitutionFaculty {
@@ -781,4 +783,5 @@ model InstitutionFaculty {
   institution         InstitutionProfile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
 
   @@map("institution_faculty")
+  @@schema("public")
 }
