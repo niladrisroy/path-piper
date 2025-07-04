@@ -488,22 +488,41 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
             {/* Action Buttons */}
             <div className="flex items-center justify-between mt-4">
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="sm" className="text-gray-600 h-8 w-8 p-0 rounded-full">
-                  <ImageIcon className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" className="text-gray-600 h-8 w-8 p-0 rounded-full">
-                  <Video className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" className="text-gray-600 h-8 w-8 p-0 rounded-full">
-                  <Link className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" className="text-gray-600 h-8 w-8 p-0 rounded-full">
-                  <Smile className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" className="text-gray-600 h-8 w-8 p-0 rounded-full">
-                  <MapPin className="h-4 w-4" />
-                </Button>
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        if (file.size > 5 * 1024 * 1024) {
+                          toast.error("Image size should be less than 5MB")
+                          return
+                        }
+                        // Handle image upload here
+                        console.log("Image selected:", file)
+                      }
+                    }}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <label htmlFor="image-upload">
+                    <Button variant="ghost" size="sm" className="text-gray-600 h-8 w-8 p-0 rounded-full cursor-pointer" asChild>
+                      <span>
+                        <ImageIcon className="h-4 w-4" />
+                      </span>
+                    </Button>
+                  </label>
+                </div>
+                <div className="relative group">
+                  <Button variant="ghost" size="sm" className="text-gray-400 h-8 w-8 p-0 rounded-full cursor-not-allowed">
+                    <Video className="h-4 w-4" />
+                  </Button>
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                    Coming Soon
+                  </div>
+                </div>
               </div>
               
               <div className="flex gap-2">
