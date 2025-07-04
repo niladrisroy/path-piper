@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useRef } from "react"
@@ -62,13 +61,13 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
 
         const rect = element.getBoundingClientRect()
         const containerRect = containerRef.current!.getBoundingClientRect()
-        
+
         // Calculate distance from section center to viewport center
         const sectionTop = rect.top - containerRect.top
         const sectionBottom = rect.bottom - containerRect.top
         const sectionCenter = (sectionTop + sectionBottom) / 2
         const distance = Math.abs(sectionCenter - centerPoint)
-        
+
         if (distance < minDistance) {
           minDistance = distance
           currentSection = id
@@ -95,7 +94,7 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
       const elementRect = element.getBoundingClientRect()
       const scrollTop = containerRef.current.scrollTop
       const containerHeight = containerRef.current.clientHeight
-      
+
       // Calculate scroll position to center the section in viewport
       const elementHeight = elementRect.height
       const targetScrollTop = scrollTop + elementRect.top - containerRect.top - (containerHeight / 2) + (elementHeight / 2)
@@ -185,7 +184,7 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
                   id="programs"
                   className="scroll-mt-6"
                 >
-                  <ProgramsSection />
+                  <ProgramsSection institutionId={institutionData.id} />
                 </div>
 
                 <div 
