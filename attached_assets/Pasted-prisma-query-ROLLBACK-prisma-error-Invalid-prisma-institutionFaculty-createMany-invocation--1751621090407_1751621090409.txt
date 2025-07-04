@@ -1,0 +1,26 @@
+prisma:query ROLLBACK
+prisma:error 
+Invalid `prisma.institutionFaculty.createMany()` invocation:
+
+
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "54000", message: "number of array dimensions (1095311437) exceeds the maximum allowed (6)", severity: "ERROR", detail: None, column: None, hint: None }), transient: false })
+file:///home/runner/workspace/node_modules/.pnpm/@prisma+client@6.8.2_prisma@6.8.2_typescript@5.0.2__typescript@5.0.2/node_modules/@prisma/client/runtime/library.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: TypeError [ERR_INVALID_ARG_TYPE]: The "payload" argument must be of type object. Received null
+file:///home/runner/workspace/node_modules/.pnpm/@prisma+client@6.8.2_prisma@6.8.2_typescript@5.0.2__typescript@5.0.2/node_modules/@prisma/client/runtime/library.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: TypeError [ERR_INVALID_ARG_TYPE]: The "payload" argument must be of type object. Received null
+file:///home/runner/workspace/node_modules/.pnpm/@prisma+client@6.8.2_prisma@6.8.2_typescript@5.0.2__typescript@5.0.2/node_modules/@prisma/client/runtime/library.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: TypeError [ERR_INVALID_ARG_TYPE]: The "payload" argument must be of type object. Received null
+file:///home/runner/workspace/node_modules/.pnpm/@prisma+client@6.8.2_prisma@6.8.2_typescript@5.0.2__typescript@5.0.2/node_modules/@prisma/client/runtime/library.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: TypeError [ERR_INVALID_ARG_TYPE]: The "payload" argument must be of type object. Received null
+Error saving faculty: Error [PrismaClientUnknownRequestError]: 
+Invalid `prisma.institutionFaculty.createMany()` invocation:
+
+
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "54000", message: "number of array dimensions (1095311437) exceeds the maximum allowed (6)", severity: "ERROR", detail: None, column: None, hint: None }), transient: false })
+    at async POST (app/api/institution/faculty/route.ts:91:6)
+  89 |       }))
+  90 |
+> 91 |       await prisma.institutionFaculty.createMany({
+     |      ^
+  92 |         data: facultyData
+  93 |       })
+  94 |     } {
+  clientVersion: '6.8.2'
