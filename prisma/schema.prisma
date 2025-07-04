@@ -628,23 +628,6 @@ model PostBookmark {
   @@schema("public")
 }
 
-model Goal {
-  id          Int      @id @default(autoincrement())
-  userId      String   @map("user_id") @db.Uuid
-  title       String
-  description String?
-  category    String?
-  timeframe   String?
-  completed   Boolean  @default(false)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("goals")
-  @@schema("public")
-}
-
 model AchievementCategory {
   id          Int      @id @default(autoincrement())
   name        String   @unique
