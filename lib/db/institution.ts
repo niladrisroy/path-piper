@@ -42,6 +42,12 @@ export async function getInstitutionById(id: string) {
       return null
     }
 
+    // Fetch gallery images
+    const galleryImages = await prisma.institutionGallery.findMany({
+      where: { institutionId: id },
+      orderBy: { createdAt: 'desc' }
+    })
+
     return {
       id: institution.id,
       name: institution.institutionName,
@@ -52,7 +58,12 @@ export async function getInstitutionById(id: string) {
       logo: institution.profile.profileImageUrl || '/placeholder-logo.png',
       coverImage: institution.coverImageUrl || '/university-classroom.png',
       website: institution.website || '',
-      verified: institution.verified
+      verified: institution.verified,
+      gallery: galleryImages.map(img => ({
+        id: img.id,
+        url: img.imageUrl,
+        caption: img.caption || ''
+      }))
     }
   } catch (error) {
     console.error(`Error fetching institution ${id}:`, error)
@@ -72,6 +83,12 @@ export async function getCurrentUserInstitution(userId: string) {
     if (!institution) {
       return null
     }
+
+    // Fetch gallery images
+    const galleryImages = await prisma.institutionGallery.findMany({
+      where: { institutionId: userId },
+      orderBy: { createdAt: 'desc' }
+    })
 
     return {
       id: institution.id,
@@ -98,7 +115,12 @@ export async function getCurrentUserInstitution(userId: string) {
             }
           })() : 
           (Array.isArray(institution.coreValues) ? institution.coreValues : [])
-        ) : []
+        ) : [],
+      gallery: galleryImages.map(img => ({
+        id: img.id,
+        url: img.imageUrl,
+        caption: img.caption || ''
+      }))
     }
   } catch (error) {
     console.error(`Error fetching current user institution ${userId}:`, error)

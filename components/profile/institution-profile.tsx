@@ -216,7 +216,7 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
                   id="gallery"
                   className="scroll-mt-6"
                 >
-                  <GallerySection />
+                  <GallerySection images={institutionData.gallery} />
                 </div>
               </div>
             </div>

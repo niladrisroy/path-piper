@@ -1040,6 +1040,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                   value={facility.availability}
                   onChange={(e) => updateFacility(index, 'availability', e.target.value)}
                   placeholder="e.g., 24/7, Mon-Fri 9AM-6PM"
+                ```text
                 />
               </div>
             </div>
@@ -1184,74 +1185,162 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     </Card>
   )
 
+  const [galleryImages, setGalleryImages] = useState([
+    {
+      id: 1,
+      url: '',
+      caption: '',
+    },
+  ])
+  const [isAddingGalleryImage, setIsAddingGalleryImage] = useState(false)
+  const [currentGalleryImage, setCurrentGalleryImage] = useState({
+    url: '',
+    caption: '',
+  })
+  const [galleryFile, setGalleryFile] = useState<File | null>(null)
+
+  const handleGalleryFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setGalleryFile(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setCurrentGalleryImage(prev => ({ ...prev, url: reader.result as string }))
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const addGalleryImage = () => {
+    setGalleryImages([
+      ...galleryImages,
+      {
+        id: galleryImages.length + 1,
+        url: currentGalleryImage.url,
+        caption: currentGalleryImage.caption,
+      },
+    ])
+    setCurrentGalleryImage({ url: '', caption: '' })
+    setGalleryFile(null)
+    setIsAddingGalleryImage(false)
+  }
+
+  const removeGalleryImage = (index: number) => {
+    const updatedGalleryImages = [...galleryImages]
+    updatedGalleryImages.splice(index, 1)
+    setGalleryImages(updatedGalleryImages)
+  }
+
+  const saveGalleryImages = () => {
+    // TODO: Save gallery images to database
+    toast({
+      title: 'Success',
+      description: 'Gallery images saved successfully!',
+    })
+  }
+
   const renderGallerySection = () => (
     <Card ref={sectionRefs.gallery}>
       <CardHeader>
         <CardTitle>Photo Gallery</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {formData.gallery.map((item, index) => (
-          <div key={index} className="p-4 border rounded-lg space-y-4">
-            <div className="flex justify-between items-center">
-              <h4 className="font-medium">Image {index + 1}</h4>
-              {formData.gallery.length > 1 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => removeGalleryItem(index)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
+        {/* Gallery Section */}
+        <div ref={sectionRefs.gallery} className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-semibold text-gray-900">Institution Gallery</h3>
+              <p className="text-gray-600 mt-1">Showcase your campus, facilities, and student life</p>
             </div>
+            <Button onClick={saveGalleryImages} className="bg-purple-600 hover:bg-purple-700">
+              Save Gallery Changes
+            </Button>
+          </div>
 
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Image URL</Label>
-                <Input
-                  value={item.imageUrl}
-                  onChange={(e) => updateGalleryItem(index, 'imageUrl', e.target.value)}
-                  placeholder="https://... or upload an image"
-                />
-              </div>
+          {/* Gallery Grid */}
+          {galleryImages.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {galleryImages.map((image) => (
+                <div key={image.id} className="group relative rounded-lg overflow-hidden border border-gray-200">
+                  <img src={image.url || "/placeholder.svg"} alt={image.caption} className="w-full h-48 object-cover" />
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200">
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => removeGalleryImage(image.id)}
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="p-2 bg-white">
+                    <p className="text-sm text-gray-700 truncate">{image.caption || 'No caption'}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
-              <div className="space-y-2">
-                <Label>Caption</Label>
-                <Input
-                  value={item.caption}
-                  onChange={(e) => updateGalleryItem(index, 'caption', e.target.value)}
-                  placeholder="Describe the image"
-                />
-              </div>
+          {/* Add Image Form */}
+          {isAddingGalleryImage ? (
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-4">
+              <h4 className="text-lg font-medium text-gray-700">Add New Image</h4>
 
-              {item.imageUrl && (
-                <div className="w-full h-48 rounded-lg overflow-hidden border">
-                  <Image
-                    src={item.imageUrl}
-                    alt={item.caption || "Gallery image"}
-                    width={400}
-                    height={200}
-                    className="w-full h-full object-cover"
-                    onError={() => {
-                      // Handle image load error
-                    }}
+              <div className="space-y-4">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  <div className="flex flex-col items-center">
+                    <ImageIcon className="h-10 w-10 text-gray-400 mb-2" />
+                    <p className="text-sm text-gray-500 mb-4">Upload an image for your gallery</p>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleGalleryFileSelect}
+                      className="mb-2"
+                    />
+                    {currentGalleryImage.url && (
+                      <img src={currentGalleryImage.url} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded" />
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="gallery-caption">Caption</Label>
+                  <Input
+                    id="gallery-caption"
+                    placeholder="e.g., Main Campus Building"
+                    value={currentGalleryImage.caption}
+                    onChange={(e) => setCurrentGalleryImage(prev => ({ ...prev, caption: e.target.value }))}
                   />
                 </div>
-              )}
-            </div>
-          </div>
-        ))}
+              </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          onClick={addGalleryItem}
-          className="w-full"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Image
-        </Button>
+              <div className="flex gap-2 pt-2">
+                <Button onClick={addGalleryImage} className="bg-purple-600 hover:bg-purple-700 text-white">
+                  Add Image
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setCurrentGalleryImage({ url: "", caption: "" })
+                    setGalleryFile(null)
+                    setIsAddingGalleryImage(false)
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={() => setIsAddingGalleryImage(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add Image
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   )

@@ -227,8 +227,24 @@ model InstitutionProfile {
   institutionTypeRef          InstitutionType? @relation(fields: [institutionTypeId], references: [id])
   studentEducationHistory     StudentEducationHistory[]
   programs              InstitutionProgram[]
+  gallery InstitutionGallery[]
 
   @@map("institution_profiles")
+  @@schema("public")
+}
+
+model InstitutionGallery {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  institutionId String   @map("institution_id") @db.Uuid
+  imageUrl      String   @map("image_url")
+  caption       String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  institution InstitutionProfile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  @@map("institution_gallery")
   @@schema("public")
 }
 
