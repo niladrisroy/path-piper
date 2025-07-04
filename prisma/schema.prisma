@@ -102,11 +102,10 @@ model Profile {
   goals                 Goal[]
   achievements          UserAchievement[]
   parent                 ParentProfile?        @relation(fields: [parentId], references: [id])
-  postLikes        PostLike[]
-  postComments     PostComment[]
-  postBookmarks    PostBookmark[]
-  postDraft        PostDraft?
-  scheduledPosts   ScheduledPost[]
+  postLikes         PostLike[]
+  postComments      PostComment[]
+  postBookmarks     PostBookmark[]
+
 
   @@map("profiles")
   @@schema("public")
@@ -637,9 +636,9 @@ model PostComment {
 }
 
 model PostBookmark {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId    String   @map("user_id") @db.Uuid
-  postId    String   @map("post_id") @db.Uuid
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  postId String @map("post_id") @db.Uuid
   createdAt DateTime @default(now()) @map("created_at")
 
   user Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -647,60 +646,6 @@ model PostBookmark {
 
   @@unique([userId, postId])
   @@map("post_bookmarks")
-  @@schema("public")
-}
-
-model PostDraft {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId          String    @map("user_id") @db.Uuid
-  content         String?
-  imageUrl        String?   @map("image_url")
-  postType        PostType  @default(GENERAL) @map("post_type")
-  tags            String[]  @default([])
-  subjects        String[]  @default([])
-  ageGroup        String?   @map("age_group")
-  difficultyLevel String?   @map("difficulty_level")
-  isQuestion      Boolean   @default(false) @map("is_question")
-  isAchievement   Boolean   @default(false) @map("is_achievement")
-  achievementType String?   @map("achievement_type")
-  projectCategory String?   @map("project_category")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
-
-  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("post_drafts")
-  @@schema("public")
-}
-
-model ScheduledPost {
-  id              String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId          String                 @map("user_id") @db.Uuid
-  content         String
-  imageUrl        String?                @map("image_url")
-  scheduledFor    DateTime               @map("scheduled_for")
-  postType        PostType               @default(GENERAL) @map("post_type")
-  tags            String[]              @default([])
-  subjects        String[]              @default([])
-  achievementType String?                @map("achievement_type")
-  projectCategory String?                @map("project_category")
-  difficultyLevel String?                @map("difficulty_level")
-  status          ScheduledPostStatus    @default(SCHEDULED)
-  createdAt       DateTime               @default(now()) @map("created_at")
-  updatedAt       DateTime               @updatedAt @map("updated_at")
-
-  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("scheduled_posts")
-  @@schema("public")
-}
-
-enum ScheduledPostStatus {
-  SCHEDULED
-  PUBLISHED
-  CANCELLED
-
-  @@map("scheduled_post_status")
   @@schema("public")
 }
 
