@@ -278,7 +278,7 @@ export function InstitutionNavbar() {
   }, []);
 
   // Function to handle profile navigation with reload
-  const handleProfileClick = (e: React.MouseEvent) => {
+  const handleProfileNavigation = (e: React.MouseEvent) => {
     e.preventDefault();
     window.location.href = '/institution/profile';
   };
@@ -292,7 +292,7 @@ export function InstitutionNavbar() {
       name: "Profile", 
       href: "/institution/profile", 
       icon: <User size={20} />,
-      onClick: handleProfileClick
+      onClick: handleProfileNavigation
     },
   ];
 
