@@ -279,7 +279,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ posts: posts.map(post => ({
         ...post,
         tags: Array.isArray(post.tags) ? post.tags : [],
-        subjects: Array.isArray(post.subjects) ? Array.isArray(post.subjects) : [],
+        subjects: Array.isArray(post.subjects) ? post.subjects : [],
       })) })
   } catch (error) {
     console.error('Error fetching posts:', error)
