@@ -513,29 +513,29 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
               </TabsContent>
             </Tabs>
 
+            {/* Image Preview */}
+            {imageUrl && (
+              <div className="relative mt-4">
+                <img 
+                  src={imageUrl} 
+                  alt="Post image" 
+                  className="max-w-full h-auto rounded-lg border border-gray-200"
+                  style={{ maxHeight: '300px' }}
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setImageUrl(null)}
+                  className="absolute top-2 right-2 bg-black/50 text-white hover:bg-black/70 rounded-full w-8 h-8 p-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+
             {/* Action Buttons */}
-            <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
               <div className="flex items-center gap-2">
-                {/* Image Preview */}
-                {imageUrl && (
-                  <div className="relative mt-2">
-                    <img 
-                      src={imageUrl} 
-                      alt="Post image" 
-                      className="max-w-full h-auto rounded-lg border border-gray-200"
-                      style={{ maxHeight: '300px' }}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setImageUrl(null)}
-                      className="absolute top-2 right-2 bg-black/50 text-white hover:bg-black/70 rounded-full w-8 h-8 p-0"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-                
                 {/* Only show upload buttons if no image is uploaded */}
                 {!imageUrl && (
                   <>
@@ -557,7 +557,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                         id="image-upload"
                       />
                       <label htmlFor="image-upload">
-                        <Button variant="ghost" size="sm" className="text-gray-600 h-8 w-8 p-0 rounded-full cursor-pointer" asChild>
+                        <Button variant="ghost" size="sm" className="text-gray-600 h-8 w-8 p-0 rounded-full cursor-pointer hover:bg-gray-100" asChild>
                           <span>
                             <ImageIcon className="h-4 w-4" />
                           </span>
@@ -576,12 +576,14 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                 )}
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 {(showTrailOption || isOverLimit) && (
                   <Button
                     onClick={handleCreateTrail}
                     disabled={!postText.trim() || isPosting}
-                    className="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-full px-4 hover:from-purple-600 hover:to-purple-700"
+                    variant="outline"
+                    size="sm"
+                    className="text-purple-600 border-purple-200 hover:bg-purple-50 rounded-full px-4"
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     Create Trail
@@ -591,7 +593,8 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                 <Button
                   onClick={handlePost}
                   disabled={!postText.trim() || isOverLimit || isPosting}
-                  className={`${selectedPostType?.color || 'bg-gradient-to-r from-pathpiper-teal to-pathpiper-blue'} text-white rounded-full px-6`}
+                  size="sm"
+                  className={`${selectedPostType?.color || 'bg-gradient-to-r from-pathpiper-teal to-pathpiper-blue'} text-white rounded-full px-6 font-medium shadow-sm hover:shadow-md transition-all duration-200`}
                 >
                   {selectedPostType && <selectedPostType.icon className="h-4 w-4 mr-1" />}
                   {isPosting ? "Posting..." : "Post"}
