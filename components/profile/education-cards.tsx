@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { BookOpenIcon, CalendarIcon, AwardIcon } from "lucide-react"
+import { BookOpenIcon, CalendarIcon, AwardIcon, Building } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import ConnectedInstitutions from "./connected-institutions"; // Import the new component
 import { useState } from "react";
@@ -121,7 +121,13 @@ export default function EducationCards({ educationHistory: realEducationHistory,
 
         {/* Connected Institutions Section */}
         {!isViewMode && (
-          <div key={refreshKey}>
+          <div className="mt-8" key={refreshKey}>
+            <div className="flex items-center gap-2 mb-4">
+              <Building className="h-5 w-5 text-pathpiper-teal" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Connected Institutions
+              </h3>
+            </div>
             <ConnectedInstitutions />
           </div>
         )}
