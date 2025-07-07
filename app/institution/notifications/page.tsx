@@ -75,15 +75,20 @@ export default function InstitutionNotificationsPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status: action === 'accept' ? 'accepted' : 'declined' }),
+        body: JSON.stringify({ action }),
       })
 
       if (response.ok) {
         // Remove the request from the list
         setConnectionRequests(prev => prev.filter(req => req.id !== requestId))
+      } else {
+        const error = await response.json()
+        console.error('Error handling connection request:', error)
+        alert(error.error || 'Failed to process request')
       }
     } catch (error) {
       console.error('Error handling connection request:', error)
+      alert('Failed to process request')
     } finally {
       setProcessingRequest(null)
     }
@@ -125,10 +130,8 @@ export default function InstitutionNotificationsPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  <div className="text-lg font-semibold leading-none tracking-tight flex items-center justify-between">
-                        Connection Requests
-                        <Badge variant="secondary">{connectionRequests.length}</Badge>
-                      </div>
+                  Connection Requests
+                  <Badge variant="secondary">{connectionRequests.length}</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
