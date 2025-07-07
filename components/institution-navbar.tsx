@@ -276,12 +276,6 @@ export function InstitutionNavbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Function to handle profile navigation with reload
-  const handleProfileNavigation = (e: React.MouseEvent) => {
-    e.preventDefault();
-    window.location.href = '/institution/profile';
-  };
-
   // Navigation items for institutions - fixed profile URL
   const navItems = [
     { name: "Feed", href: "/feed", icon: <Home size={20} /> },
@@ -290,8 +284,7 @@ export function InstitutionNavbar() {
     { 
       name: "Profile", 
       href: "/institution/profile", 
-      icon: <User size={20} />,
-      onClick: handleProfileNavigation
+      icon: <User size={20} />
     },
   ];
 
@@ -464,34 +457,18 @@ export function InstitutionNavbar() {
                 )}
               </div>
 
-              {navItems.map((link) => {
-                if (link.name === "Profile") {
-                  return (
-                    <button
-                      key={link.name}
-                      onClick={link.onClick}
-                      className={`text-slate-700 hover:text-teal-500 transition-colors font-medium flex items-center gap-1 ${
-                        pathname === link.href ? "text-teal-500" : ""
-                      }`}
-                    >
-                      {link.icon}
-                      <span>{link.name}</span>
-                    </button>
-                  );
-                }
-                return (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    className={`text-slate-700 hover:text-teal-500 transition-colors font-medium flex items-center gap-1 ${
-                      pathname === link.href ? "text-teal-500" : ""
-                    }`}
-                  >
-                    {link.icon}
-                    <span>{link.name}</span>
-                  </Link>
-                );
-              })}
+              {navItems.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className={`text-slate-700 hover:text-teal-500 transition-colors font-medium flex items-center gap-1 ${
+                    pathname === link.href ? "text-teal-500" : ""
+                  }`}
+                >
+                  {link.icon}
+                  <span>{link.name}</span>
+                </Link>
+              ))}
 
               <Link href="/institution/notifications" className="relative">
                 <Bell
@@ -605,38 +582,20 @@ export function InstitutionNavbar() {
       {/* Bottom navigation for mobile */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
         <div className="flex justify-around items-center py-2">
-          {navItems.map((item) => {
-            if (item.name === "Profile") {
-              return (
-                <button
-                  key={item.name}
-                  onClick={item.onClick}
-                  className={`flex flex-col items-center p-2 ${
-                    pathname === item.href
-                      ? "text-teal-500"
-                      : "text-gray-500 hover:text-teal-500"
-                  }`}
-                >
-                  {item.icon}
-                  <span className="text-xs mt-1">{item.name}</span>
-                </button>
-              );
-            }
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`flex flex-col items-center p-2 ${
-                  pathname === item.href
-                    ? "text-teal-500"
-                    : "text-gray-500 hover:text-teal-500"
-                }`}
-              >
-                {item.icon}
-                <span className="text-xs mt-1">{item.name}</span>
-              </Link>
-            );
-          })}
+          {navItems.map((item) => (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={`flex flex-col items-center p-2 ${
+                pathname === item.href
+                  ? "text-teal-500"
+                  : "text-gray-500 hover:text-teal-500"
+              }`}
+            >
+              {item.icon}
+              <span className="text-xs mt-1">{item.name}</span>
+            </Link>
+          ))}
           <Link href="/institution/notifications" className="relative flex flex-col items-center p-2 text-gray-500 hover:text-teal-500">
             <Bell size={20} />
             {notificationCount > 0 && (
