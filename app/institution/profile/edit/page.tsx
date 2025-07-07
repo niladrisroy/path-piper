@@ -44,16 +44,8 @@ export default async function InstitutionProfileEditPage() {
     <ProtectedLayout>
       <div className="min-h-screen flex flex-col bg-gray-50">
         <InstitutionNavbar />
-        <main className="flex-1 pt-16 sm:pt-24 pb-32">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900">Edit Institution Profile</h1>
-              <p className="text-gray-600 mt-2">
-                Update your institution information to help students learn more about you
-              </p>
-            </div>
-            <InstitutionEditForm institutionData={institution} />
-          </div>
+        <main className="flex-1 pt-16 sm:pt-24">
+          <InstitutionEditForm institutionData={institution} />
         </main>
         <Footer />
       </div>

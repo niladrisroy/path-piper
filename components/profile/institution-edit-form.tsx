@@ -1712,11 +1712,6 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     <div className="flex h-screen w-full">
       {/* Fixed Left Sidebar */}
       <div className="w-80 bg-white border-r border-gray-200 flex-shrink-0">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Edit Sections</h2>
-          <p className="text-sm text-gray-600 mt-1">Update your institution profile</p>
-        </div>
-        
         <nav className="p-4">
           <div className="space-y-2">
             {sections.map(({ id, label, icon: Icon }) => (
@@ -1735,39 +1730,14 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
             ))}
           </div>
         </nav>
-
-        {/* Cancel Button in Sidebar */}
-        <div className="absolute bottom-0 left-0 right-0 w-80 p-4 border-t border-gray-200 bg-white">
-          <Button
-            variant="outline"
-            onClick={() => router.push('/institution/profile')}
-            className="w-full"
-          >
-            Back to Profile
-          </Button>
-        </div>
       </div>
 
       {/* Scrollable Form Content - Full Width */}
       <div className="flex-1 flex flex-col w-full">
-        <div className="p-6 border-b border-gray-200 bg-white">
-          <h1 className="text-2xl font-bold text-gray-900 capitalize">
-            {sections.find(s => s.id === activeSection)?.label || "About"} Section
-          </h1>
-          <p className="text-gray-600 mt-1">
-            {activeSection === "about" && "Manage your institution's basic information and branding"}
-            {activeSection === "programs" && "Add and manage your academic programs and courses"}
-            {activeSection === "faculty" && "Showcase your faculty members and their expertise"}
-            {activeSection === "facilities" && "Highlight your campus facilities and infrastructure"}
-            {activeSection === "events" && "Manage upcoming events and activities"}
-            {activeSection === "gallery" && "Display photos of your campus and student life"}
-          </p>
-        </div>
-
         <div 
           id="form-container"
           className="flex-1 overflow-y-auto p-8 bg-gray-50 w-full"
-          style={{ height: 'calc(100vh - 140px)' }}
+          style={{ height: '100vh' }}
         >
           <form className="space-y-8 w-full">
             <div ref={sectionRefs.about} className="w-full">
