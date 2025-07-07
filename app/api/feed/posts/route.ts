@@ -276,7 +276,11 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    return NextResponse.json({ posts })
+    return NextResponse.json({ posts: posts.map(post => ({
+        ...post,
+        tags: Array.isArray(post.tags) ? post.tags : [],
+        subjects: Array.isArray(post.subjects) ? Array.isArray(post.subjects) : [],
+      })) })
   } catch (error) {
     console.error('Error fetching posts:', error)
     return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 })

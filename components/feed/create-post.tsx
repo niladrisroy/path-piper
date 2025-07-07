@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -81,8 +81,30 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
   const [difficultyLevel, setDifficultyLevel] = useState("")
   const { user } = useAuth()
   const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [connections, setConnections] = useState<any[]>([])
+  const [showMentions, setShowMentions] = useState(false)
+  const [mentionSearch, setMentionSearch] = useState("")
+  const [cursorPosition, setCursorPosition] = useState(0)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const selectedPostType = POST_TYPES.find(type => type.value === postType)
+
+  // Fetch connections for @ mentions
+  useEffect(() => {
+    const fetchConnections = async () => {
+      try {
+        const response = await fetch('/api/connections')
+        if (response.ok) {
+          const data = await response.json()
+          setConnections(data)
+        }
+      } catch (error) {
+        console.error('Error fetching connections:', error)
+      }
+    }
+
+    fetchConnections()
+  }, [])
 
   const addTag = () => {
     if (newTag.trim() && !tags.includes(newTag.trim())) {
@@ -90,6 +112,56 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
       setNewTag("")
     }
   }
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value
+    const position = e.target.selectionStart
+    setPostText(value)
+    setCursorPosition(position)
+
+    // Check for @ mentions
+    const textUpToCursor = value.substring(0, position)
+    const lastAtIndex = textUpToCursor.lastIndexOf('@')
+    
+    if (lastAtIndex !== -1) {
+      const textAfterAt = textUpToCursor.substring(lastAtIndex + 1)
+      // Check if there's no space after @, meaning we're still typing a mention
+      if (!textAfterAt.includes(' ') && textAfterAt.length >= 0) {
+        setMentionSearch(textAfterAt.toLowerCase())
+        setShowMentions(true)
+      } else {
+        setShowMentions(false)
+      }
+    } else {
+      setShowMentions(false)
+    }
+  }
+
+  const insertMention = (connection: any) => {
+    const textUpToCursor = postText.substring(0, cursorPosition)
+    const textAfterCursor = postText.substring(cursorPosition)
+    const lastAtIndex = textUpToCursor.lastIndexOf('@')
+    
+    const beforeAt = postText.substring(0, lastAtIndex)
+    const mention = `@${connection.user.firstName} ${connection.user.lastName}`
+    const newText = beforeAt + mention + ' ' + textAfterCursor
+    
+    setPostText(newText)
+    setShowMentions(false)
+    
+    // Focus back to textarea
+    setTimeout(() => {
+      textareaRef.current?.focus()
+      const newPosition = beforeAt.length + mention.length + 1
+      textareaRef.current?.setSelectionRange(newPosition, newPosition)
+    }, 0)
+  }
+
+  const filteredConnections = connections.filter(conn =>
+    mentionSearch === '' || 
+    conn.user.firstName.toLowerCase().includes(mentionSearch) ||
+    conn.user.lastName.toLowerCase().includes(mentionSearch)
+  )
 
   const removeTag = (tagToRemove: string) => {
     setTags(tags.filter(tag => tag !== tagToRemove))
@@ -289,13 +361,47 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
               />
             </div>
             <div className="flex-1">
-              <Textarea
-                value={postText}
-                onChange={(e) => setPostText(e.target.value)}
-                placeholder="Continue your trail..."
-                className="min-h-[80px] resize-none border border-gray-200 focus:border-pathpiper-teal focus:ring-1 focus:ring-pathpiper-teal"
-                disabled={isPosting}
-              />
+              <div className="relative">
+                <Textarea
+                  ref={textareaRef}
+                  value={postText}
+                  onChange={handleTextChange}
+                  placeholder="Continue your trail... (Use @ to mention connections)"
+                  className="min-h-[80px] resize-none border border-gray-200 focus:border-pathpiper-teal focus:ring-1 focus:ring-pathpiper-teal"
+                  disabled={isPosting}
+                />
+
+                {/* Mentions Dropdown for Trail */}
+                {showMentions && filteredConnections.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto">
+                    {filteredConnections.slice(0, 5).map((connection) => (
+                      <div
+                        key={connection.id}
+                        onClick={() => insertMention(connection)}
+                        className="flex items-center gap-2 p-2 hover:bg-gray-50 cursor-pointer"
+                      >
+                        <div className="h-8 w-8 rounded-full overflow-hidden">
+                          <Image
+                            src={connection.user.profileImageUrl || "/images/student-profile.png"}
+                            alt={`${connection.user.firstName} ${connection.user.lastName}`}
+                            width={32}
+                            height={32}
+                            className="object-cover"
+                          />
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium">
+                            {connection.user.firstName} {connection.user.lastName}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {connection.user.role}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div className="flex justify-between items-center mt-3">
                 <div className="text-xs text-gray-400">{characterCount} characters</div>
                 <Button
@@ -357,13 +463,14 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                 {/* Main Content Area */}
                 <div className="relative">
                   <Textarea
+                    ref={textareaRef}
                     value={postText}
-                    onChange={(e) => setPostText(e.target.value)}
+                    onChange={handleTextChange}
                     placeholder={
-                      postType === "ACHIEVEMENT" ? "Share your achievement..." :
-                      postType === "PROJECT" ? "Tell us about your project..." :
-                      postType === "QUESTION" ? "Ask your question..." :
-                      "What's on your mind?"
+                      postType === "ACHIEVEMENT" ? "Share your achievement... (Use @ to mention connections)" :
+                      postType === "PROJECT" ? "Tell us about your project... (Use @ to mention connections)" :
+                      postType === "QUESTION" ? "Ask your question... (Use @ to mention connections)" :
+                      "What's on your mind? (Use @ to mention connections)"
                     }
                     className={`min-h-[120px] resize-none border ${
                       isOverLimit ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-pathpiper-teal'
@@ -372,6 +479,37 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                     }`}
                     disabled={isPosting}
                   />
+
+                  {/* Mentions Dropdown */}
+                  {showMentions && filteredConnections.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto">
+                      {filteredConnections.slice(0, 5).map((connection) => (
+                        <div
+                          key={connection.id}
+                          onClick={() => insertMention(connection)}
+                          className="flex items-center gap-2 p-2 hover:bg-gray-50 cursor-pointer"
+                        >
+                          <div className="h-8 w-8 rounded-full overflow-hidden">
+                            <Image
+                              src={connection.user.profileImageUrl || "/images/student-profile.png"}
+                              alt={`${connection.user.firstName} ${connection.user.lastName}`}
+                              width={32}
+                              height={32}
+                              className="object-cover"
+                            />
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium">
+                              {connection.user.firstName} {connection.user.lastName}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {connection.user.role}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   <div className={`absolute bottom-2 right-2 text-xs ${
                     isOverLimit ? 'text-red-500' : characterCount > 250 ? 'text-orange-500' : 'text-gray-400'
@@ -424,9 +562,10 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                   {tags.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {tags.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-xs">
-                          #{tag}
-                          <X className="h-3 w-3 ml-1 cursor-pointer" onClick={() => removeTag(tag)} />
+                        <Badge key={tag} variant="secondary" className="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100">
+                          <Hash className="h-3 w-3 mr-1" />
+                          {tag}
+                          <X className="h-3 w-3 ml-1 cursor-pointer hover:text-red-600" onClick={() => removeTag(tag)} />
                         </Badge>
                       ))}
                     </div>

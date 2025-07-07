@@ -21,7 +21,8 @@ import {
   BookOpen,
   Calendar,
   Filter,
-  SortDesc
+  SortDesc,
+  Hash
 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { toast } from "sonner"
@@ -237,12 +238,13 @@ export default function Feed() {
           {(post.tags.length > 0 || post.subjects.length > 0) && (
             <div className="flex flex-wrap gap-1">
               {post.tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-xs">
-                  #{tag}
+                <Badge key={tag} variant="secondary" className="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100">
+                  <Hash className="h-3 w-3 mr-1" />
+                  {tag}
                 </Badge>
               ))}
               {post.subjects.map((subject) => (
-                <Badge key={subject} variant="outline" className="text-xs">
+                <Badge key={subject} variant="outline" className="text-xs border-gray-300 text-gray-600">
                   {subject}
                 </Badge>
               ))}
