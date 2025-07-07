@@ -371,76 +371,149 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
   const characterCount = postText.length
   const isOverLimit = characterCount > 300 && !isTrail
 
+  // State for trail context
+  const [trailContext, setTrailContext] = useState<any>(null)
+
+  // Fetch trail context when parentPostId changes
+  useEffect(() => {
+    if (isTrail && parentPostId) {
+      const fetchTrailContext = async () => {
+        try {
+          const response = await fetch(`/api/feed/posts/${parentPostId}`)
+          if (response.ok) {
+            const data = await response.json()
+            setTrailContext(data.post)
+          }
+        } catch (error) {
+          console.error('Error fetching trail context:', error)
+        }
+      }
+      fetchTrailContext()
+    }
+  }, [isTrail, parentPostId])
+
   if (isTrail) {
     return (
-      <Card className="border border-gray-200 shadow-sm">
-        <CardContent className="p-4">
-          <div className="flex gap-3">
-            <div className="h-10 w-10 rounded-full overflow-hidden flex-shrink-0">
-              <Image
-                src={user?.profileImageUrl || "/images/student-profile.png"}
-                alt="Your profile"
-                width={40}
-                height={40}
-                className="object-cover"
-              />
+      <div className="space-y-3">
+        {/* Trail Context Display */}
+        {trailContext && (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <div className="text-sm text-gray-600 mb-3 font-medium">Adding to this trail:</div>
+            
+            {/* Parent Post */}
+            <div className="mb-4 p-3 bg-white rounded-lg border border-gray-100">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-6 w-6 rounded-full overflow-hidden">
+                  <Image
+                    src={trailContext.author?.profileImageUrl || "/images/student-profile.png"}
+                    alt={`${trailContext.author?.firstName} ${trailContext.author?.lastName}`}
+                    width={24}
+                    height={24}
+                    className="object-cover"
+                  />
+                </div>
+                <span className="font-medium text-sm">{trailContext.author?.firstName} {trailContext.author?.lastName}</span>
+                <span className="text-xs text-gray-500 bg-blue-100 px-2 py-1 rounded-full">Original Post</span>
+              </div>
+              <p className="text-sm text-gray-700">{trailContext.content}</p>
             </div>
-            <div className="flex-1">
-              <div className="relative">
-                <Textarea
-                  ref={textareaRef}
-                  value={postText}
-                  onChange={handleTextChange}
-                  placeholder="Continue your trail... (Use @ to mention connections, # for hashtags)"
-                  className="min-h-[80px] resize-none border border-gray-200 focus:border-pathpiper-teal focus:ring-1 focus:ring-pathpiper-teal"
-                  disabled={isPosting}
-                />
 
-                {/* Mentions Dropdown for Trail */}
-                {showMentions && filteredConnections.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto">
-                    {filteredConnections.slice(0, 5).map((connection) => (
-                      <div
-                        key={connection.id}
-                        onClick={() => insertMention(connection)}
-                        className="flex items-center gap-2 p-2 hover:bg-gray-50 cursor-pointer"
-                      >
-                        <div className="h-8 w-8 rounded-full overflow-hidden">
-                          <Image
-                            src={connection.user.profileImageUrl || "/images/student-profile.png"}
-                            alt={`${connection.user.firstName} ${connection.user.lastName}`}
-                            width={32}
-                            height={32}
-                            className="object-cover"
-                          />
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium">
-                            {connection.user.firstName} {connection.user.lastName}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {connection.user.role}
-                          </div>
-                        </div>
+            {/* Previous Trail Messages */}
+            {trailContext.trails && trailContext.trails.length > 0 && (
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {trailContext.trails.map((trail: any, index: number) => (
+                  <div key={trail.id} className="p-2 bg-white rounded border border-gray-100">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="h-5 w-5 rounded-full overflow-hidden">
+                        <Image
+                          src={trail.author?.profileImageUrl || "/images/student-profile.png"}
+                          alt={`${trail.author?.firstName} ${trail.author?.lastName}`}
+                          width={20}
+                          height={20}
+                          className="object-cover"
+                        />
                       </div>
-                    ))}
+                      <span className="font-medium text-xs">{trail.author?.firstName} {trail.author?.lastName}</span>
+                      <span className="text-xs text-gray-500 bg-purple-100 px-1 py-0.5 rounded">#{trail.trailOrder}</span>
+                    </div>
+                    <p className="text-xs text-gray-600 pl-7">{trail.content}</p>
                   </div>
-                )}
+                ))}
               </div>
-              <div className="flex justify-between items-center mt-3">
-                <div className="text-xs text-gray-400">{characterCount} characters</div>
-                <Button
-                  onClick={handlePost}
-                  disabled={!postText.trim() || isPosting}
-                  className="bg-gradient-to-r from-pathpiper-teal to-pathpiper-blue text-white rounded-full px-4"
-                >
-                  Add Trail
-                </Button>
+            )}
+          </div>
+        )}
+
+        {/* Trail Input Form */}
+        <Card className="border border-gray-200 shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex gap-3">
+              <div className="h-10 w-10 rounded-full overflow-hidden flex-shrink-0">
+                <Image
+                  src={user?.profileImageUrl || "/images/student-profile.png"}
+                  alt="Your profile"
+                  width={40}
+                  height={40}
+                  className="object-cover"
+                />
+              </div>
+              <div className="flex-1">
+                <div className="relative">
+                  <Textarea
+                    ref={textareaRef}
+                    value={postText}
+                    onChange={handleTextChange}
+                    placeholder="Continue your trail... (Use @ to mention connections, # for hashtags)"
+                    className="min-h-[80px] resize-none border border-gray-200 focus:border-pathpiper-teal focus:ring-1 focus:ring-pathpiper-teal"
+                    disabled={isPosting}
+                  />
+
+                  {/* Mentions Dropdown for Trail */}
+                  {showMentions && filteredConnections.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto">
+                      {filteredConnections.slice(0, 5).map((connection) => (
+                        <div
+                          key={connection.id}
+                          onClick={() => insertMention(connection)}
+                          className="flex items-center gap-2 p-2 hover:bg-gray-50 cursor-pointer"
+                        >
+                          <div className="h-8 w-8 rounded-full overflow-hidden">
+                            <Image
+                              src={connection.user.profileImageUrl || "/images/student-profile.png"}
+                              alt={`${connection.user.firstName} ${connection.user.lastName}`}
+                              width={32}
+                              height={32}
+                              className="object-cover"
+                            />
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium">
+                              {connection.user.firstName} {connection.user.lastName}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {connection.user.role}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="flex justify-between items-center mt-3">
+                  <div className="text-xs text-gray-400">{characterCount} characters</div>
+                  <Button
+                    onClick={handlePost}
+                    disabled={!postText.trim() || isPosting}
+                    className="bg-gradient-to-r from-pathpiper-teal to-pathpiper-blue text-white rounded-full px-4"
+                  >
+                    Add Trail
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     )
   }
 
