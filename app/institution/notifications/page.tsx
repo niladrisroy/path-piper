@@ -67,7 +67,7 @@ export default function InstitutionNotificationsPage() {
     }
   }
 
-  const handleConnectionRequest = async (requestId: string, action: 'accept' | 'decline') => {
+  const handleConnectionResponse = async (requestId: string, action: 'accept' | 'decline') => {
     try {
       setProcessingRequest(requestId)
       const response = await fetch(`/api/connections/requests/${requestId}`, {
@@ -75,20 +75,26 @@ export default function InstitutionNotificationsPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ action }),
       })
 
       if (response.ok) {
-        // Remove the request from the list
+        // Remove the request from the list after successful response
         setConnectionRequests(prev => prev.filter(req => req.id !== requestId))
+
+        // Show success message
+        if (action === 'accept') {
+          console.log('Connection request accepted successfully')
+        } else {
+          console.log('Connection request declined successfully')
+        }
       } else {
-        const error = await response.json()
-        console.error('Error handling connection request:', error)
-        alert(error.error || 'Failed to process request')
+        const errorData = await response.json()
+        console.error('Failed to respond to connection request:', errorData.error || 'Unknown error')
       }
     } catch (error) {
-      console.error('Error handling connection request:', error)
-      alert('Failed to process request')
+      console.error('Error responding to connection request:', error)
     } finally {
       setProcessingRequest(null)
     }
@@ -191,7 +197,7 @@ export default function InstitutionNotificationsPage() {
                         <div className="flex space-x-2">
                           <Button
                             size="sm"
-                            onClick={() => handleConnectionRequest(request.id, 'accept')}
+                            onClick={() => handleConnectionResponse(request.id, 'accept')}
                             disabled={processingRequest === request.id}
                             className="bg-green-600 hover:bg-green-700"
                           >
@@ -201,7 +207,7 @@ export default function InstitutionNotificationsPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleConnectionRequest(request.id, 'decline')}
+                            onClick={() => handleConnectionResponse(request.id, 'decline')}
                             disabled={processingRequest === request.id}
                           >
                             <X className="h-4 w-4 mr-1" />
