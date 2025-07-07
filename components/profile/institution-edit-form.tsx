@@ -416,7 +416,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
               description: facility.description || '',
               capacity: capacityFeature ? capacityFeature.replace('Capacity: ', '') : '',
               features: otherFeatures.length > 0 ? otherFeatures : [''],
-              images: [facility.imageUrl || ''],
+              images: [facility.imageUrl || ''], // Preserve the actual image URL from database
               availability: availabilityFeature ? availabilityFeature.replace('Availability: ', '') : ''
             }
           })
@@ -468,18 +468,48 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     }))
   }
 
-  const handleFacilityImageUpload = (e: React.ChangeEvent<HTMLInputElement>, facilityIndex: number) => {
+  const handleFacilityImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, facilityIndex: number) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Create a preview URL for immediate display (like in about section)
-    const reader = new FileReader()
-    reader.onloadend = () => {
+    try {
+      // First create a preview URL for immediate display
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const newImages = [...(formData.facilities[facilityIndex].images || [""])]
+        newImages[0] = reader.result as string
+        updateFacility(facilityIndex, 'images', newImages)
+      }
+      reader.readAsDataURL(file)
+
+      // Then upload the file to get a public URL
+      const uploadFormData = new FormData()
+      uploadFormData.append('file', file)
+
+      const response = await fetch('/api/upload/institution-facility', {
+        method: 'POST',
+        body: uploadFormData
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to upload facility image')
+      }
+
+      const data = await response.json()
+      
+      // Update with the public URL
       const newImages = [...(formData.facilities[facilityIndex].images || [""])]
-      newImages[0] = reader.result as string
+      newImages[0] = data.url
       updateFacility(facilityIndex, 'images', newImages)
+
+    } catch (error) {
+      console.error('Error uploading facility image:', error)
+      toast({
+        title: "Error",
+        description: "Failed to upload facility image. Please try again.",
+        variant: "destructive",
+      })
     }
-    reader.readAsDataURL(file)
   }
 
   // Event handlers
@@ -1320,65 +1350,26 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         facility.name.trim() !== ''
       );
 
-      // Process facilities to handle image uploads
-      const processedFacilities = await Promise.all(
-        validFacilities.map(async (facility) => {
-          let imageUrl = facility.images && facility.images.length > 0 ? facility.images[0] : null;
-          
-          // Check if the image is a data URL (needs uploading)
-          if (imageUrl && imageUrl.startsWith('data:')) {
-            try {
-              // Convert data URL to blob
-              const response = await fetch(imageUrl);
-              const blob = await response.blob();
-              
-              // Create form data and upload
-              const uploadFormData = new FormData();
-              uploadFormData.append('file', blob, 'facility-image.jpg');
+      // Process facilities - no need for complex image upload here since it's handled in handleFacilityImageUpload
+      const processedFacilities = validFacilities.map((facility) => {
+        let imageUrl = facility.images && facility.images.length > 0 ? facility.images[0] : null;
+        
+        // If it's still a data URL, it means the upload failed - preserve existing or set to null
+        if (imageUrl && imageUrl.startsWith('data:')) {
+          // For existing facilities, keep the original image URL, for new ones set to null
+          imageUrl = facility.id ? null : null;
+        }
 
-              const uploadResponse = await fetch('/api/upload/institution-facility', {
-                method: 'POST',
-                body: uploadFormData
-              });
-
-              if (uploadResponse.ok) {
-                const uploadData = await uploadResponse.json();
-                imageUrl = uploadData.url;
-              } else {
-                console.error('Failed to upload image for facility:', facility.name);
-                // Keep the existing image URL if upload fails and it's an edit
-                if (facility.id) {
-                  // For existing facilities, try to preserve the original image
-                  const existingFacilities = await fetch('/api/institution/facilities');
-                  if (existingFacilities.ok) {
-                    const existingData = await existingFacilities.json();
-                    const existingFacility = existingData.facilities.find((f: any) => f.id === facility.id);
-                    if (existingFacility && existingFacility.imageUrl) {
-                      imageUrl = existingFacility.imageUrl;
-                    }
-                  }
-                }
-              }
-            } catch (uploadError) {
-              console.error('Error uploading facility image:', uploadError);
-              // Keep existing image for edits, remove for new facilities
-              if (!facility.id) {
-                imageUrl = null;
-              }
-            }
-          }
-
-          return {
-            id: facility.id,
-            name: facility.name,
-            description: facility.description,
-            capacity: facility.capacity,
-            availability: facility.availability,
-            imageUrl: imageUrl,
-            features: facility.features.filter(feature => feature.trim() !== '')
-          };
-        })
-      );
+        return {
+          id: facility.id,
+          name: facility.name,
+          description: facility.description,
+          capacity: facility.capacity,
+          availability: facility.availability,
+          imageUrl: imageUrl,
+          features: facility.features.filter(feature => feature.trim() !== '')
+        };
+      });
 
       const response = await fetch('/api/institution/facilities', {
         method: 'POST',
