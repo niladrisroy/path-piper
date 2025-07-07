@@ -3,6 +3,8 @@
 import { motion } from "framer-motion"
 import { BookOpenIcon, CalendarIcon, AwardIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import ConnectedInstitutions from "./connected-institutions"; // Import the new component
+import { useState } from "react";
 
 interface EducationCardsProps {
   educationHistory?: any[]
@@ -21,6 +23,8 @@ export default function EducationCards({ educationHistory: realEducationHistory,
       subjects: edu.subjects || [],
       achievements: edu.achievements || [],
     })) : []
+
+    const [refreshKey, setRefreshKey] = useState(0);
 
   return (
     <div className="mb-8">
@@ -112,6 +116,13 @@ export default function EducationCards({ educationHistory: realEducationHistory,
                 </motion.div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Connected Institutions Section */}
+        {!isViewMode && (
+          <div key={refreshKey}>
+            <ConnectedInstitutions />
           </div>
         )}
       </div>
