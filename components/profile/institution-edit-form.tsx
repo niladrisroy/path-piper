@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -9,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Camera, ImagePlus, Plus, Trash2, Save, Calendar, MapPin, Users, Book, Building, Image as ImageIcon, Menu, X } from "lucide-react"
+import { Camera, ImagePlus, Plus, Trash2, Save, Calendar, MapPin, Users, Book, Building, Image as ImageIcon } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 interface InstitutionData {
@@ -46,7 +47,6 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   const coverInputRef = useRef<HTMLInputElement>(null)
 
   const [activeSection, setActiveSection] = useState("about")
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [formData, setFormData] = useState({
     // About section
     overview: institutionData.overview || "",
@@ -132,7 +132,6 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   const [isLoading, setIsLoading] = useState(false)
 
   // Refs for scroll-to-section functionality
-  const containerRef = useRef<HTMLDivElement>(null)
   const sectionRefs = {
     about: useRef<HTMLDivElement>(null),
     programs: useRef<HTMLDivElement>(null),
@@ -151,10 +150,13 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     { id: "gallery", label: "Gallery", icon: ImageIcon }
   ]
 
-  // Auto-scroll detection
+  // Auto-scroll detection for form container
   useEffect(() => {
+    const formContainer = document.getElementById('form-container')
+    if (!formContainer) return
+
     const handleScroll = () => {
-      const scrollPosition = window.scrollY + 120 // Offset for navbar and sticky positioning
+      const scrollPosition = formContainer.scrollTop + 50 // Small offset
 
       let currentSection = "about"
       let closestDistance = Infinity
@@ -165,14 +167,16 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         if (!element) return
 
         const rect = element.getBoundingClientRect()
-        const elementTop = window.scrollY + rect.top
+        const containerRect = formContainer.getBoundingClientRect()
+        
+        // Calculate position relative to the scrollable container
+        const elementTop = element.offsetTop
         const elementBottom = elementTop + rect.height
         
-        // Calculate how much of the element is in the viewport
-        const viewportTop = window.scrollY + 120
-        const viewportBottom = window.scrollY + window.innerHeight
+        // Check if element is in viewport of the scrollable container
+        const viewportTop = formContainer.scrollTop + 50
+        const viewportBottom = formContainer.scrollTop + formContainer.clientHeight
         
-        // Check if element is in viewport
         if (elementBottom > viewportTop && elementTop < viewportBottom) {
           const distanceFromTop = Math.abs(elementTop - viewportTop)
           if (distanceFromTop < closestDistance) {
@@ -197,20 +201,22 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
       }
     }
 
-    window.addEventListener('scroll', throttledScroll, { passive: true })
+    formContainer.addEventListener('scroll', throttledScroll, { passive: true })
     // Call initially to set correct active section
     handleScroll()
-    return () => window.removeEventListener('scroll', throttledScroll)
+    
+    return () => formContainer.removeEventListener('scroll', throttledScroll)
   }, [])
 
   // Scroll to section when clicking navigation
   const scrollToSection = (sectionId: string) => {
     const element = sectionRefs[sectionId as keyof typeof sectionRefs]?.current
-    if (element) {
-      const elementRect = element.getBoundingClientRect()
-      const offsetTop = window.pageYOffset + elementRect.top - 120 // Account for navbar and sticky positioning
+    const formContainer = document.getElementById('form-container')
+    
+    if (element && formContainer) {
+      const offsetTop = element.offsetTop - 20 // Small offset from top
 
-      window.scrollTo({
+      formContainer.scrollTo({
         top: offsetTop,
         behavior: 'smooth'
       })
@@ -218,8 +224,6 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
       // Update active section immediately for better UX
       setActiveSection(sectionId)
     }
-    // Close sidebar on mobile after selection
-    setIsSidebarOpen(false)
   }
 
   const handleInputChange = (field: string, value: string) => {
@@ -1397,7 +1401,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Gallery Section */}
-        <div ref={sectionRefs.gallery} className="space-y-6">
+        <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-semibold text-gray-900">Institution Gallery</h3>
@@ -1497,195 +1501,99 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   )
 
   return (
-    <div className="relative">
-      {/* Mobile Menu Button */}
-      <div className="lg:hidden mb-4">
-        <Button
-          variant="outline"
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="w-full"
-        >
-          <Menu className="h-4 w-4 mr-2" />
-          Edit Sections
-        </Button>
-      </div>
-
-      <div className="flex gap-6">
-        {/* Side Navigation - Desktop */}
-        <div className="hidden lg:block w-64 flex-shrink-0">
-          <div className="sticky top-20 z-10">
-            <Card className="shadow-lg">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-semibold">Edit Sections</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <nav className="space-y-1">
-                  {sections.map(({ id, label, icon: Icon }) => (
-                    <button
-                      key={id}
-                      onClick={() => scrollToSection(id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-200 hover:bg-gray-50 ${
-                        activeSection === id
-                          ? 'bg-blue-50 text-blue-700 border-r-4 border-blue-700 font-medium shadow-sm'
-                          : 'text-gray-700 hover:text-gray-900'
-                      }`}
-                    >
-                      <Icon className={`h-4 w-4 ${activeSection === id ? 'text-blue-700' : 'text-gray-500'}`} />
-                      {label}
-                    </button>
-                  ))}
-                </nav>
-              </CardContent>
-            </Card>
-          </div>
+    <div className="flex h-screen">
+      {/* Fixed Left Sidebar */}
+      <div className="w-80 bg-white border-r border-gray-200 flex-shrink-0">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Edit Sections</h2>
+          <p className="text-sm text-gray-600 mt-1">Update your institution profile</p>
         </div>
-
-        {/* Mobile Sidebar Overlay */}
-        {isSidebarOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden">
-            <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsSidebarOpen(false)} />
-            <div className="fixed left-0 top-0 h-full w-80 bg-white p-6 shadow-lg">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold">Edit Sections</h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsSidebarOpen(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              <nav className="space-y-1">
-                {sections.map(({ id, label, icon: Icon }) => (
-                  <button
-                    key={id}
-                    onClick={() => scrollToSection(id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 rounded-lg ${
-                      activeSection === id
-                        ? 'bg-blue-50 text-blue-700'
-                        : 'text-gray-700'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {label}
-                  </button>
-                ))}
-              </nav>
-            </div>
-          </div>
-        )}
-
-        {/* Form Content */}
-        <div className="flex-1 min-w-0">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div
-              ref={containerRef}
-              className="space-y-6"
-            >
-              <div ref={sectionRefs.about}>
-                {renderAboutSection()}
-              </div>
-              <div ref={sectionRefs.programs}>
-                {renderProgramsSection()}
-              </div>
-              <div ref={sectionRefs.faculty}>
-                {renderFacultySection()}
-              </div>
-              <div ref={sectionRefs.facilities}>
-                {renderFacilitiesSection()}
-              </div>
-              <div ref={sectionRefs.events}>
-                {renderEventsSection()}
-              </div>
-              <div ref={sectionRefs.gallery}>
-                {renderGallerySection()}
-              </div>
-            </div>
-
-            {/* Desktop Save Button - Always visible at bottom */}
-            <div className="hidden lg:block mt-8 mb-8">
-              <div className="bg-white border-t border-gray-200 pt-6">
-                <div className="flex flex-row justify-end space-x-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => router.push('/institution/profile')}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={isLoading} onClick={handleSubmit}>
-                    <Save className="h-4 w-4 mr-2" />
-                    {isLoading ? 'Saving...' : 'Save Changes'}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </form>
-
-          {/* Mobile Sticky Footer for Save Button */}
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
-            <div className="flex flex-col space-y-2">
-              <Button
-                type="submit"
-                disabled={isLoading}
-                onClick={handleSubmit}
-                className="w-full"
+        
+        <nav className="p-4">
+          <div className="space-y-2">
+            {sections.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => scrollToSection(id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-all duration-200 hover:bg-gray-50 ${
+                  activeSection === id
+                    ? 'bg-blue-50 text-blue-700 border border-blue-200 font-medium shadow-sm'
+                    : 'text-gray-700 hover:text-gray-900'
+                }`}
               >
-                <Save className="h-4 w-4 mr-2" />
-                {isLoading ? 'Saving...' : 'Save Changes'}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.push('/institution/profile')}
-                className="w-full"
-              >
-                Cancel
-              </Button>
-            </div>
+                <Icon className={`h-5 w-5 ${activeSection === id ? 'text-blue-700' : 'text-gray-500'}`} />
+                <span className="text-sm">{label}</span>
+              </button>
+            ))}
           </div>
-        </div>
-      </div>
+        </nav>
 
-      {/* Mobile Sticky Footer for Save Button */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
-        <div className="flex flex-col space-y-2">
-          <Button
-            type="submit"
-            disabled={isLoading}
-            onClick={handleSubmit}
-            className="w-full"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            {isLoading ? 'Saving...' : 'Save Changes'}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.push('/institution/profile')}
-            className="w-full"
-          >
-            Cancel
-          </Button>
-        </div>
-      </div>
-
-      {/* Desktop Save Button - Always visible at bottom */}
-      <div className="hidden lg:block mt-8 mb-8">
-        <div className="bg-white border-t border-gray-200 pt-6">
-          <div className="flex flex-row justify-end space-x-4">
+        {/* Action Buttons in Sidebar */}
+        <div className="absolute bottom-0 left-0 right-0 w-80 p-4 border-t border-gray-200 bg-white">
+          <div className="space-y-2">
             <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push('/institution/profile')}
+              onClick={handleSubmit}
+              disabled={isLoading}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
             >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading} onClick={handleSubmit}>
               <Save className="h-4 w-4 mr-2" />
               {isLoading ? 'Saving...' : 'Save Changes'}
             </Button>
+            <Button
+              variant="outline"
+              onClick={() => router.push('/institution/profile')}
+              className="w-full"
+            >
+              Cancel
+            </Button>
           </div>
+        </div>
+      </div>
+
+      {/* Scrollable Form Content */}
+      <div className="flex-1 flex flex-col">
+        <div className="p-6 border-b border-gray-200 bg-white">
+          <h1 className="text-2xl font-bold text-gray-900 capitalize">
+            {sections.find(s => s.id === activeSection)?.label || "About"} Section
+          </h1>
+          <p className="text-gray-600 mt-1">
+            {activeSection === "about" && "Manage your institution's basic information and branding"}
+            {activeSection === "programs" && "Add and manage your academic programs and courses"}
+            {activeSection === "faculty" && "Showcase your faculty members and their expertise"}
+            {activeSection === "facilities" && "Highlight your campus facilities and infrastructure"}
+            {activeSection === "events" && "Manage upcoming events and activities"}
+            {activeSection === "gallery" && "Display photos of your campus and student life"}
+          </p>
+        </div>
+
+        <div 
+          id="form-container"
+          className="flex-1 overflow-y-auto p-6 bg-gray-50"
+          style={{ height: 'calc(100vh - 140px)' }}
+        >
+          <form className="space-y-8 max-w-5xl">
+            <div ref={sectionRefs.about}>
+              {renderAboutSection()}
+            </div>
+            <div ref={sectionRefs.programs}>
+              {renderProgramsSection()}
+            </div>
+            <div ref={sectionRefs.faculty}>
+              {renderFacultySection()}
+            </div>
+            <div ref={sectionRefs.facilities}>
+              {renderFacilitiesSection()}
+            </div>
+            <div ref={sectionRefs.events}>
+              {renderEventsSection()}
+            </div>
+            <div ref={sectionRefs.gallery}>
+              {renderGallerySection()}
+            </div>
+            
+            {/* Extra padding at bottom for better scrolling */}
+            <div className="h-20"></div>
+          </form>
         </div>
       </div>
     </div>
