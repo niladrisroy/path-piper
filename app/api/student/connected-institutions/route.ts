@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
             logoUrl: institutionProfile.institution.logoUrl,
             website: institutionProfile.institution.website,
             verified: institutionProfile.institution.verified,
-            connectedAt: connection.createdAt
+            connectedAt: connection.connectedAt || connection.createdAt
           }
         }
         return null

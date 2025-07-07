@@ -84,7 +84,11 @@ export default function ConnectedInstitutions() {
                 
                 <div className="flex items-center text-xs text-gray-400 mb-2">
                   <Calendar className="h-3 w-3 mr-1" />
-                  Connected {new Date(institution.connectedAt).toLocaleDateString()}
+                  Connected {new Date(institution.connectedAt).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
                 </div>
                 
                 {institution.website && (
