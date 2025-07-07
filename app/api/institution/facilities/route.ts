@@ -57,24 +57,41 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { facilities } = body
 
-    // Delete existing facilities
-    await prisma.institutionFacilities.deleteMany({
-      where: { institutionId: user.id }
-    })
-
-    // Create new facilities
     if (facilities && facilities.length > 0) {
-      const facilitiesData = facilities.map((facility: any) => ({
-        institutionId: user.id,
-        name: facility.name,
-        description: facility.description,
-        imageUrl: facility.imageUrl || null,
-        features: facility.features || []
-      }))
+      for (const facility of facilities) {
+        // Skip empty facilities
+        if (!facility.name || !facility.name.trim()) {
+          continue
+        }
 
-      await prisma.institutionFacilities.createMany({
-        data: facilitiesData
-      })
+        const facilityData = {
+          institutionId: user.id,
+          name: facility.name,
+          description: facility.description || '',
+          imageUrl: facility.images && facility.images.length > 0 && facility.images[0] ? facility.images[0] : null,
+          features: [
+            ...(facility.features || []).filter((f: string) => f.trim() !== ''),
+            ...(facility.capacity ? [`Capacity: ${facility.capacity}`] : []),
+            ...(facility.availability ? [`Availability: ${facility.availability}`] : [])
+          ]
+        }
+
+        if (facility.id && facility.id !== '') {
+          // Update existing facility
+          await prisma.institutionFacilities.update({
+            where: { 
+              id: facility.id,
+              institutionId: user.id // Ensure user owns this facility
+            },
+            data: facilityData
+          })
+        } else {
+          // Create new facility
+          await prisma.institutionFacilities.create({
+            data: facilityData
+          })
+        }
+      }
     }
 
     return NextResponse.json({ success: true })

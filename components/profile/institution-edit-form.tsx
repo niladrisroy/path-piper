@@ -400,16 +400,26 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
       if (response.ok) {
         const data = await response.json()
         if (data.facilities && data.facilities.length > 0) {
-          const formattedFacilities = data.facilities.map((facility: any) => ({
-            id: facility.id,
-            name: facility.name || '',
-            type: '',
-            description: facility.description || '',
-            capacity: '',
-            features: facility.features || [''],
-            images: [facility.imageUrl || ''],
-            availability: ''
-          }))
+          const formattedFacilities = data.facilities.map((facility: any) => {
+            // Extract capacity and availability from features array
+            const features = facility.features || []
+            const capacityFeature = features.find((f: string) => f.startsWith('Capacity:'))
+            const availabilityFeature = features.find((f: string) => f.startsWith('Availability:'))
+            const otherFeatures = features.filter((f: string) => 
+              !f.startsWith('Capacity:') && !f.startsWith('Availability:')
+            )
+
+            return {
+              id: facility.id,
+              name: facility.name || '',
+              type: '',
+              description: facility.description || '',
+              capacity: capacityFeature ? capacityFeature.replace('Capacity: ', '') : '',
+              features: otherFeatures.length > 0 ? otherFeatures : [''],
+              images: [facility.imageUrl || ''],
+              availability: availabilityFeature ? availabilityFeature.replace('Availability: ', '') : ''
+            }
+          })
           setFormData(prev => ({
             ...prev,
             facilities: formattedFacilities
@@ -427,7 +437,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     setFormData(prev => ({
       ...prev,
       facilities: [...prev.facilities, {
-        id: "",
+        id: "", // Will be assigned by database when saved
         name: "",
         type: "",
         description: "",
@@ -1331,9 +1341,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     try {
       // Filter out empty facilities
       const validFacilities = formData.facilities.filter(facility =>
-        facility.name.trim() !== '' &&
-        facility.type.trim() !== '' &&
-        facility.description.trim() !== ''
+        facility.name.trim() !== ''
       );
 
       const response = await fetch('/api/institution/facilities', {
@@ -1343,8 +1351,11 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         },
         body: JSON.stringify({
           facilities: validFacilities.map(facility => ({
+            id: facility.id,
             name: facility.name,
             description: facility.description,
+            capacity: facility.capacity,
+            availability: facility.availability,
             imageUrl: facility.images && facility.images.length > 0 && facility.images[0] ? facility.images[0] : null,
             features: facility.features.filter(feature => feature.trim() !== '')
           }))
@@ -1359,6 +1370,9 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         title: "Success",
         description: "Facilities updated successfully!",
       });
+      
+      // Refresh facilities data to get updated IDs for new facilities
+      await fetchFacilities();
     } catch (error) {
       console.error('Error updating facilities:', error);
       toast({
