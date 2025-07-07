@@ -1,10 +1,9 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
-import InternalNavbar from "@/components/internal-navbar"
+import InstitutionNavbar from "@/components/institution-navbar"
 import Footer from "@/components/footer"
 import ProtectedLayout from "@/app/protected-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -94,7 +93,7 @@ export default function InstitutionNotificationsPage() {
     return (
       <ProtectedLayout>
         <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-          <InternalNavbar />
+          <InstitutionNavbar />
           <main className="flex-grow pt-16 sm:pt-24 flex items-center justify-center">
             <div className="text-center">
               <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-pathpiper-teal"></div>
@@ -110,7 +109,7 @@ export default function InstitutionNotificationsPage() {
   return (
     <ProtectedLayout>
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-        <InternalNavbar />
+        <InstitutionNavbar />
         <main className="flex-grow pt-16 sm:pt-24">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl">
             <div className="mb-8">
@@ -126,10 +125,10 @@ export default function InstitutionNotificationsPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  Connection Requests
-                  <Badge variant="secondary">
-                    {connectionRequests.length} pending
-                  </Badge>
+                  <div className="text-lg font-semibold leading-none tracking-tight flex items-center justify-between">
+                        Connection Requests
+                        <Badge variant="secondary">{connectionRequests.length}</Badge>
+                      </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -160,7 +159,7 @@ export default function InstitutionNotificationsPage() {
                               <User className="h-6 w-6" />
                             </AvatarFallback>
                           </Avatar>
-                          
+
                           <div className="flex-1">
                             <h4 className="font-semibold text-gray-900 dark:text-white">
                               {request.sender.firstName} {request.sender.lastName}
