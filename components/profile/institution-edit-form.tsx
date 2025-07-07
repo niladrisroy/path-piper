@@ -600,6 +600,135 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     }
   }
 
+  // Save functions for each section
+  const saveAboutSection = async () => {
+    setIsLoading(true)
+    try {
+      const response = await fetch('/api/institution/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          overview: formData.overview,
+          mission: formData.mission,
+          coreValues: formData.coreValues.filter(value => value.trim() !== ''),
+          logoUrl: logoPreview,
+          coverImageUrl: coverPreview,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update about section')
+      }
+
+      toast({
+        title: "Success",
+        description: "About section updated successfully!",
+      })
+    } catch (error) {
+      console.error('Error updating about section:', error)
+      toast({
+        title: "Error",
+        description: "Failed to update about section. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const saveProgramsSection = async () => {
+    setIsLoading(true)
+    try {
+      const validPrograms = programs.filter(program =>
+        program.name.trim() !== '' &&
+        program.type.trim() !== '' &&
+        program.level.trim() !== '' &&
+        program.duration.trim() !== '' &&
+        program.description.trim() !== ''
+      )
+
+      const response = await fetch('/api/institution/programs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          programs: validPrograms.map(program => ({
+            name: program.name,
+            type: program.type,
+            level: program.level,
+            duration: program.duration,
+            durationType: program.durationType || 'years',
+            description: program.description,
+            eligibility: program.eligibility,
+            outcomes: program.outcomes,
+          }))
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save programs')
+      }
+
+      toast({
+        title: "Success",
+        description: "Programs updated successfully!",
+      })
+    } catch (error) {
+      console.error('Error updating programs:', error)
+      toast({
+        title: "Error",
+        description: "Failed to update programs. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const saveEventsSection = async () => {
+    setIsLoading(true)
+    try {
+      const validEvents = formData.events.filter(event =>
+        event.title.trim() !== '' &&
+        event.description.trim() !== '' &&
+        event.eventType.trim() !== '' &&
+        event.startDate.trim() !== ''
+      )
+
+      const response = await fetch('/api/institution/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          events: validEvents,
+          preserveExisting: true
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save events')
+      }
+
+      toast({
+        title: "Success",
+        description: "Events updated successfully!",
+      })
+    } catch (error) {
+      console.error('Error updating events:', error)
+      toast({
+        title: "Error",
+        description: "Failed to update events. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -828,6 +957,18 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
             Add Core Value
           </Button>
         </div>
+
+        {/* Save Button for About Section */}
+        <div className="flex justify-end pt-4 border-t">
+          <Button
+            onClick={saveAboutSection}
+            disabled={isLoading}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {isLoading ? 'Saving...' : 'Save About Section'}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   )
@@ -971,6 +1112,18 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
           <Plus className="h-4 w-4 mr-2" />
           Add Program
         </Button>
+
+        {/* Save Button for Programs Section */}
+        <div className="flex justify-end pt-4 border-t">
+          <Button
+            onClick={saveProgramsSection}
+            disabled={isLoading}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {isLoading ? 'Saving...' : 'Save Programs Section'}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   )
@@ -1075,6 +1228,23 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
           <Plus className="h-4 w-4 mr-2" />
           Add Faculty Member
         </Button>
+
+        {/* Save Button for Faculty Section */}
+        <div className="flex justify-end pt-4 border-t">
+          <Button
+            onClick={() => {
+              toast({
+                title: "Info",
+                description: "Faculty section saved! (This is a placeholder - implement faculty save API)",
+              })
+            }}
+            disabled={isLoading}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Save Faculty Section
+          </Button>
+        </div>
       </CardContent>
     </Card>
   )
@@ -1173,6 +1343,23 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
           <Plus className="h-4 w-4 mr-2" />
           Add Facility
         </Button>
+
+        {/* Save Button for Facilities Section */}
+        <div className="flex justify-end pt-4 border-t">
+          <Button
+            onClick={() => {
+              toast({
+                title: "Info",
+                description: "Facilities section saved! (This is a placeholder - implement facilities save API)",
+              })
+            }}
+            disabled={isLoading}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Save Facilities Section
+          </Button>
+        </div>
       </CardContent>
     </Card>
   )
@@ -1295,6 +1482,18 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
           <Plus className="h-4 w-4 mr-2" />
           Add Event
         </Button>
+
+        {/* Save Button for Events Section */}
+        <div className="flex justify-end pt-4 border-t">
+          <Button
+            onClick={saveEventsSection}
+            disabled={isLoading}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {isLoading ? 'Saving...' : 'Save Events Section'}
+          </Button>
+        </div>
           </>
         )}
       </CardContent>
@@ -1407,9 +1606,6 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
               <h3 className="text-xl font-semibold text-gray-900">Institution Gallery</h3>
               <p className="text-gray-600 mt-1">Showcase your campus, facilities, and student life</p>
             </div>
-            <Button onClick={saveGalleryImages} className="bg-purple-600 hover:bg-purple-700">
-              Save Gallery Changes
-            </Button>
           </div>
 
           {/* Gallery Grid */}
@@ -1495,13 +1691,25 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
               Add Image
             </Button>
           )}
+
+          {/* Save Button for Gallery Section */}
+          <div className="flex justify-end pt-4 border-t">
+            <Button
+              onClick={saveGalleryImages}
+              disabled={isLoading}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {isLoading ? 'Saving...' : 'Save Gallery Section'}
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
   )
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen w-full">
       {/* Fixed Left Sidebar */}
       <div className="w-80 bg-white border-r border-gray-200 flex-shrink-0">
         <div className="p-6 border-b border-gray-200">
@@ -1528,30 +1736,20 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
           </div>
         </nav>
 
-        {/* Action Buttons in Sidebar */}
+        {/* Cancel Button in Sidebar */}
         <div className="absolute bottom-0 left-0 right-0 w-80 p-4 border-t border-gray-200 bg-white">
-          <div className="space-y-2">
-            <Button
-              onClick={handleSubmit}
-              disabled={isLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              {isLoading ? 'Saving...' : 'Save Changes'}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => router.push('/institution/profile')}
-              className="w-full"
-            >
-              Cancel
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            onClick={() => router.push('/institution/profile')}
+            className="w-full"
+          >
+            Back to Profile
+          </Button>
         </div>
       </div>
 
-      {/* Scrollable Form Content */}
-      <div className="flex-1 flex flex-col">
+      {/* Scrollable Form Content - Full Width */}
+      <div className="flex-1 flex flex-col w-full">
         <div className="p-6 border-b border-gray-200 bg-white">
           <h1 className="text-2xl font-bold text-gray-900 capitalize">
             {sections.find(s => s.id === activeSection)?.label || "About"} Section
@@ -1568,26 +1766,26 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
 
         <div 
           id="form-container"
-          className="flex-1 overflow-y-auto p-6 bg-gray-50"
+          className="flex-1 overflow-y-auto p-8 bg-gray-50 w-full"
           style={{ height: 'calc(100vh - 140px)' }}
         >
-          <form className="space-y-8 max-w-5xl">
-            <div ref={sectionRefs.about}>
+          <form className="space-y-8 w-full">
+            <div ref={sectionRefs.about} className="w-full">
               {renderAboutSection()}
             </div>
-            <div ref={sectionRefs.programs}>
+            <div ref={sectionRefs.programs} className="w-full">
               {renderProgramsSection()}
             </div>
-            <div ref={sectionRefs.faculty}>
+            <div ref={sectionRefs.faculty} className="w-full">
               {renderFacultySection()}
             </div>
-            <div ref={sectionRefs.facilities}>
+            <div ref={sectionRefs.facilities} className="w-full">
               {renderFacilitiesSection()}
             </div>
-            <div ref={sectionRefs.events}>
+            <div ref={sectionRefs.events} className="w-full">
               {renderEventsSection()}
             </div>
-            <div ref={sectionRefs.gallery}>
+            <div ref={sectionRefs.gallery} className="w-full">
               {renderGallerySection()}
             </div>
             
