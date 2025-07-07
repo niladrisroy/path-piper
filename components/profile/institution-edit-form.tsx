@@ -425,6 +425,45 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     }))
   }
 
+  const handleFacilityImageUpload = async (e: Event, facilityIndex: number) => {
+    const target = e.target as HTMLInputElement
+    const file = target.files?.[0]
+    if (!file) return
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/upload/institution-facility', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image')
+      }
+
+      const data = await response.json()
+      
+      // Update the facility images array
+      const newImages = [...(formData.facilities[facilityIndex].images || [""])]
+      newImages[0] = data.url
+      updateFacility(facilityIndex, 'images', newImages)
+
+      toast({
+        title: "Success",
+        description: "Facility image uploaded successfully!",
+      })
+    } catch (error) {
+      console.error('Error uploading facility image:', error)
+      toast({
+        title: "Error",
+        description: "Failed to upload facility image. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
   // Event handlers
   const [isLoadingEvents, setIsLoadingEvents] = useState(false)
 
@@ -1274,7 +1313,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
           facilities: validFacilities.map(facility => ({
             name: facility.name,
             description: facility.description,
-            imageUrl: facility.images && facility.images.length > 0 ? facility.images[0] : null,
+            imageUrl: facility.images && facility.images.length > 0 && facility.images[0] ? facility.images[0] : null,
             features: facility.features.filter(feature => feature.trim() !== '')
           }))
         }),
@@ -1371,6 +1410,55 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                   placeholder="e.g., 24/7, Mon-Fri 9AM-6PM"
                 />
               </div>
+            </div>
+
+            {/* Facility Image Upload */}
+            <div className="space-y-2">
+              <Label>Facility Image</Label>
+              <div className="flex items-center gap-4">
+                <div
+                  className="w-32 h-24 rounded-lg bg-slate-100 flex flex-col items-center justify-center cursor-pointer overflow-hidden border-2 border-dashed border-slate-300 hover:border-blue-400 transition-colors"
+                  onClick={() => {
+                    const input = document.createElement('input')
+                    input.type = 'file'
+                    input.accept = 'image/*'
+                    input.onchange = (e) => handleFacilityImageUpload(e, index)
+                    input.click()
+                  }}
+                >
+                  {facility.images && facility.images[0] ? (
+                    <Image
+                      src={facility.images[0]}
+                      alt="Facility preview"
+                      width={128}
+                      height={96}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <>
+                      <Camera className="h-6 w-6 text-slate-400 mb-1" />
+                      <span className="text-xs text-slate-500 text-center px-2">
+                        Upload Image
+                      </span>
+                    </>
+                  )}
+                </div>
+                {facility.images && facility.images[0] && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const newImages = [...facility.images]
+                      newImages[0] = ""
+                      updateFacility(index, 'images', newImages)
+                    }}
+                  >
+                    Remove Image
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-slate-500">Upload a photo of the facility</p>
             </div>
 
             <div className="space-y-2">

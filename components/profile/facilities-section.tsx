@@ -19,7 +19,7 @@ export default function FacilitiesSection() {
       setLoading(true)
       const response = await fetch('/api/institution/facilities')
       const data = await response.json()
-      
+
       if (response.ok) {
         setFacilities(data.facilities || [])
       } else {
