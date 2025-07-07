@@ -228,6 +228,7 @@ model InstitutionProfile {
   studentEducationHistory     StudentEducationHistory[]
   programs              InstitutionProgram[]
   gallery InstitutionGallery[]
+  events   InstitutionEvents[]
 
   @@map("institution_profiles")
   @@schema("public")
@@ -239,12 +240,31 @@ model InstitutionGallery {
   imageUrl      String   @map("image_url")
   caption       String?
   createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
 
-  // Relations
   institution InstitutionProfile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
 
   @@map("institution_gallery")
+  @@schema("public")
+}
+
+model InstitutionEvents {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  institutionId   String    @map("institution_id") @db.Uuid
+  title           String
+  description     String
+  eventType       String    @map("event_type")
+  startDate       DateTime  @map("start_date")
+  endDate         DateTime? @map("end_date")
+  location        String?
+  imageUrl        String?   @map("image_url")
+  registrationUrl String?   @map("registration_url")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  institution InstitutionProfile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  @@map("institution_events")
   @@schema("public")
 }
 
@@ -345,7 +365,6 @@ model UserSkill {
 
   @@unique([userId, skillId])
   @@map("user_skills")
-  @@schema("public")
 }
 
 model SocialLink {
@@ -360,7 +379,6 @@ model SocialLink {
 
   @@unique([userId, platform])
   @@map("social_links")
-  @@schema("public")
 }
 
 model Language {
@@ -386,7 +404,6 @@ model UserLanguage {
 
   @@unique([userId, languageId])
   @@map("user_languages")
-  @@schema("public")
 }
 
 model Hobby {
@@ -410,7 +427,6 @@ model UserHobby {
 
   @@unique([userId, hobbyId])
   @@map("user_hobbies")
-  @@schema("public")
 }
 
 model Goal {
@@ -475,7 +491,6 @@ model ConnectionRequest {
 
   @@unique([senderId, receiverId])
   @@map("connection_requests")
-  @@schema("public")
 }
 
 model Connection {
@@ -489,7 +504,6 @@ model Connection {
 
   @@unique([user1Id, user2Id])
   @@map("connections")
-  @@schema("public")
 }
 
 model SkillEndorsement {
@@ -505,7 +519,6 @@ model SkillEndorsement {
 
   @@unique([endorserId, endorsedUserId, skillId])
   @@map("skill_endorsements")
-  @@schema("public")
 }
 
 model CircleBadge {
@@ -539,7 +552,6 @@ model CircleMembership {
 
   @@unique([circleId, userId])
   @@map("circle_memberships")
-  @@schema("public")
 }
 
 model CircleInvitation {
@@ -557,7 +569,6 @@ model CircleInvitation {
 
   @@unique([circleId, inviteeId])
   @@map("circle_invitations")
-  @@schema("public")
 }
 
 model FeedPost {
@@ -630,7 +641,6 @@ model PostLike {
 
   @@unique([userId, postId])
   @@map("post_likes")
-  @@schema("public")
 }
 
 model PostComment {
@@ -648,7 +658,6 @@ model PostComment {
   replies  PostComment[] @relation("CommentReplies")
 
   @@map("post_comments")
-  @@schema("public")
 }
 
 model PostBookmark {
@@ -662,7 +671,6 @@ model PostBookmark {
 
   @@unique([userId, postId])
   @@map("post_bookmarks")
-  @@schema("public")
 }
 
 model AchievementCategory {

@@ -576,9 +576,31 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         throw new Error('Failed to save programs')
       }
 
+      // Save events
+      const validEvents = formData.events.filter(event =>
+        event.title.trim() !== '' &&
+        event.description.trim() !== '' &&
+        event.eventType.trim() !== '' &&
+        event.startDate.trim() !== ''
+      )
+
+      const eventsResponse = await fetch('/api/institution/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          events: validEvents
+        }),
+      })
+
+      if (!eventsResponse.ok) {
+        throw new Error('Failed to save events')
+      }
+
       toast({
         title: "Success",
-        description: "Profile and programs updated successfully!",
+        description: "Profile, programs, and events updated successfully!",
       })
       router.push('/institution/profile')
     } catch (error) {
@@ -1520,8 +1542,8 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
       </div>
 
       {/* Desktop Save Button */}
-      <div className="hidden lg:block">
-        <div className="flex flex-row justify-end space-x-4 sticky bottom-0 bg-white p-4 border-t">
+      <div className="hidden lg:block mt-8">
+        <div className="flex flex-row justify-end space-x-4 p-4 border-t bg-white">
           <Button
             type="button"
             variant="outline"
