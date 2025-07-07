@@ -252,77 +252,119 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
     setIsPosting(true)
     try {
-      const chunks = []
-      let remainingText = postText
-
-      while (remainingText.length > 0) {
-        if (remainingText.length <= 300) {
-          chunks.push(remainingText)
-          break
-        }
-
-        let breakPoint = 300
-        while (breakPoint > 0 && remainingText[breakPoint] !== ' ') {
-          breakPoint--
-        }
-        if (breakPoint === 0) breakPoint = 300
-
-        chunks.push(remainingText.substring(0, breakPoint))
-        remainingText = remainingText.substring(breakPoint).trim()
-      }
-
-      const mainPostResponse = await fetch('/api/feed/posts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          content: chunks[0],
-          isTrail: false,
-          postType,
-          tags,
-          subjects,
-          achievementType: postType === "ACHIEVEMENT" ? achievementType : null,
-          projectCategory: postType === "PROJECT" ? projectCategory : null,
-          difficultyLevel,
-          isQuestion: postType === "QUESTION",
-          isAchievement: postType === "ACHIEVEMENT",
-          imageUrl: imageUrl,
-        }),
-      })
-
-      const mainPostData = await mainPostResponse.json()
-
-      if (!mainPostResponse.ok) {
-        throw new Error(mainPostData.error)
-      }
-
-      for (let i = 1; i < chunks.length; i++) {
-        await fetch('/api/feed/posts', {
+      // If content is under 300 characters, create a single main post
+      if (postText.length <= 300) {
+        const mainPostResponse = await fetch('/api/feed/posts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            content: chunks[i],
-            parentPostId: mainPostData.post.id,
-            isTrail: true,
-            imageUrl: null,
+            content: postText,
+            isTrail: false,
+            postType,
+            tags,
+            subjects,
+            achievementType: postType === "ACHIEVEMENT" ? achievementType : null,
+            projectCategory: postType === "PROJECT" ? projectCategory : null,
+            difficultyLevel,
+            isQuestion: postType === "QUESTION",
+            isAchievement: postType === "ACHIEVEMENT",
+            imageUrl: imageUrl,
           }),
         })
-      }
 
-      setPostText("")
-      setTags([])
-      setSubjects([])
-      setAchievementType("")
-      setProjectCategory("")
-      setDifficultyLevel("")
-      setPostType("GENERAL")
-      setShowTrailOption(false)
-      setImageUrl(null)
-      toast.success("Trail created successfully!")
-      onPostCreated?.()
+        const mainPostData = await mainPostResponse.json()
+
+        if (!mainPostResponse.ok) {
+          throw new Error(mainPostData.error)
+        }
+
+        setPostText("")
+        setTags([])
+        setSubjects([])
+        setAchievementType("")
+        setProjectCategory("")
+        setDifficultyLevel("")
+        setPostType("GENERAL")
+        setShowTrailOption(false)
+        setImageUrl(null)
+        toast.success("Post created as trail! You can now add more trails to it.")
+        onPostCreated?.()
+      } else {
+        // For longer content, chunk it as before
+        const chunks = []
+        let remainingText = postText
+
+        while (remainingText.length > 0) {
+          if (remainingText.length <= 300) {
+            chunks.push(remainingText)
+            break
+          }
+
+          let breakPoint = 300
+          while (breakPoint > 0 && remainingText[breakPoint] !== ' ') {
+            breakPoint--
+          }
+          if (breakPoint === 0) breakPoint = 300
+
+          chunks.push(remainingText.substring(0, breakPoint))
+          remainingText = remainingText.substring(breakPoint).trim()
+        }
+
+        const mainPostResponse = await fetch('/api/feed/posts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            content: chunks[0],
+            isTrail: false,
+            postType,
+            tags,
+            subjects,
+            achievementType: postType === "ACHIEVEMENT" ? achievementType : null,
+            projectCategory: postType === "PROJECT" ? projectCategory : null,
+            difficultyLevel,
+            isQuestion: postType === "QUESTION",
+            isAchievement: postType === "ACHIEVEMENT",
+            imageUrl: imageUrl,
+          }),
+        })
+
+        const mainPostData = await mainPostResponse.json()
+
+        if (!mainPostResponse.ok) {
+          throw new Error(mainPostData.error)
+        }
+
+        for (let i = 1; i < chunks.length; i++) {
+          await fetch('/api/feed/posts', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              content: chunks[i],
+              parentPostId: mainPostData.post.id,
+              isTrail: true,
+              imageUrl: null,
+            }),
+          })
+        }
+
+        setPostText("")
+        setTags([])
+        setSubjects([])
+        setAchievementType("")
+        setProjectCategory("")
+        setDifficultyLevel("")
+        setPostType("GENERAL")
+        setShowTrailOption(false)
+        setImageUrl(null)
+        toast.success("Trail created successfully!")
+        onPostCreated?.()
+      }
     } catch (error) {
       console.error('Error creating trail:', error)
       toast.error("Failed to create trail")
@@ -726,18 +768,17 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
               </div>
 
               <div className="flex items-center gap-2">
-                {(showTrailOption || isOverLimit) && (
-                  <Button
-                    onClick={handleCreateTrail}
-                    disabled={!postText.trim() || isPosting}
-                    variant="outline"
-                    size="sm"
-                    className="text-purple-600 border-purple-200 hover:bg-purple-50 rounded-full px-4"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Create Trail
-                  </Button>
-                )}
+                {/* Always show Create Trail button */}
+                <Button
+                  onClick={handleCreateTrail}
+                  disabled={!postText.trim() || isPosting}
+                  variant="outline"
+                  size="sm"
+                  className="text-purple-600 border-purple-200 hover:bg-purple-50 rounded-full px-4"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Create Trail
+                </Button>
 
                 <Button
                   onClick={handlePost}
