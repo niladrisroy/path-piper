@@ -86,6 +86,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
   const [mentionSearch, setMentionSearch] = useState("")
   const [cursorPosition, setCursorPosition] = useState(0)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [currentTrailParentId, setCurrentTrailParentId] = useState<string | null>(parentPostId || null)
 
   const selectedPostType = POST_TYPES.find(type => type.value === postType)
 
@@ -252,8 +253,11 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
     setIsPosting(true)
     try {
-      // If content is under 300 characters, create a single main post
-      if (postText.length <= 300) {
+      // Check if we already have a parent post (continuing an existing trail)
+      let activeParentId = currentTrailParentId
+
+      // If no parent post exists, create the main post first
+      if (!activeParentId) {
         const mainPostResponse = await fetch('/api/feed/posts', {
           method: 'POST',
           headers: {
@@ -280,91 +284,58 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
           throw new Error(mainPostData.error)
         }
 
-        setPostText("")
+        activeParentId = mainPostData.post.id
+        setCurrentTrailParentId(activeParentId)
+        
+        // Clear form data but keep the text for user to continue adding trails
         setTags([])
         setSubjects([])
         setAchievementType("")
         setProjectCategory("")
         setDifficultyLevel("")
         setPostType("GENERAL")
-        setShowTrailOption(false)
         setImageUrl(null)
-        toast.success("Post created as trail! You can now add more trails to it.")
-        onPostCreated?.()
-      } else {
-        // For longer content, chunk it as before
-        const chunks = []
-        let remainingText = postText
-
-        while (remainingText.length > 0) {
-          if (remainingText.length <= 300) {
-            chunks.push(remainingText)
-            break
-          }
-
-          let breakPoint = 300
-          while (breakPoint > 0 && remainingText[breakPoint] !== ' ') {
-            breakPoint--
-          }
-          if (breakPoint === 0) breakPoint = 300
-
-          chunks.push(remainingText.substring(0, breakPoint))
-          remainingText = remainingText.substring(breakPoint).trim()
+        
+        toast.success("Trail started! You can now add more messages to continue the trail.")
+        
+        // Update the component to now work as a trail continuation
+        if (onPostCreated) {
+          onPostCreated()
         }
-
-        const mainPostResponse = await fetch('/api/feed/posts', {
+        
+        // Set up for next trail message
+        setPostText("")
+        
+      } else {
+        // We're continuing an existing trail
+        const trailResponse = await fetch('/api/feed/posts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            content: chunks[0],
-            isTrail: false,
-            postType,
-            tags,
-            subjects,
-            achievementType: postType === "ACHIEVEMENT" ? achievementType : null,
-            projectCategory: postType === "PROJECT" ? projectCategory : null,
-            difficultyLevel,
-            isQuestion: postType === "QUESTION",
-            isAchievement: postType === "ACHIEVEMENT",
+            content: postText,
+            parentPostId: activeParentId,
+            isTrail: true,
             imageUrl: imageUrl,
           }),
         })
 
-        const mainPostData = await mainPostResponse.json()
+        const trailData = await trailResponse.json()
 
-        if (!mainPostResponse.ok) {
-          throw new Error(mainPostData.error)
-        }
-
-        for (let i = 1; i < chunks.length; i++) {
-          await fetch('/api/feed/posts', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              content: chunks[i],
-              parentPostId: mainPostData.post.id,
-              isTrail: true,
-              imageUrl: null,
-            }),
-          })
+        if (!trailResponse.ok) {
+          throw new Error(trailData.error)
         }
 
         setPostText("")
-        setTags([])
-        setSubjects([])
-        setAchievementType("")
-        setProjectCategory("")
-        setDifficultyLevel("")
-        setPostType("GENERAL")
-        setShowTrailOption(false)
         setImageUrl(null)
-        toast.success("Trail created successfully!")
-        onPostCreated?.()
+        toast.success("Trail message added! Continue adding more messages.")
+        
+        if (onPostCreated) {
+          onPostCreated()
+        }
       }
+      
     } catch (error) {
       console.error('Error creating trail:', error)
       toast.error("Failed to create trail")
@@ -777,7 +748,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                   className="text-purple-600 border-purple-200 hover:bg-purple-50 rounded-full px-4"
                 >
                   <Plus className="h-4 w-4 mr-1" />
-                  Create Trail
+                  {currentTrailParentId ? "Continue Trail" : "Create Trail"}
                 </Button>
 
                 <Button
