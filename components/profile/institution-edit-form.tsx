@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -173,15 +174,15 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
 
         const rect = element.getBoundingClientRect()
         const containerRect = formContainer.getBoundingClientRect()
-
+        
         // Calculate position relative to the scrollable container
         const elementTop = element.offsetTop
         const elementBottom = elementTop + rect.height
-
+        
         // Check if element is in viewport of the scrollable container
         const viewportTop = formContainer.scrollTop + 50
         const viewportBottom = formContainer.scrollTop + formContainer.clientHeight
-
+        
         if (elementBottom > viewportTop && elementTop < viewportBottom) {
           const distanceFromTop = Math.abs(elementTop - viewportTop)
           if (distanceFromTop < closestDistance) {
@@ -209,7 +210,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     formContainer.addEventListener('scroll', throttledScroll, { passive: true })
     // Call initially to set correct active section
     handleScroll()
-
+    
     return () => formContainer.removeEventListener('scroll', throttledScroll)
   }, [])
 
@@ -217,7 +218,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   const scrollToSection = (sectionId: string) => {
     const element = sectionRefs[sectionId as keyof typeof sectionRefs]?.current
     const formContainer = document.getElementById('form-container')
-
+    
     if (element && formContainer) {
       const offsetTop = element.offsetTop - 20 // Small offset from top
 
@@ -225,7 +226,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         top: offsetTop,
         behavior: 'smooth'
       })
-
+      
       // Update active section immediately for better UX
       setActiveSection(sectionId)
     }
@@ -289,9 +290,8 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         coreValues: Array.isArray(institutionData.coreValues) ? institutionData.coreValues : [''],
       }))
 
-      // Fetch existing programs and facilities
+      // Fetch existing programs
       fetchPrograms()
-      fetchFacilities()
     }
   }, [institutionData])
 
@@ -390,54 +390,11 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   }
 
   // Facility handlers
-  const [isLoadingFacilities, setIsLoadingFacilities] = useState(false);
-
-  // Fetch existing facilities
-  const fetchFacilities = async () => {
-    try {
-      setIsLoadingFacilities(true)
-      const response = await fetch('/api/institution/facilities')
-      if (response.ok) {
-        const data = await response.json()
-        if (data.facilities && data.facilities.length > 0) {
-          const formattedFacilities = data.facilities.map((facility: any) => {
-            // Extract capacity and availability from features array
-            const features = facility.features || []
-            const capacityFeature = features.find((f: string) => f.startsWith('Capacity:'))
-            const availabilityFeature = features.find((f: string) => f.startsWith('Availability:'))
-            const otherFeatures = features.filter((f: string) => 
-              !f.startsWith('Capacity:') && !f.startsWith('Availability:')
-            )
-
-            return {
-              id: facility.id,
-              name: facility.name || '',
-              type: '',
-              description: facility.description || '',
-              capacity: capacityFeature ? capacityFeature.replace('Capacity: ', '') : '',
-              features: otherFeatures.length > 0 ? otherFeatures : [''],
-              images: [facility.imageUrl || ''], // Preserve the actual image URL from database
-              availability: availabilityFeature ? availabilityFeature.replace('Availability: ', '') : ''
-            }
-          })
-          setFormData(prev => ({
-            ...prev,
-            facilities: formattedFacilities
-          }))
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching facilities:', error)
-    } finally {
-      setIsLoadingFacilities(false)
-    }
-  }
-
   const addFacility = () => {
     setFormData(prev => ({
       ...prev,
       facilities: [...prev.facilities, {
-        id: "", // Will be assigned by database when saved
+        id: "",
         name: "",
         type: "",
         description: "",
@@ -466,56 +423,6 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
       ...prev,
       facilities: newFacilities
     }))
-  }
-
-  const handleFacilityImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, facilityIndex: number) => {
-    // Prevent event bubbling that might trigger form submission
-    e.preventDefault()
-    e.stopPropagation()
-    
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    try {
-      // Show loading state
-      toast({
-        title: "Uploading...",
-        description: "Please wait while we upload your image.",
-      })
-
-      // Upload the file first to get a public URL
-      const uploadFormData = new FormData()
-      uploadFormData.append('file', file)
-
-      const response = await fetch('/api/upload/institution-facility', {
-        method: 'POST',
-        body: uploadFormData
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to upload facility image')
-      }
-
-      const data = await response.json()
-      
-      // Update form data with the actual public URL (not data URL)
-      const newImages = [...(formData.facilities[facilityIndex].images || [""])]
-      newImages[0] = data.url
-      updateFacility(facilityIndex, 'images', newImages)
-
-      toast({
-        title: "Success",
-        description: "Image uploaded successfully!",
-      })
-
-    } catch (error) {
-      console.error('Error uploading facility image:', error)
-      toast({
-        title: "Error",
-        description: "Failed to upload facility image. Please try again.",
-        variant: "destructive",
-      })
-    }
   }
 
   // Event handlers
@@ -578,18 +485,18 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
 
   const removeEvent = async (index: number) => {
     const eventToRemove = formData.events[index]
-
+    
     // If it's an existing event (has an ID), delete it from database
     if (eventToRemove.id && eventToRemove.id !== '') {
       try {
         const response = await fetch(`/api/institution/events?id=${eventToRemove.id}`, {
           method: 'DELETE'
         })
-
+        
         if (!response.ok) {
           throw new Error('Failed to delete event')
         }
-
+        
         toast({
           title: "Success",
           description: "Event deleted successfully!",
@@ -604,7 +511,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         return // Don't remove from UI if database deletion failed
       }
     }
-
+    
     // Remove from UI
     const newEvents = formData.events.filter((_, i) => i !== index)
     setFormData(prev => ({
@@ -1348,72 +1255,6 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     </Card>
   )
 
-  const saveFacilities = async () => {
-    setIsLoadingFacilities(true);
-    try {
-      // Filter out empty facilities
-      const validFacilities = formData.facilities.filter(facility =>
-        facility.name.trim() !== ''
-      );
-
-      // Process facilities to ensure proper image URL handling
-      const processedFacilities = validFacilities.map((facility) => {
-        let imageUrl = facility.images && facility.images.length > 0 ? facility.images[0] : null;
-        
-        // Only use URLs that start with /uploads/ (our valid upload URLs)
-        // Reject data URLs or any invalid URLs
-        if (imageUrl && !imageUrl.startsWith('/uploads/')) {
-          imageUrl = null;
-        }
-
-        return {
-          id: facility.id || undefined, // Let database assign ID for new facilities
-          name: facility.name,
-          description: facility.description,
-          capacity: facility.capacity,
-          availability: facility.availability,
-          imageUrl: imageUrl,
-          features: [
-            ...facility.features.filter(feature => feature.trim() !== ''),
-            ...(facility.capacity ? [`Capacity: ${facility.capacity}`] : []),
-            ...(facility.availability ? [`Availability: ${facility.availability}`] : [])
-          ]
-        };
-      });
-
-      const response = await fetch('/api/institution/facilities', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          facilities: processedFacilities
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save facilities');
-      }
-
-      toast({
-        title: "Success",
-        description: "Facilities updated successfully!",
-      });
-      
-      // Refresh facilities data to get updated IDs for new facilities
-      await fetchFacilities();
-    } catch (error) {
-      console.error('Error updating facilities:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update facilities. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingFacilities(false);
-    }
-  };
-
   const renderFacilitiesSection = () => (
     <Card ref={sectionRefs.facilities}>
       <CardHeader>
@@ -1487,63 +1328,6 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
               </div>
             </div>
 
-            {/* Facility Image Upload */}
-            <div className="space-y-2">
-              <Label>Facility Image</Label>
-              <div className="flex items-center gap-4">
-                <div
-                  className="w-32 h-24 rounded-lg bg-slate-100 flex flex-col items-center justify-center cursor-pointer overflow-hidden border-2 border-dashed border-slate-300 hover:border-blue-400 transition-colors"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const input = document.createElement('input')
-                    input.type = 'file'
-                    input.accept = 'image/*'
-                    input.onchange = (event) => {
-                      handleFacilityImageUpload(event as React.ChangeEvent<HTMLInputElement>, index)
-                      // Clear the input value to allow re-uploading the same file
-                      input.value = ''
-                    }
-                    input.click()
-                  }}
-                >
-                  {facility.images && facility.images[0] ? (
-                    <Image
-                      src={facility.images[0]}
-                      alt="Facility preview"
-                      width={128}
-                      height={96}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <>
-                      <Camera className="h-6 w-6 text-slate-400 mb-1" />
-                      <span className="text-xs text-slate-500 text-center px-2">
-                        Upload Image
-                      </span>
-                    </>
-                  )}
-                </div>
-                {facility.images && facility.images[0] && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      const newImages = [...facility.images]
-                      newImages[0] = ""
-                      updateFacility(index, 'images', newImages)
-                    }}
-                  >
-                    Remove Image
-                  </Button>
-                )}
-              </div>
-              <p className="text-xs text-slate-500">Upload a photo of the facility</p>
-            </div>
-
             <div className="space-y-2">
               <Label>Description</Label>
               <Textarea
@@ -1556,8 +1340,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
           </div>
         ))}
 
-        
-                <Button
+        <Button
           type="button"
           variant="outline"
           onClick={addFacility}
@@ -1570,17 +1353,19 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         {/* Save Button for Facilities Section */}
         <div className="flex justify-end pt-4 border-t">
           <Button
-            onClick={saveFacilities}
-            disabled={isLoadingFacilities}
+            onClick={() => {
+              toast({
+                title: "Info",
+                description: "Facilities section saved! (This is a placeholder - implement facilities save API)",
+              })
+            }}
+            disabled={isLoading}
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             <Save className="h-4 w-4 mr-2" />
-            {isLoadingFacilities ? 'Saving...' : 'Save Facilities Section'}
+            Save Facilities Section
           </Button>
         </div>
-
-        {/* Save Button for Facilities Section */}
-        
       </CardContent>
     </Card>
   )
@@ -1775,7 +1560,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   const saveGalleryImages = async () => {
     try {
       setIsLoading(true)
-
+      
       // Filter out empty gallery items
       const validGalleryImages = galleryImages.filter(image => 
         image.url && image.url.trim() !== ''
@@ -1985,7 +1770,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
             <div ref={sectionRefs.gallery} className="w-full">
               {renderGallerySection()}
             </div>
-
+            
             {/* Extra padding at bottom for better scrolling */}
             <div className="h-20"></div>
           </form>
