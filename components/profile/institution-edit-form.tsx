@@ -1489,31 +1489,74 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
 
         {/* Form Content */}
         <div className="flex-1 min-w-0">
-          <div
-            ref={containerRef}
-            className="max-h-[calc(100vh-280px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
-          >
-            <form onSubmit={handleSubmit} className="space-y-6 p-2 lg:p-6">
-              <div ref={sectionRefs.about}>
-                {renderAboutSection()}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div
+              ref={containerRef}
+              className="max-h-[calc(100vh-350px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 p-2 lg:p-6"
+            >
+              <div className="space-y-6">
+                <div ref={sectionRefs.about}>
+                  {renderAboutSection()}
+                </div>
+                <div ref={sectionRefs.programs}>
+                  {renderProgramsSection()}
+                </div>
+                <div ref={sectionRefs.faculty}>
+                  {renderFacultySection()}
+                </div>
+                <div ref={sectionRefs.facilities}>
+                  {renderFacilitiesSection()}
+                </div>
+                <div ref={sectionRefs.events}>
+                  {renderEventsSection()}
+                </div>
+                <div ref={sectionRefs.gallery}>
+                  {renderGallerySection()}
+                </div>
               </div>
-              <div ref={sectionRefs.programs}>
-                {renderProgramsSection()}
-              </div>
-              <div ref={sectionRefs.faculty}>
-                {renderFacultySection()}
-              </div>
-              <div ref={sectionRefs.facilities}>
-                {renderFacilitiesSection()}
-              </div>
-              <div ref={sectionRefs.events}>
-                {renderEventsSection()}
-              </div>
-              <div ref={sectionRefs.gallery}>
-                {renderGallerySection()}
-              </div>
+            </div>
 
-              </form>
+            {/* Desktop Save Button - Always visible at bottom */}
+            <div className="hidden lg:block mt-8 mb-8">
+              <div className="bg-white border-t border-gray-200 pt-6">
+                <div className="flex flex-row justify-end space-x-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => router.push('/institution/profile')}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isLoading} onClick={handleSubmit}>
+                    <Save className="h-4 w-4 mr-2" />
+                    {isLoading ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          {/* Mobile Sticky Footer for Save Button */}
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
+            <div className="flex flex-col space-y-2">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                onClick={handleSubmit}
+                className="w-full"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {isLoading ? 'Saving...' : 'Save Changes'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.push('/institution/profile')}
+                className="w-full"
+              >
+                Cancel
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -1541,23 +1584,21 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         </div>
       </div>
 
-      {/* Desktop Save Button - Fixed positioning */}
-      <div className="hidden lg:block">
-        <div className="sticky bottom-0 z-40 mt-8 bg-white border-t border-gray-200 shadow-lg">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex flex-row justify-end space-x-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.push('/institution/profile')}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isLoading} onClick={handleSubmit}>
-                <Save className="h-4 w-4 mr-2" />
-                {isLoading ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </div>
+      {/* Desktop Save Button - Always visible at bottom */}
+      <div className="hidden lg:block mt-8 mb-8">
+        <div className="bg-white border-t border-gray-200 pt-6">
+          <div className="flex flex-row justify-end space-x-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push('/institution/profile')}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isLoading} onClick={handleSubmit}>
+              <Save className="h-4 w-4 mr-2" />
+              {isLoading ? 'Saving...' : 'Save Changes'}
+            </Button>
           </div>
         </div>
       </div>
