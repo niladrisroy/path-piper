@@ -154,31 +154,53 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   // Auto-scroll detection
   useEffect(() => {
     const handleScroll = () => {
-      const scrollPosition = window.scrollY + 150 // Offset for better detection
+      const scrollPosition = window.scrollY + 120 // Offset for navbar and sticky positioning
 
       let currentSection = "about"
+      let closestDistance = Infinity
 
-      // Check each section to see which one is currently in view
+      // Check each section to find which one is currently most visible
       sections.forEach(({ id }) => {
         const element = sectionRefs[id as keyof typeof sectionRefs]?.current
         if (!element) return
 
         const rect = element.getBoundingClientRect()
         const elementTop = window.scrollY + rect.top
+        const elementBottom = elementTop + rect.height
         
-        // If element top is less than or equal to scroll position, it's the current section
-        if (elementTop <= scrollPosition + 200) {
-          currentSection = id
+        // Calculate how much of the element is in the viewport
+        const viewportTop = window.scrollY + 120
+        const viewportBottom = window.scrollY + window.innerHeight
+        
+        // Check if element is in viewport
+        if (elementBottom > viewportTop && elementTop < viewportBottom) {
+          const distanceFromTop = Math.abs(elementTop - viewportTop)
+          if (distanceFromTop < closestDistance) {
+            closestDistance = distanceFromTop
+            currentSection = id
+          }
         }
       })
 
       setActiveSection(currentSection)
     }
 
-    window.addEventListener('scroll', handleScroll)
+    // Throttle scroll events for better performance
+    let ticking = false
+    const throttledScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleScroll()
+          ticking = false
+        })
+        ticking = true
+      }
+    }
+
+    window.addEventListener('scroll', throttledScroll, { passive: true })
     // Call initially to set correct active section
     handleScroll()
-    return () => window.removeEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', throttledScroll)
   }, [])
 
   // Scroll to section when clicking navigation
@@ -186,12 +208,15 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     const element = sectionRefs[sectionId as keyof typeof sectionRefs]?.current
     if (element) {
       const elementRect = element.getBoundingClientRect()
-      const offsetTop = window.pageYOffset + elementRect.top - 100 // 100px offset from top
+      const offsetTop = window.pageYOffset + elementRect.top - 120 // Account for navbar and sticky positioning
 
       window.scrollTo({
         top: offsetTop,
         behavior: 'smooth'
       })
+      
+      // Update active section immediately for better UX
+      setActiveSection(sectionId)
     }
     // Close sidebar on mobile after selection
     setIsSidebarOpen(false)
@@ -1488,10 +1513,10 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
       <div className="flex gap-6">
         {/* Side Navigation - Desktop */}
         <div className="hidden lg:block w-64 flex-shrink-0">
-          <div className="sticky top-24 h-fit">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Edit Sections</CardTitle>
+          <div className="sticky top-20 z-10">
+            <Card className="shadow-lg">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-semibold">Edit Sections</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <nav className="space-y-1">
@@ -1499,13 +1524,13 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                     <button
                       key={id}
                       onClick={() => scrollToSection(id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 ${
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-200 hover:bg-gray-50 ${
                         activeSection === id
-                          ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                          : 'text-gray-700'
+                          ? 'bg-blue-50 text-blue-700 border-r-4 border-blue-700 font-medium shadow-sm'
+                          : 'text-gray-700 hover:text-gray-900'
                       }`}
                     >
-                      <Icon className="h-4 w-4" />
+                      <Icon className={`h-4 w-4 ${activeSection === id ? 'text-blue-700' : 'text-gray-500'}`} />
                       {label}
                     </button>
                   ))}
