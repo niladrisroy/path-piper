@@ -237,8 +237,8 @@ export default function Feed() {
           {/* Tags and Subjects */}
           {(post.tags.length > 0 || post.subjects.length > 0) && (
             <div className="flex flex-wrap gap-1">
-              {post.tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100">
+              {post.tags.map((tag, index) => (
+                <Badge key={`${tag}-${index}`} variant="secondary" className="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 cursor-pointer">
                   <Hash className="h-3 w-3 mr-1" />
                   {tag}
                 </Badge>

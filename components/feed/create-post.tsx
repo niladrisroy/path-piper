@@ -119,6 +119,16 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     setPostText(value)
     setCursorPosition(position)
 
+    // Extract hashtags from content
+    const hashtagRegex = /#(\w+)/g
+    const extractedHashtags = [...value.matchAll(hashtagRegex)].map(match => match[1])
+    
+    // Update tags with extracted hashtags, avoiding duplicates
+    const uniqueHashtags = [...new Set([...tags, ...extractedHashtags])]
+    if (uniqueHashtags.length !== tags.length || !tags.every(tag => uniqueHashtags.includes(tag))) {
+      setTags(uniqueHashtags)
+    }
+
     // Check for @ mentions
     const textUpToCursor = value.substring(0, position)
     const lastAtIndex = textUpToCursor.lastIndexOf('@')
@@ -366,7 +376,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                   ref={textareaRef}
                   value={postText}
                   onChange={handleTextChange}
-                  placeholder="Continue your trail... (Use @ to mention connections)"
+                  placeholder="Continue your trail... (Use @ to mention connections, # for hashtags)"
                   className="min-h-[80px] resize-none border border-gray-200 focus:border-pathpiper-teal focus:ring-1 focus:ring-pathpiper-teal"
                   disabled={isPosting}
                 />
@@ -467,10 +477,10 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                     value={postText}
                     onChange={handleTextChange}
                     placeholder={
-                      postType === "ACHIEVEMENT" ? "Share your achievement... (Use @ to mention connections)" :
-                      postType === "PROJECT" ? "Tell us about your project... (Use @ to mention connections)" :
-                      postType === "QUESTION" ? "Ask your question... (Use @ to mention connections)" :
-                      "What's on your mind? (Use @ to mention connections)"
+                      postType === "ACHIEVEMENT" ? "Share your achievement... (Use @ to mention connections, # for hashtags)" :
+                      postType === "PROJECT" ? "Tell us about your project... (Use @ to mention connections, # for hashtags)" :
+                      postType === "QUESTION" ? "Ask your question... (Use @ to mention connections, # for hashtags)" :
+                      "What's on your mind? (Use @ to mention connections, # for hashtags)"
                     }
                     className={`min-h-[120px] resize-none border ${
                       isOverLimit ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-pathpiper-teal'
