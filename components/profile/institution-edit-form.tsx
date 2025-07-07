@@ -407,6 +407,46 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   }
 
   // Event handlers
+  const [isLoadingEvents, setIsLoadingEvents] = useState(false)
+
+  useEffect(() => {
+    if (institutionData) {
+      // Fetch existing events
+      fetchEvents()
+    }
+  }, [institutionData])
+
+  const fetchEvents = async () => {
+    try {
+      setIsLoadingEvents(true)
+      const response = await fetch('/api/institution/events')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.events && data.events.length > 0) {
+          const formattedEvents = data.events.map((event: any) => ({
+            id: event.id,
+            title: event.title,
+            description: event.description,
+            eventType: event.eventType,
+            startDate: event.startDate ? new Date(event.startDate).toISOString().slice(0, 16) : "",
+            endDate: event.endDate ? new Date(event.endDate).toISOString().slice(0, 16) : "",
+            location: event.location || "",
+            imageUrl: event.imageUrl || "",
+            registrationUrl: event.registrationUrl || ""
+          }))
+          setFormData(prev => ({
+            ...prev,
+            events: formattedEvents
+          }))
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error)
+    } finally {
+      setIsLoadingEvents(false)
+    }
+  }
+
   const addEvent = () => {
     setFormData(prev => ({
       ...prev,
@@ -424,14 +464,41 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     }))
   }
 
-  const removeEvent = (index: number) => {
-    if (formData.events.length > 1) {
-      const newEvents = formData.events.filter((_, i) => i !== index)
-      setFormData(prev => ({
-        ...prev,
-        events: newEvents
-      }))
+  const removeEvent = async (index: number) => {
+    const eventToRemove = formData.events[index]
+    
+    // If it's an existing event (has an ID), delete it from database
+    if (eventToRemove.id && eventToRemove.id !== '') {
+      try {
+        const response = await fetch(`/api/institution/events?id=${eventToRemove.id}`, {
+          method: 'DELETE'
+        })
+        
+        if (!response.ok) {
+          throw new Error('Failed to delete event')
+        }
+        
+        toast({
+          title: "Success",
+          description: "Event deleted successfully!",
+        })
+      } catch (error) {
+        console.error('Error deleting event:', error)
+        toast({
+          title: "Error",
+          description: "Failed to delete event. Please try again.",
+          variant: "destructive",
+        })
+        return // Don't remove from UI if database deletion failed
+      }
     }
+    
+    // Remove from UI
+    const newEvents = formData.events.filter((_, i) => i !== index)
+    setFormData(prev => ({
+      ...prev,
+      events: newEvents
+    }))
   }
 
   const updateEvent = (index: number, field: string, value: string) => {
@@ -576,7 +643,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         throw new Error('Failed to save programs')
       }
 
-      // Save events
+      // Save events - only send new events without IDs or existing events that were modified
       const validEvents = formData.events.filter(event =>
         event.title.trim() !== '' &&
         event.description.trim() !== '' &&
@@ -590,7 +657,8 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          events: validEvents
+          events: validEvents,
+          preserveExisting: true
         }),
       })
 
@@ -1102,6 +1170,13 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         <CardTitle>Events & Activities</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+        {isLoadingEvents ? (
+          <div className="text-center py-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+            <p className="text-sm text-gray-500 mt-2">Loading events...</p>
+          </div>
+        ) : (
+          <>
         {formData.events.map((event, index) => (
           <div key={index} className="p-4 border rounded-lg space-y-4">
             <div className="flex justify-between items-center">
@@ -1207,6 +1282,8 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
           <Plus className="h-4 w-4 mr-2" />
           Add Event
         </Button>
+          </>
+        )}
       </CardContent>
     </Card>
   )
