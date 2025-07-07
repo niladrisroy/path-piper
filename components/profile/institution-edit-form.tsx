@@ -154,11 +154,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   // Auto-scroll detection
   useEffect(() => {
     const handleScroll = () => {
-      if (!containerRef.current) return
-
-      const container = containerRef.current
-      const containerRect = container.getBoundingClientRect()
-      const centerPoint = containerRect.height / 2
+      const viewportCenter = window.innerHeight / 2
 
       let currentSection = "about"
       let minDistance = Infinity
@@ -168,13 +164,10 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         if (!element) return
 
         const rect = element.getBoundingClientRect()
-        const containerRect = containerRef.current!.getBoundingClientRect()
-
+        
         // Calculate distance from section center to viewport center
-        const sectionTop = rect.top - containerRect.top
-        const sectionBottom = rect.bottom - containerRect.top
-        const sectionCenter = (sectionTop + sectionBottom) / 2
-        const distance = Math.abs(sectionCenter - centerPoint)
+        const sectionCenter = (rect.top + rect.bottom) / 2
+        const distance = Math.abs(sectionCenter - viewportCenter)
 
         if (distance < minDistance) {
           minDistance = distance
@@ -185,26 +178,20 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
       setActiveSection(currentSection)
     }
 
-    const container = containerRef.current
-    if (container) {
-      container.addEventListener('scroll', handleScroll)
-      // Call initially to set correct active section
-      handleScroll()
-      return () => container.removeEventListener('scroll', handleScroll)
-    }
+    window.addEventListener('scroll', handleScroll)
+    // Call initially to set correct active section
+    handleScroll()
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   // Scroll to section when clicking navigation
   const scrollToSection = (sectionId: string) => {
     const element = sectionRefs[sectionId as keyof typeof sectionRefs]?.current
-    if (element && containerRef.current) {
-      const container = containerRef.current
-      const containerRect = container.getBoundingClientRect()
+    if (element) {
       const elementRect = element.getBoundingClientRect()
+      const offsetTop = window.pageYOffset + elementRect.top - 100 // 100px offset from top
 
-      const offsetTop = elementRect.top - containerRect.top + container.scrollTop - 100 // 100px offset from top
-
-      container.scrollTo({
+      window.scrollTo({
         top: offsetTop,
         behavior: 'smooth'
       })
@@ -1569,27 +1556,25 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
           <form onSubmit={handleSubmit} className="space-y-6">
             <div
               ref={containerRef}
-              className="max-h-[calc(100vh-350px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 p-2 lg:p-6"
+              className="space-y-6"
             >
-              <div className="space-y-6">
-                <div ref={sectionRefs.about}>
-                  {renderAboutSection()}
-                </div>
-                <div ref={sectionRefs.programs}>
-                  {renderProgramsSection()}
-                </div>
-                <div ref={sectionRefs.faculty}>
-                  {renderFacultySection()}
-                </div>
-                <div ref={sectionRefs.facilities}>
-                  {renderFacilitiesSection()}
-                </div>
-                <div ref={sectionRefs.events}>
-                  {renderEventsSection()}
-                </div>
-                <div ref={sectionRefs.gallery}>
-                  {renderGallerySection()}
-                </div>
+              <div ref={sectionRefs.about}>
+                {renderAboutSection()}
+              </div>
+              <div ref={sectionRefs.programs}>
+                {renderProgramsSection()}
+              </div>
+              <div ref={sectionRefs.faculty}>
+                {renderFacultySection()}
+              </div>
+              <div ref={sectionRefs.facilities}>
+                {renderFacilitiesSection()}
+              </div>
+              <div ref={sectionRefs.events}>
+                {renderEventsSection()}
+              </div>
+              <div ref={sectionRefs.gallery}>
+                {renderGallerySection()}
               </div>
             </div>
 
