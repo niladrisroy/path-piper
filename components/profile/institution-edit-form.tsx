@@ -1541,20 +1541,24 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         </div>
       </div>
 
-      {/* Desktop Save Button */}
-      <div className="hidden lg:block mt-8">
-        <div className="flex flex-row justify-end space-x-4 p-4 border-t bg-white">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.push('/institution/profile')}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isLoading} onClick={handleSubmit}>
-            <Save className="h-4 w-4 mr-2" />
-            {isLoading ? 'Saving...' : 'Save Changes'}
-          </Button>
+      {/* Desktop Save Button - Fixed positioning */}
+      <div className="hidden lg:block">
+        <div className="sticky bottom-0 z-40 mt-8 bg-white border-t border-gray-200 shadow-lg">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex flex-row justify-end space-x-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.push('/institution/profile')}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading} onClick={handleSubmit}>
+                <Save className="h-4 w-4 mr-2" />
+                {isLoading ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
