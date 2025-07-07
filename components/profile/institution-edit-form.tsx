@@ -735,84 +735,6 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     }
   }
 
-  const saveFacultySection = async () => {
-    setIsLoading(true)
-    try {
-      const validFaculty = formData.faculty.filter(member =>
-        member.name.trim() !== '' &&
-        member.position.trim() !== '' &&
-        member.department.trim() !== ''
-      )
-
-      const response = await fetch('/api/institution/faculty', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          faculty: validFaculty
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to save faculty')
-      }
-
-      toast({
-        title: "Success",
-        description: "Faculty section updated successfully!",
-      })
-    } catch (error) {
-      console.error('Error updating faculty:', error)
-      toast({
-        title: "Error",
-        description: "Failed to update faculty. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const saveFacilitiesSection = async () => {
-    setIsLoading(true)
-    try {
-      const validFacilities = formData.facilities.filter(facility =>
-        facility.name.trim() !== '' &&
-        facility.type.trim() !== '' &&
-        facility.description.trim() !== ''
-      )
-
-      const response = await fetch('/api/institution/facilities', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          facilities: validFacilities
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to save facilities')
-      }
-
-      toast({
-        title: "Success",
-        description: "Facilities section updated successfully!",
-      })
-    } catch (error) {
-      console.error('Error updating facilities:', error)
-      toast({
-        title: "Error",
-        description: "Failed to update facilities. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -1316,12 +1238,17 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         {/* Save Button for Faculty Section */}
         <div className="flex justify-end pt-4 border-t">
           <Button
-            onClick={saveFacultySection}
+            onClick={() => {
+              toast({
+                title: "Info",
+                description: "Faculty section saved! (This is a placeholder - implement faculty save API)",
+              })
+            }}
             disabled={isLoading}
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             <Save className="h-4 w-4 mr-2" />
-            {isLoading ? 'Saving...' : 'Save Faculty Section'}
+            Save Faculty Section
           </Button>
         </div>
       </CardContent>
@@ -1426,12 +1353,17 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         {/* Save Button for Facilities Section */}
         <div className="flex justify-end pt-4 border-t">
           <Button
-            onClick={saveFacilitiesSection}
+            onClick={() => {
+              toast({
+                title: "Info",
+                description: "Facilities section saved! (This is a placeholder - implement facilities save API)",
+              })
+            }}
             disabled={isLoading}
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             <Save className="h-4 w-4 mr-2" />
-            {isLoading ? 'Saving...' : 'Save Facilities Section'}
+            Save Facilities Section
           </Button>
         </div>
       </CardContent>

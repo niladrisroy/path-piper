@@ -106,13 +106,6 @@ model Profile {
   postComments      PostComment[]
   postBookmarks     PostBookmark[]
 
-// Institution-specific relations
-  institutionProfile  InstitutionProfile? @relation("InstitutionProfile")
-  programs              InstitutionProgram[]
-  gallery InstitutionGallery[]
-  events   InstitutionEvents[]
-  institutionFaculty  InstitutionFaculty[]
-  institutionFacilities InstitutionFacilities[]
 
   @@map("profiles")
   @@schema("public")
@@ -216,7 +209,7 @@ model InstitutionType {
 
 model InstitutionProfile {
   id                  String    @id @db.Uuid
-  profile             Profile   @relation("InstitutionProfile", fields: [id], references: [id])
+  profile             Profile   @relation(fields: [id], references: [id])
   institutionName     String    @map("institution_name")
   institutionType     String?   @map("institution_type")
   institutionTypeId   Int?      @map("institution_type_id")
@@ -249,48 +242,49 @@ model InstitutionGallery {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
 
-  institution Profile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  institution InstitutionProfile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
 
   @@map("institution_gallery")
   @@schema("public")
 }
 
-model InstitutionFaculty {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  institutionId  String   @map("institution_id") @db.Uuid
-  name           String
-  position       String
-  department     String
-  qualifications String?
-  experience     String?
-  specialization String?
-  profileImage   String?  @map("profile_image")
-  bio            String?
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at")
+model InstitutionEvents {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  institutionId   String    @map("institution_id") @db.Uuid
+  title           String
+  description     String
+  eventType       String    @map("event_type")
+  startDate       DateTime  @map("start_date")
+  endDate         DateTime? @map("end_date")
+  location        String?
+  imageUrl        String?   @map("image_url")
+  registrationUrl String?   @map("registration_url")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
 
-  institution Profile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  institution InstitutionProfile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
 
-  @@map("institution_faculty")
+  @@map("institution_events")
   @@schema("public")
 }
 
-model InstitutionFacilities {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  institutionId String   @map("institution_id") @db.Uuid
-  name          String
-  type          String
-  description   String
-  capacity      String?
-  features      Json?
-  images        Json?
-  availability  String?
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+model InstitutionProgram {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  institutionId     String    @map("institution_id") @db.Uuid
+  name              String
+  type              String
+  level             String
+  durationValue     Int       @map("duration_value")
+  durationType      String    @map("duration_type")
+  description       String
+  eligibility       String?
+  learningOutcomes  String?   @map("learning_outcomes")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
 
-  institution Profile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  institution       InstitutionProfile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
 
-  @@map("institution_facilities")
+  @@map("institution_programs")
   @@schema("public")
 }
 
@@ -656,6 +650,7 @@ model PostLike {
 
   @@unique([userId, postId])
   @@map("post_likes")
+  @@schema("public")
 }
 
 model PostComment {
@@ -673,6 +668,7 @@ model PostComment {
   replies  PostComment[] @relation("CommentReplies")
 
   @@map("post_comments")
+  @@schema("public")
 }
 
 model PostBookmark {
@@ -686,6 +682,7 @@ model PostBookmark {
 
   @@unique([userId, postId])
   @@map("post_bookmarks")
+  @@schema("public")
 }
 
 model AchievementCategory {
