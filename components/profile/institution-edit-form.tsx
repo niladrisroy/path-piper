@@ -1258,20 +1258,31 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   const saveFacilities = async () => {
     setIsLoadingFacilities(true);
     try {
-      // Implement your API call to save facilities data here
-      // Replace this with your actual API endpoint and data
-      // Example:
-      // const response = await fetch('/api/institution/facilities', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(formData.facilities),
-      // });
+      // Filter out empty facilities
+      const validFacilities = formData.facilities.filter(facility =>
+        facility.name.trim() !== '' &&
+        facility.type.trim() !== '' &&
+        facility.description.trim() !== ''
+      );
 
-      // if (!response.ok) {
-      //   throw new Error('Failed to save facilities');
-      // }
+      const response = await fetch('/api/institution/facilities', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          facilities: validFacilities.map(facility => ({
+            name: facility.name,
+            description: facility.description,
+            imageUrl: facility.images && facility.images.length > 0 ? facility.images[0] : null,
+            features: facility.features.filter(feature => feature.trim() !== '')
+          }))
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save facilities');
+      }
 
       toast({
         title: "Success",
@@ -1375,23 +1386,27 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         ))}
 
         
-                <div className="flex gap-2 mt-4">
-                  <Button 
-                    onClick={addFacility} 
-                    variant="outline" 
-                    size="sm"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Facility
-                  </Button>
-                  <Button 
-                    onClick={saveFacilities} 
-                    disabled={isLoadingFacilities}
-                    size="sm"
-                  >
-                    {isLoadingFacilities ? 'Saving...' : 'Save Facilities'}
-                  </Button>
-                </div>
+                <Button
+          type="button"
+          variant="outline"
+          onClick={addFacility}
+          className="w-full"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Facility
+        </Button>
+
+        {/* Save Button for Facilities Section */}
+        <div className="flex justify-end pt-4 border-t">
+          <Button
+            onClick={saveFacilities}
+            disabled={isLoadingFacilities}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {isLoadingFacilities ? 'Saving...' : 'Save Facilities Section'}
+          </Button>
+        </div>
 
         {/* Save Button for Facilities Section */}
         
