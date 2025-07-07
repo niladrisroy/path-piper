@@ -69,15 +69,16 @@ export async function POST(request: NextRequest) {
       projectCategory,
       difficultyLevel,
       isQuestion = false,
-      isAchievement = false
+      isAchievement = false,
+      forceTrail = false
     } = body
 
     if (!content || content.trim().length === 0) {
       return NextResponse.json({ error: 'Content is required' }, { status: 400 })
     }
 
-    // For regular posts, enforce 300 character limit
-    if (!isTrail && content.length > 300) {
+    // For regular posts, enforce 300 character limit unless it's forced trail creation
+    if (!isTrail && !forceTrail && content.length > 300) {
       return NextResponse.json({ 
         error: 'Content exceeds 300 characters. Consider creating a trail instead.',
         suggestTrail: true 

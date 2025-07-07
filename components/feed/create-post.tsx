@@ -276,6 +276,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
             isQuestion: postType === "QUESTION",
             isAchievement: postType === "ACHIEVEMENT",
             imageUrl: imageUrl,
+            forceTrail: true, // Force trail creation regardless of character count
           }),
         })
 
