@@ -289,8 +289,9 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         coreValues: Array.isArray(institutionData.coreValues) ? institutionData.coreValues : [''],
       }))
 
-      // Fetch existing programs
+      // Fetch existing programs and facilities
       fetchPrograms()
+      fetchFacilities()
     }
   }, [institutionData])
 
@@ -390,6 +391,38 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
 
   // Facility handlers
   const [isLoadingFacilities, setIsLoadingFacilities] = useState(false);
+
+  // Fetch existing facilities
+  const fetchFacilities = async () => {
+    try {
+      setIsLoadingFacilities(true)
+      const response = await fetch('/api/institution/facilities')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.facilities && data.facilities.length > 0) {
+          const formattedFacilities = data.facilities.map((facility: any) => ({
+            id: facility.id,
+            name: facility.name || '',
+            type: '',
+            description: facility.description || '',
+            capacity: '',
+            features: facility.features || [''],
+            images: [facility.imageUrl || ''],
+            availability: ''
+          }))
+          setFormData(prev => ({
+            ...prev,
+            facilities: formattedFacilities
+          }))
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching facilities:', error)
+    } finally {
+      setIsLoadingFacilities(false)
+    }
+  }
+
   const addFacility = () => {
     setFormData(prev => ({
       ...prev,
@@ -425,18 +458,17 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     }))
   }
 
-  const handleFacilityImageUpload = async (e: Event, facilityIndex: number) => {
-    const target = e.target as HTMLInputElement
-    const file = target.files?.[0]
+  const handleFacilityImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, facilityIndex: number) => {
+    const file = e.target.files?.[0]
     if (!file) return
 
     try {
-      const formData = new FormData()
-      formData.append('file', file)
+      const uploadFormData = new FormData()
+      uploadFormData.append('file', file)
 
       const response = await fetch('/api/upload/institution-facility', {
         method: 'POST',
-        body: formData
+        body: uploadFormData
       })
 
       if (!response.ok) {
@@ -1422,7 +1454,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                     const input = document.createElement('input')
                     input.type = 'file'
                     input.accept = 'image/*'
-                    input.onchange = (e) => handleFacilityImageUpload(e, index)
+                    input.onchange = (e) => handleFacilityImageUpload(e as React.ChangeEvent<HTMLInputElement>, index)
                     input.click()
                   }}
                 >
