@@ -258,6 +258,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
       // If no parent post exists, create the main post first
       if (!activeParentId) {
+        // Create the main post with all current content and metadata
         const mainPostResponse = await fetch('/api/feed/posts', {
           method: 'POST',
           headers: {
@@ -281,13 +282,14 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
         const mainPostData = await mainPostResponse.json()
 
         if (!mainPostResponse.ok) {
-          throw new Error(mainPostData.error)
+          throw new Error(mainPostData.error || "Failed to create main post")
         }
 
+        // Set the parent ID for future trail messages
         activeParentId = mainPostData.post.id
         setCurrentTrailParentId(activeParentId)
         
-        // Clear form data but keep the text for user to continue adding trails
+        // Clear form data and reset for trail continuation
         setTags([])
         setSubjects([])
         setAchievementType("")
@@ -295,19 +297,16 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
         setDifficultyLevel("")
         setPostType("GENERAL")
         setImageUrl(null)
+        setPostText("")
         
-        toast.success("Trail started! You can now add more messages to continue the trail.")
+        toast.success("Trail started successfully! Add your next message to continue the trail.")
         
-        // Update the component to now work as a trail continuation
         if (onPostCreated) {
           onPostCreated()
         }
         
-        // Set up for next trail message
-        setPostText("")
-        
       } else {
-        // We're continuing an existing trail
+        // We're continuing an existing trail - create a new trail message
         const trailResponse = await fetch('/api/feed/posts', {
           method: 'POST',
           headers: {
@@ -324,12 +323,14 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
         const trailData = await trailResponse.json()
 
         if (!trailResponse.ok) {
-          throw new Error(trailData.error)
+          throw new Error(trailData.error || "Failed to add trail message")
         }
 
+        // Clear only the content for next trail message
         setPostText("")
         setImageUrl(null)
-        toast.success("Trail message added! Continue adding more messages.")
+        
+        toast.success("Trail message added! Continue adding more messages to build your trail.")
         
         if (onPostCreated) {
           onPostCreated()
@@ -338,7 +339,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
       
     } catch (error) {
       console.error('Error creating trail:', error)
-      toast.error("Failed to create trail")
+      toast.error(`Failed to create trail: ${error.message}`)
     } finally {
       setIsPosting(false)
     }
@@ -597,9 +598,12 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
                 {/* Over limit warning */}
                 {isOverLimit && (
-                  <div className="p-2 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-sm text-red-600">
-                      Your post exceeds 300 characters. Create a trail to share longer content.
+                  <div className="p-3 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg">
+                    <p className="text-sm text-purple-700 font-medium mb-1">
+                      Content exceeds 300 characters!
+                    </p>
+                    <p className="text-xs text-purple-600">
+                      Click "Start Trail" to share longer content as a connected series of messages.
                     </p>
                   </div>
                 )}
@@ -748,7 +752,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                   className="text-purple-600 border-purple-200 hover:bg-purple-50 rounded-full px-4"
                 >
                   <Plus className="h-4 w-4 mr-1" />
-                  {currentTrailParentId ? "Continue Trail" : "Create Trail"}
+                  {currentTrailParentId ? "Add to Trail" : "Start Trail"}
                 </Button>
 
                 <Button

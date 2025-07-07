@@ -90,11 +90,28 @@ export async function POST(request: NextRequest) {
     // If it's a trail, get the next trail order
     let trailOrder = null
     if (isTrail && parentPostId) {
+      // Verify parent post exists
+      const parentPost = await prisma.feedPost.findUnique({
+        where: { id: parentPostId }
+      })
+      
+      if (!parentPost) {
+        return NextResponse.json({ error: 'Parent post not found' }, { status: 404 })
+      }
+
+      // Get the highest trail order for this parent post
       const lastTrail = await prisma.feedPost.findFirst({
-        where: { parentPostId },
+        where: { 
+          parentPostId,
+          isTrail: true 
+        },
         orderBy: { trailOrder: 'desc' }
       })
+      
+      // Set trail order (starting from 1 for first trail)
       trailOrder = (lastTrail?.trailOrder || 0) + 1
+      
+      console.log(`📝 Creating trail ${trailOrder} for parent post ${parentPostId}`)
     }
 
     // Content moderation - simple keyword filtering
