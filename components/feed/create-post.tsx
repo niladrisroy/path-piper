@@ -374,12 +374,12 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
   // State for trail context
   const [trailContext, setTrailContext] = useState<any>(null)
 
-  // Fetch trail context when parentPostId changes
+  // Fetch trail context when currentTrailParentId changes
   useEffect(() => {
-    if (isTrail && parentPostId) {
+    if (currentTrailParentId) {
       const fetchTrailContext = async () => {
         try {
-          const response = await fetch(`/api/feed/posts/${parentPostId}`)
+          const response = await fetch(`/api/feed/posts/${currentTrailParentId}`)
           if (response.ok) {
             const data = await response.json()
             setTrailContext(data.post)
@@ -389,8 +389,10 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
         }
       }
       fetchTrailContext()
+    } else {
+      setTrailContext(null)
     }
-  }, [isTrail, parentPostId])
+  }, [currentTrailParentId])
 
   if (isTrail) {
     return (
@@ -544,6 +546,63 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
               </TabsList>
 
               <TabsContent value="compose" className="space-y-4">
+                {/* Trail Preview for Continuing Trails */}
+                {currentTrailParentId && trailContext && (
+                  <div className="p-3 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg">
+                    <div className="text-xs text-purple-700 font-medium mb-2 flex items-center gap-1">
+                      <MessageSquare className="h-3 w-3" />
+                      Continuing trail
+                    </div>
+                    
+                    {/* Parent Post Preview */}
+                    <div className="mb-2 p-2 bg-white rounded border border-purple-100">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="h-4 w-4 rounded-full overflow-hidden">
+                          <Image
+                            src={trailContext.author?.profileImageUrl || "/images/student-profile.png"}
+                            alt={`${trailContext.author?.firstName} ${trailContext.author?.lastName}`}
+                            width={16}
+                            height={16}
+                            className="object-cover"
+                          />
+                        </div>
+                        <span className="font-medium text-xs">{trailContext.author?.firstName}</span>
+                        <span className="text-xs text-blue-600 bg-blue-100 px-1 py-0.5 rounded">Original</span>
+                      </div>
+                      <p className="text-xs text-gray-700 line-clamp-2">{trailContext.content}</p>
+                    </div>
+
+                    {/* Recent Trail Messages Preview */}
+                    {trailContext.trails && trailContext.trails.length > 0 && (
+                      <div className="space-y-1 max-h-20 overflow-y-auto">
+                        {trailContext.trails.slice(-2).map((trail: any, index: number) => (
+                          <div key={trail.id} className="p-1.5 bg-white rounded border border-purple-100">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <div className="h-3 w-3 rounded-full overflow-hidden">
+                                <Image
+                                  src={trail.author?.profileImageUrl || "/images/student-profile.png"}
+                                  alt={`${trail.author?.firstName} ${trail.author?.lastName}`}
+                                  width={12}
+                                  height={12}
+                                  className="object-cover"
+                                />
+                              </div>
+                              <span className="font-medium text-xs">{trail.author?.firstName}</span>
+                              <span className="text-xs text-purple-600 bg-purple-100 px-1 py-0.5 rounded">#{trail.trailOrder}</span>
+                            </div>
+                            <p className="text-xs text-gray-600 pl-4 line-clamp-1">{trail.content}</p>
+                          </div>
+                        ))}
+                        {trailContext.trails.length > 2 && (
+                          <div className="text-xs text-purple-600 text-center py-1">
+                            +{trailContext.trails.length - 2} more messages
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Post Type Selection */}
                 <div className="flex gap-2 flex-wrap">
                   {POST_TYPES.slice(0, 4).map((type) => {
@@ -570,6 +629,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                     value={postText}
                     onChange={handleTextChange}
                     placeholder={
+                      currentTrailParentId ? "Continue your trail... (Use @ to mention connections, # for hashtags)" :
                       postType === "ACHIEVEMENT" ? "Share your achievement... (Use @ to mention connections, # for hashtags)" :
                       postType === "PROJECT" ? "Tell us about your project... (Use @ to mention connections, # for hashtags)" :
                       postType === "QUESTION" ? "Ask your question... (Use @ to mention connections, # for hashtags)" :
