@@ -469,20 +469,21 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   }
 
   const handleFacilityImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, facilityIndex: number) => {
+    // Prevent event bubbling that might trigger form submission
+    e.preventDefault()
+    e.stopPropagation()
+    
     const file = e.target.files?.[0]
     if (!file) return
 
     try {
-      // First create a preview URL for immediate display
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const newImages = [...(formData.facilities[facilityIndex].images || [""])]
-        newImages[0] = reader.result as string
-        updateFacility(facilityIndex, 'images', newImages)
-      }
-      reader.readAsDataURL(file)
+      // Show loading state
+      toast({
+        title: "Uploading...",
+        description: "Please wait while we upload your image.",
+      })
 
-      // Then upload the file to get a public URL
+      // Upload the file first to get a public URL
       const uploadFormData = new FormData()
       uploadFormData.append('file', file)
 
@@ -497,10 +498,15 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
 
       const data = await response.json()
       
-      // Update with the public URL
+      // Update form data with the actual public URL (not data URL)
       const newImages = [...(formData.facilities[facilityIndex].images || [""])]
       newImages[0] = data.url
       updateFacility(facilityIndex, 'images', newImages)
+
+      toast({
+        title: "Success",
+        description: "Image uploaded successfully!",
+      })
 
     } catch (error) {
       console.error('Error uploading facility image:', error)
@@ -1350,24 +1356,28 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         facility.name.trim() !== ''
       );
 
-      // Process facilities - no need for complex image upload here since it's handled in handleFacilityImageUpload
+      // Process facilities to ensure proper image URL handling
       const processedFacilities = validFacilities.map((facility) => {
         let imageUrl = facility.images && facility.images.length > 0 ? facility.images[0] : null;
         
-        // If it's still a data URL, it means the upload failed - preserve existing or set to null
-        if (imageUrl && imageUrl.startsWith('data:')) {
-          // For existing facilities, keep the original image URL, for new ones set to null
-          imageUrl = facility.id ? null : null;
+        // Only use URLs that start with /uploads/ (our valid upload URLs)
+        // Reject data URLs or any invalid URLs
+        if (imageUrl && !imageUrl.startsWith('/uploads/')) {
+          imageUrl = null;
         }
 
         return {
-          id: facility.id,
+          id: facility.id || undefined, // Let database assign ID for new facilities
           name: facility.name,
           description: facility.description,
           capacity: facility.capacity,
           availability: facility.availability,
           imageUrl: imageUrl,
-          features: facility.features.filter(feature => feature.trim() !== '')
+          features: [
+            ...facility.features.filter(feature => feature.trim() !== ''),
+            ...(facility.capacity ? [`Capacity: ${facility.capacity}`] : []),
+            ...(facility.availability ? [`Availability: ${facility.availability}`] : [])
+          ]
         };
       });
 
@@ -1489,7 +1499,11 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                     const input = document.createElement('input')
                     input.type = 'file'
                     input.accept = 'image/*'
-                    input.onchange = (e) => handleFacilityImageUpload(e as React.ChangeEvent<HTMLInputElement>, index)
+                    input.onchange = (event) => {
+                      handleFacilityImageUpload(event as React.ChangeEvent<HTMLInputElement>, index)
+                      // Clear the input value to allow re-uploading the same file
+                      input.value = ''
+                    }
                     input.click()
                   }}
                 >
