@@ -154,23 +154,20 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   // Auto-scroll detection
   useEffect(() => {
     const handleScroll = () => {
-      const viewportCenter = window.innerHeight / 2
+      const scrollPosition = window.scrollY + 150 // Offset for better detection
 
       let currentSection = "about"
-      let minDistance = Infinity
 
+      // Check each section to see which one is currently in view
       sections.forEach(({ id }) => {
         const element = sectionRefs[id as keyof typeof sectionRefs]?.current
         if (!element) return
 
         const rect = element.getBoundingClientRect()
+        const elementTop = window.scrollY + rect.top
         
-        // Calculate distance from section center to viewport center
-        const sectionCenter = (rect.top + rect.bottom) / 2
-        const distance = Math.abs(sectionCenter - viewportCenter)
-
-        if (distance < minDistance) {
-          minDistance = distance
+        // If element top is less than or equal to scroll position, it's the current section
+        if (elementTop <= scrollPosition + 200) {
           currentSection = id
         }
       })
@@ -1491,29 +1488,31 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
       <div className="flex gap-6">
         {/* Side Navigation - Desktop */}
         <div className="hidden lg:block w-64 flex-shrink-0">
-          <Card className="sticky top-6">
-            <CardHeader>
-              <CardTitle className="text-lg">Edit Sections</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <nav className="space-y-1">
-                {sections.map(({ id, label, icon: Icon }) => (
-                  <button
-                    key={id}
-                    onClick={() => scrollToSection(id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 ${
-                      activeSection === id
-                        ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                        : 'text-gray-700'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {label}
-                  </button>
-                ))}
-              </nav>
-            </CardContent>
-          </Card>
+          <div className="sticky top-24 h-fit">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Edit Sections</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <nav className="space-y-1">
+                  {sections.map(({ id, label, icon: Icon }) => (
+                    <button
+                      key={id}
+                      onClick={() => scrollToSection(id)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 ${
+                        activeSection === id
+                          ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                          : 'text-gray-700'
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {label}
+                    </button>
+                  ))}
+                </nav>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Mobile Sidebar Overlay */}
