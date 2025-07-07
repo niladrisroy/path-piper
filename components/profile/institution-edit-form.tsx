@@ -468,42 +468,18 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     }))
   }
 
-  const handleFacilityImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, facilityIndex: number) => {
+  const handleFacilityImageUpload = (e: React.ChangeEvent<HTMLInputElement>, facilityIndex: number) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    try {
-      const uploadFormData = new FormData()
-      uploadFormData.append('file', file)
-
-      const response = await fetch('/api/upload/institution-facility', {
-        method: 'POST',
-        body: uploadFormData
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to upload image')
-      }
-
-      const data = await response.json()
-      
-      // Update the facility images array
+    // Create a preview URL for immediate display (like in about section)
+    const reader = new FileReader()
+    reader.onloadend = () => {
       const newImages = [...(formData.facilities[facilityIndex].images || [""])]
-      newImages[0] = data.url
+      newImages[0] = reader.result as string
       updateFacility(facilityIndex, 'images', newImages)
-
-      toast({
-        title: "Success",
-        description: "Facility image uploaded successfully!",
-      })
-    } catch (error) {
-      console.error('Error uploading facility image:', error)
-      toast({
-        title: "Error",
-        description: "Failed to upload facility image. Please try again.",
-        variant: "destructive",
-      })
     }
+    reader.readAsDataURL(file)
   }
 
   // Event handlers
@@ -1344,21 +1320,73 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         facility.name.trim() !== ''
       );
 
+      // Process facilities to handle image uploads
+      const processedFacilities = await Promise.all(
+        validFacilities.map(async (facility) => {
+          let imageUrl = facility.images && facility.images.length > 0 ? facility.images[0] : null;
+          
+          // Check if the image is a data URL (needs uploading)
+          if (imageUrl && imageUrl.startsWith('data:')) {
+            try {
+              // Convert data URL to blob
+              const response = await fetch(imageUrl);
+              const blob = await response.blob();
+              
+              // Create form data and upload
+              const uploadFormData = new FormData();
+              uploadFormData.append('file', blob, 'facility-image.jpg');
+
+              const uploadResponse = await fetch('/api/upload/institution-facility', {
+                method: 'POST',
+                body: uploadFormData
+              });
+
+              if (uploadResponse.ok) {
+                const uploadData = await uploadResponse.json();
+                imageUrl = uploadData.url;
+              } else {
+                console.error('Failed to upload image for facility:', facility.name);
+                // Keep the existing image URL if upload fails and it's an edit
+                if (facility.id) {
+                  // For existing facilities, try to preserve the original image
+                  const existingFacilities = await fetch('/api/institution/facilities');
+                  if (existingFacilities.ok) {
+                    const existingData = await existingFacilities.json();
+                    const existingFacility = existingData.facilities.find((f: any) => f.id === facility.id);
+                    if (existingFacility && existingFacility.imageUrl) {
+                      imageUrl = existingFacility.imageUrl;
+                    }
+                  }
+                }
+              }
+            } catch (uploadError) {
+              console.error('Error uploading facility image:', uploadError);
+              // Keep existing image for edits, remove for new facilities
+              if (!facility.id) {
+                imageUrl = null;
+              }
+            }
+          }
+
+          return {
+            id: facility.id,
+            name: facility.name,
+            description: facility.description,
+            capacity: facility.capacity,
+            availability: facility.availability,
+            imageUrl: imageUrl,
+            features: facility.features.filter(feature => feature.trim() !== '')
+          };
+        })
+      );
+
       const response = await fetch('/api/institution/facilities', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          facilities: validFacilities.map(facility => ({
-            id: facility.id,
-            name: facility.name,
-            description: facility.description,
-            capacity: facility.capacity,
-            availability: facility.availability,
-            imageUrl: facility.images && facility.images.length > 0 && facility.images[0] ? facility.images[0] : null,
-            features: facility.features.filter(feature => feature.trim() !== '')
-          }))
+          facilities: processedFacilities
         }),
       });
 
@@ -1464,7 +1492,9 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
               <div className="flex items-center gap-4">
                 <div
                   className="w-32 h-24 rounded-lg bg-slate-100 flex flex-col items-center justify-center cursor-pointer overflow-hidden border-2 border-dashed border-slate-300 hover:border-blue-400 transition-colors"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     const input = document.createElement('input')
                     input.type = 'file'
                     input.accept = 'image/*'
@@ -1494,7 +1524,9 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       const newImages = [...facility.images]
                       newImages[0] = ""
                       updateFacility(index, 'images', newImages)
