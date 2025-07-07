@@ -41,12 +41,6 @@ interface InstitutionEditFormProps {
 }
 
 export default function InstitutionEditForm({ institutionData }: InstitutionEditFormProps) {
-  // CSS to hide scrollbar for webkit browsers
-  const hideScrollbarStyle = `
-    #form-container::-webkit-scrollbar {
-      display: none;
-    }
-  `
   const router = useRouter()
   const { toast } = useToast()
   const logoInputRef = useRef<HTMLInputElement>(null)
@@ -1715,9 +1709,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   )
 
   return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: hideScrollbarStyle }} />
-      <div className="flex h-screen w-full">
+    <div className="flex h-screen w-full">
       {/* Fixed Left Sidebar */}
       <div className="w-80 bg-white border-r border-gray-200 flex-shrink-0">
         <nav className="p-4">
@@ -1745,11 +1737,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         <div 
           id="form-container"
           className="flex-1 overflow-y-auto p-8 bg-gray-50 w-full"
-          style={{ 
-            height: '100vh',
-            scrollbarWidth: 'none', /* Firefox */
-            msOverflowStyle: 'none' /* IE and Edge */
-          }}
+          style={{ height: '100vh' }}
         >
           <form className="space-y-8 w-full">
             <div ref={sectionRefs.about} className="w-full">
@@ -1777,6 +1765,5 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         </div>
       </div>
     </div>
-    </>
   )
 }
