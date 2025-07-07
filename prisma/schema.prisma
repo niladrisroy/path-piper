@@ -365,6 +365,7 @@ model UserSkill {
 
   @@unique([userId, skillId])
   @@map("user_skills")
+  @@schema("public")
 }
 
 model SocialLink {
@@ -379,6 +380,7 @@ model SocialLink {
 
   @@unique([userId, platform])
   @@map("social_links")
+  @@schema("public")
 }
 
 model Language {
@@ -404,6 +406,7 @@ model UserLanguage {
 
   @@unique([userId, languageId])
   @@map("user_languages")
+  @@schema("public")
 }
 
 model Hobby {
@@ -427,6 +430,7 @@ model UserHobby {
 
   @@unique([userId, hobbyId])
   @@map("user_hobbies")
+  @@schema("public")
 }
 
 model Goal {
@@ -491,6 +495,7 @@ model ConnectionRequest {
 
   @@unique([senderId, receiverId])
   @@map("connection_requests")
+  @@schema("public")
 }
 
 model Connection {
@@ -504,6 +509,7 @@ model Connection {
 
   @@unique([user1Id, user2Id])
   @@map("connections")
+  @@schema("public")
 }
 
 model SkillEndorsement {
@@ -519,6 +525,7 @@ model SkillEndorsement {
 
   @@unique([endorserId, endorsedUserId, skillId])
   @@map("skill_endorsements")
+  @@schema("public")
 }
 
 model CircleBadge {
@@ -552,6 +559,7 @@ model CircleMembership {
 
   @@unique([circleId, userId])
   @@map("circle_memberships")
+  @@schema("public")
 }
 
 model CircleInvitation {
@@ -569,6 +577,7 @@ model CircleInvitation {
 
   @@unique([circleId, inviteeId])
   @@map("circle_invitations")
+  @@schema("public")
 }
 
 model FeedPost {
@@ -641,6 +650,7 @@ model PostLike {
 
   @@unique([userId, postId])
   @@map("post_likes")
+  @@schema("public")
 }
 
 model PostComment {
@@ -658,6 +668,7 @@ model PostComment {
   replies  PostComment[] @relation("CommentReplies")
 
   @@map("post_comments")
+  @@schema("public")
 }
 
 model PostBookmark {
@@ -671,6 +682,7 @@ model PostBookmark {
 
   @@unique([userId, postId])
   @@map("post_bookmarks")
+  @@schema("public")
 }
 
 model AchievementCategory {
