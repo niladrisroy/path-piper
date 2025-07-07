@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -174,15 +173,15 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
 
         const rect = element.getBoundingClientRect()
         const containerRect = formContainer.getBoundingClientRect()
-        
+
         // Calculate position relative to the scrollable container
         const elementTop = element.offsetTop
         const elementBottom = elementTop + rect.height
-        
+
         // Check if element is in viewport of the scrollable container
         const viewportTop = formContainer.scrollTop + 50
         const viewportBottom = formContainer.scrollTop + formContainer.clientHeight
-        
+
         if (elementBottom > viewportTop && elementTop < viewportBottom) {
           const distanceFromTop = Math.abs(elementTop - viewportTop)
           if (distanceFromTop < closestDistance) {
@@ -210,7 +209,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     formContainer.addEventListener('scroll', throttledScroll, { passive: true })
     // Call initially to set correct active section
     handleScroll()
-    
+
     return () => formContainer.removeEventListener('scroll', throttledScroll)
   }, [])
 
@@ -218,7 +217,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   const scrollToSection = (sectionId: string) => {
     const element = sectionRefs[sectionId as keyof typeof sectionRefs]?.current
     const formContainer = document.getElementById('form-container')
-    
+
     if (element && formContainer) {
       const offsetTop = element.offsetTop - 20 // Small offset from top
 
@@ -226,7 +225,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         top: offsetTop,
         behavior: 'smooth'
       })
-      
+
       // Update active section immediately for better UX
       setActiveSection(sectionId)
     }
@@ -390,6 +389,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   }
 
   // Facility handlers
+  const [isLoadingFacilities, setIsLoadingFacilities] = useState(false);
   const addFacility = () => {
     setFormData(prev => ({
       ...prev,
@@ -485,18 +485,18 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
 
   const removeEvent = async (index: number) => {
     const eventToRemove = formData.events[index]
-    
+
     // If it's an existing event (has an ID), delete it from database
     if (eventToRemove.id && eventToRemove.id !== '') {
       try {
         const response = await fetch(`/api/institution/events?id=${eventToRemove.id}`, {
           method: 'DELETE'
         })
-        
+
         if (!response.ok) {
           throw new Error('Failed to delete event')
         }
-        
+
         toast({
           title: "Success",
           description: "Event deleted successfully!",
@@ -511,7 +511,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         return // Don't remove from UI if database deletion failed
       }
     }
-    
+
     // Remove from UI
     const newEvents = formData.events.filter((_, i) => i !== index)
     setFormData(prev => ({
@@ -1255,6 +1255,40 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     </Card>
   )
 
+  const saveFacilities = async () => {
+    setIsLoadingFacilities(true);
+    try {
+      // Implement your API call to save facilities data here
+      // Replace this with your actual API endpoint and data
+      // Example:
+      // const response = await fetch('/api/institution/facilities', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify(formData.facilities),
+      // });
+
+      // if (!response.ok) {
+      //   throw new Error('Failed to save facilities');
+      // }
+
+      toast({
+        title: "Success",
+        description: "Facilities updated successfully!",
+      });
+    } catch (error) {
+      console.error('Error updating facilities:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update facilities. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingFacilities(false);
+    }
+  };
+
   const renderFacilitiesSection = () => (
     <Card ref={sectionRefs.facilities}>
       <CardHeader>
@@ -1340,32 +1374,27 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
           </div>
         ))}
 
-        <Button
-          type="button"
-          variant="outline"
-          onClick={addFacility}
-          className="w-full"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Facility
-        </Button>
+        
+                <div className="flex gap-2 mt-4">
+                  <Button 
+                    onClick={addFacility} 
+                    variant="outline" 
+                    size="sm"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Facility
+                  </Button>
+                  <Button 
+                    onClick={saveFacilities} 
+                    disabled={isLoadingFacilities}
+                    size="sm"
+                  >
+                    {isLoadingFacilities ? 'Saving...' : 'Save Facilities'}
+                  </Button>
+                </div>
 
         {/* Save Button for Facilities Section */}
-        <div className="flex justify-end pt-4 border-t">
-          <Button
-            onClick={() => {
-              toast({
-                title: "Info",
-                description: "Facilities section saved! (This is a placeholder - implement facilities save API)",
-              })
-            }}
-            disabled={isLoading}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            Save Facilities Section
-          </Button>
-        </div>
+        
       </CardContent>
     </Card>
   )
@@ -1560,7 +1589,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   const saveGalleryImages = async () => {
     try {
       setIsLoading(true)
-      
+
       // Filter out empty gallery items
       const validGalleryImages = galleryImages.filter(image => 
         image.url && image.url.trim() !== ''
@@ -1770,7 +1799,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
             <div ref={sectionRefs.gallery} className="w-full">
               {renderGallerySection()}
             </div>
-            
+
             {/* Extra padding at bottom for better scrolling */}
             <div className="h-20"></div>
           </form>

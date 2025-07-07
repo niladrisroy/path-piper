@@ -229,6 +229,7 @@ model InstitutionProfile {
   programs              InstitutionProgram[]
   gallery InstitutionGallery[]
   events   InstitutionEvents[]
+  facilities InstitutionFacilities[]
 
   @@map("institution_profiles")
   @@schema("public")
@@ -265,6 +266,22 @@ model InstitutionEvents {
   institution InstitutionProfile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
 
   @@map("institution_events")
+  @@schema("public")
+}
+
+model InstitutionFacilities {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  institutionId String   @map("institution_id") @db.Uuid
+  name          String
+  description   String?
+  imageUrl      String?  @map("image_url")
+  features      String[] @default([])
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  institution InstitutionProfile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  @@map("institution_facilities")
   @@schema("public")
 }
 
