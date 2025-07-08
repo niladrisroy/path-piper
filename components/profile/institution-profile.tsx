@@ -22,6 +22,11 @@ interface InstitutionData {
   verified: boolean
   founded?: number | null
   tagline: string
+  gallery?: Array<{
+    id: string
+    url: string
+    caption?: string
+  }>
 }
 
 interface InstitutionProfileProps {
