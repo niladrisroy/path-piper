@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -22,12 +21,16 @@ import {
   Calendar,
   Filter,
   SortDesc,
-  Hash
+  Hash,
+  MoreHorizontal,
+  Trash2
 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { toast } from "sonner"
 import Image from "next/image"
 import { formatDistanceToNow } from "date-fns"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 
 interface FeedPost {
   id: string
@@ -90,6 +93,9 @@ export default function Feed() {
   const [difficultyFilter, setDifficultyFilter] = useState('all')
   const [availableSubjects, setAvailableSubjects] = useState<string[]>([])
   const { user } = useAuth()
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deletingItem, setDeletingItem] = useState<{ id: string; type: 'post' | 'trail'; trailOrder?: number } | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const fetchPosts = async () => {
     try {
@@ -103,10 +109,10 @@ export default function Feed() {
 
       const response = await fetch(`/api/feed/posts?${params}`)
       const data = await response.json()
-      
+
       if (response.ok) {
         setPosts(data.posts)
-        
+
         // Extract unique subjects for filter
         const subjects = new Set<string>()
         data.posts.forEach((post: FeedPost) => {
@@ -133,7 +139,7 @@ export default function Feed() {
       const response = await fetch(`/api/feed/posts/${postId}/like`, {
         method: 'POST'
       })
-      
+
       if (response.ok) {
         fetchPosts() // Refresh to get updated counts
       }
@@ -148,7 +154,7 @@ export default function Feed() {
       const response = await fetch(`/api/feed/posts/${postId}/bookmark`, {
         method: 'POST'
       })
-      
+
       if (response.ok) {
         toast.success("Post bookmarked!")
       }
@@ -156,6 +162,55 @@ export default function Feed() {
       console.error('Error bookmarking post:', error)
       toast.error("Failed to bookmark post")
     }
+  }
+
+  const handlePostCreated = () => {
+    fetchPosts()
+  }
+
+  const handleDeleteClick = (id: string, type: 'post' | 'trail', trailOrder?: number) => {
+    setDeletingItem({ id, type, trailOrder })
+    setShowDeleteDialog(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingItem || !user) return
+
+    setIsDeleting(true)
+    try {
+      const response = await fetch(`/api/feed/posts/${deletingItem.id}/delete`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${user.accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete')
+      }
+
+      if (deletingItem.type === 'post') {
+        toast.success('Post deleted successfully')
+      } else {
+        toast.success('Trail message deleted successfully')
+      }
+
+      fetchPosts() // Refresh the feed
+    } catch (error) {
+      console.error('Error deleting:', error)
+      toast.error(`Failed to delete ${deletingItem.type}`)
+    } finally {
+      setIsDeleting(false)
+      setShowDeleteDialog(false)
+      setDeletingItem(null)
+    }
+  }
+
+  const canDelete = (authorId: string) => {
+    return user && user.id === authorId
   }
 
   const PostCard = ({ post }: { post: FeedPost }) => {
@@ -191,9 +246,27 @@ export default function Feed() {
                 {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
               </p>
             </div>
+             {canDelete(post.author.id) && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem 
+                          className="text-red-600 focus:text-red-600"
+                          onClick={() => handleDeleteClick(post.id, 'post')}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Post
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
           </div>
         </CardHeader>
-        
+
         <CardContent className="space-y-3">
           {/* Achievement/Project specific info */}
           {post.isAchievement && post.achievementType && (
@@ -202,7 +275,7 @@ export default function Feed() {
               {post.achievementType}
             </Badge>
           )}
-          
+
           {post.postType === "PROJECT" && post.projectCategory && (
             <Badge className="bg-green-100 text-green-800 border-green-200">
               <Code className="h-3 w-3 mr-1" />
@@ -295,7 +368,7 @@ export default function Feed() {
                 Share
               </Button>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <span className="text-xs text-gray-400">
                 {post.viewsCount} views
@@ -318,7 +391,7 @@ export default function Feed() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Create Post */}
-      <CreatePost onPostCreated={fetchPosts} />
+      <CreatePost onPostCreated={handlePostCreated} />
 
       {/* Feed Filters */}
       <Card>
@@ -410,6 +483,33 @@ export default function Feed() {
           posts.map((post) => <PostCard key={post.id} post={post} />)
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete {deletingItem?.type === 'post' ? 'Post' : 'Trail Message'}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deletingItem?.type === 'post' 
+                ? 'This will permanently delete the post and all its trail messages. This action cannot be undone.'
+                : 'This will permanently delete this trail message and reorder the remaining trails. This action cannot be undone.'
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

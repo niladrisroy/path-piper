@@ -6,7 +6,11 @@ import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Heart, MessageCircle, Repeat2, Share, MoreHorizontal, Plus } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import { Heart, MessageCircle, Repeat2, Share, MoreHorizontal, Plus, Trash2 } from "lucide-react"
+import { useAuth } from "@/hooks/use-auth"
+import { toast } from "sonner"
 import CreatePost from "./create-post"
 
 interface Author {
@@ -42,6 +46,10 @@ interface PostWithTrailsProps {
 export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsProps) {
   const [showTrails, setShowTrails] = useState(false)
   const [showAddTrail, setShowAddTrail] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deletingItem, setDeletingItem] = useState<{ id: string; type: 'post' | 'trail'; trailOrder?: number } | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const { user } = useAuth()
 
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString)
@@ -57,6 +65,51 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
   const handleTrailCreated = () => {
     setShowAddTrail(false)
     onPostUpdate?.()
+  }
+
+  const handleDeleteClick = (id: string, type: 'post' | 'trail', trailOrder?: number) => {
+    setDeletingItem({ id, type, trailOrder })
+    setShowDeleteDialog(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingItem || !user) return
+
+    setIsDeleting(true)
+    try {
+      const response = await fetch(`/api/feed/posts/${deletingItem.id}/delete`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${user.accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete')
+      }
+
+      if (deletingItem.type === 'post') {
+        toast.success('Post deleted successfully')
+      } else {
+        toast.success('Trail message deleted successfully')
+      }
+
+      onPostUpdate?.()
+    } catch (error) {
+      console.error('Error deleting:', error)
+      toast.error(`Failed to delete ${deletingItem.type}`)
+    } finally {
+      setIsDeleting(false)
+      setShowDeleteDialog(false)
+      setDeletingItem(null)
+    }
+  }
+
+  const canDelete = (authorId: string) => {
+    return user && user.id === authorId
   }
 
   return (
@@ -88,9 +141,24 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
                 </div>
               </div>
             </div>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
+            {canDelete(post.author.id) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem 
+                    className="text-red-600 focus:text-red-600"
+                    onClick={() => handleDeleteClick(post.id, 'post')}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Post
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
 
           {/* Post Content */}
@@ -184,16 +252,36 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
                     />
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-sm">
-                        {trail.author.firstName} {trail.author.lastName}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {formatTimeAgo(trail.createdAt)}
-                      </span>
-                      <Badge variant="outline" className="text-xs py-0 px-1 bg-purple-50 text-purple-600 border-purple-200">
-                        #{trail.trailOrder}
-                      </Badge>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm">
+                          {trail.author.firstName} {trail.author.lastName}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {formatTimeAgo(trail.createdAt)}
+                        </span>
+                        <Badge variant="outline" className="text-xs py-0 px-1 bg-purple-50 text-purple-600 border-purple-200">
+                          #{trail.trailOrder}
+                        </Badge>
+                      </div>
+                      {canDelete(trail.author.id) && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-60 hover:opacity-100">
+                              <MoreHorizontal className="h-3 w-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem 
+                              className="text-red-600 focus:text-red-600"
+                              onClick={() => handleDeleteClick(trail.id, 'trail', trail.trailOrder)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Trail
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                     <p className="text-sm text-gray-700">{trail.content}</p>
                   </div>
@@ -203,6 +291,33 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
           ))}
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete {deletingItem?.type === 'post' ? 'Post' : 'Trail Message'}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deletingItem?.type === 'post' 
+                ? 'This will permanently delete the post and all its trail messages. This action cannot be undone.'
+                : 'This will permanently delete this trail message and reorder the remaining trails. This action cannot be undone.'
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
