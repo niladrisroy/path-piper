@@ -2046,17 +2046,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
               {renderEventsSection()}
               {renderGallerySection()}
 
-              {/* Global Save Button */}
-              <div className="flex justify-end pt-8 border-t">
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  {isLoading ? 'Saving...' : 'Save All Changes'}
-                </Button>
-              </div>
+              
             </div>
           </form>
         </div>
