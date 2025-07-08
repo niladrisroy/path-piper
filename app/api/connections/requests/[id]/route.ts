@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@supabase/supabase-js'
@@ -8,10 +9,13 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Get user from session cookie
+    const resolvedParams = await params
+    const requestId = resolvedParams.id
+
+    // Get user from session cookie to verify authentication
     const cookieStore = request.headers.get('cookie') || ''
     const cookies = Object.fromEntries(
       cookieStore.split(';').map(cookie => {
@@ -32,14 +36,13 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { action } = await request.json()
-    const requestId = params.id
+    const { action } = await request.json() // 'accept' or 'decline'
 
-    if (!action || !['accept', 'decline'].includes(action)) {
+    if (!['accept', 'decline'].includes(action)) {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
     }
 
-    // Get the connection request to verify it exists and user is the receiver
+    // Find the connection request
     const connectionRequest = await prisma.connectionRequest.findUnique({
       where: { id: requestId },
       include: {
@@ -52,44 +55,61 @@ export async function PUT(
       return NextResponse.json({ error: 'Connection request not found' }, { status: 404 })
     }
 
+    // Verify that the current user is the receiver
     if (connectionRequest.receiverId !== user.id) {
-      return NextResponse.json({ error: 'Unauthorized to respond to this request' }, { status: 403 })
+      return NextResponse.json({ error: 'Not authorized to respond to this request' }, { status: 403 })
     }
 
-    if (connectionRequest.status !== 'pending') {
-      return NextResponse.json({ error: 'Request has already been processed' }, { status: 400 })
-    }
+    // Update the request status
+    const updatedRequest = await prisma.connectionRequest.update({
+      where: { id: requestId },
+      data: {
+        status: action === 'accept' ? 'accepted' : 'declined',
+        updatedAt: new Date()
+      }
+    })
 
+    // If accepted, create a connection
     if (action === 'accept') {
-      // Update connection request status to accepted
-      await prisma.connectionRequest.update({
-        where: { id: requestId },
-        data: { status: 'accepted' }
-      })
-
-      // Create a connection record
-      await prisma.connection.create({
-        data: {
-          user1Id: connectionRequest.senderId,
-          user2Id: connectionRequest.receiverId,
-          connectionType: 'mutual',
-          connectedAt: new Date()
+      // Check if connection already exists to avoid duplicates
+      const existingConnection = await prisma.connection.findFirst({
+        where: {
+          OR: [
+            {
+              user1Id: connectionRequest.senderId,
+              user2Id: connectionRequest.receiverId
+            },
+            {
+              user1Id: connectionRequest.receiverId,
+              user2Id: connectionRequest.senderId
+            }
+          ]
         }
       })
 
-      return NextResponse.json({ message: 'Connection request accepted' })
-    } else {
-      // Update connection request status to declined
-      await prisma.connectionRequest.update({
-        where: { id: requestId },
-        data: { status: 'declined' }
-      })
+      if (!existingConnection) {
+        // Ensure user1Id is always the "smaller" UUID to maintain consistency
+        const user1Id = connectionRequest.senderId < connectionRequest.receiverId 
+          ? connectionRequest.senderId 
+          : connectionRequest.receiverId
+        const user2Id = connectionRequest.senderId < connectionRequest.receiverId 
+          ? connectionRequest.receiverId 
+          : connectionRequest.senderId
 
-      return NextResponse.json({ message: 'Connection request declined' })
+        await prisma.connection.create({
+          data: {
+            user1Id,
+            user2Id,
+            connectionType: 'friend' // Default connection type
+          }
+        })
+      }
     }
 
+    return NextResponse.json(updatedRequest)
+
   } catch (error) {
-    console.error('Error processing connection request:', error)
+    console.error('Error updating connection request:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
