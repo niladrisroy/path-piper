@@ -40,10 +40,17 @@ interface InstitutionEditFormProps {
 }
 
 export default function InstitutionEditForm({ institutionData }: InstitutionEditFormProps) {
-  // CSS to hide scrollbar for webkit browsers
+  // CSS to hide all scrollbars
   const hideScrollbarStyle = `
     #form-container::-webkit-scrollbar {
       display: none;
+    }
+    #form-container {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    body {
+      overflow-x: hidden;
     }
   `
   const router = useRouter()
@@ -2036,8 +2043,12 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
           <form onSubmit={handleSubmit}>
             <div 
               id="form-container" 
-              className="space-y-8 max-h-[calc(100vh-200px)] overflow-y-auto pr-4"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              className="space-y-8 max-h-[calc(100vh-250px)] overflow-y-auto pr-2"
+              style={{ 
+                scrollbarWidth: 'none', 
+                msOverflowStyle: 'none',
+                overflowX: 'hidden'
+              }}
             >
               {renderAboutSection()}
               {renderProgramsSection()}
