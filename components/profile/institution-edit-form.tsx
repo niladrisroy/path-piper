@@ -623,15 +623,12 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     const file = e.target.files?.[0]
     if (file) {
       try {
-        // Create preview immediately (like logo/cover upload)
-        const reader = new FileReader()
-        reader.onloadend = () => {
-          const newImages = [reader.result as string]
-          updateFacility(facilityIndex, 'images', newImages)
-        }
-        reader.readAsDataURL(file)
+        // Create immediate preview URL
+        const previewUrl = URL.createObjectURL(file)
+        const newImages = [previewUrl]
+        updateFacility(facilityIndex, 'images', newImages)
 
-        // Upload to server in background
+        // Upload to server
         const uploadData = new FormData()
         uploadData.append('file', file)
 
@@ -642,10 +639,12 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
 
         if (response.ok) {
           const data = await response.json()
-          const newImages = [data.url]
+          // Clean up the preview URL
+          URL.revokeObjectURL(previewUrl)
           
-          // Update with server URL after upload completes
-          updateFacility(facilityIndex, 'images', newImages)
+          // Update with server URL
+          const serverImages = [data.url]
+          updateFacility(facilityIndex, 'images', serverImages)
           
           toast({
             title: "Success",
@@ -653,6 +652,11 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
           })
         } else {
           console.error('Failed to upload facility image')
+          // Clean up the preview URL on error
+          URL.revokeObjectURL(previewUrl)
+          // Reset to empty
+          updateFacility(facilityIndex, 'images', [''])
+          
           toast({
             title: "Error",
             description: "Failed to upload facility image. Please try again.",
@@ -668,6 +672,9 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         })
       }
     }
+
+    // Clear the input value to allow re-uploading the same file
+    e.target.value = ''
   }
 
   const uploadFile = async (file: File, type: 'logo' | 'cover'): Promise<string | null> => {
