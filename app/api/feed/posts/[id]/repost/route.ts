@@ -4,10 +4,10 @@ import { prisma } from '@/lib/prisma'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const postId = params.id
+    const { id: postId } = await params
     const { content } = await request.json()
 
     // Get user from cookies
@@ -43,7 +43,7 @@ export async function POST(
     const existingRepost = await prisma.feedPost.findFirst({
       where: {
         userId: user.id,
-        originalPostId: postId
+        parentPostId: postId
       }
     })
 
@@ -64,10 +64,10 @@ export async function POST(
       data: {
         content: content || '',
         userId: user.id,
-        originalPostId: postId,
+        parentPostId: postId,
         postType: 'GENERAL',
-        age_group: ageGroup,
-        moderation_status: 'approved'
+        ageGroup: ageGroup,
+        moderationStatus: 'approved'
       }
     })
 

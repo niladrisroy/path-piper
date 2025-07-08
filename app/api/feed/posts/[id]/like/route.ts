@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@supabase/supabase-js'
@@ -9,7 +8,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const cookieStore = request.cookies
@@ -19,13 +18,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: { user }, error } = await supabase.auth.getUser(accessToken)
-
-    if (error || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const postId = params.id
+    const { id: postId } = await params
 
     // Check if post exists
     const post = await prisma.feedPost.findUnique({
