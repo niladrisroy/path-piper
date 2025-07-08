@@ -253,12 +253,12 @@ export async function GET(request: NextRequest) {
             firstName: true,
             lastName: true,
             profileImageUrl: true,
-            role: true
-          }
-        },
-        student: {
-          select: {
-            age_group: true
+            role: true,
+            student: {
+              select: {
+                age_group: true
+              }
+            }
           }
         },
         originalPost: {
