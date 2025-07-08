@@ -181,9 +181,9 @@ export default function Feed() {
       const response = await fetch(`/api/feed/posts/${deletingItem.id}/delete`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${user.accessToken}`,
           'Content-Type': 'application/json'
-        }
+        },
+        credentials: 'include' // Use cookies for authentication
       })
 
       const data = await response.json()
