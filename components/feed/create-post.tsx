@@ -194,7 +194,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
       return
     }
 
-    // Check if content exceeds 300 characters and suggest trail instead
+    // Prevent posting if character limit exceeded and not a trail
     if (characterCount > 300 && !isTrail) {
       setShowTrailOption(true)
       toast.error("Content exceeds 300 characters. Please use 'Start Trail' to share longer content.")
@@ -926,7 +926,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
                 <Button
                   onClick={handlePost}
-                  disabled={!postText.trim() || isPosting}
+                  disabled={!postText.trim() || isPosting || isOverLimit}
                   size="sm"
                   className={`${selectedPostType?.color || 'bg-gradient-to-r from-pathpiper-teal to-pathpiper-blue'} text-white rounded-full px-6 font-medium shadow-sm hover:shadow-md transition-all duration-200 ${isOverLimit ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
