@@ -1083,8 +1083,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                     <SelectItem value="advanced">Advanced</SelectItem>
                     <SelectItem value="undergraduate">Undergraduate</SelectItem>
                     <SelectItem value="postgraduate">Postgraduate</SelectItem>
-                  </SelectContent>
-                </Select>
+                  </SelectContent>                </Select>
                             </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -1476,3 +1475,279 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
       </CardContent>
     </Card>
   )
+
+  const renderEventsSection = () => (
+    <Card ref={sectionRefs.events}>
+      <CardHeader>
+        <CardTitle>Events & Programs</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {isLoadingEvents ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="text-gray-500 mt-4">Loading events...</p>
+          </div>
+        ) : (
+          formData.events.map((event, index) => (
+            <div key={index} className="p-4 border rounded-lg space-y-4">
+              <div className="flex justify-between items-center">
+                <h4 className="font-medium">Event {index + 1}</h4>
+                {formData.events.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeEvent(index)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Event Title</Label>
+                  <Input
+                    value={event.title}
+                    onChange={(e) => updateEvent(index, 'title', e.target.value)}
+                    placeholder="e.g., Annual Tech Conference"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Event Type</Label>
+                  <Select
+                    value={event.eventType}
+                    onValueChange={(value) => updateEvent(index, 'eventType', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="workshop">Workshop</SelectItem>
+                      <SelectItem value="seminar">Seminar</SelectItem>
+                      <SelectItem value="conference">Conference</SelectItem>
+                      <SelectItem value="exhibition">Exhibition</SelectItem>
+                      <SelectItem value="competition">Competition</SelectItem>
+                      <SelectItem value="social">Social Event</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Start Date & Time</Label>
+                  <Input
+                    type="datetime-local"
+                    value={event.startDate}
+                    onChange={(e) => updateEvent(index, 'startDate', e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>End Date & Time</Label>
+                  <Input
+                    type="datetime-local"
+                    value={event.endDate}
+                    onChange={(e) => updateEvent(index, 'endDate', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Textarea
+                  value={event.description}
+                  onChange={(e) => updateEvent(index, 'description', e.target.value)}
+                  placeholder="Describe the event and what participants can expect"
+                  className="min-h-[80px]"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Location</Label>
+                  <Input
+                    value={event.location}
+                    onChange={(e) => updateEvent(index, 'location', e.target.value)}
+                    placeholder="e.g., Main Auditorium, Online"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Registration URL (Optional)</Label>
+                  <Input
+                    value={event.registrationUrl}
+                    onChange={(e) => updateEvent(index, 'registrationUrl', e.target.value)}
+                    placeholder="https://..."
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Event Image URL (Optional)</Label>
+                <Input
+                  value={event.imageUrl}
+                  onChange={(e) => updateEvent(index, 'imageUrl', e.target.value)}
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
+          ))
+        )}
+
+        <Button
+          type="button"
+          variant="outline"
+          onClick={addEvent}
+          className="w-full"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Event
+        </Button>
+
+        {/* Save Button for Events Section */}
+        <div className="flex justify-end pt-4 border-t">
+          <Button
+            onClick={saveEventsSection}
+            disabled={isLoading}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {isLoading ? 'Saving...' : 'Save Events Section'}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+
+  const renderGallerySection = () => (
+    <Card ref={sectionRefs.gallery}>
+      <CardHeader>
+        <CardTitle>Gallery</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {formData.gallery.map((item, index) => (
+          <div key={index} className="p-4 border rounded-lg space-y-4">
+            <div className="flex justify-between items-center">
+              <h4 className="font-medium">Gallery Item {index + 1}</h4>
+              {formData.gallery.length > 1 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => removeGalleryItem(index)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label>Image URL</Label>
+              <Input
+                value={item.imageUrl}
+                onChange={(e) => updateGalleryItem(index, 'imageUrl', e.target.value)}
+                placeholder="https://..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Caption</Label>
+              <Input
+                value={item.caption}
+                onChange={(e) => updateGalleryItem(index, 'caption', e.target.value)}
+                placeholder="Describe this image"
+              />
+            </div>
+          </div>
+        ))}
+
+        <Button
+          type="button"
+          variant="outline"
+          onClick={addGalleryItem}
+          className="w-full"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Gallery Item
+        </Button>
+
+        {/* Save Button for Gallery Section */}
+        <div className="flex justify-end pt-4 border-t">
+          <Button
+            onClick={() => {
+              toast({
+                title: "Info",
+                description: "Gallery section saved! (This is a placeholder - implement gallery save API)",
+              })
+            }}
+            disabled={isLoading}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Save Gallery Section
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: hideScrollbarStyle }} />
+      <div className="flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto">
+        {/* Navigation Sidebar */}
+        <div className="lg:w-64 shrink-0">
+          <div className="sticky top-24">
+            <nav className="space-y-2">
+              {sections.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => scrollToSection(id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-all duration-200 ${
+                    activeSection === id
+                      ? 'bg-blue-100 text-blue-700 border-l-4 border-blue-600'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span className="font-medium">{label}</span>
+                </button>
+              ))}
+            </nav>
+          </div>
+        </div>
+
+        {/* Form Content */}
+        <div className="flex-1">
+          <form onSubmit={handleSubmit}>
+            <div 
+              id="form-container" 
+              className="space-y-8 max-h-[calc(100vh-200px)] overflow-y-auto pr-4"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {renderAboutSection()}
+              {renderProgramsSection()}
+              {renderFacultySection()}
+              {renderFacilitiesSection()}
+              {renderEventsSection()}
+              {renderGallerySection()}
+
+              {/* Global Save Button */}
+              <div className="flex justify-end pt-8 border-t">
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {isLoading ? 'Saving...' : 'Save All Changes'}
+                </Button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </>
+  )
+}
