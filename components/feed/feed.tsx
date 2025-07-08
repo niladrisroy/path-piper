@@ -174,7 +174,10 @@ export default function Feed() {
   }
 
   const handleDeleteConfirm = async () => {
-    if (!deletingItem || !user) return
+    if (!deletingItem || !user) {
+      console.error('Delete confirmation failed: missing deletingItem or user')
+      return
+    }
 
     setIsDeleting(true)
     try {
@@ -189,7 +192,7 @@ export default function Feed() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to delete')
+        throw new Error(data.error || `Failed to delete ${deletingItem.type}`)
       }
 
       if (deletingItem.type === 'post') {
@@ -201,7 +204,8 @@ export default function Feed() {
       fetchPosts() // Refresh the feed
     } catch (error) {
       console.error('Error deleting:', error)
-      toast.error(`Failed to delete ${deletingItem.type}`)
+      const errorMessage = error instanceof Error ? error.message : `Failed to delete ${deletingItem.type}`
+      toast.error(errorMessage)
     } finally {
       setIsDeleting(false)
       setShowDeleteDialog(false)
@@ -485,27 +489,49 @@ export default function Feed() {
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
+      <AlertDialog open={showDeleteDialog} onOpenChange={(open) => {
+        if (!isDeleting) {
+          setShowDeleteDialog(open)
+          if (!open) {
+            setDeletingItem(null)
+          }
+        }
+      }}>
+        <AlertDialogContent className="sm:max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              Delete {deletingItem?.type === 'post' ? 'Post' : 'Trail Message'}?
+            <AlertDialogTitle className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
+                <Trash2 className="h-4 w-4 text-red-600" />
+              </div>
+              Confirm Deletion
             </AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-left">
               {deletingItem?.type === 'post' 
-                ? 'This will permanently delete the post and all its trail messages. This action cannot be undone.'
-                : 'This will permanently delete this trail message and reorder the remaining trails. This action cannot be undone.'
+                ? 'Are you sure you want to delete this post? This will permanently remove the post and all its trail messages. This action cannot be undone.'
+                : 'Are you sure you want to delete this trail message? This will permanently remove the message and reorder the remaining trails. This action cannot be undone.'
               }
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDeleteConfirm}
               disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
             >
-              {isDeleting ? 'Deleting...' : 'Delete'}
+              {isDeleting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete {deletingItem?.type === 'post' ? 'Post' : 'Trail'}
+                </>
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
