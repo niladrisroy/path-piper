@@ -1,14 +1,16 @@
 
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Textarea } from "@/components/ui/textarea"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
-import { Heart, MessageCircle, Repeat2, Share, MoreHorizontal, Plus, Trash2 } from "lucide-react"
+import { Heart, MessageCircle, Repeat2, Share, MoreHorizontal, Plus, Trash2, Send } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { toast } from "sonner"
 import CreatePost from "./create-post"
@@ -27,6 +29,15 @@ interface Trail {
   createdAt: string
   author: Author
   trailOrder: number
+  likesCount: number
+  commentsCount: number
+}
+
+interface Comment {
+  id: string
+  content: string
+  createdAt: string
+  user: Author
 }
 
 interface PostWithTrailsProps {
@@ -39,6 +50,11 @@ interface PostWithTrailsProps {
     createdAt: string
     author: Author
     trails: Trail[]
+    originalPost?: {
+      id: string
+      content: string
+      author: Author
+    } | null
   }
   onPostUpdate?: () => void
 }
@@ -49,6 +65,20 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deletingItem, setDeletingItem] = useState<{ id: string; type: 'post' | 'trail'; trailOrder?: number } | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [showComments, setShowComments] = useState(false)
+  const [showRepostDialog, setShowRepostDialog] = useState(false)
+  const [comments, setComments] = useState<Comment[]>([])
+  const [newComment, setNewComment] = useState("")
+  const [repostContent, setRepostContent] = useState("")
+  const [isLiked, setIsLiked] = useState(false)
+  const [likesCount, setLikesCount] = useState(post.likesCount)
+  const [commentsCount, setCommentsCount] = useState(post.commentsCount)
+  const [isCommenting, setIsCommenting] = useState(false)
+  const [isReposting, setIsReposting] = useState(false)
+  const [trailLikes, setTrailLikes] = useState<Record<string, { liked: boolean; count: number }>>({})
+  const [trailComments, setTrailComments] = useState<Record<string, Comment[]>>({})
+  const [showTrailComments, setShowTrailComments] = useState<Record<string, boolean>>({})
+  const [newTrailComment, setNewTrailComment] = useState<Record<string, string>>({})
   const { user } = useAuth()
 
   const formatTimeAgo = (dateString: string) => {
@@ -111,6 +141,176 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
   const canDelete = (authorId: string) => {
     return user && user.id === authorId
   }
+
+  const handleLike = async () => {
+    try {
+      const response = await fetch(`/api/feed/posts/${post.id}/like`, {
+        method: 'POST',
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setIsLiked(data.liked)
+        setLikesCount(prev => data.liked ? prev + 1 : prev - 1)
+      }
+    } catch (error) {
+      console.error('Error liking post:', error)
+      toast.error("Failed to like post")
+    }
+  }
+
+  const fetchComments = async () => {
+    try {
+      const response = await fetch(`/api/feed/posts/${post.id}/comment`)
+      if (response.ok) {
+        const data = await response.json()
+        setComments(data.comments)
+      }
+    } catch (error) {
+      console.error('Error fetching comments:', error)
+    }
+  }
+
+  const handleComment = async () => {
+    if (!newComment.trim()) return
+
+    setIsCommenting(true)
+    try {
+      const response = await fetch(`/api/feed/posts/${post.id}/comment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: newComment }),
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setComments(prev => [...prev, data.comment])
+        setCommentsCount(prev => prev + 1)
+        setNewComment("")
+        toast.success("Comment added successfully!")
+      } else {
+        const error = await response.json()
+        toast.error(error.error || "Failed to add comment")
+      }
+    } catch (error) {
+      console.error('Error adding comment:', error)
+      toast.error("Failed to add comment")
+    } finally {
+      setIsCommenting(false)
+    }
+  }
+
+  const handleRepost = async () => {
+    setIsReposting(true)
+    try {
+      const response = await fetch(`/api/feed/posts/${post.id}/repost`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: repostContent }),
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        toast.success("Post reposted successfully!")
+        setShowRepostDialog(false)
+        setRepostContent("")
+        onPostUpdate?.()
+      } else {
+        const error = await response.json()
+        toast.error(error.error || "Failed to repost")
+      }
+    } catch (error) {
+      console.error('Error reposting:', error)
+      toast.error("Failed to repost")
+    } finally {
+      setIsReposting(false)
+    }
+  }
+
+  const handleTrailLike = async (trailId: string) => {
+    try {
+      const response = await fetch(`/api/feed/posts/${post.id}/trails/${trailId}/like`, {
+        method: 'POST',
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setTrailLikes(prev => ({
+          ...prev,
+          [trailId]: {
+            liked: data.liked,
+            count: data.liked ? (prev[trailId]?.count || 0) + 1 : Math.max(0, (prev[trailId]?.count || 1) - 1)
+          }
+        }))
+      }
+    } catch (error) {
+      console.error('Error liking trail:', error)
+      toast.error("Failed to like trail")
+    }
+  }
+
+  const fetchTrailComments = async (trailId: string) => {
+    try {
+      const response = await fetch(`/api/feed/posts/${post.id}/trails/${trailId}/comment`)
+      if (response.ok) {
+        const data = await response.json()
+        setTrailComments(prev => ({ ...prev, [trailId]: data.comments }))
+      }
+    } catch (error) {
+      console.error('Error fetching trail comments:', error)
+    }
+  }
+
+  const handleTrailComment = async (trailId: string) => {
+    const content = newTrailComment[trailId]
+    if (!content?.trim()) return
+
+    try {
+      const response = await fetch(`/api/feed/posts/${post.id}/trails/${trailId}/comment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setTrailComments(prev => ({
+          ...prev,
+          [trailId]: [...(prev[trailId] || []), data.comment]
+        }))
+        setNewTrailComment(prev => ({ ...prev, [trailId]: "" }))
+        toast.success("Comment added successfully!")
+      } else {
+        const error = await response.json()
+        toast.error(error.error || "Failed to add comment")
+      }
+    } catch (error) {
+      console.error('Error adding trail comment:', error)
+      toast.error("Failed to add comment")
+    }
+  }
+
+  useEffect(() => {
+    if (showComments) {
+      fetchComments()
+    }
+  }, [showComments])
+
+  useEffect(() => {
+    // Initialize trail likes from post data
+    const initialTrailLikes: Record<string, { liked: boolean; count: number }> = {}
+    post.trails.forEach(trail => {
+      initialTrailLikes[trail.id] = {
+        liked: false, // You might want to fetch this from the API
+        count: trail.likesCount || 0
+      }
+    })
+    setTrailLikes(initialTrailLikes)
+  }, [post.trails])
 
   return (
     <div className="space-y-3">
@@ -210,26 +410,57 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="text-gray-600 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 flex items-center gap-2 rounded-full px-3 py-2 transition-all duration-200 group"
+                onClick={handleLike}
+                className={`flex items-center gap-2 rounded-full px-3 py-2 transition-all duration-200 group ${
+                  isLiked 
+                    ? 'text-red-500 bg-red-50 dark:bg-red-950/20' 
+                    : 'text-gray-600 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20'
+                }`}
               >
-                <Heart className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
-                <span className="text-sm font-medium">{post.likesCount}</span>
+                <Heart className={`h-4 w-4 group-hover:scale-110 transition-transform duration-200 ${isLiked ? 'fill-current' : ''}`} />
+                <span className="text-sm font-medium">{likesCount}</span>
               </Button>
               <Button 
                 variant="ghost" 
                 size="sm" 
+                onClick={() => setShowComments(!showComments)}
                 className="text-gray-600 dark:text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/20 flex items-center gap-2 rounded-full px-3 py-2 transition-all duration-200 group"
               >
                 <MessageCircle className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
-                <span className="text-sm font-medium">{post.commentsCount}</span>
+                <span className="text-sm font-medium">{commentsCount}</span>
               </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-gray-600 dark:text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-950/20 rounded-full p-2 transition-all duration-200 group"
-              >
-                <Repeat2 className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
-              </Button>
+              <Dialog open={showRepostDialog} onOpenChange={setShowRepostDialog}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-gray-600 dark:text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-950/20 rounded-full p-2 transition-all duration-200 group"
+                  >
+                    <Repeat2 className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Repost</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <Textarea
+                      value={repostContent}
+                      onChange={(e) => setRepostContent(e.target.value)}
+                      placeholder="Add your thoughts (optional)..."
+                      className="min-h-[100px]"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => setShowRepostDialog(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleRepost} disabled={isReposting}>
+                        {isReposting ? "Reposting..." : "Repost"}
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -251,6 +482,74 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
           </div>
         </CardContent>
       </Card>
+
+      {/* Comments Section */}
+      {showComments && (
+        <Card className="border-0 shadow-lg bg-gray-50/50 dark:bg-gray-800/50 backdrop-blur-sm">
+          <CardContent className="p-4">
+            <div className="space-y-4">
+              {/* Add Comment */}
+              <div className="flex gap-3">
+                <div className="h-8 w-8 rounded-full overflow-hidden">
+                  <Image
+                    src={user?.profileImageUrl || "/images/student-profile.png"}
+                    alt="Your profile"
+                    width={32}
+                    height={32}
+                    className="object-cover"
+                  />
+                </div>
+                <div className="flex-1 flex gap-2">
+                  <Textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Write a comment..."
+                    className="min-h-[40px] resize-none"
+                  />
+                  <Button
+                    onClick={handleComment}
+                    disabled={!newComment.trim() || isCommenting}
+                    size="sm"
+                    className="bg-pathpiper-teal hover:bg-pathpiper-teal/90"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Comments List */}
+              <div className="space-y-3">
+                {comments.map((comment) => (
+                  <div key={comment.id} className="flex gap-3">
+                    <div className="h-8 w-8 rounded-full overflow-hidden">
+                      <Image
+                        src={comment.user.profileImageUrl || "/images/student-profile.png"}
+                        alt={`${comment.user.firstName} ${comment.user.lastName}`}
+                        width={32}
+                        height={32}
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <div className="bg-white dark:bg-gray-700 rounded-lg p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-sm">
+                            {comment.user.firstName} {comment.user.lastName}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {formatTimeAgo(comment.createdAt)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-800 dark:text-gray-200">{comment.content}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Add Trail Form */}
       {showAddTrail && (
@@ -341,6 +640,103 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
                       <div className="mt-2">
                         <p className="text-purple-800 dark:text-purple-200 leading-relaxed font-medium">{trail.content}</p>
                       </div>
+
+                      {/* Trail Actions */}
+                      <div className="flex items-center justify-between mt-3 pt-2 border-t border-purple-200/50 dark:border-purple-700/50">
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleTrailLike(trail.id)}
+                            className={`flex items-center gap-1 rounded-full px-2 py-1 transition-all duration-200 group text-xs ${
+                              trailLikes[trail.id]?.liked 
+                                ? 'text-red-500 bg-red-50 dark:bg-red-950/20' 
+                                : 'text-purple-600 dark:text-purple-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20'
+                            }`}
+                          >
+                            <Heart className={`h-3 w-3 ${trailLikes[trail.id]?.liked ? 'fill-current' : ''}`} />
+                            <span>{trailLikes[trail.id]?.count || 0}</span>
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => {
+                              setShowTrailComments(prev => ({ ...prev, [trail.id]: !prev[trail.id] }))
+                              if (!showTrailComments[trail.id]) {
+                                fetchTrailComments(trail.id)
+                              }
+                            }}
+                            className="text-purple-600 dark:text-purple-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/20 flex items-center gap-1 rounded-full px-2 py-1 transition-all duration-200 group text-xs"
+                          >
+                            <MessageCircle className="h-3 w-3" />
+                            <span>{trailComments[trail.id]?.length || 0}</span>
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Trail Comments */}
+                      {showTrailComments[trail.id] && (
+                        <div className="mt-3 space-y-2">
+                          {/* Add Comment */}
+                          <div className="flex gap-2">
+                            <div className="h-6 w-6 rounded-full overflow-hidden">
+                              <Image
+                                src={user?.profileImageUrl || "/images/student-profile.png"}
+                                alt="Your profile"
+                                width={24}
+                                height={24}
+                                className="object-cover"
+                              />
+                            </div>
+                            <div className="flex-1 flex gap-1">
+                              <Textarea
+                                value={newTrailComment[trail.id] || ""}
+                                onChange={(e) => setNewTrailComment(prev => ({ ...prev, [trail.id]: e.target.value }))}
+                                placeholder="Comment on this trail..."
+                                className="min-h-[30px] text-xs resize-none"
+                              />
+                              <Button
+                                onClick={() => handleTrailComment(trail.id)}
+                                disabled={!newTrailComment[trail.id]?.trim()}
+                                size="sm"
+                                className="bg-purple-500 hover:bg-purple-600 text-white h-8 w-8 p-0"
+                              >
+                                <Send className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Comments List */}
+                          <div className="space-y-2 ml-2">
+                            {(trailComments[trail.id] || []).map((comment) => (
+                              <div key={comment.id} className="flex gap-2">
+                                <div className="h-5 w-5 rounded-full overflow-hidden">
+                                  <Image
+                                    src={comment.user.profileImageUrl || "/images/student-profile.png"}
+                                    alt={`${comment.user.firstName} ${comment.user.lastName}`}
+                                    width={20}
+                                    height={20}
+                                    className="object-cover"
+                                  />
+                                </div>
+                                <div className="flex-1">
+                                  <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-2">
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                      <span className="font-medium text-xs">
+                                        {comment.user.firstName} {comment.user.lastName}
+                                      </span>
+                                      <span className="text-xs text-purple-500">
+                                        {formatTimeAgo(comment.createdAt)}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-purple-800 dark:text-purple-200">{comment.content}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>

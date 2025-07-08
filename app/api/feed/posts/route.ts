@@ -253,17 +253,16 @@ export async function GET(request: NextRequest) {
             firstName: true,
             lastName: true,
             profileImageUrl: true,
-            role: true,
-            student: {
-              select: {
-                age_group: true
-              }
-            }
+            role: true
           }
         },
-        trails: {
-          orderBy: { trailOrder: 'asc' },
-          include: { 
+        student: {
+          select: {
+            age_group: true
+          }
+        },
+        originalPost: {
+          include: {
             author: {
               select: {
                 id: true,
@@ -281,11 +280,31 @@ export async function GET(request: NextRequest) {
             comments: true,
             bookmarks: true
           }
+        },
+        trails: {
+          where: { isTrail: true },
+          include: {
+            author: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                profileImageUrl: true,
+                role: true
+              }
+            },
+            _count: {
+              select: {
+                likes: true,
+                comments: true
+              }
+            }
+          },
+          orderBy: { trailOrder: 'asc' }
         }
       },
-      orderBy,
-      take: limit,
-      skip: offset
+      orderBy: { createdAt: 'desc' },
+      take: 20
     })
 
     // Update view counts for returned posts
