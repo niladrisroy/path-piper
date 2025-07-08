@@ -1,27 +1,66 @@
+"use client"
+
 import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { MapPin, Home, Book, Microscope, Coffee } from "lucide-react"
+import { MapPin, Home, Book, Microscope, Coffee, Building2 } from "lucide-react"
+import { useState, useEffect } from "react"
+
+interface Facility {
+  id: string
+  name: string
+  description: string
+  features: string[]
+  images: string[]
+  learnMoreLink?: string
+}
 
 export default function FacilitiesSection() {
-  const facilities = [
-    {
-      id: 1,
-      name: "Main Library",
-      description:
-        "The Stanford University Libraries hold more than 9.5 million volumes and 6 million digital resources.",
-      image: "/college-library.png",
-      icon: Book,
-      features: ["24/7 Access", "Study Rooms", "Digital Archives", "Research Support"],
-    },
-    {
-      id: 2,
-      name: "Research Laboratories",
-      description: "State-of-the-art research facilities supporting groundbreaking discoveries across disciplines.",
-      image: "/university-laboratory.png",
-      icon: Microscope,
-      features: ["Advanced Equipment", "Collaborative Spaces", "Industry Partnerships", "Student Research"],
-    },
-  ]
+  const [facilities, setFacilities] = useState<Facility[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchFacilities()
+  }, [])
+
+  const fetchFacilities = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/institution/facilities')
+      if (response.ok) {
+        const data = await response.json()
+        setFacilities(data.facilities || [])
+      } else {
+        throw new Error('Failed to fetch facilities')
+      }
+    } catch (error) {
+      console.error('Error fetching facilities:', error)
+      setError('Failed to load facilities')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="text-gray-500 mt-4">Loading facilities...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center py-8">
+          <p className="text-red-500">{error}</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -59,41 +98,86 @@ export default function FacilitiesSection() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {facilities.map((facility) => (
-                <div
-                  key={facility.id}
-                  className="flex flex-col sm:flex-row gap-4 border-b border-gray-100 last:border-0 pb-6 last:pb-0"
-                >
-                  <div className="sm:w-1/3 relative h-40 sm:h-40 rounded-lg overflow-hidden">
-                    <Image
-                      src={facility.image || "/placeholder.svg"}
-                      alt={facility.name}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="sm:w-2/3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <facility.icon className="h-5 w-5 text-blue-600" />
-                      <h3 className="text-lg font-bold">{facility.name}</h3>
-                    </div>
-                    <p className="text-gray-600 mb-3">{facility.description}</p>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      {facility.features.map((feature, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                          <div className="h-2 w-2 rounded-full bg-blue-600"></div>
-                          <span className="text-gray-700 text-sm">{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <a href="#" className="mt-3 inline-block text-blue-600 hover:text-blue-800 text-sm font-medium">
-                      Learn more about {facility.name}
-                    </a>
-                  </div>
+              {facilities.length === 0 ? (
+                <div className="text-center py-8">
+                  <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">No facilities added yet.</p>
                 </div>
-              ))}
+              ) : (
+                facilities.map((facility) => (
+                  <div
+                    key={facility.id}
+                    className="flex flex-col sm:flex-row gap-4 border-b border-gray-100 last:border-0 pb-6 last:pb-0"
+                  >
+                    <div className="sm:w-1/3 relative h-40 sm:h-40 rounded-lg overflow-hidden">
+                      {facility.images && facility.images.length > 0 ? (
+                        <Image
+                          src={facility.images[0]}
+                          alt={facility.name}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                          <Building2 className="h-8 w-8 text-gray-400" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="sm:w-2/3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Building2 className="h-5 w-5 text-blue-600" />
+                        <h3 className="text-lg font-bold">{facility.name}</h3>
+                      </div>
+                      <p className="text-gray-600 mb-3">{facility.description}</p>
+
+                      {facility.features && facility.features.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                          {facility.features.map((feature, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <div className="h-2 w-2 rounded-full bg-blue-600"></div>
+                              <span className="text-gray-700 text-sm">{feature}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {facility.learnMoreLink && (
+                        <a 
+                          href={facility.learnMoreLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="mt-3 inline-block text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        >
+                          Learn more about {facility.name}
+                        </a>
+                      )}
+
+                      {facility.images && facility.images.length > 1 && (
+                        <div className="mt-3">
+                          <p className="text-sm text-gray-500 mb-2">Additional Images:</p>
+                          <div className="flex gap-2 flex-wrap">
+                            {facility.images.slice(1, 4).map((image, index) => (
+                              <div key={index} className="w-16 h-16 relative rounded overflow-hidden">
+                                <Image
+                                  src={image}
+                                  alt={`${facility.name} ${index + 2}`}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            ))}
+                            {facility.images.length > 4 && (
+                              <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500">
+                                +{facility.images.length - 4}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </div>

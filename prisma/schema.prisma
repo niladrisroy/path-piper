@@ -227,25 +227,38 @@ model InstitutionProfile {
   institutionTypeRef          InstitutionType? @relation(fields: [institutionTypeId], references: [id])
   studentEducationHistory     StudentEducationHistory[]
   programs              InstitutionProgram[]
-  gallery InstitutionGallery[]
-  events   InstitutionEvents[]
+  events       InstitutionEvents[]
+  gallery      InstitutionGallery[]
+  facilities   InstitutionFacility[]
 
   @@map("institution_profiles")
   @@schema("public")
 }
 
 model InstitutionGallery {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  institutionId String   @map("institution_id") @db.Uuid
-  imageUrl      String   @map("image_url")
+  id            String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  institutionId String              @map("institution_id") @db.Uuid
+  imageUrl      String              @map("image_url")
   caption       String?
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
-
-  institution InstitutionProfile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  createdAt     DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  institution   InstitutionProfile  @relation(fields: [institutionId], references: [id], onDelete: Cascade)
 
   @@map("institution_gallery")
-  @@schema("public")
+}
+
+model InstitutionFacility {
+  id             String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  institutionId  String              @map("institution_id") @db.Uuid
+  name           String
+  description    String
+  features       String[]
+  images         String[]
+  learnMoreLink  String?             @map("learn_more_link")
+  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+  institution    InstitutionProfile  @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  @@map("institution_facilities")
 }
 
 model InstitutionEvents {
@@ -260,7 +273,7 @@ model InstitutionEvents {
   imageUrl        String?   @map("image_url")
   registrationUrl String?   @map("registration_url")
   createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   institution InstitutionProfile @relation(fields: [institutionId], references: [id], onDelete: Cascade)
 

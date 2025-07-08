@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -172,15 +171,15 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
 
         const rect = element.getBoundingClientRect()
         const containerRect = formContainer.getBoundingClientRect()
-        
+
         // Calculate position relative to the scrollable container
         const elementTop = element.offsetTop
         const elementBottom = elementTop + rect.height
-        
+
         // Check if element is in viewport of the scrollable container
         const viewportTop = formContainer.scrollTop + 50
         const viewportBottom = formContainer.scrollTop + formContainer.clientHeight
-        
+
         if (elementBottom > viewportTop && elementTop < viewportBottom) {
           const distanceFromTop = Math.abs(elementTop - viewportTop)
           if (distanceFromTop < closestDistance) {
@@ -208,7 +207,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     formContainer.addEventListener('scroll', throttledScroll, { passive: true })
     // Call initially to set correct active section
     handleScroll()
-    
+
     return () => formContainer.removeEventListener('scroll', throttledScroll)
   }, [])
 
@@ -216,7 +215,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   const scrollToSection = (sectionId: string) => {
     const element = sectionRefs[sectionId as keyof typeof sectionRefs]?.current
     const formContainer = document.getElementById('form-container')
-    
+
     if (element && formContainer) {
       const offsetTop = element.offsetTop - 20 // Small offset from top
 
@@ -224,7 +223,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         top: offsetTop,
         behavior: 'smooth'
       })
-      
+
       // Update active section immediately for better UX
       setActiveSection(sectionId)
     }
@@ -481,18 +480,18 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
 
   const removeEvent = async (index: number) => {
     const eventToRemove = formData.events[index]
-    
+
     // If it's an existing event (has an ID), delete it from database
     if (eventToRemove.id && eventToRemove.id !== '') {
       try {
         const response = await fetch(`/api/institution/events?id=${eventToRemove.id}`, {
           method: 'DELETE'
         })
-        
+
         if (!response.ok) {
           throw new Error('Failed to delete event')
         }
-        
+
         toast({
           title: "Success",
           description: "Event deleted successfully!",
@@ -507,7 +506,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         return // Don't remove from UI if database deletion failed
       }
     }
-    
+
     // Remove from UI
     const newEvents = formData.events.filter((_, i) => i !== index)
     setFormData(prev => ({
@@ -1086,7 +1085,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                     <SelectItem value="postgraduate">Postgraduate</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+                            </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Duration</Label>
@@ -1443,417 +1442,3 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
             Save Facilities Section
           </Button>
         </div>
-      </CardContent>
-    </Card>
-  )
-
-  const renderEventsSection = () => (
-    <Card ref={sectionRefs.events}>
-      <CardHeader>
-        <CardTitle>Events & Activities</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {isLoadingEvents ? (
-          <div className="text-center py-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
-            <p className="text-sm text-gray-500 mt-2">Loading events...</p>
-          </div>
-        ) : (
-          <>
-        {formData.events.map((event, index) => (
-          <div key={index} className="p-4 border rounded-lg space-y-4">
-            <div className="flex justify-between items-center">
-              <h4 className="font-medium">Event {index + 1}</h4>
-              {formData.events.length > 1 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => removeEvent(index)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Event Title</Label>
-                <Input
-                  value={event.title}
-                  onChange={(e) => updateEvent(index, 'title', e.target.value)}
-                  placeholder="e.g., Annual Tech Fest"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Event Type</Label>
-                <Select
-                  value={event.eventType}
-                  onValueChange={(value) => updateEvent(index, 'eventType', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="academic">Academic</SelectItem>
-                    <SelectItem value="cultural">Cultural</SelectItem>
-                    <SelectItem value="sports">Sports</SelectItem>
-                    <SelectItem value="workshop">Workshop</SelectItem>
-                    <SelectItem value="seminar">Seminar</SelectItem>
-                    <SelectItem value="conference">Conference</SelectItem>
-                    <SelectItem value="competition">Competition</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Start Date</Label>
-                <Input
-                  value={event.startDate}
-                  onChange={(e) => updateEvent(index, 'startDate', e.target.value)}
-                  type="datetime-local"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>End Date</Label>
-                <Input
-                  value={event.endDate}
-                  onChange={(e) => updateEvent(index, 'endDate', e.target.value)}
-                  type="datetime-local"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Location</Label>
-                <Input
-                  value={event.location}
-                  onChange={(e) => updateEvent(index, 'location', e.target.value)}
-                  placeholder="e.g., Main Auditorium"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Registration URL</Label>
-                <Input
-                  value={event.registrationUrl}
-                  onChange={(e) => updateEvent(index, 'registrationUrl', e.target.value)}
-                  placeholder="https://..."
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Description</Label>
-              <Textarea
-                value={event.description}
-                onChange={(e) => updateEvent(index, 'description', e.target.value)}
-                placeholder="Describe the event, its purpose, and activities"
-                className="min-h-[80px]"
-              />
-            </div>
-          </div>
-        ))}
-
-        <Button
-          type="button"
-          variant="outline"
-          onClick={addEvent}
-          className="w-full"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Event
-        </Button>
-
-        {/* Save Button for Events Section */}
-        <div className="flex justify-end pt-4 border-t">
-          <Button
-            onClick={saveEventsSection}
-            disabled={isLoading}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            {isLoading ? 'Saving...' : 'Save Events Section'}
-          </Button>
-        </div>
-          </>
-        )}
-      </CardContent>
-    </Card>
-  )
-
-  const [galleryImages, setGalleryImages] = useState(() => {
-    // Initialize with existing gallery data or empty array
-    if (institutionData.gallery && institutionData.gallery.length > 0) {
-      return institutionData.gallery.map((item, index) => ({
-        id: index + 1,
-        url: item.url,
-        caption: item.caption || '',
-      }))
-    }
-    return [{ id: 1, url: '', caption: '' }]
-  })
-  const [isAddingGalleryImage, setIsAddingGalleryImage] = useState(false)
-  const [currentGalleryImage, setCurrentGalleryImage] = useState({
-    url: '',
-    caption: '',
-  })
-  const [galleryFile, setGalleryFile] = useState<File | null>(null)
-
-  const handleGalleryFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setGalleryFile(file)
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setCurrentGalleryImage(prev => ({ ...prev, url: reader.result as string }))
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const addGalleryImage = () => {
-    if (currentGalleryImage.url) {
-      setGalleryImages([
-        ...galleryImages,
-        {
-          id: galleryImages.length + 1,
-          url: currentGalleryImage.url,
-          caption: currentGalleryImage.caption,
-        },
-      ])
-      setCurrentGalleryImage({ url: '', caption: '' })
-      setGalleryFile(null)
-      setIsAddingGalleryImage(false)
-    }
-  }
-
-  const removeGalleryImage = (imageId: number) => {
-    const updatedGalleryImages = galleryImages.filter(image => image.id !== imageId)
-    setGalleryImages(updatedGalleryImages)
-  }
-
-  const saveGalleryImages = async () => {
-    try {
-      setIsLoading(true)
-      
-      // Filter out empty gallery items
-      const validGalleryImages = galleryImages.filter(image => 
-        image.url && image.url.trim() !== ''
-      )
-
-      const response = await fetch('/api/institution/gallery', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          images: validGalleryImages.map(image => ({
-            url: image.url,
-            caption: image.caption || ''
-          }))
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to save gallery images')
-      }
-
-      toast({
-        title: 'Success',
-        description: 'Gallery images saved successfully!',
-      })
-    } catch (error) {
-      console.error('Error saving gallery images:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to save gallery images. Please try again.',
-        variant: 'destructive',
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const renderGallerySection = () => (
-    <Card ref={sectionRefs.gallery}>
-      <CardHeader>
-        <CardTitle>Photo Gallery</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Gallery Section */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900">Institution Gallery</h3>
-              <p className="text-gray-600 mt-1">Showcase your campus, facilities, and student life</p>
-            </div>
-          </div>
-
-          {/* Gallery Grid */}
-          {galleryImages.length > 0 && galleryImages.some(image => image.url) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {galleryImages.filter(image => image.url).map((image) => (
-                <div key={image.id} className="group relative rounded-lg overflow-hidden border border-gray-200">
-                  <img src={image.url || "/placeholder.svg"} alt={image.caption} className="w-full h-48 object-cover" />
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200">
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => removeGalleryImage(image.id)}
-                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="p-2 bg-white">
-                    <p className="text-sm text-gray-700 truncate">{image.caption || 'No caption'}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Add Image Form */}
-          {isAddingGalleryImage ? (
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-4">
-              <h4 className="text-lg font-medium text-gray-700">Add New Image</h4>
-
-              <div className="space-y-4">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                  <div className="flex flex-col items-center">
-                    <ImageIcon className="h-10 w-10 text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-500 mb-4">Upload an image for your gallery</p>
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleGalleryFileSelect}
-                      className="mb-2"
-                    />
-                    {currentGalleryImage.url && (
-                      <img src={currentGalleryImage.url} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded" />
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="gallery-caption">Caption</Label>
-                  <Input
-                    id="gallery-caption"
-                    placeholder="e.g., Main Campus Building"
-                    value={currentGalleryImage.caption}
-                    onChange={(e) => setCurrentGalleryImage(prev => ({ ...prev, caption: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <Button onClick={addGalleryImage} className="bg-purple-600 hover:bg-purple-700 text-white">
-                  Add Image
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setCurrentGalleryImage({ url: "", caption: "" })
-                    setGalleryFile(null)
-                    setIsAddingGalleryImage(false)
-                  }}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <Button
-              variant="outline"
-              onClick={() => setIsAddingGalleryImage(true)}
-              className="flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Add Image
-            </Button>
-          )}
-
-          {/* Save Button for Gallery Section */}
-          <div className="flex justify-end pt-4 border-t">
-            <Button
-              onClick={saveGalleryImages}
-              disabled={isLoading}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              {isLoading ? 'Saving...' : 'Save Gallery Section'}
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-
-  return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: hideScrollbarStyle }} />
-      <div className="flex h-screen w-full">
-      {/* Fixed Left Sidebar */}
-      <div className="w-80 bg-white border-r border-gray-200 flex-shrink-0">
-        <nav className="p-4">
-          <div className="space-y-2">
-            {sections.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => scrollToSection(id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-all duration-200 hover:bg-gray-50 ${
-                  activeSection === id
-                    ? 'bg-blue-50 text-blue-700 border border-blue-200 font-medium shadow-sm'
-                    : 'text-gray-700 hover:text-gray-900'
-                }`}
-              >
-                <Icon className={`h-5 w-5 ${activeSection === id ? 'text-blue-700' : 'text-gray-500'}`} />
-                <span className="text-sm">{label}</span>
-              </button>
-            ))}
-          </div>
-        </nav>
-      </div>
-
-      {/* Scrollable Form Content - Full Width */}
-      <div className="flex-1 flex flex-col w-full">
-        <div 
-          id="form-container"
-          className="flex-1 overflow-y-auto p-8 bg-gray-50 w-full"
-          style={{ 
-            height: '100vh',
-            scrollbarWidth: 'none', /* Firefox */
-            msOverflowStyle: 'none' /* IE and Edge */
-          }}
-        >
-          <form className="space-y-8 w-full">
-            <div ref={sectionRefs.about} className="w-full">
-              {renderAboutSection()}
-            </div>
-            <div ref={sectionRefs.programs} className="w-full">
-              {renderProgramsSection()}
-            </div>
-            <div ref={sectionRefs.faculty} className="w-full">
-              {renderFacultySection()}
-            </div>
-            <div ref={sectionRefs.facilities} className="w-full">
-              {renderFacilitiesSection()}
-            </div>
-            <div ref={sectionRefs.events} className="w-full">
-              {renderEventsSection()}
-            </div>
-            <div ref={sectionRefs.gallery} className="w-full">
-              {renderGallerySection()}
-            </div>
-            
-            {/* Extra padding at bottom for better scrolling */}
-            <div className="h-20"></div>
-          </form>
-        </div>
-      </div>
-    </div>
-    </>
-  )
-}
