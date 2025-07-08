@@ -89,6 +89,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
   const [cursorPosition, setCursorPosition] = useState(0)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [trailContext, setTrailContext] = useState<any>(null)
 
   const selectedPostType = POST_TYPES.find(type => type.value === postType)
 
@@ -108,6 +109,25 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
     fetchConnections()
   }, [])
+
+  // Fetch trail context when creating a trail
+  useEffect(() => {
+    if (isTrail && parentPostId) {
+      const fetchTrailContext = async () => {
+        try {
+          const response = await fetch(`/api/feed/posts/${parentPostId}`)
+          if (response.ok) {
+            const data = await response.json()
+            setTrailContext(data)
+          }
+        } catch (error) {
+          console.error('Error fetching trail context:', error)
+        }
+      }
+
+      fetchTrailContext()
+    }
+  }, [isTrail, parentPostId])
 
   const addTag = () => {
     if (newTag.trim() && !tags.includes(newTag.trim())) {
