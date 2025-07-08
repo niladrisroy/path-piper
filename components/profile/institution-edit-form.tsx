@@ -580,6 +580,50 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     }
   }
 
+  const handleFacilityImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, facilityIndex: number) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      try {
+        // Create preview immediately
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          const newImages = [reader.result as string]
+          updateFacility(facilityIndex, 'images', newImages)
+        }
+        reader.readAsDataURL(file)
+
+        // Upload to server
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const response = await fetch('/api/upload/institution-facility', {
+          method: 'POST',
+          body: formData
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          const newImages = [data.url]
+          updateFacility(facilityIndex, 'images', newImages)
+        } else {
+          console.error('Failed to upload facility image')
+          toast({
+            title: "Error",
+            description: "Failed to upload facility image. Please try again.",
+            variant: "destructive",
+          })
+        }
+      } catch (error) {
+        console.error('Error uploading facility image:', error)
+        toast({
+          title: "Error",
+          description: "Failed to upload facility image. Please try again.",
+          variant: "destructive",
+        })
+      }
+    }
+  }
+
   const uploadFile = async (file: File, type: 'logo' | 'cover'): Promise<string | null> => {
     try {
       const formData = new FormData()
@@ -1284,15 +1328,24 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
               </div>
 
               <div className="space-y-2">
-                <Label>Facility Image URL</Label>
-                <Input
-                  value={facility.images?.[0] || ''}
-                  onChange={(e) => {
-                    const newImages = [e.target.value]
-                    updateFacility(index, 'images', newImages)
-                  }}
-                  placeholder="https://example.com/facility-image.jpg"
-                />
+                <Label>Facility Image</Label>
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFacilityImageUpload(e, index)}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                  {facility.images?.[0] && (
+                    <div className="mt-2">
+                      <img 
+                        src={facility.images[0]} 
+                        alt="Facility preview" 
+                        className="w-32 h-32 object-cover rounded-lg border"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
