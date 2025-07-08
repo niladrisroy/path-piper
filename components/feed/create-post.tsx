@@ -215,7 +215,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     setHasUnsavedChanges(true) // Indicate changes
   }
 
-  
+
 
   const handlePost = async () => {
     if (!postText.trim()) {
@@ -275,7 +275,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     }
   }
 
-  
+
 
   const handleImageUpload = async (file: File) => {
     const formData = new FormData()
@@ -303,7 +303,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
   const characterCount = postText.length
   const isOverLimit = characterCount > 300 && !isTrail
 
-  
+
 
   // Warn user if they try to leave with unsaved changes
   useEffect(() => {
@@ -467,7 +467,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
           </div>
 
           <div className="flex-1">
-            
+
 
             <Tabs defaultValue="compose" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
@@ -476,7 +476,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
               </TabsList>
 
               <TabsContent value="compose" className="space-y-4">
-                
+
 
                 {/* Post Type Selection */}
                 <div className="flex gap-2 flex-wrap">

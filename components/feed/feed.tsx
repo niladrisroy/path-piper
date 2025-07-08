@@ -223,40 +223,59 @@ export default function Feed() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Create Post */}
-      <CreatePost onPostCreated={handlePostCreated} />
+      <div className="transform transition-all duration-300 hover:scale-[1.01]">
+        <CreatePost onPostCreated={handlePostCreated} />
+      </div>
 
       {/* Feed Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <Tabs value={filter} onValueChange={setFilter} className="space-y-4">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="trending">
+      <Card className="border-0 shadow-xl bg-gradient-to-br from-white via-gray-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900 backdrop-blur-sm">
+        <CardContent className="p-6">
+          <Tabs value={filter} onValueChange={setFilter} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-5 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 shadow-lg">
+              <TabsTrigger 
+                value="all" 
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-pathpiper-teal data-[state=active]:to-blue-500 data-[state=active]:text-white transition-all duration-300"
+              >
+                All
+              </TabsTrigger>
+              <TabsTrigger 
+                value="trending"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white transition-all duration-300"
+              >
                 <TrendingUp className="h-4 w-4 mr-1" />
                 Trending
               </TabsTrigger>
-              <TabsTrigger value="achievements">
+              <TabsTrigger 
+                value="achievements"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-orange-500 data-[state=active]:text-white transition-all duration-300"
+              >
                 <Trophy className="h-4 w-4 mr-1" />
                 Achievements
               </TabsTrigger>
-              <TabsTrigger value="projects">
+              <TabsTrigger 
+                value="projects"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-500 data-[state=active]:text-white transition-all duration-300"
+              >
                 <Code className="h-4 w-4 mr-1" />
                 Projects
               </TabsTrigger>
-              <TabsTrigger value="questions">
+              <TabsTrigger 
+                value="questions"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white transition-all duration-300"
+              >
                 <HelpCircle className="h-4 w-4 mr-1" />
                 Questions
               </TabsTrigger>
             </TabsList>
 
             {/* Advanced Filters */}
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-3 flex-wrap">
               <Select value={postTypeFilter} onValueChange={setPostTypeFilter}>
-                <SelectTrigger className="w-[140px]">
-                  <Filter className="h-4 w-4 mr-1" />
+                <SelectTrigger className="w-[140px] bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 transition-all duration-200 shadow-md">
+                  <Filter className="h-4 w-4 mr-1 text-pathpiper-teal" />
                   <SelectValue placeholder="Post Type" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-gray-200/50 dark:border-gray-700/50">
                   <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="GENERAL">General</SelectItem>
                   <SelectItem value="ACHIEVEMENT">Achievement</SelectItem>
@@ -269,10 +288,11 @@ export default function Feed() {
 
               {availableSubjects.length > 0 && (
                 <Select value={subjectFilter} onValueChange={setSubjectFilter}>
-                  <SelectTrigger className="w-[120px]">
+                  <SelectTrigger className="w-[120px] bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 transition-all duration-200 shadow-md">
+                    <Hash className="h-4 w-4 mr-1 text-blue-500" />
                     <SelectValue placeholder="Subject" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-gray-200/50 dark:border-gray-700/50">
                     <SelectItem value="all">All Subjects</SelectItem>
                     {availableSubjects.map(subject => (
                       <SelectItem key={subject} value={subject}>{subject}</SelectItem>
@@ -282,10 +302,11 @@ export default function Feed() {
               )}
 
               <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
-                <SelectTrigger className="w-[120px]">
+                <SelectTrigger className="w-[120px] bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 transition-all duration-200 shadow-md">
+                  <SortDesc className="h-4 w-4 mr-1 text-purple-500" />
                   <SelectValue placeholder="Difficulty" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-gray-200/50 dark:border-gray-700/50">
                   <SelectItem value="all">All Levels</SelectItem>
                   <SelectItem value="beginner">Beginner</SelectItem>
                   <SelectItem value="intermediate">Intermediate</SelectItem>
@@ -299,40 +320,67 @@ export default function Feed() {
       </Card>
 
       {/* Posts */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         {loading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pathpiper-teal mx-auto"></div>
-            <p className="mt-2 text-gray-600">Loading posts...</p>
+          <div className="text-center py-12">
+            <div className="relative">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-pathpiper-teal/20 border-t-pathpiper-teal mx-auto"></div>
+              <div className="animate-ping absolute inset-0 rounded-full h-12 w-12 border-4 border-pathpiper-teal/10 mx-auto"></div>
+            </div>
+            <div className="mt-4 space-y-2">
+              <p className="text-gray-600 dark:text-gray-400 font-medium">Loading amazing posts...</p>
+              <div className="flex justify-center space-x-1">
+                <div className="h-2 w-2 bg-pathpiper-teal rounded-full animate-bounce"></div>
+                <div className="h-2 w-2 bg-pathpiper-teal rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="h-2 w-2 bg-pathpiper-teal rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              </div>
+            </div>
           </div>
         ) : posts.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <p className="text-gray-500">No posts found. Be the first to share something!</p>
+          <Card className="border-0 shadow-xl bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900">
+            <CardContent className="p-12 text-center">
+              <div className="mb-6">
+                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-pathpiper-teal to-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                  <MessageSquare className="h-10 w-10 text-white" />
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">No posts yet</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">Be the first to share something amazing with the community!</p>
+              <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-pathpiper-teal to-blue-500 text-white rounded-full text-sm font-medium shadow-md">
+                <span className="animate-pulse">✨ Start the conversation</span>
+              </div>
             </CardContent>
           </Card>
         ) : (
-          posts.map((post) => (
-            <PostWithTrails 
-              key={post.id} 
-              post={{
-                id: post.id,
-                content: post.content,
-                imageUrl: post.imageUrl,
-                likesCount: post._count.likes,
-                commentsCount: post._count.comments,
-                createdAt: post.createdAt,
-                author: {
-                  id: post.author.id,
-                  firstName: post.author.firstName,
-                  lastName: post.author.lastName,
-                  role: post.author.role,
-                  profileImageUrl: post.author.profileImageUrl
-                },
-                trails: post.trails || []
+          posts.map((post, index) => (
+            <div 
+              key={post.id}
+              className="transform transition-all duration-300 hover:scale-[1.01]"
+              style={{ 
+                animationDelay: `${index * 100}ms`,
+                animation: 'fadeInUp 0.6s ease-out forwards'
               }}
-              onPostUpdate={fetchPosts}
-            />
+            >
+              <PostWithTrails 
+                post={{
+                  id: post.id,
+                  content: post.content,
+                  imageUrl: post.imageUrl,
+                  likesCount: post._count.likes,
+                  commentsCount: post._count.comments,
+                  createdAt: post.createdAt,
+                  author: {
+                    id: post.author.id,
+                    firstName: post.author.firstName,
+                    lastName: post.author.lastName,
+                    role: post.author.role,
+                    profileImageUrl: post.author.profileImageUrl
+                  },
+                  trails: post.trails || []
+                }}
+                onPostUpdate={fetchPosts}
+              />
+            </div>
           ))
         )}
       </div>
