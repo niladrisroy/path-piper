@@ -824,7 +824,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                 {isOverLimit && (
                   <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg">
                     <p className="text-sm text-amber-700 font-medium mb-1 flex items-center gap-2">
-                      <spanclassName="text-amber-500">⚠️</span>
+                      <span className="text-amber-500">⚠️</span>
                       Content exceeds 300 characters!
                     </p>
                     <p className="text-xs text-amber-600 mb-2">
