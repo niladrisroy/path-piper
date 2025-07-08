@@ -97,12 +97,10 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
       {
         id: "",
         name: "",
-        type: "",
         description: "",
-        capacity: "",
         features: [""],
         images: [""],
-        availability: ""
+        learnMoreLink: ""
       }
     ],
 
@@ -396,12 +394,10 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
       facilities: [...prev.facilities, {
         id: "",
         name: "",
-        type: "",
         description: "",
-        capacity: "",
         features: [""],
         images: [""],
-        availability: ""
+        learnMoreLink: ""
       }]
     }))
   }
@@ -1283,59 +1279,87 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                 <Input
                   value={facility.name}
                   onChange={(e) => updateFacility(index, 'name', e.target.value)}
-                  placeholder="e.g., Computer Lab, Library"
+                  placeholder="e.g., Main Library"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Type</Label>
-                <Select
-                  value={facility.type}
-                  onValueChange={(value) => updateFacility(index, 'type', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="laboratory">Laboratory</SelectItem>
-                    <SelectItem value="library">Library</SelectItem>
-                    <SelectItem value="classroom">Classroom</SelectItem>
-                    <SelectItem value="auditorium">Auditorium</SelectItem>
-                    <SelectItem value="sports">Sports Facility</SelectItem>
-                    <SelectItem value="cafeteria">Cafeteria</SelectItem>
-                    <SelectItem value="hostel">Hostel</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Capacity</Label>
+                <Label>Facility Image URL</Label>
                 <Input
-                  value={facility.capacity}
-                  onChange={(e) => updateFacility(index, 'capacity', e.target.value)}
-                  placeholder="e.g., 50 students"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Availability</Label>
-                <Input
-                  value={facility.availability}
-                  onChange={(e) => updateFacility(index, 'availability', e.target.value)}
-                  placeholder="e.g., 24/7, Mon-Fri 9AM-6PM"
+                  value={facility.images?.[0] || ''}
+                  onChange={(e) => {
+                    const newImages = [e.target.value]
+                    updateFacility(index, 'images', newImages)
+                  }}
+                  placeholder="https://example.com/facility-image.jpg"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label>Facility Description</Label>
               <Textarea
                 value={facility.description}
                 onChange={(e) => updateFacility(index, 'description', e.target.value)}
-                placeholder="Describe the facility and its features"
+                placeholder="e.g., The Stanford University Libraries hold more than 9.5 million volumes and 6 million digital resources."
                 className="min-h-[80px]"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Features</Label>
+              {facility.features.map((feature, featureIndex) => (
+                <div key={featureIndex} className="flex gap-2">
+                  <Input
+                    value={feature}
+                    onChange={(e) => {
+                      const newFeatures = [...facility.features]
+                      newFeatures[featureIndex] = e.target.value
+                      updateFacility(index, 'features', newFeatures)
+                    }}
+                    placeholder={`Feature ${featureIndex + 1} (e.g., 24/7 Access, Study Rooms)`}
+                    className="flex-1"
+                  />
+                  {facility.features.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const newFeatures = facility.features.filter((_, i) => i !== featureIndex)
+                        updateFacility(index, 'features', newFeatures)
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const newFeatures = [...facility.features, ""]
+                  updateFacility(index, 'features', newFeatures)
+                }}
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Feature
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Learn More Link</Label>
+              <Input
+                value={facility.learnMoreLink || ''}
+                onChange={(e) => updateFacility(index, 'learnMoreLink', e.target.value)}
+                placeholder={`Learn more about ${facility.name || 'this facility'}`}
+              />
+              <p className="text-xs text-gray-500">
+                Optional: Add a link for users to learn more about this facility
+              </p>
             </div>
           </div>
         ))}
