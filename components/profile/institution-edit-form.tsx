@@ -386,18 +386,18 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     }))
   }
 
-  // Facility handlers
   const addFacility = () => {
+    const newFacility = {
+      name: '',
+      description: '',
+      features: [''],
+      images: [''],
+      learnMoreLink: ''
+      // No ID field - this marks it as a new facility
+    }
     setFormData(prev => ({
       ...prev,
-      facilities: [...prev.facilities, {
-        id: "",
-        name: "",
-        description: "",
-        features: [""],
-        images: [""],
-        learnMoreLink: ""
-      }]
+      facilities: [...prev.facilities, newFacility]
     }))
   }
 

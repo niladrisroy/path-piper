@@ -57,12 +57,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { facilities } = body
 
-    // Clear existing facilities and insert new ones
-    await prisma.institutionFacility.deleteMany({
-      where: { institutionId: user.id }
-    })
-
-    // Insert new facilities
+    // Only insert new facilities - don't delete existing ones
     const validFacilities = facilities.filter((facility: any) =>
       facility.name.trim() !== '' &&
       facility.description.trim() !== ''
