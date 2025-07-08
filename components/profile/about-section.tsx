@@ -220,9 +220,22 @@ export default function AboutSection({ student: studentProp, currentUser, isView
                 </svg>
                 <h3 className="font-semibold">Badges</h3>
               </div>
-              <Button variant="ghost" size="sm" className="h-6 text-xs text-amber-500 hover:text-amber-600 p-0">
-                View All
-              </Button>
+              <div className="flex items-center gap-2">
+                {isOwnProfile && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-6 text-xs"
+                    onClick={() => window.location.href = '/student/profile/edit'}
+                  >
+                    <EditIcon className="h-3 w-3 mr-1" />
+                    Edit
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" className="h-6 text-xs text-amber-500 hover:text-amber-600 p-0">
+                  View All
+                </Button>
+              </div>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
