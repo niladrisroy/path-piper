@@ -7,7 +7,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const postId = params.id
+    const postId = (await params).id
     const { content } = await request.json()
 
     if (!content || content.trim().length === 0) {
@@ -51,7 +51,7 @@ export async function POST(
         postId: postId
       },
       include: {
-        user: {
+        author: {
           select: {
             id: true,
             firstName: true,
@@ -84,12 +84,12 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const postId = params.id
+    const postId = (await params).id
 
     const comments = await prisma.postComment.findMany({
       where: { postId },
       include: {
-        user: {
+        author: {
           select: {
             id: true,
             firstName: true,
