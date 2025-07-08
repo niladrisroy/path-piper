@@ -45,6 +45,13 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     #form-container::-webkit-scrollbar {
       display: none;
     }
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
   `
   const router = useRouter()
   const { toast } = useToast()
@@ -2036,7 +2043,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
           <form onSubmit={handleSubmit}>
             <div 
               id="form-container" 
-              className="space-y-8 max-h-[calc(100vh-200px)] overflow-y-auto pr-4"
+              className="space-y-8 max-h-[calc(100vh-200px)] overflow-y-auto pr-4 scrollbar-hide"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {renderAboutSection()}
