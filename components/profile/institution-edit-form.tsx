@@ -622,26 +622,20 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     const file = e.target.files?.[0]
     if (file) {
       try {
-        // Create preview immediately
-        const reader = new FileReader()
-        reader.onloadend = () => {
-          const newImages = [reader.result as string]
-          updateFacility(facilityIndex, 'images', newImages)
-        }
-        reader.readAsDataURL(file)
-
-        // Upload to server
-        const formData = new FormData()
-        formData.append('file', file)
+        // Upload to server first
+        const uploadData = new FormData()
+        uploadData.append('file', file)
 
         const response = await fetch('/api/upload/institution-facility', {
           method: 'POST',
-          body: formData
+          body: uploadData
         })
 
         if (response.ok) {
           const data = await response.json()
           const newImages = [data.url]
+          
+          // Update the facility with the uploaded image URL
           updateFacility(facilityIndex, 'images', newImages)
           
           toast({
@@ -1606,12 +1600,13 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
               {newFacilities.length > 0 && (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900">New Facilities</h3>
-                  {newFacilities.map((facility, index) => {
-                    const actualIndex = formData.facilities.findIndex(f => f === facility)
+                  {newFacilities.map((facility, newFacilityIndex) => {
+                    // Find the actual index in formData.facilities array
+                    const actualIndex = existingFacilities.length + newFacilityIndex
                     return (
-                      <div key={actualIndex} className="p-4 border rounded-lg space-y-4">
+                      <div key={`new-facility-${newFacilityIndex}`} className="p-4 border rounded-lg space-y-4">
                         <div className="flex justify-between items-center">
-                          <h4 className="font-medium">New Facility {index + 1}</h4>
+                          <h4 className="font-medium">New Facility {newFacilityIndex + 1}</h4>
                           <Button
                             type="button"
                             variant="outline"
