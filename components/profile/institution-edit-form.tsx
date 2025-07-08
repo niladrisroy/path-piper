@@ -50,6 +50,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   const { toast } = useToast()
   const logoInputRef = useRef<HTMLInputElement>(null)
   const coverInputRef = useRef<HTMLInputElement>(null)
+  const facilityImageRefs = useRef<(HTMLInputElement | null)[]>([])
 
   const [activeSection, setActiveSection] = useState("about")
   const [formData, setFormData] = useState({
@@ -622,7 +623,15 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     const file = e.target.files?.[0]
     if (file) {
       try {
-        // Upload to server first
+        // Create preview immediately (like logo/cover upload)
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          const newImages = [reader.result as string]
+          updateFacility(facilityIndex, 'images', newImages)
+        }
+        reader.readAsDataURL(file)
+
+        // Upload to server in background
         const uploadData = new FormData()
         uploadData.append('file', file)
 
@@ -635,7 +644,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
           const data = await response.json()
           const newImages = [data.url]
           
-          // Update the facility with the uploaded image URL
+          // Update with server URL after upload completes
           updateFacility(facilityIndex, 'images', newImages)
           
           toast({
@@ -1630,21 +1639,31 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                           <div className="space-y-2">
                             <Label>Facility Image</Label>
                             <div className="space-y-2">
+                              <div
+                                className="w-full h-32 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors cursor-pointer"
+                                onClick={() => facilityImageRefs.current[actualIndex]?.click()}
+                              >
+                                {facility.images?.[0] ? (
+                                  <img
+                                    src={facility.images[0]}
+                                    alt="Facility preview"
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="text-center">
+                                    <Camera className="h-6 w-6 text-gray-400 mx-auto mb-1" />
+                                    <p className="text-xs text-gray-500">Click to upload</p>
+                                  </div>
+                                )}
+                              </div>
                               <input
                                 type="file"
-                                accept="image/*"
+                                ref={(el) => (facilityImageRefs.current[actualIndex] = el)}
                                 onChange={(e) => handleFacilityImageUpload(e, actualIndex)}
-                                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                accept="image/*"
+                                className="hidden"
                               />
-                              {facility.images?.[0] && (
-                                <div className="mt-2">
-                                  <img 
-                                    src={facility.images[0]} 
-                                    alt="Facility preview" 
-                                    className="w-32 h-32 object-cover rounded-lg border"
-                                  />
-                                </div>
-                              )}
+                              <p className="text-xs text-gray-500">Recommended: JPG, PNG up to 5MB</p>
                             </div>
                           </div>
                         </div>
