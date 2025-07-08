@@ -261,7 +261,7 @@ export async function GET(request: NextRequest) {
             }
           }
         },
-        originalPost: {
+        parentPost: {
           include: {
             author: {
               select: {
