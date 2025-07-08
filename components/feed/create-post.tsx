@@ -20,6 +20,7 @@ import {
   Code, 
   HelpCircle, 
   MessageSquare,
+  MessageCircle,
   BookOpen,
   Share2,
   Calendar,
