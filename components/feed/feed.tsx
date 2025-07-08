@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import CreatePost from "./create-post"
+import PostWithTrails from "./post-with-trails"
 import { 
   Heart, 
   MessageCircle, 
@@ -217,180 +218,7 @@ export default function Feed() {
     return user && user.id === authorId
   }
 
-  const PostCard = ({ post }: { post: FeedPost }) => {
-    const PostTypeIcon = POST_TYPE_ICONS[post.postType as keyof typeof POST_TYPE_ICONS] || MessageSquare
-    const postTypeColor = POST_TYPE_COLORS[post.postType as keyof typeof POST_TYPE_COLORS] || "bg-blue-500"
-
-    return (
-      <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-        <CardHeader className="pb-3">
-          <div className="flex items-start gap-3">
-            <div className="h-12 w-12 rounded-full overflow-hidden flex-shrink-0">
-              <Image
-                src={post.author.profileImageUrl || "/images/student-profile.png"}
-                alt={`${post.author.firstName} ${post.author.lastName}`}
-                width={48}
-                height={48}
-                className="object-cover"
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className="font-medium text-gray-900">
-                  {post.author.firstName} {post.author.lastName}
-                </h3>
-                <Badge variant="outline" className="text-xs">
-                  {post.author.role}
-                </Badge>
-                <div className={`p-1 rounded-full ${postTypeColor}`}>
-                  <PostTypeIcon className="h-3 w-3 text-white" />
-                </div>
-              </div>
-              <p className="text-sm text-gray-500">
-                {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
-              </p>
-            </div>
-             {canDelete(post.author.id) && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem 
-                          className="text-red-600 focus:text-red-600"
-                          onClick={() => handleDeleteClick(post.id, 'post')}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete Post
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-          </div>
-        </CardHeader>
-
-        <CardContent className="space-y-3">
-          {/* Achievement/Project specific info */}
-          {post.isAchievement && post.achievementType && (
-            <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
-              <Trophy className="h-3 w-3 mr-1" />
-              {post.achievementType}
-            </Badge>
-          )}
-
-          {post.postType === "PROJECT" && post.projectCategory && (
-            <Badge className="bg-green-100 text-green-800 border-green-200">
-              <Code className="h-3 w-3 mr-1" />
-              {post.projectCategory}
-            </Badge>
-          )}
-
-          {post.difficultyLevel && (
-            <Badge variant="outline" className="text-xs">
-              {post.difficultyLevel} level
-            </Badge>
-          )}
-
-          {/* Content */}
-          <div className="prose prose-sm max-w-none">
-            <p className="whitespace-pre-wrap">{post.content}</p>
-          </div>
-
-          {/* Image */}
-          {post.imageUrl && (
-            <div className="rounded-lg overflow-hidden">
-              <Image
-                src={post.imageUrl}
-                alt="Post image"
-                width={500}
-                height={300}
-                className="w-full h-auto object-cover"
-              />
-            </div>
-          )}
-
-          {/* Tags and Subjects */}
-          {(post.tags.length > 0 || post.subjects.length > 0) && (
-            <div className="flex flex-wrap gap-1">
-              {post.tags.map((tag, index) => (
-                <Badge key={`${tag}-${index}`} variant="secondary" className="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 cursor-pointer">
-                  <Hash className="h-3 w-3 mr-1" />
-                  {tag}
-                </Badge>
-              ))}
-              {post.subjects.map((subject) => (
-                <Badge key={subject} variant="outline" className="text-xs border-gray-300 text-gray-600">
-                  {subject}
-                </Badge>
-              ))}
-            </div>
-          )}
-
-          {/* Trails */}
-          {post.trails.length > 0 && (
-            <div className="border-l-2 border-gray-200 pl-4 space-y-2">
-              {post.trails.map((trail) => (
-                <div key={trail.id} className="text-sm">
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="h-6 w-6 rounded-full overflow-hidden">
-                      <Image
-                        src={trail.author.profileImageUrl || "/images/student-profile.png"}
-                        alt={`${trail.author.firstName} ${trail.author.lastName}`}
-                        width={24}
-                        height={24}
-                        className="object-cover"
-                      />
-                    </div>
-                    <span className="font-medium">{trail.author.firstName}</span>
-                  </div>
-                  <p className="text-gray-700">{trail.content}</p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Engagement Stats */}
-          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleLike(post.id)}
-                className="text-gray-500 hover:text-red-500"
-              >
-                <Heart className="h-4 w-4 mr-1" />
-                {post._count.likes}
-              </Button>
-              <Button variant="ghost" size="sm" className="text-gray-500">
-                <MessageCircle className="h-4 w-4 mr-1" />
-                {post._count.comments}
-              </Button>
-              <Button variant="ghost" size="sm" className="text-gray-500">
-                <Share2 className="h-4 w-4 mr-1" />
-                Share
-              </Button>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400">
-                {post.viewsCount} views
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleBookmark(post.id)}
-                className="text-gray-500 hover:text-blue-500"
-              >
-                <Bookmark className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
+  
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -484,7 +312,28 @@ export default function Feed() {
             </CardContent>
           </Card>
         ) : (
-          posts.map((post) => <PostCard key={post.id} post={post} />)
+          posts.map((post) => (
+            <PostWithTrails 
+              key={post.id} 
+              post={{
+                id: post.id,
+                content: post.content,
+                imageUrl: post.imageUrl,
+                likesCount: post._count.likes,
+                commentsCount: post._count.comments,
+                createdAt: post.createdAt,
+                author: {
+                  id: post.author.id,
+                  firstName: post.author.firstName,
+                  lastName: post.author.lastName,
+                  role: post.author.role,
+                  profileImageUrl: post.author.profileImageUrl
+                },
+                trails: post.trails || []
+              }}
+              onPostUpdate={fetchPosts}
+            />
+          ))
         )}
       </div>
 
