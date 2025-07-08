@@ -215,7 +215,7 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
               variant="ghost"
               size="sm"
               onClick={() => setShowAddTrail(!showAddTrail)}
-              className="text-pathpiper-teal hover:text-pathpiper-teal hover:bg-pathpiper-teal/10"
+              className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 border border-purple-200 rounded-full px-3"
             >
               <Plus className="h-4 w-4 mr-1" />
               Add Trail
@@ -237,12 +237,15 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
 
       {/* Trails */}
       {showTrails && post.trails.length > 0 && (
-        <div className="ml-8 space-y-2">
+        <div className="ml-6 space-y-3 border-l-2 border-purple-200 pl-4">
           {post.trails.map((trail) => (
-            <Card key={trail.id} className="border border-gray-100 shadow-sm bg-gray-50/50">
-              <CardContent className="p-3">
+            <Card key={trail.id} className="border border-purple-100 shadow-sm bg-gradient-to-r from-purple-50/30 to-indigo-50/30 relative">
+              <CardContent className="p-4">
+                {/* Trail indicator */}
+                <div className="absolute -left-2 top-4 w-4 h-4 bg-purple-500 rounded-full border-2 border-white"></div>
+                
                 <div className="flex items-start gap-3">
-                  <div className="h-8 w-8 rounded-full overflow-hidden">
+                  <div className="h-8 w-8 rounded-full overflow-hidden border-2 border-purple-200">
                     <Image
                       src={trail.author.profileImageUrl || "/images/student-profile.png"}
                       alt={`${trail.author.firstName} ${trail.author.lastName}`}
@@ -252,22 +255,22 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
                     />
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm">
+                        <span className="font-medium text-sm text-purple-900">
                           {trail.author.firstName} {trail.author.lastName}
                         </span>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-purple-600">
                           {formatTimeAgo(trail.createdAt)}
                         </span>
-                        <Badge variant="outline" className="text-xs py-0 px-1 bg-purple-50 text-purple-600 border-purple-200">
-                          #{trail.trailOrder}
+                        <Badge variant="outline" className="text-xs py-0.5 px-2 bg-purple-100 text-purple-700 border-purple-300 font-medium">
+                          Trail #{trail.trailOrder}
                         </Badge>
                       </div>
                       {canDelete(trail.author.id) && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-60 hover:opacity-100">
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-60 hover:opacity-100 text-purple-600">
                               <MoreHorizontal className="h-3 w-3" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -283,7 +286,7 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
                         </DropdownMenu>
                       )}
                     </div>
-                    <p className="text-sm text-gray-700">{trail.content}</p>
+                    <p className="text-sm text-purple-800 leading-relaxed">{trail.content}</p>
                   </div>
                 </div>
               </CardContent>

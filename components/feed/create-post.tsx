@@ -74,7 +74,6 @@ const COMMON_SUBJECTS = [
 export default function CreatePost({ parentPostId, isTrail = false, onPostCreated }: CreatePostProps) {
   const [postText, setPostText] = useState("")
   const [isPosting, setIsPosting] = useState(false)
-  const [showTrailOption, setShowTrailOption] = useState(false)
   const [postType, setPostType] = useState("GENERAL")
   const [tags, setTags] = useState<string[]>([])
   const [subjects, setSubjects] = useState<string[]>([])
@@ -89,9 +88,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
   const [mentionSearch, setMentionSearch] = useState("")
   const [cursorPosition, setCursorPosition] = useState(0)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const [currentTrailParentId, setCurrentTrailParentId] = useState<string | null>(parentPostId || null)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
-  const [showDiscardDialog, setShowDiscardDialog] = useState(false)
 
   const selectedPostType = POST_TYPES.find(type => type.value === postType)
 
@@ -198,21 +195,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     setHasUnsavedChanges(true) // Indicate changes
   }
 
-  const handleDiscardTrail = () => {
-    setCurrentTrailParentId(null)
-    setPostText("")
-    setTags([])
-    setSubjects([])
-    setAchievementType("")
-    setProjectCategory("")
-    setDifficultyLevel("")
-    setPostType("GENERAL")
-    setImageUrl(null)
-    setShowTrailOption(false)
-    setHasUnsavedChanges(false)
-    setShowDiscardDialog(false)
-    toast.success("Trail discarded successfully")
-  }
+  
 
   const handlePost = async () => {
     if (!postText.trim()) {
@@ -220,10 +203,9 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
       return
     }
 
-    // Prevent posting if character limit exceeded and not a trail
-    if (characterCount > 300 && !isTrail) {
-      setShowTrailOption(true)
-      toast.error("Content exceeds 300 characters. Please use 'Start Trail' to share longer content.")
+    // Enforce character limit strictly for all posts
+    if (characterCount > 300) {
+      toast.error("Content exceeds 300 characters. Please shorten your content.")
       return
     }
 
@@ -258,9 +240,8 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
         setProjectCategory("")
         setDifficultyLevel("")
         setPostType("GENERAL")
-        setShowTrailOption(false)
         setImageUrl(null)
-        setHasUnsavedChanges(false) // Clear unsaved changes flag
+        setHasUnsavedChanges(false)
         toast.success(isTrail ? "Trail added successfully!" : "Post created successfully!")
         onPostCreated?.()
       } else {
@@ -274,104 +255,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     }
   }
 
-  const handleCreateTrail = async () => {
-    if (!postText.trim()) {
-      toast.error("Please write something to post")
-      return
-    }
-
-    setIsPosting(true)
-    try {
-      // Check if we already have a parent post (continuing an existing trail)
-      let activeParentId = currentTrailParentId
-
-      if (!activeParentId) {
-        // First, we need to create the main post that will be the parent
-        const mainPostResponse = await fetch('/api/feed/posts', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            content: postText,
-            postType,
-            tags,
-            subjects,
-            achievementType: achievementType || undefined,
-            projectCategory: projectCategory || undefined,
-            difficultyLevel: difficultyLevel || undefined,
-            imageUrl: imageUrl,
-          }),
-        })
-
-        const mainPostData = await mainPostResponse.json()
-
-        if (!mainPostResponse.ok) {
-          throw new Error(mainPostData.error || "Failed to create main post")
-        }
-
-        // Set the parent ID for future trail messages
-        activeParentId = mainPostData.post.id
-        setCurrentTrailParentId(activeParentId)
-
-        // Clear form data and reset for trail continuation
-        setTags([])
-        setSubjects([])
-        setAchievementType("")
-        setProjectCategory("")
-        setDifficultyLevel("")
-        setPostType("GENERAL")
-        setImageUrl(null)
-        setPostText("")
-        setShowTrailOption(false) // Hide trail option after creation
-        setHasUnsavedChanges(false) // Clear unsaved changes flag
-
-        toast.success("Trail started successfully! Add your next message to continue the trail.")
-
-        if (onPostCreated) {
-          onPostCreated()
-        }
-
-      } else {
-        // We're continuing an existing trail - create a new trail message
-        const trailResponse = await fetch('/api/feed/posts', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            content: postText,
-            parentPostId: activeParentId,
-            isTrail: true,
-            imageUrl: imageUrl,
-          }),
-        })
-
-        const trailData = await trailResponse.json()
-
-        if (!trailResponse.ok) {
-          throw new Error(trailData.error || "Failed to add trail message")
-        }
-
-        // Clear only the content for next trail message
-        setPostText("")
-        setImageUrl(null)
-        setHasUnsavedChanges(false) // Clear unsaved changes flag
-
-        toast.success("Trail message added! Continue adding more messages to build your trail.")
-
-        if (onPostCreated) {
-          onPostCreated()
-        }
-      }
-
-    } catch (error) {
-      console.error('Error creating trail:', error)
-      toast.error(`Failed to create trail: ${error.message}`)
-    } finally {
-      setIsPosting(false)
-    }
-  }
+  
 
   const handleImageUpload = async (file: File) => {
     const formData = new FormData()
@@ -399,28 +283,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
   const characterCount = postText.length
   const isOverLimit = characterCount > 300 && !isTrail
 
-  // State for trail context
-  const [trailContext, setTrailContext] = useState<any>(null)
-
-  // Fetch trail context when currentTrailParentId changes
-  useEffect(() => {
-    if (currentTrailParentId) {
-      const fetchTrailContext = async () => {
-        try {
-          const response = await fetch(`/api/feed/posts/${currentTrailParentId}`)
-          if (response.ok) {
-            const data = await response.json()
-            setTrailContext(data.post)
-          }
-        } catch (error) {
-          console.error('Error fetching trail context:', error)
-        }
-      }
-      fetchTrailContext()
-    } else {
-      setTrailContext(null)
-    }
-  }, [currentTrailParentId])
+  
 
   // Warn user if they try to leave with unsaved changes
   useEffect(() => {
@@ -584,42 +447,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
           </div>
 
           <div className="flex-1">
-            {/* Trail Mode Indicator */}
-            {currentTrailParentId && (
-              <div className="mb-3 p-2 bg-gradient-to-r from-purple-100 to-indigo-100 border border-purple-200 rounded-lg">
-                <div className="text-xs text-purple-700 font-medium flex items-center gap-1">
-                  <MessageSquare className="h-3 w-3" />
-                  Trail Mode Active - Continue building your story
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="ml-auto">
-                      Options
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setShowDiscardDialog(true)}>
-                      Discard Trail
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            )}
-
-            <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Discard Trail?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to discard this trail? All unsaved changes will be lost.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel onClick={() => setShowDiscardDialog(false)}>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDiscardTrail}>Discard</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            
 
             <Tabs defaultValue="compose" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
@@ -628,62 +456,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
               </TabsList>
 
               <TabsContent value="compose" className="space-y-4">
-                {/* Trail Preview for Continuing Trails */}
-                {currentTrailParentId && trailContext && (
-                  <div className="p-3 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg">
-                    <div className="text-xs text-purple-700 font-medium mb-2 flex items-center gap-1">
-                      <MessageSquare className="h-3 w-3" />
-                      Continuing trail
-                    </div>
-
-                    {/* Parent Post Preview */}
-                    <div className="mb-2 p-2 bg-white rounded border border-purple-100">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="h-4 w-4 rounded-full overflow-hidden">
-                          <Image
-                            src={trailContext.author?.profileImageUrl || "/images/student-profile.png"}
-                            alt={`${trailContext.author?.firstName} ${trailContext.author?.lastName}`}
-                            width={16}
-                            height={16}
-                            className="object-cover"
-                          />
-                        </div>
-                        <span className="font-medium text-xs">{trailContext.author?.firstName}</span>
-                        <span className="text-xs text-blue-600 bg-blue-100 px-1 py-0.5 rounded">Original</span>
-                      </div>
-                      <p className="text-xs text-gray-700 line-clamp-2">{trailContext.content}</p>
-                    </div>
-
-                    {/* Recent Trail Messages Preview */}
-                    {trailContext.trails && trailContext.trails.length > 0 && (
-                      <div className="space-y-1 max-h-20 overflow-y-auto">
-                        {trailContext.trails.slice(-2).map((trail: any, index: number) => (
-                          <div key={trail.id} className="p-1.5 bg-white rounded border border-purple-100">
-                            <div className="flex items-center gap-1.5 mb-0.5">
-                              <div className="h-3 w-3 rounded-full overflow-hidden">
-                                <Image
-                                  src={trail.author?.profileImageUrl || "/images/student-profile.png"}
-                                  alt={`${trail.author?.firstName} ${trail.author?.lastName}`}
-                                  width={12}
-                                  height={12}
-                                  className="object-cover"
-                                />
-                              </div>
-                              <span className="font-medium text-xs">{trail.author?.firstName}</span>
-                              <span className="text-xs text-purple-600 bg-purple-100 px-1 py-0.5 rounded">#{trail.trailOrder}</span>
-                            </div>
-                            <p className="text-xs text-gray-600 pl-4 line-clamp-1">{trail.content}</p>
-                          </div>
-                        ))}
-                        {trailContext.trails.length > 2 && (
-                          <div className="text-xs text-purple-600 text-center py-1">
-                            +{trailContext.trails.length - 2} more messages
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
+                
 
                 {/* Post Type Selection */}
                 <div className="flex gap-2 flex-wrap">
@@ -711,7 +484,6 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                     value={postText}
                     onChange={handleTextChange}
                     placeholder={
-                      currentTrailParentId ? "Continue your trail... (Use @ to mention connections, # for hashtags)" :
                       postType === "ACHIEVEMENT" ? "Share your achievement... (Use @ to mention connections, # for hashtags)" :
                       postType === "PROJECT" ? "Tell us about your project... (Use @ to mention connections, # for hashtags)" :
                       postType === "QUESTION" ? "Ask your question... (Use @ to mention connections, # for hashtags)" :
@@ -827,20 +599,9 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                       <span className="text-amber-500">⚠️</span>
                       Content exceeds 300 characters!
                     </p>
-                    <p className="text-xs text-amber-600 mb-2">
-                      Your content is too long for a single post. Use "Start Trail" to share it as a connected series of messages.
+                    <p className="text-xs text-amber-600">
+                      Please shorten your content to 300 characters or less.
                     </p>
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={handleCreateTrail}
-                        disabled={!postText.trim() || isPosting}
-                        size="sm"
-                        className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-4"
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Start Trail Now
-                      </Button>
-                    </div>
                   </div>
                 )}
               </TabsContent>
@@ -979,18 +740,6 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
               </div>
 
               <div className="flex items-center gap-2">
-                {/* Always show Create Trail button */}
-                <Button
-                  onClick={handleCreateTrail}
-                  disabled={!postText.trim() || isPosting}
-                  variant="outline"
-                  size="sm"
-                  className="text-purple-600 border-purple-200 hover:bg-purple-50 rounded-full px-4"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  {currentTrailParentId ? "Add to Trail" : "Start Trail"}
-                </Button>
-
                 <Button
                   onClick={handlePost}
                   disabled={!postText.trim() || isPosting || isOverLimit}
