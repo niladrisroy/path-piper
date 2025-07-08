@@ -185,6 +185,9 @@ export default function StudentProfile({ studentId, currentUser, studentData, is
 
       <HorizontalNavigation tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
 
+      {/* Horizontal Navigation */}
+      <HorizontalNavigation tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
+
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
           {activeTab === "about" && <AboutSection student={student} currentUser={currentUser} isViewMode={isViewMode} />}
