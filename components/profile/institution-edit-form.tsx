@@ -1429,6 +1429,183 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         {/* Save Button for Facilities Section */}
         <div className="flex justify-end pt-4 border-t">
           <Button
+            onClick={async () => {
+              setIsLoading(true)
+              try {
+                const validFacilities = formData.facilities.filter(facility =>
+                  facility.name.trim() !== '' &&
+                  facility.description.trim() !== ''
+                )
+
+                const response = await fetch('/api/institution/facilities', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    facilities: validFacilities
+                  }),
+                })
+
+                if (!response.ok) {
+                  throw new Error('Failed to save facilities')
+                }
+
+                toast({
+                  title: "Success",
+                  description: "Facilities updated successfully!",
+                })
+              } catch (error) {
+                console.error('Error updating facilities:', error)
+                toast({
+                  title: "Error",
+                  description: "Failed to update facilities. Please try again.",
+                  variant: "destructive",
+                })
+              } finally {
+                setIsLoading(false)
+              }
+            }}
+            disabled={isLoading}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {isLoading ? 'Saving...' : 'Save Facilities Section'}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+      <CardContent className="space-y-6">
+        {formData.facilities.map((facility, index) => (
+          <div key={index} className="p-4 border rounded-lg space-y-4">
+            <div className="flex justify-between items-center">
+              <h4 className="font-medium">Facility {index + 1}</h4>
+              {formData.facilities.length > 1 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => removeFacility(index)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Facility Name</Label>
+                <Input
+                  value={facility.name}
+                  onChange={(e) => updateFacility(index, 'name', e.target.value)}
+                  placeholder="e.g., Main Library"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Facility Image</Label>
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFacilityImageUpload(e, index)}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                  {facility.images?.[0] && (
+                    <div className="mt-2">
+                      <img 
+                        src={facility.images[0]} 
+                        alt="Facility preview" 
+                        className="w-32 h-32 object-cover rounded-lg border"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Facility Description</Label>
+              <Textarea
+                value={facility.description}
+                onChange={(e) => updateFacility(index, 'description', e.target.value)}
+                placeholder="e.g., The Stanford University Libraries hold more than 9.5 million volumes and 6 million digital resources."
+                className="min-h-[80px]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Features</Label>
+              {facility.features.map((feature, featureIndex) => (
+                <div key={featureIndex} className="flex gap-2">
+                  <Input
+                    value={feature}
+                    onChange={(e) => {
+                      const newFeatures = [...facility.features]
+                      newFeatures[featureIndex] = e.target.value
+                      updateFacility(index, 'features', newFeatures)
+                    }}
+                    placeholder={`Feature ${featureIndex + 1} (e.g., 24/7 Access, Study Rooms)`}
+                    className="flex-1"
+                  />
+                  {facility.features.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const newFeatures = facility.features.filter((_, i) => i !== featureIndex)
+                        updateFacility(index, 'features', newFeatures)
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const newFeatures = [...facility.features, ""]
+                  updateFacility(index, 'features', newFeatures)
+                }}
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Feature
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Learn More Link</Label>
+              <Input
+                value={facility.learnMoreLink || ''}
+                onChange={(e) => updateFacility(index, 'learnMoreLink', e.target.value)}
+                placeholder={`Learn more about ${facility.name || 'this facility'}`}
+              />
+              <p className="text-xs text-gray-500">
+                Optional: Add a link for users to learn more about this facility
+              </p>
+            </div>
+          </div>
+        ))}
+
+        <Button
+          type="button"
+          variant="outline"
+          onClick={addFacility}
+          className="w-full"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Facility
+        </Button>
+
+        {/* Save Button for Facilities Section */}
+        <div className="flex justify-end pt-4 border-t">
+          <Button
             onClick={() => {
               toast({
                 title: "Info",

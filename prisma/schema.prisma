@@ -259,6 +259,7 @@ model InstitutionFacility {
   institution    InstitutionProfile  @relation(fields: [institutionId], references: [id], onDelete: Cascade)
 
   @@map("institution_facilities")
+  @@schema("public")
 }
 
 model InstitutionEvents {
