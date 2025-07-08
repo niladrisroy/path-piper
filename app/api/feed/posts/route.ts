@@ -77,12 +77,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Content is required' }, { status: 400 })
     }
 
-    // For regular posts, enforce 300 character limit unless it's forced trail creation
-    if (!isTrail && !forceTrail && content.length > 300) {
-      return NextResponse.json({ 
-        error: 'Content exceeds 300 characters. Consider creating a trail instead.',
-        suggestTrail: true 
-      }, { status: 400 })
+    // For non-trail posts, enforce character limit strictly
+    if (content.length > 300 && !isTrail && !forceTrail) {
+      return NextResponse.json(
+        { 
+          error: "Content exceeds 300 characters. Please use 'Start Trail' to share longer content.",
+          suggestTrail: true
+        },
+        { status: 400 }
+      )
     }
 
     // Get user's age group for content targeting
@@ -95,7 +98,7 @@ export async function POST(request: NextRequest) {
       const parentPost = await prisma.feedPost.findUnique({
         where: { id: parentPostId }
       })
-      
+
       if (!parentPost) {
         return NextResponse.json({ error: 'Parent post not found' }, { status: 404 })
       }
@@ -108,10 +111,10 @@ export async function POST(request: NextRequest) {
         },
         orderBy: { trailOrder: 'desc' }
       })
-      
+
       // Set trail order (starting from 1 for first trail)
       trailOrder = (lastTrail?.trailOrder || 0) + 1
-      
+
       console.log(`📝 Creating trail ${trailOrder} for parent post ${parentPostId}`)
     }
 

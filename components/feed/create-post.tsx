@@ -194,6 +194,13 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
       return
     }
 
+    // Check if content exceeds 300 characters and suggest trail instead
+    if (characterCount > 300 && !isTrail) {
+      setShowTrailOption(true)
+      toast.error("Content exceeds 300 characters. Please use 'Start Trail' to share longer content.")
+      return
+    }
+
     setIsPosting(true)
     try {
       const response = await fetch('/api/feed/posts', {
@@ -231,9 +238,6 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
         setImageUrl(null)
         toast.success(isTrail ? "Trail added successfully!" : "Post created successfully!")
         onPostCreated?.()
-      } else if (data.suggestTrail) {
-        setShowTrailOption(true)
-        toast.error(data.error)
       } else {
         toast.error(data.error || "Failed to create post")
       }
@@ -299,6 +303,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
         setPostType("GENERAL")
         setImageUrl(null)
         setPostText("")
+        setShowTrailOption(false) // Hide trail option after creation
         
         toast.success("Trail started successfully! Add your next message to continue the trail.")
         
@@ -539,6 +544,16 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
           </div>
 
           <div className="flex-1">
+            {/* Trail Mode Indicator */}
+            {currentTrailParentId && (
+              <div className="mb-3 p-2 bg-gradient-to-r from-purple-100 to-indigo-100 border border-purple-200 rounded-lg">
+                <div className="text-xs text-purple-700 font-medium flex items-center gap-1">
+                  <MessageSquare className="h-3 w-3" />
+                  Trail Mode Active - Continue building your story
+                </div>
+              </div>
+            )}
+            
             <Tabs defaultValue="compose" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="compose">Compose</TabsTrigger>
@@ -674,10 +689,13 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                     </div>
                   )}
 
-                  <div className={`absolute bottom-2 right-2 text-xs ${
-                    isOverLimit ? 'text-red-500' : characterCount > 250 ? 'text-orange-500' : 'text-gray-400'
+                  <div className={`absolute bottom-2 right-2 text-xs font-medium ${
+                    isOverLimit ? 'text-red-500 bg-red-50 px-2 py-1 rounded' : 
+                    characterCount > 250 ? 'text-orange-500 bg-orange-50 px-2 py-1 rounded' : 
+                    'text-gray-400'
                   }`}>
                     {characterCount}/300
+                    {isOverLimit && <span className="ml-1">⚠️</span>}
                   </div>
                 </div>
 
@@ -737,13 +755,25 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
                 {/* Over limit warning */}
                 {isOverLimit && (
-                  <div className="p-3 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg">
-                    <p className="text-sm text-purple-700 font-medium mb-1">
+                  <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg">
+                    <p className="text-sm text-amber-700 font-medium mb-1 flex items-center gap-2">
+                      <span className="text-amber-500">⚠️</span>
                       Content exceeds 300 characters!
                     </p>
-                    <p className="text-xs text-purple-600">
-                      Click "Start Trail" to share longer content as a connected series of messages.
+                    <p className="text-xs text-amber-600 mb-2">
+                      Your content is too long for a single post. Use "Start Trail" to share it as a connected series of messages.
                     </p>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handleCreateTrail}
+                        disabled={!postText.trim() || isPosting}
+                        size="sm"
+                        className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-4"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Start Trail Now
+                      </Button>
+                    </div>
                   </div>
                 )}
               </TabsContent>
@@ -896,9 +926,9 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
                 <Button
                   onClick={handlePost}
-                  disabled={!postText.trim() || isOverLimit || isPosting}
+                  disabled={!postText.trim() || isPosting}
                   size="sm"
-                  className={`${selectedPostType?.color || 'bg-gradient-to-r from-pathpiper-teal to-pathpiper-blue'} text-white rounded-full px-6 font-medium shadow-sm hover:shadow-md transition-all duration-200`}
+                  className={`${selectedPostType?.color || 'bg-gradient-to-r from-pathpiper-teal to-pathpiper-blue'} text-white rounded-full px-6 font-medium shadow-sm hover:shadow-md transition-all duration-200 ${isOverLimit ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   {selectedPostType && <selectedPostType.icon className="h-4 w-4 mr-1" />}
                   {isPosting ? "Posting..." : "Post"}
