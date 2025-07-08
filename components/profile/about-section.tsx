@@ -80,23 +80,6 @@ export default function AboutSection({ student: studentProp, currentUser, isView
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">About Me</h2>
-        {isOwnProfile && (
-          !isEditing ? (
-            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-              <EditIcon className="h-4 w-4 mr-2" />
-              Edit
-            </Button>
-          ) : (
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>
-                Cancel
-              </Button>
-              <Button size="sm" onClick={() => setIsEditing(false)}>
-                Save
-              </Button>
-            </div>
-          )
-        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -219,22 +202,6 @@ export default function AboutSection({ student: studentProp, currentUser, isView
                   <circle cx="12" cy="12" r="4" />
                 </svg>
                 <h3 className="font-semibold">Badges</h3>
-              </div>
-              <div className="flex items-center gap-2">
-                {isOwnProfile && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="h-6 text-xs"
-                    onClick={() => window.location.href = '/student/profile/edit'}
-                  >
-                    <EditIcon className="h-3 w-3 mr-1" />
-                    Edit
-                  </Button>
-                )}
-                <Button variant="ghost" size="sm" className="h-6 text-xs text-amber-500 hover:text-amber-600 p-0">
-                  View All
-                </Button>
               </div>
             </div>
 
