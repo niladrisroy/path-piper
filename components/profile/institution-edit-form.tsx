@@ -92,18 +92,6 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
       }
     ],
 
-    // Facilities section
-    facilities: [
-      {
-        id: "",
-        name: "",
-        description: "",
-        features: [""],
-        images: [""],
-        learnMoreLink: ""
-      }
-    ],
-
     // Events section
     events: [
       {
@@ -387,15 +375,17 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     }))
   }
 
-  // Facility functionality
+  // Facility functionality - Simplified state management
+  const [existingFacilities, setExistingFacilities] = useState<any[]>([])
+  const [newFacilities, setNewFacilities] = useState<any[]>([])
   const [isLoadingFacilities, setIsLoadingFacilities] = useState(false)
 
   useEffect(() => {
     if (institutionData) {
-      // Fetch existing facilities
+      // Fetch existing facilities once
       fetchFacilities()
     }
-  }, [institutionData])
+  }, [institutionData.id]) // Only depend on institution ID
 
   const fetchFacilities = async () => {
     try {
@@ -404,18 +394,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
       if (response.ok) {
         const data = await response.json()
         if (data.facilities && data.facilities.length > 0) {
-          const formattedFacilities = data.facilities.map((facility: any) => ({
-            id: facility.id, // Include ID for existing facilities
-            name: facility.name,
-            description: facility.description,
-            features: facility.features || [''],
-            images: facility.images || [''],
-            learnMoreLink: facility.learnMoreLink || ''
-          }))
-          setFormData(prev => ({
-            ...prev,
-            facilities: formattedFacilities
-          }))
+          setExistingFacilities(data.facilities)
         }
       }
     } catch (error) {
@@ -425,39 +404,29 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     }
   }
 
-  // Facility handlers
+  // Facility handlers - Simplified for separate state
   const addFacility = () => {
     const newFacility = {
+      tempId: Date.now(), // Use temporary ID for tracking
       name: '',
       description: '',
       features: [''],
       images: [''],
       learnMoreLink: ''
-      // No ID field - this marks it as a new facility
     }
-    setFormData(prev => ({
-      ...prev,
-      facilities: [...prev.facilities, newFacility]
-    }))
+    setNewFacilities(prev => [...prev, newFacility])
   }
 
-  const removeFacility = (index: number) => {
-    if (formData.facilities.length > 1) {
-      const newFacilities = formData.facilities.filter((_, i) => i !== index)
-      setFormData(prev => ({
-        ...prev,
-        facilities: newFacilities
-      }))
-    }
+  const removeNewFacility = (tempId: number) => {
+    setNewFacilities(prev => prev.filter(facility => facility.tempId !== tempId))
   }
 
-  const updateFacility = (index: number, field: string, value: string | string[]) => {
-    const newFacilities = [...formData.facilities]
-    newFacilities[index] = { ...newFacilities[index], [field]: value }
-    setFormData(prev => ({
-      ...prev,
-      facilities: newFacilities
-    }))
+  const updateNewFacility = (tempId: number, field: string, value: string | string[]) => {
+    setNewFacilities(prev => prev.map(facility => 
+      facility.tempId === tempId 
+        ? { ...facility, [field]: value }
+        : facility
+    ))
   }
 
   // Event handlers
@@ -619,14 +588,13 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     }
   }
 
-  const handleFacilityImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, facilityIndex: number) => {
+  const handleFacilityImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, tempId: number) => {
     const file = e.target.files?.[0]
     if (file) {
       try {
         // Create immediate preview URL
         const previewUrl = URL.createObjectURL(file)
-        const newImages = [previewUrl]
-        updateFacility(facilityIndex, 'images', newImages)
+        updateNewFacility(tempId, 'images', [previewUrl])
 
         // Upload to server
         const uploadData = new FormData()
@@ -643,8 +611,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
           URL.revokeObjectURL(previewUrl)
           
           // Update with server URL
-          const serverImages = [data.url]
-          updateFacility(facilityIndex, 'images', serverImages)
+          updateNewFacility(tempId, 'images', [data.url])
           
           toast({
             title: "Success",
@@ -655,7 +622,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
           // Clean up the preview URL on error
           URL.revokeObjectURL(previewUrl)
           // Reset to empty
-          updateFacility(facilityIndex, 'images', [''])
+          updateNewFacility(tempId, 'images', [''])
           
           toast({
             title: "Error",
@@ -1581,10 +1548,6 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   }
 
   const renderFacilitiesSection = () => {
-    // Separate existing facilities from new ones
-    const existingFacilities = formData.facilities.filter(facility => facility.id)
-    const newFacilities = formData.facilities.filter(facility => !facility.id)
-
     return (
       <Card ref={sectionRefs.facilities}>
         <CardHeader>
@@ -1598,11 +1561,11 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
             </div>
           ) : (
             <>
-              {/* Existing Facilities - Display as individual editable cards */}
+              {/* Existing Facilities */}
               {existingFacilities.length > 0 && (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900">Existing Facilities</h3>
-                  {existingFacilities.map((facility, index) => (
+                  {existingFacilities.map((facility) => (
                     <ExistingFacilityCard 
                       key={facility.id} 
                       facility={facility} 
@@ -1612,137 +1575,129 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                 </div>
               )}
 
-              {/* New Facilities - Traditional form layout */}
+              {/* New Facilities */}
               {newFacilities.length > 0 && (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900">New Facilities</h3>
-                  {newFacilities.map((facility, newFacilityIndex) => {
-                    // Find the actual index in formData.facilities array
-                    const actualIndex = existingFacilities.length + newFacilityIndex
-                    return (
-                      <div key={`new-facility-${newFacilityIndex}`} className="p-4 border rounded-lg space-y-4">
-                        <div className="flex justify-between items-center">
-                          <h4 className="font-medium">New Facility {newFacilityIndex + 1}</h4>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removeFacility(actualIndex)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                  {newFacilities.map((facility, index) => (
+                    <div key={facility.tempId} className="p-4 border rounded-lg space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-medium">New Facility {index + 1}</h4>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeNewFacility(facility.tempId)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>Facility Name</Label>
-                            <Input
-                              value={facility.name}
-                              onChange={(e) => updateFacility(actualIndex, 'name', e.target.value)}
-                              placeholder="e.g., Main Library"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label>Facility Image</Label>
-                            <div className="space-y-2">
-                              <div
-                                className="w-full h-32 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors cursor-pointer"
-                                onClick={() => facilityImageRefs.current[actualIndex]?.click()}
-                              >
-                                {facility.images?.[0] ? (
-                                  <img
-                                    src={facility.images[0]}
-                                    alt="Facility preview"
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="text-center">
-                                    <Camera className="h-6 w-6 text-gray-400 mx-auto mb-1" />
-                                    <p className="text-xs text-gray-500">Click to upload</p>
-                                  </div>
-                                )}
-                              </div>
-                              <input
-                                type="file"
-                                ref={(el) => (facilityImageRefs.current[actualIndex] = el)}
-                                onChange={(e) => handleFacilityImageUpload(e, actualIndex)}
-                                accept="image/*"
-                                className="hidden"
-                              />
-                              <p className="text-xs text-gray-500">Recommended: JPG, PNG up to 5MB</p>
-                            </div>
-                          </div>
-                        </div>
-
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>Facility Description</Label>
-                          <Textarea
-                            value={facility.description}
-                            onChange={(e) => updateFacility(actualIndex, 'description', e.target.value)}
-                            placeholder="e.g., The Stanford University Libraries hold more than 9.5 million volumes and 6 million digital resources."
-                            className="min-h-[80px]"
+                          <Label>Facility Name</Label>
+                          <Input
+                            value={facility.name}
+                            onChange={(e) => updateNewFacility(facility.tempId, 'name', e.target.value)}
+                            placeholder="e.g., Main Library"
                           />
                         </div>
 
                         <div className="space-y-2">
-                          <Label>Features</Label>
-                          {facility.features.map((feature, featureIndex) => (
-                            <div key={featureIndex} className="flex gap-2">
-                              <Input
-                                value={feature}
-                                onChange={(e) => {
-                                  const newFeatures = [...facility.features]
-                                  newFeatures[featureIndex] = e.target.value
-                                  updateFacility(actualIndex, 'features', newFeatures)
-                                }}
-                                placeholder={`Feature ${featureIndex + 1} (e.g., 24/7 Access, Study Rooms)`}
-                                className="flex-1"
-                              />
-                              {facility.features.length > 1 && (
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    const newFeatures = facility.features.filter((_, i) => i !== featureIndex)
-                                    updateFacility(actualIndex, 'features', newFeatures)
-                                  }}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                          <Label>Facility Image</Label>
+                          <div className="space-y-2">
+                            <div
+                              className="w-full h-32 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors cursor-pointer"
+                              onClick={() => {
+                                const input = document.createElement('input')
+                                input.type = 'file'
+                                input.accept = 'image/*'
+                                input.onchange = (e) => handleFacilityImageUpload(e as any, facility.tempId)
+                                input.click()
+                              }}
+                            >
+                              {facility.images?.[0] ? (
+                                <img
+                                  src={facility.images[0]}
+                                  alt="Facility preview"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="text-center">
+                                  <Camera className="h-6 w-6 text-gray-400 mx-auto mb-1" />
+                                  <p className="text-xs text-gray-500">Click to upload</p>
+                                </div>
                               )}
                             </div>
-                          ))}
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              const newFeatures = [...facility.features, ""]
-                              updateFacility(actualIndex, 'features', newFeatures)
-                            }}
-                            className="w-full"
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Feature
-                          </Button>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Learn More Link</Label>
-                          <Input
-                            value={facility.learnMoreLink || ''}
-                            onChange={(e) => updateFacility(actualIndex, 'learnMoreLink', e.target.value)}
-                            placeholder={`Learn more about ${facility.name || 'this facility'}`}
-                          />
-                          <p className="text-xs text-gray-500">
-                            Optional: Add a link for users to learn more about this facility
-                          </p>
+                            <p className="text-xs text-gray-500">Recommended: JPG, PNG up to 5MB</p>
+                          </div>
                         </div>
                       </div>
-                    )
-                  })}
+
+                      <div className="space-y-2">
+                        <Label>Facility Description</Label>
+                        <Textarea
+                          value={facility.description}
+                          onChange={(e) => updateNewFacility(facility.tempId, 'description', e.target.value)}
+                          placeholder="Describe this facility"
+                          className="min-h-[80px]"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Features</Label>
+                        {facility.features.map((feature, featureIndex) => (
+                          <div key={featureIndex} className="flex gap-2">
+                            <Input
+                              value={feature}
+                              onChange={(e) => {
+                                const newFeatures = [...facility.features]
+                                newFeatures[featureIndex] = e.target.value
+                                updateNewFacility(facility.tempId, 'features', newFeatures)
+                              }}
+                              placeholder={`Feature ${featureIndex + 1}`}
+                              className="flex-1"
+                            />
+                            {facility.features.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const newFeatures = facility.features.filter((_, i) => i !== featureIndex)
+                                  updateNewFacility(facility.tempId, 'features', newFeatures)
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const newFeatures = [...facility.features, ""]
+                            updateNewFacility(facility.tempId, 'features', newFeatures)
+                          }}
+                          className="w-full"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Feature
+                        </Button>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Learn More Link</Label>
+                        <Input
+                          value={facility.learnMoreLink || ''}
+                          onChange={(e) => updateNewFacility(facility.tempId, 'learnMoreLink', e.target.value)}
+                          placeholder="Optional link for more information"
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
 
@@ -1759,7 +1714,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                 </Button>
               </div>
 
-              {/* Save Button for New Facilities Only */}
+              {/* Save New Facilities Button */}
               {newFacilities.length > 0 && (
                 <div className="flex justify-end pt-4 border-t">
                   <Button
@@ -1786,7 +1741,13 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                             'Content-Type': 'application/json',
                           },
                           body: JSON.stringify({
-                            facilities: validNewFacilities
+                            facilities: validNewFacilities.map(f => ({
+                              name: f.name,
+                              description: f.description,
+                              features: f.features.filter(feature => feature.trim() !== ''),
+                              images: f.images.filter(image => image.trim() !== ''),
+                              learnMoreLink: f.learnMoreLink
+                            }))
                           }),
                         })
 
@@ -1799,13 +1760,8 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                           description: "New facilities saved successfully!",
                         })
 
-                        // Clear new facilities from form and refresh existing facilities
-                        setFormData(prev => ({
-                          ...prev,
-                          facilities: prev.facilities.filter(facility => facility.id) // Keep only existing facilities
-                        }))
-                        
-                        // Refresh the facilities list to show the newly saved facilities
+                        // Clear new facilities and refresh existing
+                        setNewFacilities([])
                         await fetchFacilities()
                       } catch (error) {
                         console.error('Error saving new facilities:', error)
