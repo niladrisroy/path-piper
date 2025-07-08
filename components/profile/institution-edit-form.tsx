@@ -643,6 +643,11 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
           const data = await response.json()
           const newImages = [data.url]
           updateFacility(facilityIndex, 'images', newImages)
+          
+          toast({
+            title: "Success",
+            description: "Image uploaded successfully!",
+          })
         } else {
           console.error('Failed to upload facility image')
           toast({
@@ -1340,6 +1345,17 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     const handleSave = async () => {
       setIsSaving(true)
       try {
+        // Validate required fields
+        if (!editData.name.trim() || !editData.description.trim()) {
+          toast({
+            title: "Error",
+            description: "Please fill in facility name and description.",
+            variant: "destructive",
+          })
+          setIsSaving(false)
+          return
+        }
+
         const response = await fetch('/api/institution/facilities', {
           method: 'PUT',
           headers: {
@@ -1710,15 +1726,17 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
               )}
 
               {/* Add New Facility Button */}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={addFacility}
-                className="w-full"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add New Facility
-              </Button>
+              <div className="pt-4 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addFacility}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add New Facility
+                </Button>
+              </div>
 
               {/* Save Button for New Facilities Only */}
               {newFacilities.length > 0 && (
@@ -1735,8 +1753,9 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                         if (validNewFacilities.length === 0) {
                           toast({
                             title: "Info",
-                            description: "No new facilities to save.",
+                            description: "Please fill in facility name and description before saving.",
                           })
+                          setIsLoading(false)
                           return
                         }
 
@@ -1759,7 +1778,13 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                           description: "New facilities saved successfully!",
                         })
 
-                        // Refresh the facilities list
+                        // Clear new facilities from form and refresh existing facilities
+                        setFormData(prev => ({
+                          ...prev,
+                          facilities: prev.facilities.filter(facility => facility.id) // Keep only existing facilities
+                        }))
+                        
+                        // Refresh the facilities list to show the newly saved facilities
                         await fetchFacilities()
                       } catch (error) {
                         console.error('Error saving new facilities:', error)
@@ -1772,7 +1797,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                         setIsLoading(false)
                       }
                     }}
-                    disabled={isLoading}
+                    disabled={isLoading || newFacilities.some(f => !f.name.trim() || !f.description.trim())}
                     className="bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     <Save className="h-4 w-4 mr-2" />
