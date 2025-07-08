@@ -83,6 +83,51 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PUT(request: NextRequest) {
+  try {
+    // Get user from auth
+    const cookieStore = await cookies()
+    const token = cookieStore.get('sb-access-token')?.value
+    
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data: { user } } = await supabase.auth.getUser(token)
+    
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { facilities } = body
+
+    // Update existing facilities
+    const updatePromises = facilities.map((facility: any) => 
+      prisma.institutionFacility.update({
+        where: { 
+          id: facility.id,
+          institutionId: user.id // Ensure user can only update their own facilities
+        },
+        data: {
+          name: facility.name,
+          description: facility.description,
+          features: facility.features.filter((f: string) => f.trim() !== ''),
+          images: facility.images.filter((img: string) => img.trim() !== ''),
+          learnMoreLink: facility.learnMoreLink || null
+        }
+      })
+    )
+
+    await Promise.all(updatePromises)
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Error updating institution facilities:', error)
+    return NextResponse.json({ error: 'Failed to update facilities' }, { status: 500 })
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   try {
     // Get user from auth

@@ -386,6 +386,45 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
     }))
   }
 
+  // Facility functionality
+  const [isLoadingFacilities, setIsLoadingFacilities] = useState(false)
+
+  useEffect(() => {
+    if (institutionData) {
+      // Fetch existing facilities
+      fetchFacilities()
+    }
+  }, [institutionData])
+
+  const fetchFacilities = async () => {
+    try {
+      setIsLoadingFacilities(true)
+      const response = await fetch('/api/institution/facilities')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.facilities && data.facilities.length > 0) {
+          const formattedFacilities = data.facilities.map((facility: any) => ({
+            id: facility.id, // Include ID for existing facilities
+            name: facility.name,
+            description: facility.description,
+            features: facility.features || [''],
+            images: facility.images || [''],
+            learnMoreLink: facility.learnMoreLink || ''
+          }))
+          setFormData(prev => ({
+            ...prev,
+            facilities: formattedFacilities
+          }))
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching facilities:', error)
+    } finally {
+      setIsLoadingFacilities(false)
+    }
+  }
+
+  // Facility handlers
   const addFacility = () => {
     const newFacility = {
       name: '',
@@ -1050,8 +1089,7 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Program Type</Label>
+              <div className="space-y-2">                <Label>Program Type</Label>
                 <Select
                   value={program.type}
                   onValueChange={(value) => updateProgram(index, 'type', value)}
