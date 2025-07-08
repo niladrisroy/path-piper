@@ -28,6 +28,8 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { toast } from "sonner"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 
 interface CreatePostProps {
   parentPostId?: string
@@ -87,6 +89,8 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
   const [cursorPosition, setCursorPosition] = useState(0)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [currentTrailParentId, setCurrentTrailParentId] = useState<string | null>(parentPostId || null)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false)
 
   const selectedPostType = POST_TYPES.find(type => type.value === postType)
 
@@ -119,11 +123,12 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     const position = e.target.selectionStart
     setPostText(value)
     setCursorPosition(position)
+    setHasUnsavedChanges(true) // Indicate changes
 
     // Extract hashtags from content
     const hashtagRegex = /#(\w+)/g
     const extractedHashtags = [...value.matchAll(hashtagRegex)].map(match => match[1])
-    
+
     // Update tags with extracted hashtags, avoiding duplicates
     const uniqueHashtags = [...new Set([...tags, ...extractedHashtags])]
     if (uniqueHashtags.length !== tags.length || !tags.every(tag => uniqueHashtags.includes(tag))) {
@@ -133,7 +138,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     // Check for @ mentions
     const textUpToCursor = value.substring(0, position)
     const lastAtIndex = textUpToCursor.lastIndexOf('@')
-    
+
     if (lastAtIndex !== -1) {
       const textAfterAt = textUpToCursor.substring(lastAtIndex + 1)
       // Check if there's no space after @, meaning we're still typing a mention
@@ -152,14 +157,15 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     const textUpToCursor = postText.substring(0, cursorPosition)
     const textAfterCursor = postText.substring(cursorPosition)
     const lastAtIndex = textUpToCursor.lastIndexOf('@')
-    
+
     const beforeAt = postText.substring(0, lastAtIndex)
     const mention = `@${connection.user.firstName} ${connection.user.lastName}`
     const newText = beforeAt + mention + ' ' + textAfterCursor
-    
+
     setPostText(newText)
     setShowMentions(false)
-    
+    setHasUnsavedChanges(true) // Indicate changes
+
     // Focus back to textarea
     setTimeout(() => {
       textareaRef.current?.focus()
@@ -176,16 +182,35 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
   const removeTag = (tagToRemove: string) => {
     setTags(tags.filter(tag => tag !== tagToRemove))
+    setHasUnsavedChanges(true) // Indicate changes
   }
 
   const addSubject = (subject: string) => {
     if (!subjects.includes(subject)) {
       setSubjects([...subjects, subject])
+      setHasUnsavedChanges(true) // Indicate changes
     }
   }
 
   const removeSubject = (subject: string) => {
     setSubjects(subjects.filter(s => s !== subject))
+    setHasUnsavedChanges(true) // Indicate changes
+  }
+
+  const handleDiscardTrail = () => {
+    setCurrentTrailParentId(null)
+    setPostText("")
+    setTags([])
+    setSubjects([])
+    setAchievementType("")
+    setProjectCategory("")
+    setDifficultyLevel("")
+    setPostType("GENERAL")
+    setImageUrl(null)
+    setShowTrailOption(false)
+    setHasUnsavedChanges(false)
+    setShowDiscardDialog(false)
+    toast.success("Trail discarded successfully")
   }
 
   const handlePost = async () => {
@@ -210,16 +235,14 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
         },
         body: JSON.stringify({
           content: postText,
-          parentPostId,
+          parentPostId: parentPostId || undefined,
+          postType: isTrail ? "GENERAL" : postType,
+          tags: isTrail ? [] : tags,
+          subjects: isTrail ? [] : subjects,
+          achievementType: isTrail ? undefined : (achievementType || undefined),
+          projectCategory: isTrail ? undefined : (projectCategory || undefined),
+          difficultyLevel: isTrail ? undefined : (difficultyLevel || undefined),
           isTrail,
-          postType,
-          tags,
-          subjects,
-          achievementType: postType === "ACHIEVEMENT" ? achievementType : null,
-          projectCategory: postType === "PROJECT" ? projectCategory : null,
-          difficultyLevel,
-          isQuestion: postType === "QUESTION",
-          isAchievement: postType === "ACHIEVEMENT",
           imageUrl: imageUrl,
         }),
       })
@@ -236,6 +259,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
         setPostType("GENERAL")
         setShowTrailOption(false)
         setImageUrl(null)
+        setHasUnsavedChanges(false) // Clear unsaved changes flag
         toast.success(isTrail ? "Trail added successfully!" : "Post created successfully!")
         onPostCreated?.()
       } else {
@@ -260,9 +284,8 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
       // Check if we already have a parent post (continuing an existing trail)
       let activeParentId = currentTrailParentId
 
-      // If no parent post exists, create the main post first
       if (!activeParentId) {
-        // Create the main post with all current content and metadata
+        // First, we need to create the main post that will be the parent
         const mainPostResponse = await fetch('/api/feed/posts', {
           method: 'POST',
           headers: {
@@ -270,17 +293,13 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
           },
           body: JSON.stringify({
             content: postText,
-            isTrail: false,
             postType,
             tags,
             subjects,
-            achievementType: postType === "ACHIEVEMENT" ? achievementType : null,
-            projectCategory: postType === "PROJECT" ? projectCategory : null,
-            difficultyLevel,
-            isQuestion: postType === "QUESTION",
-            isAchievement: postType === "ACHIEVEMENT",
+            achievementType: achievementType || undefined,
+            projectCategory: projectCategory || undefined,
+            difficultyLevel: difficultyLevel || undefined,
             imageUrl: imageUrl,
-            forceTrail: true, // Force trail creation regardless of character count
           }),
         })
 
@@ -293,7 +312,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
         // Set the parent ID for future trail messages
         activeParentId = mainPostData.post.id
         setCurrentTrailParentId(activeParentId)
-        
+
         // Clear form data and reset for trail continuation
         setTags([])
         setSubjects([])
@@ -304,13 +323,14 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
         setImageUrl(null)
         setPostText("")
         setShowTrailOption(false) // Hide trail option after creation
-        
+        setHasUnsavedChanges(false) // Clear unsaved changes flag
+
         toast.success("Trail started successfully! Add your next message to continue the trail.")
-        
+
         if (onPostCreated) {
           onPostCreated()
         }
-        
+
       } else {
         // We're continuing an existing trail - create a new trail message
         const trailResponse = await fetch('/api/feed/posts', {
@@ -335,14 +355,15 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
         // Clear only the content for next trail message
         setPostText("")
         setImageUrl(null)
-        
+        setHasUnsavedChanges(false) // Clear unsaved changes flag
+
         toast.success("Trail message added! Continue adding more messages to build your trail.")
-        
+
         if (onPostCreated) {
           onPostCreated()
         }
       }
-      
+
     } catch (error) {
       console.error('Error creating trail:', error)
       toast.error(`Failed to create trail: ${error.message}`)
@@ -367,6 +388,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
       const data = await response.json()
       setImageUrl(data.imageUrl)
+      setHasUnsavedChanges(true) // Indicate changes
     } catch (error) {
       console.error('Error uploading image:', error)
       toast.error('Failed to upload image')
@@ -399,6 +421,23 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     }
   }, [currentTrailParentId])
 
+  // Warn user if they try to leave with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        event.preventDefault()
+        event.returnValue = "You have unsaved changes. Are you sure you want to leave?"
+        return "You have unsaved changes. Are you sure you want to leave?"
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [hasUnsavedChanges])
+
   if (isTrail) {
     return (
       <Card className="border border-gray-200 shadow-sm">
@@ -421,7 +460,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                     <MessageCircle className="h-3 w-3" />
                     Adding to trail
                   </div>
-                  
+
                   {/* Parent Post Preview */}
                   <div className="mb-2 p-2 bg-white rounded border border-purple-100">
                     <div className="flex items-center gap-2 mb-1">
@@ -551,9 +590,36 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                   <MessageSquare className="h-3 w-3" />
                   Trail Mode Active - Continue building your story
                 </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="ml-auto">
+                      Options
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setShowDiscardDialog(true)}>
+                      Discard Trail
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             )}
-            
+
+            <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Discard Trail?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to discard this trail? All unsaved changes will be lost.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setShowDiscardDialog(false)}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDiscardTrail}>Discard</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
             <Tabs defaultValue="compose" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="compose">Compose</TabsTrigger>
@@ -568,7 +634,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                       <MessageSquare className="h-3 w-3" />
                       Continuing trail
                     </div>
-                    
+
                     {/* Parent Post Preview */}
                     <div className="mb-2 p-2 bg-white rounded border border-purple-100">
                       <div className="flex items-center gap-2 mb-1">
@@ -757,7 +823,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                 {isOverLimit && (
                   <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg">
                     <p className="text-sm text-amber-700 font-medium mb-1 flex items-center gap-2">
-                      <span className="text-amber-500">⚠️</span>
+                      <spanclassName="text-amber-500">⚠️</span>
                       Content exceeds 300 characters!
                     </p>
                     <p className="text-xs text-amber-600 mb-2">
