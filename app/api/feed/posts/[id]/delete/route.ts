@@ -18,14 +18,15 @@ export async function DELETE(
       return NextResponse.json({ error: 'Post ID is required' }, { status: 400 })
     }
 
-    // Get user from auth token
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
+    // Get user from cookies
+    const cookieStore = request.cookies
+    const accessToken = cookieStore.get('sb-access-token')?.value
+
+    if (!accessToken) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Invalid auth token' }, { status: 401 })
