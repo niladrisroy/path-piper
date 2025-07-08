@@ -221,7 +221,15 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
             {/* View all photos button */}
             {institutionData.gallery && institutionData.gallery.length > 0 && (
               <div className="absolute top-4 right-4">
-                <button className="bg-white bg-opacity-90 hover:bg-opacity-100 text-black px-3 py-1 rounded-lg text-sm font-medium flex items-center gap-1 transition-all">
+                <button 
+                  onClick={() => {
+                    const gallerySection = document.getElementById('gallery');
+                    if (gallerySection) {
+                      gallerySection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className="bg-white bg-opacity-90 hover:bg-opacity-100 text-black px-3 py-1 rounded-lg text-sm font-medium flex items-center gap-1 transition-all"
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="16"
