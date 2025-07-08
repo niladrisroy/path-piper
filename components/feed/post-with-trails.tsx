@@ -37,7 +37,7 @@ interface Comment {
   id: string
   content: string
   createdAt: string
-  user: Author
+  author: Author
 }
 
 interface PostWithTrailsProps {
@@ -523,8 +523,8 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
                   <div key={comment.id} className="flex gap-3">
                     <div className="h-8 w-8 rounded-full overflow-hidden">
                       <Image
-                        src={comment.user.profileImageUrl || "/images/student-profile.png"}
-                        alt={`${comment.user.firstName} ${comment.user.lastName}`}
+                        src={comment.author.profileImageUrl || "/images/student-profile.png"}
+                        alt={`${comment.author.firstName} ${comment.author.lastName}`}
                         width={32}
                         height={32}
                         className="object-cover"
@@ -534,7 +534,7 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
                       <div className="bg-white dark:bg-gray-700 rounded-lg p-3">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-medium text-sm">
-                            {comment.user.firstName} {comment.user.lastName}
+                            {comment.author.firstName} {comment.author.lastName}
                           </span>
                           <span className="text-xs text-gray-500">
                             {formatTimeAgo(comment.createdAt)}
@@ -712,8 +712,8 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
                               <div key={comment.id} className="flex gap-2">
                                 <div className="h-5 w-5 rounded-full overflow-hidden">
                                   <Image
-                                    src={comment.user.profileImageUrl || "/images/student-profile.png"}
-                                    alt={`${comment.user.firstName} ${comment.user.lastName}`}
+                                    src={comment.author.profileImageUrl || "/images/student-profile.png"}
+                                    alt={`${comment.author.firstName} ${comment.author.lastName}`}
                                     width={20}
                                     height={20}
                                     className="object-cover"
@@ -723,7 +723,7 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
                                   <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-2">
                                     <div className="flex items-center gap-2 mb-0.5">
                                       <span className="font-medium text-xs">
-                                        {comment.user.firstName} {comment.user.lastName}
+                                        {comment.author.firstName} {comment.author.lastName}
                                       </span>
                                       <span className="text-xs text-purple-500">
                                         {formatTimeAgo(comment.createdAt)}
