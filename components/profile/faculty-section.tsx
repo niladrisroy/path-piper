@@ -1,50 +1,80 @@
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Mail, ExternalLink, Award, BookOpen, Users } from "lucide-react"
 
+interface Faculty {
+  id: string
+  name: string
+  title: string
+  department: string
+  image: string
+  expertise: string[]
+  email: string
+  featured: boolean
+  bio?: string
+  qualifications?: string
+  experience?: string
+  specialization?: string
+}
+
 export default function FacultySection() {
-  const facultyMembers = [
-    {
-      id: 1,
-      name: "Dr. Sarah Johnson",
-      title: "Professor of Computer Science",
-      department: "Computer Science",
-      image: "/diverse-professor-lecturing.png",
-      expertise: ["Artificial Intelligence", "Machine Learning", "Computer Vision"],
-      email: "sjohnson@stanford.edu",
-      featured: true,
-    },
-    {
-      id: 2,
-      name: "Dr. Michael Chen",
-      title: "Associate Professor of Business",
-      department: "Graduate School of Business",
-      image: "/asian-professor.png",
-      expertise: ["Entrepreneurship", "Venture Capital", "Strategic Management"],
-      email: "mchen@stanford.edu",
-      featured: true,
-    },
-    {
-      id: 3,
-      name: "Dr. Emily Rodriguez",
-      title: "Professor of Medicine",
-      department: "School of Medicine",
-      image: "/diverse-female-student.png",
-      expertise: ["Immunology", "Infectious Diseases", "Global Health"],
-      email: "erodriguez@stanford.edu",
-      featured: false,
-    },
-    {
-      id: 4,
-      name: "Dr. James Wilson",
-      title: "Professor of Physics",
-      department: "Physics",
-      image: "/math-teacher.png",
-      expertise: ["Quantum Mechanics", "Theoretical Physics", "Astrophysics"],
-      email: "jwilson@stanford.edu",
-      featured: false,
-    },
-  ]
+  const [facultyMembers, setFacultyMembers] = useState<Faculty[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchFaculty()
+  }, [])
+
+  const fetchFaculty = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/institution/faculty')
+      if (response.ok) {
+        const data = await response.json()
+        setFacultyMembers(data.faculty || [])
+      } else {
+        throw new Error('Failed to fetch faculty')
+      }
+    } catch (error) {
+      console.error('Error fetching faculty:', error)
+      setError('Failed to load faculty')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="text-gray-500 mt-4">Loading faculty...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center py-8">
+          <p className="text-red-500">{error}</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (facultyMembers.length === 0) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center py-8">
+          <p className="text-gray-500">No faculty added yet.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-7xl mx-auto">
