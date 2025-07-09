@@ -105,74 +105,41 @@ export default function Feed() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [hasMore, setHasMore] = useState(false)
 
-const handleLike = async (postId: string) => {
+  const handleLike = async (postId: string, currentLikeCount: number, isLiked: boolean) => {
     if (!user) {
-      toast.error('Please login to like posts')
+      toast.error("Please login to like posts")
       return
     }
 
     try {
-      // Use the dedicated like endpoint for consistent behavior
       const response = await fetch(`/api/feed/posts/${postId}/like`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
         credentials: 'include'
       })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `Server responded with ${response.status}`)
+        throw new Error('Failed to toggle like')
       }
 
       const data = await response.json()
 
-      if (!data.success) {
-        throw new Error('Failed to update like')
-      }
-
-      // Use the exact like count from the database response
-      const newLikeCount = data.likeCount
-      const newIsLiked = data.liked
-
-      // Update posts state with database values
+      // Update the posts state
       setPosts(prevPosts => 
         prevPosts.map(post => 
           post.id === postId 
-            ? {
-                ...post,
-                isLikedByUser: newIsLiked,
-                likesCount: newLikeCount,
-                _count: {
-                  ...post._count,
-                  likes: newLikeCount
-                }
+            ? { 
+                ...post, 
+                likesCount: data.liked ? currentLikeCount + 1 : Math.max(0, currentLikeCount - 1),
+                isLikedByUser: data.liked 
               }
             : post
         )
       )
 
-      // Update local tracking state
-      if (newIsLiked) {
-        setLikedPosts(prev => new Set([...prev, postId]))
-      } else {
-        setLikedPosts(prev => {
-          const newSet = new Set(prev)
-          newSet.delete(postId)
-          return newSet
-        })
-      }
-
-      // Update like counts tracking with database value
-      setPostLikeCounts(prev => ({
-        ...prev,
-        [postId]: newLikeCount
-      }))
-
+      toast.success(data.liked ? "Post liked!" : "Post unliked!")
     } catch (error) {
       console.error('Error toggling like:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to update like')
+      toast.error("Failed to update like")
     }
   }
 
@@ -442,13 +409,26 @@ const handleLike = async (postId: string) => {
                 animation: 'fadeInUp 0.6s ease-out forwards'
               }}
             >
-              <PostWithTrails
-                post={post}
-                onPostUpdate={fetchPosts}
-                onLike={handleLike}
-                isLiked={post.isLikedByUser || false}
-                likeCount={post.likesCount || 0}
-              />
+              <div key={post.id} className="space-y-4">
+                <PostWithTrails
+                  post={post}
+                  onPostUpdate={fetchPosts}
+                  onLike={handleLike}
+                  isLiked={post.isLikedByUser || false}
+                  likeCount={post.likesCount || 0}
+                />
+
+                {/* Enhanced Reactions Section */}
+                <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <EnhancedReactions
+                    postId={post.id}
+                    initialLikes={post.likesCount || 0}
+                    isLiked={post.isLikedByUser || false}
+                    size="md"
+                    onReactionChange={(reactionType) => handleReactionChange(post.id, reactionType)}
+                  />
+                </div>
+              </div>
             </div>
           ))
         )}
