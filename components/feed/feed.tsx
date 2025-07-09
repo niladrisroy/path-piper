@@ -415,26 +415,13 @@ export default function Feed() {
                 animation: 'fadeInUp 0.6s ease-out forwards'
               }}
             >
-              <div key={post.id} className="space-y-4">
-                <PostWithTrails
-                  post={post}
-                  onPostUpdate={fetchPosts}
-                  onLike={handleLike}
-                  isLiked={post.isLikedByUser || false}
-                  likeCount={post.likesCount || 0}
-                />
-
-                {/* Enhanced Reactions Section */}
-                <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <EnhancedReactions
-                    postId={post.id}
-                    initialLikes={post.likesCount || 0}
-                    isLiked={post.isLikedByUser || false}
-                    size="md"
-                    onReactionChange={(reactionType) => handleReactionChange(post.id, reactionType)}
-                  />
-                </div>
-              </div>
+              <PostWithTrails
+                post={post}
+                onPostUpdate={fetchPosts}
+                onLike={handleLike}
+                isLiked={post.isLikedByUser || false}
+                likeCount={post.likesCount || 0}
+              />
             </div>
           ))
         )}
