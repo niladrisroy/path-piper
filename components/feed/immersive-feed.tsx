@@ -118,7 +118,15 @@ export default function ImmersiveFeed() {
       <div ref={containerRef} className="h-full overflow-y-auto snap-y snap-mandatory hide-scrollbar">
         {feedItems.map((item, index) => (
           <div key={item.id} className="feed-card h-full w-full snap-start snap-always">
-            <FeedCard item={item} isActive={index === activeIndex} />
+            <FeedCard 
+              key={item.id} 
+              item={{
+                ...item,
+                isLikedByUser: item.isLikedByUser || false,
+                likesCount: item.likesCount || item.stats?.likes || 0
+              }}
+              isActive={activeIndex === index}
+            />
           </div>
         ))}
       </div>

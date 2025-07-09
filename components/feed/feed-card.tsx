@@ -23,17 +23,33 @@ interface FeedCardProps {
 }
 
 export default function FeedCard({ item, isActive }: FeedCardProps) {
-  const [liked, setLiked] = useState(false)
+  const [liked, setLiked] = useState(item.isLikedByUser || false)
   const [saved, setSaved] = useState(false)
-  const [likeCount, setLikeCount] = useState(item.stats.likes)
+  const [likeCount, setLikeCount] = useState(item.likesCount || item.stats?.likes || 0)
 
-  const handleLike = () => {
-    if (liked) {
-      setLikeCount(likeCount - 1)
-    } else {
-      setLikeCount(likeCount + 1)
+  const handleLike = async () => {
+    try {
+      const response = await fetch(`/api/feed/posts/${item.id}/like`, {
+        method: 'POST',
+        credentials: 'include'
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to toggle like')
+      }
+
+      const data = await response.json()
+      setLiked(data.liked)
+      
+      if (data.liked) {
+        setLikeCount(prev => prev + 1)
+      } else {
+        setLikeCount(prev => Math.max(0, prev - 1))
+      }
+
+    } catch (error) {
+      console.error('Error toggling like:', error)
     }
-    setLiked(!liked)
   }
 
   const handleSave = () => {

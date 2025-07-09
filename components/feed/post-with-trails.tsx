@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -10,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
-import { Heart, MessageCircle, Repeat2, Share, MoreHorizontal, Plus, Trash2, Send } from "lucide-react"
+import { Heart, MessageCircle, Repeat2, Share, MoreHorizontal, Plus, Trash2, Send, ThumbsUp, Laugh, Angry, Sad } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { toast } from "sonner"
 import CreatePost from "./create-post"
@@ -57,9 +56,18 @@ interface PostWithTrailsProps {
     } | null
   }
   onPostUpdate?: () => void
+  onLike?: (postId: string, currentLikeCount: number, isLiked: boolean) => void
+  isLiked?: boolean
+  likeCount?: number
 }
 
-export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsProps) {
+export default function PostWithTrails({
+  post,
+  onPostUpdate,
+  onLike,
+  isLiked = false,
+  likeCount = 0
+}: PostWithTrailsProps) {
   const [showTrails, setShowTrails] = useState(false)
   const [showAddTrail, setShowAddTrail] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -70,8 +78,8 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState("")
   const [repostContent, setRepostContent] = useState("")
-  const [isLiked, setIsLiked] = useState(false)
-  const [likesCount, setLikesCount] = useState(post.likesCount)
+  const [showReactions, setShowReactions] = useState(false)
+  const currentLikeCount = likeCount || post.likesCount || 0
   const [commentsCount, setCommentsCount] = useState(post.commentsCount)
   const [isCommenting, setIsCommenting] = useState(false)
   const [isReposting, setIsReposting] = useState(false)
@@ -85,7 +93,7 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
     const date = new Date(dateString)
     const now = new Date()
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
-    
+
     if (diffInHours < 1) return 'just now'
     if (diffInHours < 24) return `${diffInHours}h`
     if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d`
@@ -143,20 +151,38 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
   }
 
   const handleLike = async () => {
+    if (onLike) {
+      onLike(post.id, currentLikeCount, isLiked)
+    }
+  }
+
+  const handleReaction = async (reactionType: string) => {
+    if (!user) {
+      toast.error("Please login to react to posts")
+      return
+    }
+
     try {
-      const response = await fetch(`/api/feed/posts/${post.id}/like`, {
+      const response = await fetch(`/api/feed/posts/${post.id}/react`, {
         method: 'POST',
-        credentials: 'include'
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ reactionType })
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        setIsLiked(data.liked)
-        setLikesCount(prev => data.liked ? prev + 1 : prev - 1)
+      if (!response.ok) {
+        throw new Error('Failed to add reaction')
       }
+
+      const data = await response.json()
+      toast.success(`Added ${reactionType} reaction!`)
+      setShowReactions(false)
+
     } catch (error) {
-      console.error('Error liking post:', error)
-      toast.error("Failed to like post")
+      console.error('Error adding reaction:', error)
+      toast.error("Failed to add reaction")
     }
   }
 
@@ -338,8 +364,8 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
                   {post.author.firstName} {post.author.lastName}
                 </h4>
                 <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
-                  <Badge 
-                    variant="outline" 
+                  <Badge
+                    variant="outline"
                     className="bg-gradient-to-r from-pathpiper-teal/10 to-blue-500/10 text-pathpiper-teal border-pathpiper-teal/30 text-xs py-1 px-3 font-medium shadow-sm"
                   >
                     {post.author.role}
@@ -359,7 +385,7 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     className="text-red-600 focus:text-red-600"
                     onClick={() => handleDeleteClick(post.id, 'post')}
                   >
@@ -407,22 +433,21 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
           {/* Post Actions */}
           <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
             <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleLike}
-                className={`flex items-center gap-2 rounded-full px-3 py-2 transition-all duration-200 group ${
-                  isLiked 
-                    ? 'text-red-500 bg-red-50 dark:bg-red-950/20' 
-                    : 'text-gray-600 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20'
-                }`}
+                className={`flex items-center gap-2 rounded-full px-3 py-2 transition-all duration-200 group ${isLiked
+                  ? 'text-red-500 bg-red-50 dark:bg-red-950/20'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20'
+                  }`}
               >
                 <Heart className={`h-4 w-4 group-hover:scale-110 transition-transform duration-200 ${isLiked ? 'fill-current' : ''}`} />
-                <span className="text-sm font-medium">{likesCount}</span>
+                <span className="text-sm font-medium">{currentLikeCount}</span>
               </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setShowComments(!showComments)}
                 className="text-gray-600 dark:text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/20 flex items-center gap-2 rounded-full px-3 py-2 transition-all duration-200 group"
               >
@@ -431,9 +456,9 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
               </Button>
               <Dialog open={showRepostDialog} onOpenChange={setShowRepostDialog}>
                 <DialogTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="text-gray-600 dark:text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-950/20 rounded-full p-2 transition-all duration-200 group"
                   >
                     <Repeat2 className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
@@ -461,15 +486,15 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
                   </div>
                 </DialogContent>
               </Dialog>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className="text-gray-600 dark:text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/20 rounded-full p-2 transition-all duration-200 group"
               >
                 <Share className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
               </Button>
             </div>
-            
+
             <Button
               variant="ghost"
               size="sm"
@@ -479,6 +504,35 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
               <Plus className="h-4 w-4 mr-2" />
               Add Trail
             </Button>
+          </div>
+
+          {/* Reactions */}
+          <div className="flex items-center justify-start pt-2 border-t border-gray-100 dark:border-gray-700">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="flex items-center gap-1 rounded-full px-3 py-1 transition-all duration-200 group">
+                  <span className="text-sm font-medium">Reactions</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onClick={() => handleReaction("ThumbsUp")}>
+                  <ThumbsUp className="h-4 w-4 mr-2" />
+                  Thumbs Up
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleReaction("Laugh")}>
+                  <Laugh className="h-4 w-4 mr-2" />
+                  Laugh
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleReaction("Angry")}>
+                  <Angry className="h-4 w-4 mr-2" />
+                  Angry
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleReaction("Sad")}>
+                  <Sad className="h-4 w-4 mr-2" />
+                  Sad
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </CardContent>
       </Card>
@@ -567,12 +621,12 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
         <div className="ml-8 space-y-4 relative">
           {/* Trail connection line */}
           <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-purple-400 via-indigo-400 to-blue-400 rounded-full shadow-sm"></div>
-          
+
           {post.trails.map((trail, index) => (
-            <div 
+            <div
               key={trail.id}
               className="relative transform transition-all duration-300 hover:scale-[1.02]"
-              style={{ 
+              style={{
                 animationDelay: `${index * 150}ms`,
                 animation: 'fadeInRight 0.5s ease-out forwards'
               }}
@@ -583,7 +637,7 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
                   <div className="absolute -left-3 top-6 w-6 h-6 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full border-3 border-white dark:border-gray-900 shadow-lg flex items-center justify-center">
                     <div className="w-2 h-2 bg-white rounded-full"></div>
                   </div>
-                  
+
                   <div className="flex items-start gap-4">
                     <div className="relative">
                       <div className="h-10 w-10 rounded-full overflow-hidden ring-2 ring-purple-200 dark:ring-purple-700 shadow-md">
@@ -607,26 +661,26 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
                             <div className="w-1 h-1 bg-purple-400 rounded-full"></div>
                             {formatTimeAgo(trail.createdAt)}
                           </span>
-                          <Badge 
-                            variant="outline" 
+                          <Badge
+                            variant="outline"
                             className="text-xs py-1 px-3 bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/50 dark:to-indigo-900/50 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-600 font-semibold shadow-sm"
                           >
                             Trail #{trail.trailOrder}
                           </Badge>
                         </div>
-                      {canDelete(trail.author.id) && (
+                        {canDelete(trail.author.id) && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
+                              <Button
+                                variant="ghost"
+                                size="sm"
                                 className="h-8 w-8 p-0 opacity-60 hover:opacity-100 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-full transition-all duration-200"
                               >
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-gray-200/50 dark:border-gray-700/50">
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 className="text-red-600 focus:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors duration-200"
                                 onClick={() => handleDeleteClick(trail.id, 'trail', trail.trailOrder)}
                               >
@@ -644,22 +698,21 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
                       {/* Trail Actions */}
                       <div className="flex items-center justify-between mt-3 pt-2 border-t border-purple-200/50 dark:border-purple-700/50">
                         <div className="flex items-center gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleTrailLike(trail.id)}
-                            className={`flex items-center gap-1 rounded-full px-2 py-1 transition-all duration-200 group text-xs ${
-                              trailLikes[trail.id]?.liked 
-                                ? 'text-red-500 bg-red-50 dark:bg-red-950/20' 
-                                : 'text-purple-600 dark:text-purple-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20'
-                            }`}
+                            className={`flex items-center gap-1 rounded-full px-2 py-1 transition-all duration-200 group text-xs ${trailLikes[trail.id]?.liked
+                              ? 'text-red-500 bg-red-50 dark:bg-red-950/20'
+                              : 'text-purple-600 dark:text-purple-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20'
+                              }`}
                           >
                             <Heart className={`h-3 w-3 ${trailLikes[trail.id]?.liked ? 'fill-current' : ''}`} />
                             <span>{trailLikes[trail.id]?.count || 0}</span>
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => {
                               setShowTrailComments(prev => ({ ...prev, [trail.id]: !prev[trail.id] }))
                               if (!showTrailComments[trail.id]) {
@@ -754,7 +807,7 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
               Delete {deletingItem?.type === 'post' ? 'Post' : 'Trail Message'}?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {deletingItem?.type === 'post' 
+              {deletingItem?.type === 'post'
                 ? 'This will permanently delete the post and all its trail messages. This action cannot be undone.'
                 : 'This will permanently delete this trail message and reorder the remaining trails. This action cannot be undone.'
               }
@@ -762,7 +815,7 @@ export default function PostWithTrails({ post, onPostUpdate }: PostWithTrailsPro
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleDeleteConfirm}
               disabled={isDeleting}
               className="bg-red-600 hover:bg-red-700"

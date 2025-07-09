@@ -244,6 +244,23 @@ export async function GET(request: NextRequest) {
       ? [{ engagementScore: 'desc' as const }, { createdAt: 'desc' as const }]
       : [{ createdAt: 'desc' as const }]
 
+    // Get current user's likes
+    let userLikes: string[] = []
+    const cookieStore = request.cookies
+    const accessToken = cookieStore.get('sb-access-token')?.value
+
+    if (accessToken) {
+      const { data: { user }, error } = await supabase.auth.getUser(accessToken)
+      if (user) {
+        const likes = await prisma.postLike.findMany({
+          where: { userId: user.id },
+          select: { postId: true }
+        })
+        userLikes = likes.map(like => like.postId)
+      }
+    }
+    
+
     const posts = await prisma.feedPost.findMany({
       where: whereClause,
       include: {
@@ -304,8 +321,15 @@ export async function GET(request: NextRequest) {
         }
       },
       orderBy: { createdAt: 'desc' },
-      take: 20
+      take: 20,
+      skip: offset
     })
+
+    // Add isLikedByUser field to each post
+    const postsWithLikeStatus = posts.map(post => ({
+      ...post,
+      isLikedByUser: userLikes.includes(post.id)
+    }))
 
     // Update view counts for returned posts
     const postIds = posts.map(post => post.id)
@@ -316,7 +340,7 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    return NextResponse.json({ posts: posts.map(post => ({
+    return NextResponse.json({ posts: postsWithLikeStatus.map(post => ({
         ...post,
         tags: Array.isArray(post.tags) ? post.tags : [],
         subjects: Array.isArray(post.subjects) ? post.subjects : [],

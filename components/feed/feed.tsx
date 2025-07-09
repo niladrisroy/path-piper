@@ -1,3 +1,7 @@
+The code is modified to add liking functionality to the posts in the feed, including updating the UI and integrating with the backend API.
+```
+
+```replit_final_file
 "use client"
 
 import { useState, useEffect } from "react"
@@ -97,58 +101,56 @@ export default function Feed() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deletingItem, setDeletingItem] = useState<{ id: string; type: 'post' | 'trail'; trailOrder?: number } | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set())
+  const [postLikeCounts, setPostLikeCounts] = useState<Record<string, number>>({})
+  const [deletePostId, setDeletePostId] = useState<string | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
-  const fetchPosts = async () => {
+  // Handle post like functionality
+  const handleLike = async (postId: string, currentLikeCount: number, isLiked: boolean) => {
+    if (!user) {
+      toast.error("Please login to like posts")
+      return
+    }
+
     try {
-      setLoading(true)
-      const params = new URLSearchParams({
-        filter,
-        ...(postTypeFilter !== 'all' && { type: postTypeFilter }),
-        ...(subjectFilter !== 'all' && { subject: subjectFilter }),
-        ...(difficultyFilter !== 'all' && { difficulty: difficultyFilter }),
+      const response = await fetch(`/api/feed/posts/${postId}/like`, {
+        method: 'POST',
+        credentials: 'include'
       })
 
-      const response = await fetch(`/api/feed/posts?${params}`)
+      if (!response.ok) {
+        throw new Error('Failed to toggle like')
+      }
+
       const data = await response.json()
 
-      if (response.ok) {
-        setPosts(data.posts)
-
-        // Extract unique subjects for filter
-        const subjects = new Set<string>()
-        data.posts.forEach((post: FeedPost) => {
-          post.subjects.forEach(subject => subjects.add(subject))
-        })
-        setAvailableSubjects(Array.from(subjects))
+      // Update local state
+      const newLikedPosts = new Set(likedPosts)
+      if (data.liked) {
+        newLikedPosts.add(postId)
+        setPostLikeCounts(prev => ({
+          ...prev,
+          [postId]: currentLikeCount + 1
+        }))
       } else {
-        toast.error("Failed to load posts")
+        newLikedPosts.delete(postId)
+        setPostLikeCounts(prev => ({
+          ...prev,
+          [postId]: Math.max(0, currentLikeCount - 1)
+        }))
       }
+      setLikedPosts(newLikedPosts)
+
     } catch (error) {
-      console.error('Error fetching posts:', error)
-      toast.error("Failed to load posts")
-    } finally {
-      setLoading(false)
+      console.error('Error toggling like:', error)
+      toast.error("Failed to update like")
     }
   }
 
   useEffect(() => {
     fetchPosts()
   }, [filter, postTypeFilter, subjectFilter, difficultyFilter])
-
-  const handleLike = async (postId: string) => {
-    try {
-      const response = await fetch(`/api/feed/posts/${postId}/like`, {
-        method: 'POST'
-      })
-
-      if (response.ok) {
-        fetchPosts() // Refresh to get updated counts
-      }
-    } catch (error) {
-      console.error('Error liking post:', error)
-      toast.error("Failed to like post")
-    }
-  }
 
   const handleBookmark = async (postId: string) => {
     try {
@@ -218,7 +220,45 @@ export default function Feed() {
     return user && user.id === authorId
   }
 
-  
+  const fetchPosts = async () => {
+    try {
+      setLoading(true)
+      const params = new URLSearchParams({
+        filter,
+        ...(postTypeFilter !== 'all' && { type: postTypeFilter }),
+        ...(subjectFilter !== 'all' && { subject: subjectFilter }),
+        ...(difficultyFilter !== 'all' && { difficulty: difficultyFilter }),
+      })
+
+      const response = await fetch(`/api/feed/posts?${params}`)
+      const data = await response.json()
+      setPosts(data.posts || [])
+      setHasMore(data.hasMore || false)
+
+      // Initialize like states
+      if (data.posts) {
+        const likeCounts: Record<string, number> = {}
+        const userLikes = new Set<string>()
+
+        data.posts.forEach((post: any) => {
+          likeCounts[post.id] = post.likesCount || 0
+          if (post.isLikedByUser) {
+            userLikes.add(post.id)
+          }
+        })
+
+        setPostLikeCounts(likeCounts)
+        setLikedPosts(userLikes)
+      }
+    } catch (error) {
+      console.error('Error fetching posts:', error)
+      toast.error("Failed to load posts")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -379,6 +419,9 @@ export default function Feed() {
                   trails: post.trails || []
                 }}
                 onPostUpdate={fetchPosts}
+                onLike={handleLike}
+                isLiked={likedPosts.has(post.id)}
+                likeCount={postLikeCounts[post.id] || post._count.likes || 0}
               />
             </div>
           ))
