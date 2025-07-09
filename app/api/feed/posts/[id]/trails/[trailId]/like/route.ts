@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { cookies } from "next/headers"
@@ -12,7 +13,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string; trailId: string }> }
 ) {
   try {
-    const { trailId } = await params
+    const { id: postId, trailId } = await params
     const cookieStore = await cookies()
     const token = cookieStore.get('auth-token')?.value
 
@@ -55,17 +56,18 @@ export async function POST(
       await prisma.feedPost.update({
         where: { id: trailId },
         data: {
-          likesCount: {
-            decrement: 1
-          }
+          likesCount: { decrement: 1 },
+          engagementScore: { decrement: 1 }
         }
       })
+
+      liked = false
     } else {
       // Like the trail
       await prisma.postLike.create({
         data: {
-          postId: trailId,
-          userId: user.id
+          userId: user.id,
+          postId: trailId
         }
       })
 
@@ -73,18 +75,17 @@ export async function POST(
       await prisma.feedPost.update({
         where: { id: trailId },
         data: {
-          likesCount: {
-            increment: 1
-          }
+          likesCount: { increment: 1 },
+          engagementScore: { increment: 1 }
         }
       })
 
       liked = true
     }
 
-    return NextResponse.json({ liked })
+    return NextResponse.json({ success: true, liked })
   } catch (error) {
-    console.error('Error toggling trail like:', error)
-    return NextResponse.json({ error: "Failed to toggle trail like" }, { status: 500 })
+    console.error('Error handling trail like:', error)
+    return NextResponse.json({ error: "Failed to handle like" }, { status: 500 })
   }
 }

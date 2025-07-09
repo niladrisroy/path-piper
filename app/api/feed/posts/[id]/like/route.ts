@@ -11,20 +11,6 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const cookieStore = request.cookies
-    const accessToken = cookieStore.get('sb-access-token')?.value
-
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Get user from token
-    const { data: { user }, error } = await supabase.auth.getUser(accessToken)
-    
-    if (error || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const { id: postId } = await params
 
     // Check if post exists
@@ -34,6 +20,20 @@ export async function POST(
 
     if (!post) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 })
+    }
+
+    const cookieStore = request.cookies
+    const accessToken = cookieStore.get('sb-access-token')?.value
+
+    if (!accessToken) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Get user from token
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken)
+
+    if (error || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Check if user already liked the post
