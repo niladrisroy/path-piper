@@ -70,14 +70,23 @@ export default function PostWithTrails({
   likeCount 
 }: PostWithTrailsProps) {
   const { user } = useAuth()
-  const [showAddTrail, setShowAddTrail] = useState(false)
-  const [trailContent, setTrailContent] = useState("")
-  const [isSubmittingTrail, setIsSubmittingTrail] = useState(false)
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [deletingItem, setDeletingItem] = useState<{ id: string; type: 'post' | 'trail'; trailOrder?: number } | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
   const [likedTrails, setLikedTrails] = useState<Set<string>>(new Set())
-  const [trailLikeCounts, setTrailLikeCounts] = useState<Record<string, number>>({})
+  const [trailLikeCounts, setTrailLikeCounts] = useState<{[key: string]: number}>({})
+  const [showAddTrail, setShowAddTrail] = useState(false)
+  const [isSubmittingTrail, setIsSubmittingTrail] = useState(false)
+  const [showReactions, setShowReactions] = useState(false)
+  const [showTrailReactions, setShowTrailReactions] = useState<{[key: string]: boolean}>({})
+
+  const reactionTypes = [
+    { type: 'like', emoji: '❤️', label: 'Like' },
+    { type: 'love', emoji: '😍', label: 'Love' },
+    { type: 'laugh', emoji: '😂', label: 'Haha' },
+    { type: 'wow', emoji: '😮', label: 'Wow' },
+    { type: 'sad', emoji: '😢', label: 'Sad' },
+    { type: 'angry', emoji: '😠', label: 'Angry' },
+    { type: 'celebrate', emoji: '🎉', label: 'Celebrate' },
+    { type: 'think', emoji: '🤔', label: 'Thinking' }
+  ]
 
   // Initialize trail like states
   useEffect(() => {
