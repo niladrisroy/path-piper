@@ -126,21 +126,38 @@ export async function POST(
               data: { likesCount: { decrement: 1 } }
             })
 
-            return NextResponse.json({ success: true, reactionType: null, liked: false })
+            // Get updated like count
+            const updatedPost = await prisma.feedPost.findUnique({
+              where: { id: postId },
+              select: { likesCount: true }
+            })
+
+            return NextResponse.json({ 
+              success: true, 
+              reactionType: null, 
+              liked: false,
+              likeCount: updatedPost?.likesCount || 0
+            })
           } else {
             await prisma.postLike.create({
               data: { userId: user.id, postId }
             })
 
-            await prisma.feedPost.update({
+            const updatedPost = await prisma.feedPost.update({
               where: { id: postId },
               data: { 
                 likesCount: { increment: 1 },
                 engagementScore: { increment: 1 }
-              }
+              },
+              select: { likesCount: true }
             })
 
-            return NextResponse.json({ success: true, reactionType: 'like', liked: true })
+            return NextResponse.json({ 
+              success: true, 
+              reactionType: 'like', 
+              liked: true,
+              likeCount: updatedPost.likesCount
+            })
           }
         } catch (fallbackError) {
           console.error('Fallback like operation failed:', fallbackError)

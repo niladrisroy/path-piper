@@ -136,14 +136,31 @@ export default function Feed() {
             ? {
                 ...post,
                 isLikedByUser: data.liked || false,
+                likesCount: data.likeCount || post.likesCount || 0,
                 _count: {
                   ...post._count,
-                  likes: data.likeCount || post._count.likes
+                  likes: data.likeCount || post._count?.likes || 0
                 }
               }
             : post
         )
       )
+
+      // Update local state tracking
+      if (data.liked) {
+        setLikedPosts(prev => new Set([...prev, postId]))
+      } else {
+        setLikedPosts(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(postId)
+          return newSet
+        })
+      }
+
+      setPostLikeCounts(prev => ({
+        ...prev,
+        [postId]: data.likeCount || 0
+      }))
 
     } catch (error) {
       console.error('Error toggling like:', error)

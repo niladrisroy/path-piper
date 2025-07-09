@@ -340,11 +340,20 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    return NextResponse.json({ posts: postsWithLikeStatus.map(post => ({
+    return NextResponse.json({ 
+      posts: postsWithLikeStatus.map(post => ({
         ...post,
         tags: Array.isArray(post.tags) ? post.tags : [],
         subjects: Array.isArray(post.subjects) ? post.subjects : [],
-      })) })
+        // Ensure consistent like data structure
+        likesCount: post.likesCount || 0,
+        _count: {
+          ...post._count,
+          likes: post.likesCount || 0
+        }
+      })),
+      hasMore: false // Add pagination support if needed
+    })
   } catch (error) {
     console.error('Error fetching posts:', error)
     return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 })
