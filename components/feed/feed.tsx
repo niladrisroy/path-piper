@@ -107,7 +107,6 @@ export default function Feed() {
 
   const handleLike = async (postId: string) => {
     try {
-      // Use the enhanced reactions endpoint with 'like' reaction type
       const response = await fetch(`/api/feed/posts/${postId}/react`, {
         method: 'POST',
         headers: {
@@ -120,23 +119,26 @@ export default function Feed() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to toggle like')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Server responded with ${response.status}`)
       }
 
       const data = await response.json()
 
-      // Update the local state
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to process like reaction')
+      }
+
+      // Update the local state based on the response
       setPosts(prevPosts => 
         prevPosts.map(post => 
           post.id === postId 
             ? {
                 ...post,
-                isLikedByUser: data.reactionType === 'like',
+                isLikedByUser: data.liked || false,
                 _count: {
                   ...post._count,
-                  likes: data.reactionType === 'like'
-                    ? post._count.likes + 1 
-                    : Math.max(0, post._count.likes - 1)
+                  likes: data.likeCount || post._count.likes
                 }
               }
             : post
@@ -145,7 +147,7 @@ export default function Feed() {
 
     } catch (error) {
       console.error('Error toggling like:', error)
-      toast.error('Failed to update like')
+      toast.error(error instanceof Error ? error.message : 'Failed to update like')
     }
   }
 
