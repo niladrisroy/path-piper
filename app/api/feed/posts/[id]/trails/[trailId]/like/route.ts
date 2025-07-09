@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { cookies } from "next/headers"
@@ -15,15 +14,16 @@ export async function POST(
   try {
     const { id: postId, trailId } = await params
     const cookieStore = await cookies()
-    const token = cookieStore.get('auth-token')?.value
+    const accessToken = cookieStore.get('sb-access-token')?.value
 
-    if (!token) {
-      return NextResponse.json({ error: "Authentication required" }, { status: 401 })
+    if (!accessToken) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Verify the user
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-    if (authError || !user) {
+    // Get user from token
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken)
+
+    if (error || !user) {
       return NextResponse.json({ error: "Invalid authentication" }, { status: 401 })
     }
 

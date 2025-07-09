@@ -76,6 +76,10 @@ export default function PostWithTrails({
   const [isSubmittingTrail, setIsSubmittingTrail] = useState(false)
   const [showReactions, setShowReactions] = useState(false)
   const [showTrailReactions, setShowTrailReactions] = useState<{[key: string]: boolean}>({})
+  const [trailContent, setTrailContent] = useState("")
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deletingItem, setDeletingItem] = useState<{id: string, type: 'post' | 'trail', trailOrder?: number} | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const reactionTypes = [
     { type: 'like', emoji: '❤️', label: 'Like' },

@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -33,6 +32,8 @@ import Image from "next/image"
 import { formatDistanceToNow } from "date-fns"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import EnhancedReactions from "./enhanced-reactions"
+import { useCustomToast } from "@/hooks/use-custom-toast"
 
 interface FeedPost {
   id: string
@@ -104,7 +105,6 @@ export default function Feed() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [hasMore, setHasMore] = useState(false)
 
-  // Handle post like functionality
   const handleLike = async (postId: string, currentLikeCount: number, isLiked: boolean) => {
     if (!user) {
       toast.error("Please login to like posts")
@@ -123,27 +123,39 @@ export default function Feed() {
 
       const data = await response.json()
 
-      // Update local state
-      const newLikedPosts = new Set(likedPosts)
-      if (data.liked) {
-        newLikedPosts.add(postId)
-        setPostLikeCounts(prev => ({
-          ...prev,
-          [postId]: currentLikeCount + 1
-        }))
-      } else {
-        newLikedPosts.delete(postId)
-        setPostLikeCounts(prev => ({
-          ...prev,
-          [postId]: Math.max(0, currentLikeCount - 1)
-        }))
-      }
-      setLikedPosts(newLikedPosts)
+      // Update the posts state
+      setPosts(prevPosts => 
+        prevPosts.map(post => 
+          post.id === postId 
+            ? { 
+                ...post, 
+                likesCount: data.liked ? currentLikeCount + 1 : Math.max(0, currentLikeCount - 1),
+                isLikedByUser: data.liked 
+              }
+            : post
+        )
+      )
 
+      toast.success(data.liked ? "Post liked!" : "Post unliked!")
     } catch (error) {
       console.error('Error toggling like:', error)
       toast.error("Failed to update like")
     }
+  }
+
+  const handleReactionChange = (postId: string, reactionType: string | null) => {
+    // Update the posts state when reaction changes
+    setPosts(prevPosts => 
+      prevPosts.map(post => 
+        post.id === postId 
+          ? { 
+              ...post, 
+              isLikedByUser: reactionType === 'like',
+              likesCount: reactionType ? post.likesCount + (post.isLikedByUser ? 0 : 1) : Math.max(0, post.likesCount - 1)
+            }
+          : post
+      )
+    )
   }
 
   useEffect(() => {
@@ -397,28 +409,26 @@ export default function Feed() {
                 animation: 'fadeInUp 0.6s ease-out forwards'
               }}
             >
-              <PostWithTrails 
-                post={{
-                  id: post.id,
-                  content: post.content,
-                  imageUrl: post.imageUrl,
-                  likesCount: post._count.likes,
-                  commentsCount: post._count.comments,
-                  createdAt: post.createdAt,
-                  author: {
-                    id: post.author.id,
-                    firstName: post.author.firstName,
-                    lastName: post.author.lastName,
-                    role: post.author.role,
-                    profileImageUrl: post.author.profileImageUrl
-                  },
-                  trails: post.trails || []
-                }}
-                onPostUpdate={fetchPosts}
-                onLike={handleLike}
-                isLiked={likedPosts.has(post.id)}
-                likeCount={postLikeCounts[post.id] || post._count.likes || 0}
-              />
+              <div key={post.id} className="space-y-4">
+                <PostWithTrails
+                  post={post}
+                  onPostUpdate={fetchPosts}
+                  onLike={handleLike}
+                  isLiked={post.isLikedByUser || false}
+                  likeCount={post.likesCount || 0}
+                />
+
+                {/* Enhanced Reactions Section */}
+                <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <EnhancedReactions
+                    postId={post.id}
+                    initialLikes={post.likesCount || 0}
+                    isLiked={post.isLikedByUser || false}
+                    size="md"
+                    onReactionChange={(reactionType) => handleReactionChange(post.id, reactionType)}
+                  />
+                </div>
+              </div>
             </div>
           ))
         )}

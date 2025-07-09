@@ -259,7 +259,7 @@ export async function GET(request: NextRequest) {
         userLikes = likes.map(like => like.postId)
       }
     }
-    
+
 
     const posts = await prisma.feedPost.findMany({
       where: whereClause,
