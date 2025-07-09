@@ -53,12 +53,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Images array is required' }, { status: 400 })
     }
 
-    // Delete existing gallery images for this institution
-    await prisma.institutionGallery.deleteMany({
-      where: { institutionId: user.id }
-    })
-
-    // Insert new gallery images
+    // Only insert new gallery images (don't delete existing ones)
     if (images.length > 0) {
       const galleryData = images.map((image: any) => ({
         institutionId: user.id,
