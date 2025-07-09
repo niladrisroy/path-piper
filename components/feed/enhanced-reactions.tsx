@@ -74,12 +74,22 @@ export default function EnhancedReactions({
       })
 
       if (!response.ok) {
-        throw new Error('Failed to add reaction')
+        const errorData = await response.json().catch(() => ({ error: 'Network error' }))
+        throw new Error(errorData.error || `HTTP ${response.status}`)
       }
 
-      const data = await response.json()
+      const data = await response.json().catch(() => ({ error: 'Invalid response format' }))
       
-      if (data.success) {
+      // Check if data exists and has expected properties
+      if (!data) {
+        throw new Error('No response data received')
+      }
+
+      if (data.error) {
+        throw new Error(data.error)
+      }
+
+      if (data.success !== false) {
         // Update local state
         if (currentReaction === reactionType) {
           // Removing reaction
@@ -97,11 +107,14 @@ export default function EnhancedReactions({
           toast.success(`Reacted with ${reactionLabel}!`)
         }
         
-        onReactionChange?.(data.reactionType)
+        onReactionChange?.(data.reactionType || null)
+      } else {
+        throw new Error('Reaction failed')
       }
     } catch (error) {
       console.error('Error adding reaction:', error)
-      toast.error("Failed to add reaction")
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add reaction'
+      toast.error(errorMessage)
     }
   }
 

@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@supabase/supabase-js'
@@ -23,7 +22,7 @@ export async function POST(
 
     // Get user from token
     const { data: { user }, error } = await supabase.auth.getUser(accessToken)
-    
+
     if (error || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -55,14 +54,14 @@ export async function POST(
 
       if (existingReaction.length > 0) {
         const reaction = existingReaction[0]
-        
+
         if (reaction.reaction_type === reactionType) {
           // Remove reaction if same type
           await prisma.$executeRaw`
             DELETE FROM post_reactions 
             WHERE user_id = ${user.id} AND post_id = ${postId}
           `
-          
+
           // Decrement engagement score
           await prisma.feedPost.update({
             where: { id: postId },
@@ -108,54 +107,47 @@ export async function POST(
         })
       }
     } catch (error) {
-      console.warn('post_reactions table not available, falling back to likes:', error)
-      
-      // Fallback to the existing like system for 'like' reactions
+      console.error('post_reactions table not available, falling back to likes:', error)
+
+      // Fallback to simple like functionality
       if (reactionType === 'like') {
-        const existingLike = await prisma.postLike.findUnique({
-          where: {
-            userId_postId: {
-              userId: user.id,
-              postId: postId
-            }
+        try {
+          const existingLike = await prisma.postLike.findFirst({
+            where: { userId: user.id, postId }
+          })
+
+          if (existingLike) {
+            await prisma.postLike.delete({
+              where: { id: existingLike.id }
+            })
+
+            await prisma.feedPost.update({
+              where: { id: postId },
+              data: { likesCount: { decrement: 1 } }
+            })
+
+            return NextResponse.json({ success: true, reactionType: null, liked: false })
+          } else {
+            await prisma.postLike.create({
+              data: { userId: user.id, postId }
+            })
+
+            await prisma.feedPost.update({
+              where: { id: postId },
+              data: { 
+                likesCount: { increment: 1 },
+                engagementScore: { increment: 1 }
+              }
+            })
+
+            return NextResponse.json({ success: true, reactionType: 'like', liked: true })
           }
-        })
-
-        if (existingLike) {
-          // Unlike the post
-          await prisma.postLike.delete({
-            where: { id: existingLike.id }
-          })
-
-          // Decrement likes count
-          await prisma.feedPost.update({
-            where: { id: postId },
-            data: { 
-              likesCount: { decrement: 1 },
-              engagementScore: { decrement: 1 }
-            }
-          })
-
-          return NextResponse.json({ success: true, liked: false })
-        } else {
-          // Like the post
-          await prisma.postLike.create({
-            data: {
-              userId: user.id,
-              postId: postId
-            }
-          })
-
-          // Increment likes count and update engagement score
-          await prisma.feedPost.update({
-            where: { id: postId },
-            data: { 
-              likesCount: { increment: 1 },
-              engagementScore: { increment: 1 }
-            }
-          })
-
-          return NextResponse.json({ success: true, liked: true })
+        } catch (fallbackError) {
+          console.error('Fallback like operation failed:', fallbackError)
+          return NextResponse.json({ 
+            success: false, 
+            error: 'Failed to process reaction' 
+          }, { status: 500 })
         }
       } else {
         return NextResponse.json({ 
