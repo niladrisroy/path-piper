@@ -89,13 +89,16 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
       {
         id: "",
         name: "",
-        position: "",
+        title: "",
         department: "",
+        image: "",
+        expertise: [],
+        email: "",
+        featured: false,
+        bio: "",
         qualifications: "",
         experience: "",
-        specialization: "",
-        profileImage: "",
-        bio: ""
+        specialization: ""
       }
     ],
 
@@ -352,13 +355,16 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
       faculty: [...prev.faculty, {
         id: "",
         name: "",
-        position: "",
+        title: "",
         department: "",
+        image: "",
+        expertise: [],
+        email: "",
+        featured: false,
+        bio: "",
         qualifications: "",
         experience: "",
-        specialization: "",
-        profileImage: "",
-        bio: ""
+        specialization: ""
       }]
     }))
   }
@@ -1296,56 +1302,158 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
               )}
             </div>
 
+            {/* Profile Image Upload */}
+            <div className="space-y-2">
+              <Label>Profile Image</Label>
+              <div
+                className="w-32 h-32 rounded-lg bg-slate-100 flex flex-col items-center justify-center cursor-pointer overflow-hidden border-2 border-dashed border-slate-300 hover:border-blue-400 transition-colors"
+                onClick={() => {
+                  const input = document.createElement('input')
+                  input.type = 'file'
+                  input.accept = 'image/*'
+                  input.onchange = async (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0]
+                    if (file) {
+                      try {
+                        // Create immediate preview URL
+                        const previewUrl = URL.createObjectURL(file)
+                        updateFaculty(index, 'image', previewUrl)
+
+                        // Upload to server
+                        const uploadData = new FormData()
+                        uploadData.append('file', file)
+
+                        const response = await fetch('/api/upload/institution-faculty', {
+                          method: 'POST',
+                          body: uploadData
+                        })
+
+                        if (response.ok) {
+                          const data = await response.json()
+                          // Clean up the preview URL
+                          URL.revokeObjectURL(previewUrl)
+                          
+                          // Update with server URL
+                          updateFaculty(index, 'image', data.url)
+                          
+                          toast({
+                            title: "Success",
+                            description: "Faculty image uploaded successfully!",
+                          })
+                        } else {
+                          console.error('Failed to upload faculty image')
+                          // Clean up the preview URL on error
+                          URL.revokeObjectURL(previewUrl)
+                          // Reset to empty
+                          updateFaculty(index, 'image', '')
+                          
+                          toast({
+                            title: "Error",
+                            description: "Failed to upload faculty image. Please try again.",
+                            variant: "destructive",
+                          })
+                        }
+                      } catch (error) {
+                        console.error('Error uploading faculty image:', error)
+                        toast({
+                          title: "Error",
+                          description: "Failed to upload faculty image. Please try again.",
+                          variant: "destructive",
+                        })
+                      }
+                    }
+                  }
+                  input.click()
+                }}
+              >
+                {member.image ? (
+                  <Image
+                    src={member.image}
+                    alt="Faculty preview"
+                    width={128}
+                    height={128}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <>
+                    <Camera className="h-8 w-8 text-slate-400 mb-2" />
+                    <span className="text-xs text-slate-500 text-center px-2">
+                      Upload Photo
+                    </span>
+                  </>
+                )}
+              </div>
+              <p className="text-xs text-slate-500">Recommended: Square image (300x300px)</p>
+            </div>
+
+            {/* Basic Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Full Name</Label>
+                <Label>Full Name <span className="text-red-500">*</span></Label>
                 <Input
                   value={member.name}
                   onChange={(e) => updateFaculty(index, 'name', e.target.value)}
-                  placeholder="e.g., Dr. Jane Smith"
+                  placeholder="e.g., Dr. Sarah Johnson"
+                  required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Position</Label>
+                <Label>Academic Title <span className="text-red-500">*</span></Label>
                 <Input
-                  value={member.position}
-                  onChange={(e) => updateFaculty(index, 'position', e.target.value)}
-                  placeholder="e.g., Professor, Assistant Professor"
+                  value={member.title}
+                  onChange={(e) => updateFaculty(index, 'title', e.target.value)}
+                  placeholder="e.g., Professor of Computer Science"
+                  required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Department</Label>
+                <Label>Department <span className="text-red-500">*</span></Label>
                 <Input
                   value={member.department}
                   onChange={(e) => updateFaculty(index, 'department', e.target.value)}
-                  placeholder="e.g., Computer Science"
+                  placeholder="e.g., Computer Science, School of Engineering"
+                  required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Experience (Years)</Label>
+                <Label>Email <span className="text-red-500">*</span></Label>
                 <Input
-                  value={member.experience}
-                  onChange={(e) => updateFaculty(index, 'experience', e.target.value)}
-                  placeholder="e.g., 10"
-                  type="number"
+                  type="email"
+                  value={member.email}
+                  onChange={(e) => updateFaculty(index, 'email', e.target.value)}
+                  placeholder="e.g., sjohnson@institution.edu"
+                  required
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Qualifications</Label>
-              <Input
-                value={member.qualifications}
-                onChange={(e) => updateFaculty(index, 'qualifications', e.target.value)}
-                placeholder="e.g., PhD in Computer Science, MIT"
-              />
+            {/* Professional Details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Academic Qualifications</Label>
+                <Input
+                  value={member.qualifications}
+                  onChange={(e) => updateFaculty(index, 'qualifications', e.target.value)}
+                  placeholder="e.g., PhD in Computer Science, MIT"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Years of Experience</Label>
+                <Input
+                  value={member.experience}
+                  onChange={(e) => updateFaculty(index, 'experience', e.target.value)}
+                  placeholder="e.g., 15 years"
+                />
+              </div>
             </div>
 
+            {/* Specialization and Expertise */}
             <div className="space-y-2">
-              <Label>Specialization</Label>
+              <Label>Specialization/Primary Area</Label>
               <Input
                 value={member.specialization}
                 onChange={(e) => updateFaculty(index, 'specialization', e.target.value)}
@@ -1354,13 +1462,41 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
             </div>
 
             <div className="space-y-2">
-              <Label>Bio</Label>
+              <Label>Areas of Expertise (comma-separated)</Label>
+              <Input
+                value={Array.isArray(member.expertise) ? member.expertise.join(', ') : member.expertise || ''}
+                onChange={(e) => {
+                  const expertiseArray = e.target.value.split(',').map(item => item.trim()).filter(item => item)
+                  updateFaculty(index, 'expertise', expertiseArray)
+                }}
+                placeholder="e.g., Artificial Intelligence, Machine Learning, Computer Vision"
+              />
+              <p className="text-xs text-slate-500">Enter multiple areas separated by commas</p>
+            </div>
+
+            {/* Biography */}
+            <div className="space-y-2">
+              <Label>Biography</Label>
               <Textarea
                 value={member.bio}
                 onChange={(e) => updateFaculty(index, 'bio', e.target.value)}
-                placeholder="Brief biography and achievements"
-                className="min-h-[80px]"
+                placeholder="Brief biography, achievements, research interests, and background"
+                className="min-h-[100px]"
               />
+            </div>
+
+            {/* Featured Toggle */}
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id={`featured-${index}`}
+                checked={member.featured || false}
+                onChange={(e) => updateFaculty(index, 'featured', e.target.checked)}
+                className="rounded border-gray-300"
+              />
+              <Label htmlFor={`featured-${index}`} className="text-sm font-medium">
+                Feature this faculty member (display prominently)
+              </Label>
             </div>
           </div>
         ))}
