@@ -58,7 +58,17 @@ export async function POST(
         data: { likesCount: { decrement: 1 } }
       })
 
-      return NextResponse.json({ success: true, liked: false })
+      // Get updated like count
+      const updatedPost = await prisma.feedPost.findUnique({
+        where: { id: postId },
+        select: { likesCount: true }
+      })
+
+      return NextResponse.json({ 
+        success: true, 
+        liked: false, 
+        likeCount: updatedPost?.likesCount || 0 
+      })
     } else {
       // Like the post
       await prisma.postLike.create({
@@ -77,7 +87,17 @@ export async function POST(
         }
       })
 
-      return NextResponse.json({ success: true, liked: true })
+      // Get updated like count  
+      const updatedPost = await prisma.feedPost.findUnique({
+        where: { id: postId },
+        select: { likesCount: true }
+      })
+
+      return NextResponse.json({ 
+        success: true, 
+        liked: true, 
+        likeCount: updatedPost?.likesCount || 0 
+      })
     }
   } catch (error) {
     console.error('Error handling like:', error)

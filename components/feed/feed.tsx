@@ -106,16 +106,19 @@ export default function Feed() {
   const [hasMore, setHasMore] = useState(false)
 
   const handleLike = async (postId: string) => {
+    if (!user) {
+      toast.error("Please login to like posts")
+      return
+    }
+
     try {
-      const response = await fetch(`/api/feed/posts/${postId}/react`, {
+      // Use the dedicated like endpoint for consistent behavior
+      const response = await fetch(`/api/feed/posts/${postId}/like`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        credentials: 'include',
-        body: JSON.stringify({
-          reactionType: 'like'
-        })
+        credentials: 'include'
       })
 
       if (!response.ok) {
@@ -126,28 +129,37 @@ export default function Feed() {
       const data = await response.json()
 
       if (!data.success) {
-        throw new Error(data.error || 'Failed to process like reaction')
+        throw new Error('Failed to update like')
       }
 
-      // Update the local state based on the response
+      // Get current post data
+      const currentPost = posts.find(p => p.id === postId)
+      const currentLikeCount = currentPost?.likesCount || 0
+      const isCurrentlyLiked = likedPosts.has(postId)
+
+      // Calculate new like count and status
+      const newIsLiked = data.liked
+      const newLikeCount = newIsLiked ? currentLikeCount + 1 : Math.max(0, currentLikeCount - 1)
+
+      // Update posts state
       setPosts(prevPosts => 
         prevPosts.map(post => 
           post.id === postId 
             ? {
                 ...post,
-                isLikedByUser: data.liked || false,
-                likesCount: data.likeCount || post.likesCount || 0,
+                isLikedByUser: newIsLiked,
+                likesCount: newLikeCount,
                 _count: {
                   ...post._count,
-                  likes: data.likeCount || post._count?.likes || 0
+                  likes: newLikeCount
                 }
               }
             : post
         )
       )
 
-      // Update local state tracking
-      if (data.liked) {
+      // Update local tracking state
+      if (newIsLiked) {
         setLikedPosts(prev => new Set([...prev, postId]))
       } else {
         setLikedPosts(prev => {
@@ -157,9 +169,10 @@ export default function Feed() {
         })
       }
 
+      // Update like counts tracking
       setPostLikeCounts(prev => ({
         ...prev,
-        [postId]: data.likeCount || 0
+        [postId]: newLikeCount
       }))
 
     } catch (error) {

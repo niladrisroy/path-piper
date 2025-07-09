@@ -57,7 +57,7 @@ interface Post {
 interface PostWithTrailsProps {
   post: Post
   onPostUpdate: () => void
-  onLike: (postId: string, currentLikeCount: number, isLiked: boolean) => void
+  onLike: (postId: string) => void
   isLiked: boolean
   likeCount: number
 }
@@ -311,7 +311,7 @@ export default function PostWithTrails({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => onLike(post.id, likeCount, isLiked)}
+                onClick={() => onLike(post.id)}
                 className={`transition-all duration-200 ${
                   isLiked 
                     ? 'text-red-500 hover:text-red-600' 
