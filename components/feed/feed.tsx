@@ -1,7 +1,4 @@
-The code is modified to add liking functionality to the posts in the feed, including updating the UI and integrating with the backend API.
-```
 
-```replit_final_file
 "use client"
 
 import { useState, useEffect } from "react"
@@ -105,6 +102,7 @@ export default function Feed() {
   const [postLikeCounts, setPostLikeCounts] = useState<Record<string, number>>({})
   const [deletePostId, setDeletePostId] = useState<string | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
 
   // Handle post like functionality
   const handleLike = async (postId: string, currentLikeCount: number, isLiked: boolean) => {
@@ -257,8 +255,6 @@ export default function Feed() {
       setLoading(false)
     }
   }
-
-
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
