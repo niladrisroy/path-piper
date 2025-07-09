@@ -230,6 +230,7 @@ model InstitutionProfile {
   events       InstitutionEvents[]
   gallery      InstitutionGallery[]
   facilities   InstitutionFacility[]
+  faculty      InstitutionFaculty[]
 
   @@map("institution_profiles")
   @@schema("public")
@@ -260,6 +261,28 @@ model InstitutionFacility {
   institution    InstitutionProfile  @relation(fields: [institutionId], references: [id], onDelete: Cascade)
 
   @@map("institution_facilities")
+  @@schema("public")
+}
+
+model InstitutionFaculty {
+  id             String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  institutionId  String              @map("institution_id") @db.Uuid
+  name           String
+  title          String
+  department     String
+  image          String?
+  expertise      String[]            @default([])
+  email          String?
+  bio            String?
+  qualifications String?
+  experience     String?
+  specialization String?
+  featured       Boolean             @default(false)
+  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+  institution    InstitutionProfile  @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  @@map("institution_faculty")
   @@schema("public")
 }
 
