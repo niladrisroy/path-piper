@@ -63,9 +63,16 @@ export async function POST(
 
       liked = false
     } else {
-      // Like the trail
-      await prisma.postLike.create({
-        data: {
+      // Use upsert to handle potential race conditions
+      await prisma.postLike.upsert({
+        where: {
+          userId_postId: {
+            userId: user.id,
+            postId: trailId
+          }
+        },
+        update: {},
+        create: {
           userId: user.id,
           postId: trailId
         }
