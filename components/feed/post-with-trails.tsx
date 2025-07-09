@@ -311,19 +311,6 @@ export default function PostWithTrails({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => onLike(post.id, likeCount, isLiked)}
-                className={`transition-all duration-200 ${
-                  isLiked 
-                    ? 'text-red-500 hover:text-red-600' 
-                    : 'text-gray-500 hover:text-red-500'
-                }`}
-              >
-                <Heart className={`h-5 w-5 mr-2 ${isLiked ? 'fill-current' : ''}`} />
-                {likeCount || 0}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
                 onClick={() => setShowAddTrail(!showAddTrail)}
                 className="text-gray-500 hover:text-pathpiper-teal transition-all duration-200"
               >
