@@ -46,7 +46,7 @@ export default function FeedCard({ item, isActive }: FeedCardProps) {
 
       const data = await response.json()
       setLiked(data.reactionType === 'like')
-      
+
       if (data.reactionType === 'like') {
         setLikeCount(prev => prev + 1)
       } else {

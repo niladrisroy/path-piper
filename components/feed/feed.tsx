@@ -105,9 +105,9 @@ export default function Feed() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [hasMore, setHasMore] = useState(false)
 
-  const handleLike = async (postId: string) => {
+const handleLike = async (postId: string) => {
     if (!user) {
-      toast.error("Please login to like posts")
+      toast.error('Please login to like posts')
       return
     }
 
@@ -132,16 +132,11 @@ export default function Feed() {
         throw new Error('Failed to update like')
       }
 
-      // Get current post data
-      const currentPost = posts.find(p => p.id === postId)
-      const currentLikeCount = currentPost?.likesCount || 0
-      const isCurrentlyLiked = likedPosts.has(postId)
-
-      // Calculate new like count and status
+      // Use the exact like count from the database response
+      const newLikeCount = data.likeCount
       const newIsLiked = data.liked
-      const newLikeCount = newIsLiked ? currentLikeCount + 1 : Math.max(0, currentLikeCount - 1)
 
-      // Update posts state
+      // Update posts state with database values
       setPosts(prevPosts => 
         prevPosts.map(post => 
           post.id === postId 
@@ -169,7 +164,7 @@ export default function Feed() {
         })
       }
 
-      // Update like counts tracking
+      // Update like counts tracking with database value
       setPostLikeCounts(prev => ({
         ...prev,
         [postId]: newLikeCount
