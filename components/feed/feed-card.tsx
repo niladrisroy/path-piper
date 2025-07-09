@@ -29,9 +29,15 @@ export default function FeedCard({ item, isActive }: FeedCardProps) {
 
   const handleLike = async () => {
     try {
-      const response = await fetch(`/api/feed/posts/${item.id}/like`, {
+      const response = await fetch(`/api/feed/posts/${item.id}/react`, {
         method: 'POST',
-        credentials: 'include'
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          reactionType: 'like'
+        })
       })
 
       if (!response.ok) {
@@ -39,9 +45,9 @@ export default function FeedCard({ item, isActive }: FeedCardProps) {
       }
 
       const data = await response.json()
-      setLiked(data.liked)
+      setLiked(data.reactionType === 'like')
       
-      if (data.liked) {
+      if (data.reactionType === 'like') {
         setLikeCount(prev => prev + 1)
       } else {
         setLikeCount(prev => Math.max(0, prev - 1))

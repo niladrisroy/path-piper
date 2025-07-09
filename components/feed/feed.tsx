@@ -105,16 +105,18 @@ export default function Feed() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [hasMore, setHasMore] = useState(false)
 
-  const handleLike = async (postId: string, currentLikeCount: number, isLiked: boolean) => {
-    if (!user) {
-      toast.error("Please login to like posts")
-      return
-    }
-
+  const handleLike = async (postId: string) => {
     try {
-      const response = await fetch(`/api/feed/posts/${postId}/like`, {
+      // Use the enhanced reactions endpoint with 'like' reaction type
+      const response = await fetch(`/api/feed/posts/${postId}/react`, {
         method: 'POST',
-        credentials: 'include'
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          reactionType: 'like'
+        })
       })
 
       if (!response.ok) {
@@ -123,23 +125,27 @@ export default function Feed() {
 
       const data = await response.json()
 
-      // Update the posts state
+      // Update the local state
       setPosts(prevPosts => 
         prevPosts.map(post => 
           post.id === postId 
-            ? { 
-                ...post, 
-                likesCount: data.liked ? currentLikeCount + 1 : Math.max(0, currentLikeCount - 1),
-                isLikedByUser: data.liked 
+            ? {
+                ...post,
+                isLikedByUser: data.reactionType === 'like',
+                _count: {
+                  ...post._count,
+                  likes: data.reactionType === 'like'
+                    ? post._count.likes + 1 
+                    : Math.max(0, post._count.likes - 1)
+                }
               }
             : post
         )
       )
 
-      toast.success(data.liked ? "Post liked!" : "Post unliked!")
     } catch (error) {
       console.error('Error toggling like:', error)
-      toast.error("Failed to update like")
+      toast.error('Failed to update like')
     }
   }
 
