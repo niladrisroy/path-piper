@@ -541,34 +541,109 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
   }
 
   // Gallery handlers
-  const addGalleryItem = () => {
-    setFormData(prev => ({
-      ...prev,
-      gallery: [...prev.gallery, {
-        id: "",
-        imageUrl: "",
-        caption: ""
-      }]
-    }))
-  }
+  const [existingGallery, setExistingGallery] = useState<any[]>([])
+  const [newGalleryItems, setNewGalleryItems] = useState<any[]>([])
+  const [isLoadingGallery, setIsLoadingGallery] = useState(false)
 
-  const removeGalleryItem = (index: number) => {
-    if (formData.gallery.length > 1) {
-      const newGallery = formData.gallery.filter((_, i) => i !== index)
-      setFormData(prev => ({
-        ...prev,
-        gallery: newGallery
-      }))
+  useEffect(() => {
+    if (institutionData) {
+      // Fetch existing gallery
+      fetchGallery()
+    }
+  }, [institutionData.id])
+
+  const fetchGallery = async () => {
+    try {
+      setIsLoadingGallery(true)
+      const response = await fetch(`/api/institution/gallery?institutionId=${institutionData.id}`)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.images && data.images.length > 0) {
+          setExistingGallery(data.images)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching gallery:', error)
+    } finally {
+      setIsLoadingGallery(false)
     }
   }
 
-  const updateGalleryItem = (index: number, field: string, value: string) => {
-    const newGallery = [...formData.gallery]
-    newGallery[index] = { ...newGallery[index], [field]: value }
-    setFormData(prev => ({
-      ...prev,
-      gallery: newGallery
-    }))
+  const addGalleryItem = () => {
+    const newItem = {
+      tempId: Date.now(),
+      imageUrl: '',
+      caption: ''
+    }
+    setNewGalleryItems(prev => [...prev, newItem])
+  }
+
+  const removeNewGalleryItem = (tempId: number) => {
+    setNewGalleryItems(prev => prev.filter(item => item.tempId !== tempId))
+  }
+
+  const updateNewGalleryItem = (tempId: number, field: string, value: string) => {
+    setNewGalleryItems(prev => prev.map(item => 
+      item.tempId === tempId 
+        ? { ...item, [field]: value }
+        : item
+    ))
+  }
+
+  const handleGalleryImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, tempId: number) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      try {
+        // Create immediate preview URL
+        const previewUrl = URL.createObjectURL(file)
+        updateNewGalleryItem(tempId, 'imageUrl', previewUrl)
+
+        // Upload to server
+        const uploadData = new FormData()
+        uploadData.append('file', file)
+
+        const response = await fetch('/api/upload/institution-gallery', {
+          method: 'POST',
+          body: uploadData
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          // Clean up the preview URL
+          URL.revokeObjectURL(previewUrl)
+          
+          // Update with server URL
+          updateNewGalleryItem(tempId, 'imageUrl', data.url)
+          
+          toast({
+            title: "Success",
+            description: "Image uploaded successfully!",
+          })
+        } else {
+          console.error('Failed to upload gallery image')
+          // Clean up the preview URL on error
+          URL.revokeObjectURL(previewUrl)
+          // Reset to empty
+          updateNewGalleryItem(tempId, 'imageUrl', '')
+          
+          toast({
+            title: "Error",
+            description: "Failed to upload gallery image. Please try again.",
+            variant: "destructive",
+          })
+        }
+      } catch (error) {
+        console.error('Error uploading gallery image:', error)
+        toast({
+          title: "Error",
+          description: "Failed to upload gallery image. Please try again.",
+          variant: "destructive",
+        })
+      }
+    }
+
+    // Clear the input value to allow re-uploading the same file
+    e.target.value = ''
   }
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1946,68 +2021,205 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
         <CardTitle>Gallery</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {formData.gallery.map((item, index) => (
-          <div key={index} className="p-4 border rounded-lg space-y-4">
-            <div className="flex justify-between items-center">
-              <h4 className="font-medium">Gallery Item {index + 1}</h4>
-              {formData.gallery.length > 1 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => removeGalleryItem(index)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label>Image URL</Label>
-              <Input
-                value={item.imageUrl}
-                onChange={(e) => updateGalleryItem(index, 'imageUrl', e.target.value)}
-                placeholder="https://..."
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Caption</Label>
-              <Input
-                value={item.caption}
-                onChange={(e) => updateGalleryItem(index, 'caption', e.target.value)}
-                placeholder="Describe this image"
-              />
-            </div>
+        {isLoadingGallery ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="text-gray-500 mt-4">Loading gallery...</p>
           </div>
-        ))}
+        ) : (
+          <>
+            {/* Existing Gallery Images */}
+            {existingGallery.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">Existing Gallery</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {existingGallery.map((item) => (
+                    <div key={item.id} className="group relative rounded-lg overflow-hidden border border-gray-200">
+                      <img 
+                        src={item.imageUrl} 
+                        alt={item.caption || "Gallery image"} 
+                        className="w-full h-48 object-cover" 
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200">
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          onClick={async () => {
+                            try {
+                              const response = await fetch(`/api/institution/gallery?imageId=${item.id}`, {
+                                method: 'DELETE'
+                              })
+                              if (response.ok) {
+                                toast({
+                                  title: "Success",
+                                  description: "Image deleted successfully!",
+                                })
+                                fetchGallery() // Refresh gallery
+                              }
+                            } catch (error) {
+                              toast({
+                                title: "Error",
+                                description: "Failed to delete image.",
+                                variant: "destructive",
+                              })
+                            }
+                          }}
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="p-2 bg-white">
+                        <p className="text-sm text-gray-700 truncate">{item.caption || "No caption"}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-        <Button
-          type="button"
-          variant="outline"
-          onClick={addGalleryItem}
-          className="w-full"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Gallery Item
-        </Button>
+            {/* New Gallery Items */}
+            {newGalleryItems.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">New Gallery Items</h3>
+                {newGalleryItems.map((item, index) => (
+                  <div key={item.tempId} className="p-4 border rounded-lg space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-medium">New Gallery Item {index + 1}</h4>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeNewGalleryItem(item.tempId)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
 
-        {/* Save Button for Gallery Section */}
-        <div className="flex justify-end pt-4 border-t">
-          <Button
-            onClick={() => {
-              toast({
-                title: "Info",
-                description: "Gallery section saved! (This is a placeholder - implement gallery save API)",
-              })
-            }}
-            disabled={isLoading}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            Save Gallery Section
-          </Button>
-        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Gallery Image</Label>
+                        <div
+                          className="w-full h-48 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors cursor-pointer"
+                          onClick={() => {
+                            const input = document.createElement('input')
+                            input.type = 'file'
+                            input.accept = 'image/*'
+                            input.onchange = (e) => handleGalleryImageUpload(e as any, item.tempId)
+                            input.click()
+                          }}
+                        >
+                          {item.imageUrl ? (
+                            <img
+                              src={item.imageUrl}
+                              alt="Gallery preview"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="text-center">
+                              <Camera className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                              <p className="text-sm text-gray-500">Click to upload image</p>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500">Recommended: JPG, PNG up to 5MB</p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Caption</Label>
+                        <Textarea
+                          value={item.caption}
+                          onChange={(e) => updateNewGalleryItem(item.tempId, 'caption', e.target.value)}
+                          placeholder="Describe this image"
+                          className="min-h-[120px]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add New Gallery Item Button */}
+            <div className="pt-4 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addGalleryItem}
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Gallery Item
+              </Button>
+            </div>
+
+            {/* Save New Gallery Items Button */}
+            {newGalleryItems.length > 0 && (
+              <div className="flex justify-end pt-4 border-t">
+                <Button
+                  onClick={async () => {
+                    setIsLoading(true)
+                    try {
+                      const validGalleryItems = newGalleryItems.filter(item =>
+                        item.imageUrl.trim() !== '' &&
+                        item.caption.trim() !== ''
+                      )
+
+                      if (validGalleryItems.length === 0) {
+                        toast({
+                          title: "Info",
+                          description: "Please upload images and add captions before saving.",
+                        })
+                        setIsLoading(false)
+                        return
+                      }
+
+                      const response = await fetch('/api/institution/gallery', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                          images: validGalleryItems.map(item => ({
+                            url: item.imageUrl,
+                            caption: item.caption
+                          }))
+                        }),
+                      })
+
+                      if (!response.ok) {
+                        throw new Error('Failed to save gallery items')
+                      }
+
+                      toast({
+                        title: "Success",
+                        description: "Gallery items saved successfully!",
+                      })
+
+                      // Clear new items and refresh existing
+                      setNewGalleryItems([])
+                      await fetchGallery()
+                    } catch (error) {
+                      console.error('Error saving gallery items:', error)
+                      toast({
+                        title: "Error",
+                        description: "Failed to save gallery items. Please try again.",
+                        variant: "destructive",
+                      })
+                    } finally {
+                      setIsLoading(false)
+                    }
+                  }}
+                  disabled={isLoading || newGalleryItems.some(item => !item.imageUrl.trim() || !item.caption.trim())}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {isLoading ? 'Saving...' : 'Save Gallery Items'}
+                </Button>
+              </div>
+            )}
+          </>
+        )}
       </CardContent>
     </Card>
   )
