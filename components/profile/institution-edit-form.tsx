@@ -2544,12 +2544,82 @@ export default function InstitutionEditForm({ institutionData }: InstitutionEdit
               </div>
 
               <div className="space-y-2">
-                <Label>Event Image URL (Optional)</Label>
-                <Input
-                  value={event.imageUrl}
-                  onChange={(e) => updateEvent(index, 'imageUrl', e.target.value)}
-                  placeholder="https://..."
-                />
+                <Label>Event Image</Label>
+                <div
+                  className="w-full h-32 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors cursor-pointer"
+                  onClick={() => {
+                    const input = document.createElement('input')
+                    input.type = 'file'
+                    input.accept = 'image/*'
+                    input.onchange = async (e) => {
+                      const file = (e.target as HTMLInputElement).files?.[0]
+                      if (file) {
+                        try {
+                          // Create immediate preview URL
+                          const previewUrl = URL.createObjectURL(file)
+                          updateEvent(index, 'imageUrl', previewUrl)
+
+                          // Upload to server
+                          const uploadData = new FormData()
+                          uploadData.append('file', file)
+
+                          const response = await fetch('/api/upload/institution-event', {
+                            method: 'POST',
+                            body: uploadData
+                          })
+
+                          if (response.ok) {
+                            const data = await response.json()
+                            // Clean up the preview URL
+                            URL.revokeObjectURL(previewUrl)
+                            
+                            // Update with server URL
+                            updateEvent(index, 'imageUrl', data.url)
+                            
+                            toast({
+                              title: "Success",
+                              description: "Event image uploaded successfully!",
+                            })
+                          } else {
+                            console.error('Failed to upload event image')
+                            // Clean up the preview URL on error
+                            URL.revokeObjectURL(previewUrl)
+                            // Reset to empty
+                            updateEvent(index, 'imageUrl', '')
+                            
+                            toast({
+                              title: "Error",
+                              description: "Failed to upload event image. Please try again.",
+                              variant: "destructive",
+                            })
+                          }
+                        } catch (error) {
+                          console.error('Error uploading event image:', error)
+                          toast({
+                            title: "Error",
+                            description: "Failed to upload event image. Please try again.",
+                            variant: "destructive",
+                          })
+                        }
+                      }
+                    }
+                    input.click()
+                  }}
+                >
+                  {event.imageUrl ? (
+                    <img
+                      src={event.imageUrl}
+                      alt="Event preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="text-center">
+                      <Camera className="h-6 w-6 text-gray-400 mx-auto mb-1" />
+                      <p className="text-xs text-gray-500">Click to upload event image</p>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500">Recommended: JPG, PNG up to 5MB</p>
               </div>
             </div>
           ))
