@@ -14,6 +14,16 @@ import { getPlaceholdersForType } from "@/data/institution-placeholders"
 import { MultiSelect } from "@/components/ui/multi-select"
 import { getSubjectSuggestions } from "@/data/subject-suggestions"
 
+interface InstitutionSearchResult {
+  id: string
+  name: string
+  type: string
+  typeId: string
+  categoryId: string
+  categoryName: string
+  typeName: string
+}
+
 interface EducationEntry {
   id: number | string
   institutionName: string
@@ -73,6 +83,9 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
     description: ""
   })
   const [institutionCategories, setInstitutionCategories] = useState<InstitutionCategory[]>([])
+  const [institutionSearchResults, setInstitutionSearchResults] = useState<InstitutionSearchResult[]>([])
+  const [showInstitutionDropdown, setShowInstitutionDropdown] = useState(false)
+  const [institutionSearchLoading, setInstitutionSearchLoading] = useState(false)
 
   // Fetch existing education history from database
   useEffect(() => {
@@ -124,6 +137,57 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
   useEffect(() => {
     onChange('education', educationHistory)
   }, [educationHistory, onChange])
+
+  // Search institutions function
+  const searchInstitutions = async (query: string) => {
+    if (query.length < 2) {
+      setInstitutionSearchResults([])
+      setShowInstitutionDropdown(false)
+      return
+    }
+
+    try {
+      setInstitutionSearchLoading(true)
+      const response = await fetch(`/api/institutions/search?q=${encodeURIComponent(query)}`)
+      
+      if (response.ok) {
+        const data = await response.json()
+        setInstitutionSearchResults(data.institutions || [])
+        setShowInstitutionDropdown(true)
+      } else {
+        console.error('Failed to search institutions')
+        setInstitutionSearchResults([])
+        setShowInstitutionDropdown(false)
+      }
+    } catch (error) {
+      console.error('Error searching institutions:', error)
+      setInstitutionSearchResults([])
+      setShowInstitutionDropdown(false)
+    } finally {
+      setInstitutionSearchLoading(false)
+    }
+  }
+
+  // Handle institution selection from search results
+  const handleInstitutionSelect = (institution: InstitutionSearchResult) => {
+    const updatedEntry = {
+      institutionName: institution.name,
+      institutionId: institution.id,
+      institutionCategory: institution.categoryId,
+      institutionType: institution.typeId,
+      institutionTypeName: institution.typeName,
+      institutionVerified: true
+    }
+
+    if (editingEntry) {
+      setEditingEntry(prev => prev ? { ...prev, ...updatedEntry } : null)
+    } else {
+      setNewEntry(prev => ({ ...prev, ...updatedEntry }))
+    }
+
+    setShowInstitutionDropdown(false)
+    setInstitutionSearchResults([])
+  }
 
   const handleInputChange = (field: keyof EducationEntry, value: string | number | boolean | string[]) => {
     if (editingEntry) {
@@ -533,16 +597,60 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
               </div>
 
               {/* Step 2: Institution Name */}
-              <div>
+              <div className="relative">
                 <Label className="text-gray-700 dark:text-gray-300">
                   Institution Name <span className="text-red-500">*</span>
                 </Label>
-                <Input
-                  value={currentEntry.institutionName}
-                  onChange={(e) => handleInputChange('institutionName', e.target.value)}
-                  placeholder="e.g., Delhi Public School, IIT Delhi, BYJU'S"
-                  className="mt-1"
-                />
+                <div className="relative">
+                  <Input
+                    value={currentEntry.institutionName}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      handleInputChange('institutionName', value)
+                      searchInstitutions(value)
+                    }}
+                    onFocus={() => {
+                      if (currentEntry.institutionName.length >= 2) {
+                        searchInstitutions(currentEntry.institutionName)
+                      }
+                    }}
+                    onBlur={() => {
+                      // Delay hiding dropdown to allow for clicks
+                      setTimeout(() => setShowInstitutionDropdown(false), 200)
+                    }}
+                    placeholder="e.g., Delhi Public School, IIT Delhi, BYJU'S"
+                    className="mt-1"
+                  />
+                  {institutionSearchLoading && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                    </div>
+                  )}
+                </div>
+                
+                {/* Institution Search Dropdown */}
+                {showInstitutionDropdown && institutionSearchResults.length > 0 && (
+                  <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    {institutionSearchResults.map((institution) => (
+                      <div
+                        key={institution.id}
+                        className="p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-600 last:border-b-0"
+                        onClick={() => handleInstitutionSelect(institution)}
+                      >
+                        <div className="font-medium text-gray-900 dark:text-white">
+                          {institution.name}
+                        </div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          {institution.typeName} • {institution.categoryName}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                <p className="text-xs text-gray-500 mt-1">
+                  Start typing to search for your institution or enter a custom name
+                </p>
               </div>
 
               {/* Step 3: Subjects/Courses */}
