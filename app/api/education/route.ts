@@ -77,8 +77,12 @@ export async function GET(request: NextRequest) {
         institutionVerified: entry.institutionVerified,
         institution_verified_raw: entry.institutionVerified,
         institution_verified_type: typeof entry.institutionVerified,
+        all_fields: Object.keys(entry),
         raw_entry: entry
       })
+      
+      // Ensure institutionVerified is properly handled
+      const institutionVerified = entry.institutionVerified !== undefined ? entry.institutionVerified : null;
       
       return {
         id: entry.id,
@@ -87,7 +91,7 @@ export async function GET(request: NextRequest) {
         institutionCategory: entry.institutionType?.category?.slug || '',
         institutionType: entry.institutionTypeId ? entry.institutionTypeId.toString() : '',
         institutionTypeName: entry.institutionType?.name || '', // Add the type name
-        institutionVerified: entry.institutionVerified, // This should now work correctly
+        institutionVerified: institutionVerified, // Explicitly handle the field
         degree: entry.degreeProgram || '',
         fieldOfStudy: entry.fieldOfStudy || '',
         subjects: Array.isArray(entry.subjects) ? entry.subjects : [],
@@ -98,6 +102,8 @@ export async function GET(request: NextRequest) {
         description: entry.description || ''
       }
     })
+
+    console.log('🔍 Final transformed education data:', transformedEducation)
 
     return NextResponse.json({ education: transformedEducation })
   } catch (error) {
