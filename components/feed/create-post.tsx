@@ -469,232 +469,224 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
           <div className="flex-1">
 
 
-            <Tabs defaultValue="compose" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="compose">Compose</TabsTrigger>
-                <TabsTrigger value="settings">Settings</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="compose" className="space-y-4">
-
-
-                {/* Post Type Selection */}
-                <div className="flex gap-2 flex-wrap">
-                  {POST_TYPES.slice(0, 4).map((type) => {
-                    const Icon = type.icon
-                    return (
-                      <Button
-                        key={type.value}
-                        variant={postType === type.value ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setPostType(type.value)}
-                        className={`${postType === type.value ? type.color + ' text-white' : ''}`}
-                      >
-                        <Icon className="h-4 w-4 mr-1" />
-                        {type.label}
-                      </Button>
-                    )
-                  })}
-                </div>
-
-                {/* Main Content Area */}
-                <div className="relative">
-                  <Textarea
-                    ref={textareaRef}
-                    value={postText}
-                    onChange={handleTextChange}
-                    placeholder={
-                      postType === "ACHIEVEMENT" ? "Share your achievement... (Use @ to mention connections, # for hashtags)" :
-                      postType === "PROJECT" ? "Tell us about your project... (Use @ to mention connections, # for hashtags)" :
-                      postType === "QUESTION" ? "Ask your question... (Use @ to mention connections, # for hashtags)" :
-                      "What's on your mind? (Use @ to mention connections, # for hashtags)"
-                    }
-                    className={`min-h-[120px] resize-none border ${
-                      isOverLimit ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-pathpiper-teal'
-                    } focus:ring-1 ${
-                      isOverLimit ? 'focus:ring-red-500' : 'focus:ring-pathpiper-teal'
-                    }`}
-                    disabled={isPosting}
-                  />
-
-                  {/* Mentions Dropdown */}
-                  {showMentions && filteredConnections.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto">
-                      {filteredConnections.slice(0, 5).map((connection) => (
-                        <div
-                          key={connection.id}
-                          onClick={() => insertMention(connection)}
-                          className="flex items-center gap-2 p-2 hover:bg-gray-50 cursor-pointer"
-                        >
-                          <div className="h-8 w-8 rounded-full overflow-hidden">
-                            <Image
-                              src={connection.user.profileImageUrl || "/images/student-profile.png"}
-                              alt={`${connection.user.firstName} ${connection.user.lastName}`}
-                              width={32}
-                              height={32}
-                              className="object-cover"
-                            />
-                          </div>
-                          <div>
-                            <div className="text-sm font-medium">
-                              {connection.user.firstName} {connection.user.lastName}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {connection.user.role}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className={`absolute bottom-2 right-2 text-xs font-medium ${
-                    isOverLimit ? 'text-red-500 bg-red-50 px-2 py-1 rounded' : 
-                    characterCount > 250 ? 'text-orange-500 bg-orange-50 px-2 py-1 rounded' : 
-                    'text-gray-400'
-                  }`}>
-                    {characterCount}/300
-                    {isOverLimit && <span className="ml-1">⚠️</span>}
-                  </div>
-                </div>
-
-                {/* Post Type Specific Fields */}
-                {postType === "ACHIEVEMENT" && (
-                  <Select value={achievementType} onValueChange={setAchievementType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select achievement type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ACHIEVEMENT_TYPES.map((type) => (
-                        <SelectItem key={type} value={type}>{type}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-
-                {postType === "PROJECT" && (
-                  <Select value={projectCategory} onValueChange={setProjectCategory}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select project category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PROJECT_CATEGORIES.map((category) => (
-                        <SelectItem key={category} value={category}>{category}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-
-                {/* Tags */}
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <Input
-                      value={newTag}
-                      onChange={(e) => setNewTag(e.target.value)}
-                      placeholder="Add a tag..."
-                      className="flex-1"
-                      onKeyPress={(e) => e.key === 'Enter' && addTag()}
-                    />
-                    <Button onClick={addTag} size="sm" variant="outline">
-                      <Hash className="h-4 w-4" />
+            <div className="space-y-4">
+              {/* Post Type Selection */}
+              <div className="flex gap-2 flex-wrap items-center">
+                {POST_TYPES.slice(0, 4).map((type) => {
+                  const Icon = type.icon
+                  return (
+                    <Button
+                      key={type.value}
+                      variant={postType === type.value ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setPostType(type.value)}
+                      className={`${postType === type.value ? type.color + ' text-white' : ''}`}
+                    >
+                      <Icon className="h-4 w-4 mr-1" />
+                      {type.label}
                     </Button>
-                  </div>
-                  {tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {tags.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100">
-                          <Hash className="h-3 w-3 mr-1" />
-                          {tag}
-                          <X className="h-3 w-3 ml-1 cursor-pointer hover:text-red-600" onClick={() => removeTag(tag)} />
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Over limit warning */}
-                {isOverLimit && (
-                  <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg">
-                    <p className="text-sm text-amber-700 font-medium mb-1 flex items-center gap-2">
-                      <span className="text-amber-500">⚠️</span>
-                      Content exceeds 300 characters!
-                    </p>
-                    <p className="text-xs text-amber-600">
-                      Please shorten your content to 300 characters or less.
-                    </p>
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="settings" className="space-y-4">
-                {/* Subjects */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Related Subjects</label>
-                  <div className="flex flex-wrap gap-1">
-                    {COMMON_SUBJECTS.map((subject) => (
-                      <Button
-                        key={subject}
-                        variant={subjects.includes(subject) ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => subjects.includes(subject) ? removeSubject(subject) : addSubject(subject)}
-                        className="text-xs"
-                      >
-                        {subject}
-                      </Button>
-                    ))}
-                  </div>
-                  {subjects.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {subjects.map((subject) => (
-                        <Badge key={subject} variant="outline" className="text-xs">
-                          {subject}
-                          <X className="h-3 w-3 ml-1 cursor-pointer" onClick={() => removeSubject(subject)} />
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Difficulty Level */}
-                {(postType === "PROJECT" || postType === "TUTORIAL" || postType === "QUESTION") && (
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Difficulty Level</label>
-                    <Select value={difficultyLevel} onValueChange={setDifficultyLevel}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select difficulty" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {DIFFICULTY_LEVELS.map((level) => (
-                          <SelectItem key={level.value} value={level.value}>{level.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                {/* More Post Types */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">More Post Types</label>
-                  <div className="flex gap-2 flex-wrap">
+                  )
+                })}
+                
+                {/* More Post Types Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-gray-600">
+                      <Plus className="h-4 w-4 mr-1" />
+                      More Types
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
                     {POST_TYPES.slice(4).map((type) => {
                       const Icon = type.icon
                       return (
-                        <Button
+                        <DropdownMenuItem
                           key={type.value}
-                          variant={postType === type.value ? "default" : "outline"}
-                          size="sm"
                           onClick={() => setPostType(type.value)}
-                          className={`${postType === type.value ? type.color + ' text-white' : ''}`}
+                          className={`cursor-pointer ${postType === type.value ? 'bg-gray-100' : ''}`}
                         >
-                          <Icon className="h-4 w-4 mr-1" />
+                          <Icon className="h-4 w-4 mr-2" />
                           {type.label}
-                        </Button>
+                        </DropdownMenuItem>
                       )
                     })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+                {/* Main Content Area */}
+              <div className="relative">
+                <Textarea
+                  ref={textareaRef}
+                  value={postText}
+                  onChange={handleTextChange}
+                  placeholder={
+                    postType === "ACHIEVEMENT" ? "Share your achievement... (Use @ to mention connections, # for hashtags)" :
+                    postType === "PROJECT" ? "Tell us about your project... (Use @ to mention connections, # for hashtags)" :
+                    postType === "QUESTION" ? "Ask your question... (Use @ to mention connections, # for hashtags)" :
+                    "What's on your mind? (Use @ to mention connections, # for hashtags)"
+                  }
+                  className={`min-h-[120px] resize-none border ${
+                    isOverLimit ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-pathpiper-teal'
+                  } focus:ring-1 ${
+                    isOverLimit ? 'focus:ring-red-500' : 'focus:ring-pathpiper-teal'
+                  }`}
+                  disabled={isPosting}
+                />
+
+                {/* Mentions Dropdown */}
+                {showMentions && filteredConnections.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto">
+                    {filteredConnections.slice(0, 5).map((connection) => (
+                      <div
+                        key={connection.id}
+                        onClick={() => insertMention(connection)}
+                        className="flex items-center gap-2 p-2 hover:bg-gray-50 cursor-pointer"
+                      >
+                        <div className="h-8 w-8 rounded-full overflow-hidden">
+                          <Image
+                            src={connection.user.profileImageUrl || "/images/student-profile.png"}
+                            alt={`${connection.user.firstName} ${connection.user.lastName}`}
+                            width={32}
+                            height={32}
+                            className="object-cover"
+                          />
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium">
+                            {connection.user.firstName} {connection.user.lastName}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {connection.user.role}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
+                )}
+
+                <div className={`absolute bottom-2 right-2 text-xs font-medium ${
+                  isOverLimit ? 'text-red-500 bg-red-50 px-2 py-1 rounded' : 
+                  characterCount > 250 ? 'text-orange-500 bg-orange-50 px-2 py-1 rounded' : 
+                  'text-gray-400'
+                }`}>
+                  {characterCount}/300
+                  {isOverLimit && <span className="ml-1">⚠️</span>}
                 </div>
-              </TabsContent>
-            </Tabs>
+              </div>
+
+              {/* Post Type Specific Fields */}
+              {postType === "ACHIEVEMENT" && (
+                <Select value={achievementType} onValueChange={setAchievementType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select achievement type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ACHIEVEMENT_TYPES.map((type) => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
+              {postType === "PROJECT" && (
+                <Select value={projectCategory} onValueChange={setProjectCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select project category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PROJECT_CATEGORIES.map((category) => (
+                      <SelectItem key={category} value={category}>{category}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
+              {/* Difficulty Level */}
+              {(postType === "PROJECT" || postType === "TUTORIAL" || postType === "QUESTION") && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Difficulty Level</label>
+                  <Select value={difficultyLevel} onValueChange={setDifficultyLevel}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select difficulty" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DIFFICULTY_LEVELS.map((level) => (
+                        <SelectItem key={level.value} value={level.value}>{level.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Tags */}
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Input
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    placeholder="Add a tag..."
+                    className="flex-1"
+                    onKeyPress={(e) => e.key === 'Enter' && addTag()}
+                  />
+                  <Button onClick={addTag} size="sm" variant="outline">
+                    <Hash className="h-4 w-4" />
+                  </Button>
+                </div>
+                {tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {tags.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100">
+                        <Hash className="h-3 w-3 mr-1" />
+                        {tag}
+                        <X className="h-3 w-3 ml-1 cursor-pointer hover:text-red-600" onClick={() => removeTag(tag)} />
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Subjects */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Related Subjects</label>
+                <div className="flex flex-wrap gap-1">
+                  {COMMON_SUBJECTS.map((subject) => (
+                    <Button
+                      key={subject}
+                      variant={subjects.includes(subject) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => subjects.includes(subject) ? removeSubject(subject) : addSubject(subject)}
+                      className="text-xs"
+                    >
+                      {subject}
+                    </Button>
+                  ))}
+                </div>
+                {subjects.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {subjects.map((subject) => (
+                      <Badge key={subject} variant="outline" className="text-xs">
+                        {subject}
+                        <X className="h-3 w-3 ml-1 cursor-pointer" onClick={() => removeSubject(subject)} />
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Over limit warning */}
+              {isOverLimit && (
+                <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg">
+                  <p className="text-sm text-amber-700 font-medium mb-1 flex items-center gap-2">
+                    <span className="text-amber-500">⚠️</span>
+                    Content exceeds 300 characters!
+                  </p>
+                  <p className="text-xs text-amber-600">
+                    Please shorten your content to 300 characters or less.
+                  </p>
+                </div>
+              )}
+            </div>
 
             {/* Image Preview */}
             {imageUrl && (
