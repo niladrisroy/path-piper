@@ -640,13 +640,12 @@ model FeedPost {
   isAchievement Boolean  @default(false) @map("is_achievement")
   achievementType String? @map("achievement_type")
   projectCategory String? @map("project_category")
-
-  // Moderation & Analytics
-  moderationStatus String @default("approved") @map("moderation_status")
-  viewsCount    Int      @default(0) @map("views_count")
-  engagementScore Float  @default(0) @map("engagement_score")
-  isPinned      Boolean  @default(false) @map("is_pinned")
-  isPromoted    Boolean  @default(false) @map("is_promoted")
+  privacy             String             @default("PUBLIC")
+  moderationStatus    String             @default("approved") @map("moderation_status")
+  viewsCount          Int                @default(0) @map("views_count")
+  engagementScore     Float              @default(0) @map("engagement_score")
+  isPinned            Boolean            @default(false) @map("is_pinned")
+  isPromoted          Boolean            @default(false) @map("is_promoted")
 
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")

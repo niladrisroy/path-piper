@@ -25,7 +25,10 @@ import {
   Share2,
   Calendar,
   Hash,
-  X
+  X,
+  Globe,
+  Users,
+  Lock
 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { toast } from "sonner"
@@ -66,6 +69,27 @@ const DIFFICULTY_LEVELS = [
   { value: "expert", label: "Expert" }
 ]
 
+const PRIVACY_OPTIONS = [
+  { 
+    value: "PUBLIC", 
+    label: "Public", 
+    description: "Anyone can see this post",
+    icon: Globe 
+  },
+  { 
+    value: "CONNECTIONS", 
+    label: "Private (Only Connections)", 
+    description: "Only your connections can see this post",
+    icon: Users 
+  },
+  { 
+    value: "PRIVATE", 
+    label: "Only Me", 
+    description: "Only you can see this post",
+    icon: Lock 
+  }
+]
+
 
 
 export default function CreatePost({ parentPostId, isTrail = false, onPostCreated }: CreatePostProps) {
@@ -77,6 +101,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
   const [achievementType, setAchievementType] = useState("")
   const [projectCategory, setProjectCategory] = useState("")
   const [difficultyLevel, setDifficultyLevel] = useState("")
+  const [privacy, setPrivacy] = useState("PUBLIC")
   const { user } = useAuth()
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [connections, setConnections] = useState<any[]>([])
@@ -230,6 +255,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
           achievementType: isTrail ? undefined : (achievementType || undefined),
           projectCategory: isTrail ? undefined : (projectCategory || undefined),
           difficultyLevel: isTrail ? undefined : (difficultyLevel || undefined),
+          privacy: isTrail ? "PUBLIC" : privacy,
           isTrail,
           imageUrl: imageUrl,
         }),
@@ -243,6 +269,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
         setAchievementType("")
         setProjectCategory("")
         setDifficultyLevel("")
+        setPrivacy("PUBLIC")
         setPostType("GENERAL")
         setImageUrl(null)
         setHasUnsavedChanges(false)
@@ -631,6 +658,32 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                 )}
               </div>
 
+              {/* Post Privacy */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Who can see this post?</label>
+                <Select value={privacy} onValueChange={setPrivacy}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select privacy" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PRIVACY_OPTIONS.map((option) => {
+                      const Icon = option.icon
+                      return (
+                        <SelectItem key={option.value} value={option.value}>
+                          <div className="flex items-center gap-2">
+                            <Icon className="h-4 w-4" />
+                            <div>
+                              <div className="font-medium">{option.label}</div>
+                              <div className="text-xs text-gray-500">{option.description}</div>
+                            </div>
+                          </div>
+                        </SelectItem>
+                      )
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+
               
 
               {/* Over limit warning */}
@@ -670,6 +723,19 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
             {/* Action Buttons */}
             <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
               <div className="flex items-center gap-2">
+                {/* Privacy Indicator */}
+                <div className="flex items-center gap-1 text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded-full">
+                  {(() => {
+                    const selectedPrivacy = PRIVACY_OPTIONS.find(p => p.value === privacy)
+                    const Icon = selectedPrivacy?.icon || Globe
+                    return (
+                      <>
+                        <Icon className="h-3 w-3" />
+                        {selectedPrivacy?.label}
+                      </>
+                    )
+                  })()}
+                </div>
                 {/* Only show upload buttons if no image is uploaded */}
                 {!imageUrl && (
                   <>
@@ -708,6 +774,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                     </div>
                   </>
                 )}
+              </div>
               </div>
 
               <div className="flex items-center gap-2">
