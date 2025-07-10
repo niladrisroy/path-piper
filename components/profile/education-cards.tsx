@@ -21,7 +21,7 @@ export default function EducationCards({ educationHistory: realEducationHistory,
       gpa: edu.gpa && edu.gpa.trim() ? `GPA: ${edu.gpa}` : null,
       subjects: edu.subjects || [],
       achievements: edu.achievements || [],
-      institutionVerified: edu.institutionVerified,
+      institutionVerified: edu.institution_verified,
     })) : []
 
   return (
