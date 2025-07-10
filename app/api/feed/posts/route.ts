@@ -57,18 +57,17 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const {
-      content,
-      parentPostId,
+    const { 
+      content, 
+      imageUrl, 
+      parentPostId, 
+      isTrail = false,
       postType = "GENERAL",
       tags = [],
       subjects = [],
       achievementType,
       projectCategory,
       difficultyLevel,
-      privacy = "PUBLIC",
-      isTrail = false,
-      imageUrl,
       isQuestion = false,
       isAchievement = false,
       forceTrail = false
@@ -81,7 +80,7 @@ export async function POST(request: NextRequest) {
     // For non-trail posts, enforce character limit strictly
     if (content.length > 300 && !isTrail && !forceTrail) {
       return NextResponse.json(
-        {
+        { 
           error: "Content exceeds 300 characters. Please use 'Start Trail' to share longer content.",
           suggestTrail: true
         },
@@ -106,9 +105,9 @@ export async function POST(request: NextRequest) {
 
       // Get the highest trail order for this parent post
       const lastTrail = await prisma.feedPost.findFirst({
-        where: {
+        where: { 
           parentPostId,
-          isTrail: true
+          isTrail: true 
         },
         orderBy: { trailOrder: 'desc' }
       })
@@ -141,7 +140,6 @@ export async function POST(request: NextRequest) {
         projectCategory: postType === "PROJECT" ? projectCategory : null,
         moderationStatus,
         engagementScore: 0,
-        privacy: privacy as any,
       },
       include: {
         author: {
@@ -160,7 +158,7 @@ export async function POST(request: NextRequest) {
         },
         trails: {
           orderBy: { trailOrder: 'asc' },
-          include: {
+          include: { 
             author: {
               select: {
                 id: true,
@@ -213,7 +211,7 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0')
 
     // Build where clause based on filters
-    const whereClause: any = {
+    const whereClause: any = { 
       isTrail: false,
       moderationStatus: 'approved'
     }
@@ -242,7 +240,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Order by engagement score and recency
-    const orderBy = filter === 'trending'
+    const orderBy = filter === 'trending' 
       ? [{ engagementScore: 'desc' as const }, { createdAt: 'desc' as const }]
       : [{ createdAt: 'desc' as const }]
 
@@ -264,22 +262,7 @@ export async function GET(request: NextRequest) {
 
 
     const posts = await prisma.feedPost.findMany({
-      where: {
-        isTrail: false,
-        moderationStatus: 'approved',
-        OR: [
-          { privacy: "PUBLIC" },
-          {
-            privacy: "CONNECTIONS",
-            userId: user.id// Add connection check here - for now allowing all, will need to implement connection checking
-          },
-          {
-            privacy: "PRIVATE",
-            userId: user.id // Only show private posts to the author
-          }
-        ],
-        ...whereClause,
-      },
+      where: whereClause,
       include: {
         author: {
           select: {
@@ -357,7 +340,7 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    return NextResponse.json({
+    return NextResponse.json({ 
       posts: postsWithLikeStatus.map(post => ({
         ...post,
         tags: Array.isArray(post.tags) ? post.tags : [],
@@ -385,7 +368,7 @@ async function moderateContent(content: string): Promise<string> {
   ]
 
   const lowerContent = content.toLowerCase()
-  const hasInappropriateContent = inappropriateWords.some(word =>
+  const hasInappropriateContent = inappropriateWords.some(word => 
     lowerContent.includes(word)
   )
 
