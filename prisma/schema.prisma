@@ -147,6 +147,7 @@ model StudentEducationHistory {
   gpa                 String?
   achievements        String?
   description         String?
+  institutionVerified Boolean?  @default(null) @map("institution_verified")
   createdAt           DateTime  @default(now()) @map("created_at")
   updatedAt           DateTime  @updatedAt @map("updated_at")
 

@@ -46,10 +46,12 @@ export async function GET(request: NextRequest) {
     // Transform database fields to match the frontend interface
     const transformedEducation = educationHistory.map(entry => ({
       id: entry.id,
+      institutionId: entry.institutionId || '',
       institutionName: entry.institutionName,
       institutionCategory: entry.institutionType?.category?.slug || '',
       institutionType: entry.institutionTypeId ? entry.institutionTypeId.toString() : '',
       institutionTypeName: entry.institutionType?.name || '', // Add the type name
+      institutionVerified: entry.institutionVerified,
       degree: entry.degreeProgram || '',
       fieldOfStudy: entry.fieldOfStudy || '',
       subjects: Array.isArray(entry.subjects) ? entry.subjects : [],
@@ -100,6 +102,7 @@ export async function POST(request: NextRequest) {
         const educationRecord = await prisma.studentEducationHistory.create({
           data: {
             studentId: userId,
+            institutionId: entry.institutionId || null,
             institutionName: entry.institutionName,
             institutionTypeId: parseInt(entry.institutionType),
             degreeProgram: entry.degree || null,
@@ -109,7 +112,8 @@ export async function POST(request: NextRequest) {
             endDate: entry.endDate ? new Date(entry.endDate) : null,
             isCurrent: Boolean(entry.isCurrent),
             gradeLevel: entry.grade || null,
-            description: entry.description || null
+            description: entry.description || null,
+            institutionVerified: entry.institutionId ? null : undefined // null if institution selected, undefined if manual entry
           },
         });
         savedEntries.push(educationRecord);
@@ -128,6 +132,7 @@ export async function POST(request: NextRequest) {
       const educationRecord = await prisma.studentEducationHistory.create({
         data: {
           studentId: userId,
+          institutionId: data.institutionId || null,
           institutionName: data.institutionName,
           institutionTypeId: parseInt(data.institutionTypeId),
           degreeProgram: data.degree || null,
@@ -137,7 +142,8 @@ export async function POST(request: NextRequest) {
           endDate: data.endDate ? new Date(data.endDate) : null,
           isCurrent: Boolean(data.isCurrent),
           gradeLevel: data.grade || null,
-          description: data.description || null
+          description: data.description || null,
+          institutionVerified: data.institutionId ? null : undefined // null if institution selected, undefined if manual entry
         },
       });
 

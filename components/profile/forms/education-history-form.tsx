@@ -28,6 +28,8 @@ interface EducationEntry {
   isCurrent: boolean
   grade?: string
   description?: string
+  institutionId?: string;
+  institutionVerified: boolean | null;
 }
 
 interface EducationHistoryFormProps {
@@ -59,6 +61,8 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
     institutionName: "",
     institutionCategory: "",
     institutionType: "",
+    institutionId: "",
+    institutionVerified: null,
     degree: "",
     fieldOfStudy: "",
     subjects: [],
@@ -182,6 +186,8 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
       institutionName: "",
       institutionCategory: "",
       institutionType: "",
+      institutionId: "",
+      institutionVerified: null,
       degree: "",
       fieldOfStudy: "",
       subjects: [],
@@ -296,6 +302,8 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
       institutionName: "",
       institutionCategory: "",
       institutionType: "",
+      institutionId: "",
+      institutionVerified: null,
       degree: "",
       fieldOfStudy: "",
       subjects: [],
