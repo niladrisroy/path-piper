@@ -34,10 +34,36 @@ export async function GET(request: NextRequest) {
       orderBy: {
         startDate: 'desc'
       },
-      include: {
+      select: {
+        id: true,
+        institutionId: true,
+        institutionName: true,
+        institutionTypeId: true,
+        degreeProgram: true,
+        fieldOfStudy: true,
+        subjects: true,
+        startDate: true,
+        endDate: true,
+        isCurrent: true,
+        gradeLevel: true,
+        gpa: true,
+        achievements: true,
+        description: true,
+        institutionVerified: true, // Explicitly select this field
+        createdAt: true,
+        updatedAt: true,
         institutionType: {
-          include: {
-            category: true
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            category: {
+              select: {
+                id: true,
+                name: true,
+                slug: true
+              }
+            }
           }
         }
       }
