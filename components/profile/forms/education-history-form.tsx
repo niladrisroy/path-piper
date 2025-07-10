@@ -138,7 +138,19 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
     onChange('education', educationHistory)
   }, [educationHistory, onChange])
 
-  // Search institutions function
+  // Cleanup search timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout)
+      }
+    }
+  }, [searchTimeout])
+
+  // Debounced search function
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
+  
+  // Search institutions function with debouncing
   const searchInstitutions = async (query: string) => {
     if (query.length < 2) {
       setInstitutionSearchResults([])
@@ -146,44 +158,66 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
       return
     }
 
-    try {
-      setInstitutionSearchLoading(true)
-      const response = await fetch(`/api/institutions/search?q=${encodeURIComponent(query)}`)
-      
-      if (response.ok) {
-        const data = await response.json()
-        setInstitutionSearchResults(data.institutions || [])
-        setShowInstitutionDropdown(true)
-      } else {
-        console.error('Failed to search institutions')
+    // Clear previous timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout)
+    }
+
+    // Set new timeout for debounced search
+    const newTimeout = setTimeout(async () => {
+      try {
+        setInstitutionSearchLoading(true)
+        console.log('🔍 Searching institutions for:', query)
+        
+        const response = await fetch(`/api/institutions/search?q=${encodeURIComponent(query)}`)
+        
+        if (response.ok) {
+          const data = await response.json()
+          console.log('✅ Search results:', data.institutions?.length || 0, 'institutions')
+          setInstitutionSearchResults(data.institutions || [])
+          setShowInstitutionDropdown(true)
+        } else {
+          console.error('Failed to search institutions')
+          setInstitutionSearchResults([])
+          setShowInstitutionDropdown(false)
+        }
+      } catch (error) {
+        console.error('Error searching institutions:', error)
         setInstitutionSearchResults([])
         setShowInstitutionDropdown(false)
+      } finally {
+        setInstitutionSearchLoading(false)
       }
-    } catch (error) {
-      console.error('Error searching institutions:', error)
-      setInstitutionSearchResults([])
-      setShowInstitutionDropdown(false)
-    } finally {
-      setInstitutionSearchLoading(false)
-    }
+    }, 300) // 300ms debounce
+
+    setSearchTimeout(newTimeout)
   }
 
   // Handle institution selection from search results
-  const handleInstitutionSelect = (institution: InstitutionSearchResult) => {
-    const updatedEntry = {
-      institutionName: institution.name,
-      institutionId: institution.id,
-      institutionVerified: true
-    }
+  const handleInstitutionSelect = async (institution: InstitutionSearchResult) => {
+    try {
+      const updatedEntry = {
+        institutionName: institution.name,
+        institutionId: institution.id,
+        institutionVerified: true
+      }
 
-    if (editingEntry) {
-      setEditingEntry(prev => prev ? { ...prev, ...updatedEntry } : null)
-    } else {
-      setNewEntry(prev => ({ ...prev, ...updatedEntry }))
-    }
+      // Update state in a single batch
+      if (editingEntry) {
+        setEditingEntry(prev => prev ? { ...prev, ...updatedEntry } : null)
+      } else {
+        setNewEntry(prev => ({ ...prev, ...updatedEntry }))
+      }
 
-    setShowInstitutionDropdown(false)
-    setInstitutionSearchResults([])
+      // Close dropdown and clear results
+      setShowInstitutionDropdown(false)
+      setInstitutionSearchResults([])
+      
+      console.log('✅ Institution selected:', institution.name)
+    } catch (error) {
+      console.error('❌ Error selecting institution:', error)
+      toast.error('Failed to select institution')
+    }
   }
 
   const handleInputChange = (field: keyof EducationEntry, value: string | number | boolean | string[]) => {
@@ -611,9 +645,12 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                         searchInstitutions(currentEntry.institutionName)
                       }
                     }}
-                    onBlur={() => {
-                      // Delay hiding dropdown to allow for clicks
-                      setTimeout(() => setShowInstitutionDropdown(false), 200)
+                    onBlur={(e) => {
+                      // Only close dropdown if not clicking on a dropdown item
+                      const relatedTarget = e.relatedTarget as HTMLElement
+                      if (!relatedTarget || !relatedTarget.closest('.institution-dropdown')) {
+                        setTimeout(() => setShowInstitutionDropdown(false), 150)
+                      }
                     }}
                     placeholder="e.g., Delhi Public School, IIT Delhi, BYJU'S"
                     className="mt-1"
@@ -627,12 +664,20 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
                 
                 {/* Institution Search Dropdown */}
                 {showInstitutionDropdown && institutionSearchResults.length > 0 && (
-                  <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  <div className="institution-dropdown absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-60 overflow-y-auto">
                     {institutionSearchResults.map((institution) => (
                       <div
                         key={institution.id}
-                        className="p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-600 last:border-b-0"
-                        onClick={() => handleInstitutionSelect(institution)}
+                        className="p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-600 last:border-b-0 transition-colors"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          handleInstitutionSelect(institution)
+                        }}
+                        onMouseDown={(e) => {
+                          // Prevent input blur when clicking on dropdown
+                          e.preventDefault()
+                        }}
                       >
                         <div className="font-medium text-gray-900 dark:text-white">
                           {institution.name}
