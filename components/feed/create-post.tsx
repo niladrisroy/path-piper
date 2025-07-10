@@ -66,17 +66,13 @@ const DIFFICULTY_LEVELS = [
   { value: "expert", label: "Expert" }
 ]
 
-const COMMON_SUBJECTS = [
-  "Mathematics", "Science", "Physics", "Chemistry", "Biology", "Computer Science",
-  "English", "History", "Geography", "Art", "Music", "Sports", "Languages"
-]
+
 
 export default function CreatePost({ parentPostId, isTrail = false, onPostCreated }: CreatePostProps) {
   const [postText, setPostText] = useState("")
   const [isPosting, setIsPosting] = useState(false)
   const [postType, setPostType] = useState("GENERAL")
   const [tags, setTags] = useState<string[]>([])
-  const [subjects, setSubjects] = useState<string[]>([])
   const [newTag, setNewTag] = useState("")
   const [achievementType, setAchievementType] = useState("")
   const [projectCategory, setProjectCategory] = useState("")
@@ -203,17 +199,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     setHasUnsavedChanges(true) // Indicate changes
   }
 
-  const addSubject = (subject: string) => {
-    if (!subjects.includes(subject)) {
-      setSubjects([...subjects, subject])
-      setHasUnsavedChanges(true) // Indicate changes
-    }
-  }
-
-  const removeSubject = (subject: string) => {
-    setSubjects(subjects.filter(s => s !== subject))
-    setHasUnsavedChanges(true) // Indicate changes
-  }
+  
 
 
 
@@ -241,7 +227,6 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
           parentPostId: parentPostId || undefined,
           postType: isTrail ? "GENERAL" : postType,
           tags: isTrail ? [] : tags,
-          subjects: isTrail ? [] : subjects,
           achievementType: isTrail ? undefined : (achievementType || undefined),
           projectCategory: isTrail ? undefined : (projectCategory || undefined),
           difficultyLevel: isTrail ? undefined : (difficultyLevel || undefined),
@@ -255,7 +240,6 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
       if (response.ok) {
         setPostText("")
         setTags([])
-        setSubjects([])
         setAchievementType("")
         setProjectCategory("")
         setDifficultyLevel("")
@@ -472,7 +456,8 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
             <div className="space-y-4">
               {/* Post Type Selection */}
               <div className="flex gap-2 flex-wrap items-center">
-                {POST_TYPES.slice(0, 4).map((type) => {
+                {/* Quick Access Buttons */}
+                {POST_TYPES.slice(0, 2).map((type) => {
                   const Icon = type.icon
                   return (
                     <Button
@@ -488,7 +473,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                   )
                 })}
                 
-                {/* More Post Types Dropdown */}
+                {/* All Post Types Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="text-gray-600">
@@ -497,7 +482,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    {POST_TYPES.slice(4).map((type) => {
+                    {POST_TYPES.slice(2).map((type) => {
                       const Icon = type.icon
                       return (
                         <DropdownMenuItem
@@ -646,33 +631,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                 )}
               </div>
 
-              {/* Subjects */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Related Subjects</label>
-                <div className="flex flex-wrap gap-1">
-                  {COMMON_SUBJECTS.map((subject) => (
-                    <Button
-                      key={subject}
-                      variant={subjects.includes(subject) ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => subjects.includes(subject) ? removeSubject(subject) : addSubject(subject)}
-                      className="text-xs"
-                    >
-                      {subject}
-                    </Button>
-                  ))}
-                </div>
-                {subjects.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {subjects.map((subject) => (
-                      <Badge key={subject} variant="outline" className="text-xs">
-                        {subject}
-                        <X className="h-3 w-3 ml-1 cursor-pointer" onClick={() => removeSubject(subject)} />
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </div>
+              
 
               {/* Over limit warning */}
               {isOverLimit && (
