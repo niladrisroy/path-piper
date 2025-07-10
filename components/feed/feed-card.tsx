@@ -205,20 +205,38 @@ export default function FeedCard({ item, isActive }: FeedCardProps) {
                 <Heart className={`h-6 w-6 ${liked ? "fill-red-500" : ""}`} />
                 <span className="text-xs mt-1">{likeCount}</span>
               </button>
-              <button className="flex flex-col items-center text-white">
+              <button 
+                className="flex flex-col items-center text-white hover:text-blue-400 transition-colors"
+                onClick={() => {
+                  // Handle comment functionality
+                  console.log('Comment button clicked for post:', item.id)
+                }}
+              >
                 <MessageCircle className="h-6 w-6" />
                 <span className="text-xs mt-1">{item.stats.comments}</span>
               </button>
-              <button className="flex flex-col items-center text-white">
+              <button 
+                className="flex flex-col items-center text-white hover:text-purple-400 transition-colors"
+                onClick={() => {
+                  // Handle add trail functionality
+                  console.log('Add trail button clicked for post:', item.id)
+                }}
+              >
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span className="text-xs mt-1">Trail</span>
+              </button>
+              <button className="flex flex-col items-center text-white hover:text-green-400 transition-colors">
                 <Share2 className="h-6 w-6" />
                 <span className="text-xs mt-1">{item.stats.shares}</span>
               </button>
             </div>
             <div className="flex items-center gap-4">
-              <button className={`flex items-center justify-center h-12 w-12 rounded-full bg-white text-black`}>
+              <button className={`flex items-center justify-center h-12 w-12 rounded-full bg-white text-black hover:bg-gray-100 transition-colors`}>
                 <Play className="h-6 w-6 fill-current" />
               </button>
-              <button className={`${saved ? "text-pathpiper-teal" : "text-white"}`} onClick={handleSave}>
+              <button className={`${saved ? "text-pathpiper-teal" : "text-white"} hover:text-pathpiper-teal transition-colors`} onClick={handleSave}>
                 <Bookmark className={`h-6 w-6 ${saved ? "fill-pathpiper-teal" : ""}`} />
               </button>
             </div>

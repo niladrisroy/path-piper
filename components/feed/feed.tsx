@@ -34,6 +34,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import EnhancedReactions from "./enhanced-reactions"
 import { useCustomToast } from "@/hooks/use-custom-toast"
+import EnhancedFeedItem from "./enhanced-feed-item"
 
 interface FeedPost {
   id: string
