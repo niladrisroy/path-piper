@@ -48,8 +48,9 @@ export async function GET(request: NextRequest) {
       console.log('🔍 Education entry debug:', {
         id: entry.id,
         institutionName: entry.institutionName,
-        institution_verified: entry.institution_verified,
-        institution_verified_type: typeof entry.institution_verified,
+        institutionVerified: entry.institutionVerified,
+        institution_verified_raw: entry.institutionVerified,
+        institution_verified_type: typeof entry.institutionVerified,
         raw_entry: entry
       })
       
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
         institutionCategory: entry.institutionType?.category?.slug || '',
         institutionType: entry.institutionTypeId ? entry.institutionTypeId.toString() : '',
         institutionTypeName: entry.institutionType?.name || '', // Add the type name
-        institutionVerified: entry.institution_verified,
+        institutionVerified: entry.institutionVerified, // This should now work correctly
         degree: entry.degreeProgram || '',
         fieldOfStudy: entry.fieldOfStudy || '',
         subjects: Array.isArray(entry.subjects) ? entry.subjects : [],
