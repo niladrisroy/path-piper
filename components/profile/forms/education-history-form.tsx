@@ -133,6 +133,9 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
     fetchInstitutionTypes()
   }, [])
 
+  // Debounced search function
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
+
   // Pass education history data back to parent component whenever it changes
   useEffect(() => {
     onChange('education', educationHistory)
@@ -146,9 +149,6 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
       }
     }
   }, [searchTimeout])
-
-  // Debounced search function
-  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
   
   // Search institutions function with debouncing
   const searchInstitutions = async (query: string) => {
