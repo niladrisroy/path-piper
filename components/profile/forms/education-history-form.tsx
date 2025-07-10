@@ -173,9 +173,6 @@ export default function EducationHistoryForm({ data, onChange }: EducationHistor
     const updatedEntry = {
       institutionName: institution.name,
       institutionId: institution.id,
-      institutionCategory: institution.categoryId,
-      institutionType: institution.typeId,
-      institutionTypeName: institution.typeName,
       institutionVerified: true
     }
 
