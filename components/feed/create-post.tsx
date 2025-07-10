@@ -77,6 +77,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
   const [achievementType, setAchievementType] = useState("")
   const [projectCategory, setProjectCategory] = useState("")
   const [difficultyLevel, setDifficultyLevel] = useState("")
+  const [visibility, setVisibility] = useState("public")
   const { user } = useAuth()
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [connections, setConnections] = useState<any[]>([])
@@ -230,6 +231,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
           achievementType: isTrail ? undefined : (achievementType || undefined),
           projectCategory: isTrail ? undefined : (projectCategory || undefined),
           difficultyLevel: isTrail ? undefined : (difficultyLevel || undefined),
+          visibility: isTrail ? "public" : visibility,
           isTrail,
           imageUrl: imageUrl,
         }),
@@ -244,6 +246,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
         setProjectCategory("")
         setDifficultyLevel("")
         setPostType("GENERAL")
+        setVisibility("public")
         setImageUrl(null)
         setHasUnsavedChanges(false)
         toast.success(isTrail ? "Trail added successfully!" : "Post created successfully!")
@@ -454,49 +457,78 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
 
             <div className="space-y-4">
-              {/* Post Type Selection */}
-              <div className="flex gap-2 flex-wrap items-center">
-                {/* Quick Access Buttons */}
-                {POST_TYPES.slice(0, 2).map((type) => {
-                  const Icon = type.icon
-                  return (
-                    <Button
-                      key={type.value}
-                      variant={postType === type.value ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setPostType(type.value)}
-                      className={`${postType === type.value ? type.color + ' text-white' : ''}`}
-                    >
-                      <Icon className="h-4 w-4 mr-1" />
-                      {type.label}
-                    </Button>
-                  )
-                })}
-                
-                {/* All Post Types Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="text-gray-600">
-                      <Plus className="h-4 w-4 mr-1" />
-                      More Types
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    {POST_TYPES.slice(2).map((type) => {
-                      const Icon = type.icon
-                      return (
-                        <DropdownMenuItem
-                          key={type.value}
-                          onClick={() => setPostType(type.value)}
-                          className={`cursor-pointer ${postType === type.value ? 'bg-gray-100' : ''}`}
-                        >
-                          <Icon className="h-4 w-4 mr-2" />
-                          {type.label}
-                        </DropdownMenuItem>
-                      )
-                    })}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+              {/* Post Type and Visibility Selection */}
+              <div className="flex gap-2 flex-wrap items-center justify-between">
+                <div className="flex gap-2 flex-wrap items-center">
+                  {/* Quick Access Buttons */}
+                  {POST_TYPES.slice(0, 2).map((type) => {
+                    const Icon = type.icon
+                    return (
+                      <Button
+                        key={type.value}
+                        variant={postType === type.value ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setPostType(type.value)}
+                        className={`${postType === type.value ? type.color + ' text-white' : ''}`}
+                      >
+                        <Icon className="h-4 w-4 mr-1" />
+                        {type.label}
+                      </Button>
+                    )
+                  })}
+                  
+                  {/* All Post Types Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="text-gray-600">
+                        <Plus className="h-4 w-4 mr-1" />
+                        More Types
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      {POST_TYPES.slice(2).map((type) => {
+                        const Icon = type.icon
+                        return (
+                          <DropdownMenuItem
+                            key={type.value}
+                            onClick={() => setPostType(type.value)}
+                            className={`cursor-pointer ${postType === type.value ? 'bg-gray-100' : ''}`}
+                          >
+                            <Icon className="h-4 w-4 mr-2" />
+                            {type.label}
+                          </DropdownMenuItem>
+                        )
+                      })}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                {/* Visibility Dropdown */}
+                <Select value={visibility} onValueChange={setVisibility}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="public">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                        Public
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="private">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-orange-500"></div>
+                        Private
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="only_me">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-red-500"></div>
+                        Only me
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
                 {/* Main Content Area */}
