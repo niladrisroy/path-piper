@@ -148,15 +148,17 @@ export default function InstitutionNotificationsPage() {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <GraduationCap className="h-5 w-5 text-pathpiper-teal" />
-                    Education Verification Requests
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="flex items-center gap-2">
+                      <GraduationCap className="h-5 w-5 text-pathpiper-teal" />
+                      Education Verification Requests
+                    </CardTitle>
                     {pendingRequests.length > 0 && (
                       <Badge variant="secondary">
                         {pendingRequests.length} pending
                       </Badge>
                     )}
-                  </CardTitle>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {pendingRequests.length === 0 ? (
