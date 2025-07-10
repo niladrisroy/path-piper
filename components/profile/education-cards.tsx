@@ -1,8 +1,9 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { BookOpenIcon, CalendarIcon, AwardIcon } from "lucide-react"
+import { BookOpenIcon, CalendarIcon, AwardIcon, CheckCircle, XCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 
 interface EducationCardsProps {
   educationHistory?: any[]
@@ -20,6 +21,7 @@ export default function EducationCards({ educationHistory: realEducationHistory,
       gpa: edu.gpa && edu.gpa.trim() ? `GPA: ${edu.gpa}` : null,
       subjects: edu.subjects || [],
       achievements: edu.achievements || [],
+      institutionVerified: edu.institutionVerified,
     })) : []
 
   return (
@@ -63,11 +65,24 @@ export default function EducationCards({ educationHistory: realEducationHistory,
                   transition={{ delay: index * 0.1 }}
                 >
                   <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h4 className="font-semibold text-lg">{education.school}</h4>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-semibold text-lg truncate">{education.school}</h4>
+                        {education.institutionVerified === true ? (
+                          <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200 flex items-center gap-1 text-xs px-2 py-0.5">
+                            <CheckCircle className="h-3 w-3" />
+                            Verified
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-300 flex items-center gap-1 text-xs px-2 py-0.5">
+                            <XCircle className="h-3 w-3" />
+                            Not Verified
+                          </Badge>
+                        )}
+                      </div>
                       <p className="text-sm text-gray-600 dark:text-gray-400">{education.type}</p>
                     </div>
-                    <span className="px-2 py-1 bg-pathpiper-teal/10 text-pathpiper-teal text-xs rounded-full">
+                    <span className="px-2 py-1 bg-pathpiper-teal/10 text-pathpiper-teal text-xs rounded-full flex-shrink-0 ml-2">
                       {education.grade}
                     </span>
                   </div>
