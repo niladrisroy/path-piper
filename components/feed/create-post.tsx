@@ -314,8 +314,6 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
   const characterCount = postText.length
   const isOverLimit = characterCount > 300 && !isTrail
 
-
-
   // Warn user if they try to leave with unsaved changes
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
