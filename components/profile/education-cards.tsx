@@ -11,18 +11,29 @@ interface EducationCardsProps {
 }
 
 export default function EducationCards({ educationHistory: realEducationHistory, isViewMode = false }: EducationCardsProps) {
+  console.log('🔍 Raw education data received:', realEducationHistory)
+  
   // Use real education data only - no fallback to mock data
   const educationHistory = realEducationHistory && realEducationHistory.length > 0 ? 
-    realEducationHistory.map((edu: any) => ({
-      school: edu.institutionName,
-      type: edu.institutionTypeName || "Institution",
-      grade: edu.gradeLevel || edu.grade || "Student", 
-      period: `${new Date(edu.startDate).getFullYear()} - ${edu.isCurrent ? 'Present' : new Date(edu.endDate || Date.now()).getFullYear()}`,
-      gpa: edu.gpa && edu.gpa.trim() ? `GPA: ${edu.gpa}` : null,
-      subjects: edu.subjects || [],
-      achievements: edu.achievements || [],
-      institutionVerified: edu.institution_verified,
-    })) : []
+    realEducationHistory.map((edu: any) => {
+      console.log('🔍 Processing education item:', {
+        institutionName: edu.institutionName,
+        institutionVerified: edu.institutionVerified,
+        institution_verified: edu.institution_verified,
+        rawEducation: edu
+      })
+      
+      return {
+        school: edu.institutionName,
+        type: edu.institutionTypeName || "Institution",
+        grade: edu.gradeLevel || edu.grade || "Student", 
+        period: `${new Date(edu.startDate).getFullYear()} - ${edu.isCurrent ? 'Present' : new Date(edu.endDate || Date.now()).getFullYear()}`,
+        gpa: edu.gpa && edu.gpa.trim() ? `GPA: ${edu.gpa}` : null,
+        subjects: edu.subjects || [],
+        achievements: edu.achievements || [],
+        institutionVerified: edu.institutionVerified, // Use the already mapped field from API
+      }
+    }) : []
 
   return (
     <div className="mb-8">
