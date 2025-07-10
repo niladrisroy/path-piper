@@ -44,23 +44,33 @@ export async function GET(request: NextRequest) {
     })
 
     // Transform database fields to match the frontend interface
-    const transformedEducation = educationHistory.map(entry => ({
-      id: entry.id,
-      institutionId: entry.institutionId || '',
-      institutionName: entry.institutionName,
-      institutionCategory: entry.institutionType?.category?.slug || '',
-      institutionType: entry.institutionTypeId ? entry.institutionTypeId.toString() : '',
-      institutionTypeName: entry.institutionType?.name || '', // Add the type name
-      institutionVerified: entry.institution_verified,
-      degree: entry.degreeProgram || '',
-      fieldOfStudy: entry.fieldOfStudy || '',
-      subjects: Array.isArray(entry.subjects) ? entry.subjects : [],
-      startDate: entry.startDate ? entry.startDate.toISOString().split('T')[0] : '',
-      endDate: entry.endDate ? entry.endDate.toISOString().split('T')[0] : '',
-      isCurrent: entry.isCurrent || false,
-      grade: entry.gradeLevel || '',
-      description: entry.description || ''
-    }))
+    const transformedEducation = educationHistory.map(entry => {
+      console.log('🔍 Education entry debug:', {
+        id: entry.id,
+        institutionName: entry.institutionName,
+        institution_verified: entry.institution_verified,
+        institution_verified_type: typeof entry.institution_verified,
+        raw_entry: entry
+      })
+      
+      return {
+        id: entry.id,
+        institutionId: entry.institutionId || '',
+        institutionName: entry.institutionName,
+        institutionCategory: entry.institutionType?.category?.slug || '',
+        institutionType: entry.institutionTypeId ? entry.institutionTypeId.toString() : '',
+        institutionTypeName: entry.institutionType?.name || '', // Add the type name
+        institutionVerified: entry.institution_verified,
+        degree: entry.degreeProgram || '',
+        fieldOfStudy: entry.fieldOfStudy || '',
+        subjects: Array.isArray(entry.subjects) ? entry.subjects : [],
+        startDate: entry.startDate ? entry.startDate.toISOString().split('T')[0] : '',
+        endDate: entry.endDate ? entry.endDate.toISOString().split('T')[0] : '',
+        isCurrent: entry.isCurrent || false,
+        grade: entry.gradeLevel || '',
+        description: entry.description || ''
+      }
+    })
 
     return NextResponse.json({ education: transformedEducation })
   } catch (error) {

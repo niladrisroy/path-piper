@@ -68,17 +68,28 @@ export default function EducationCards({ educationHistory: realEducationHistory,
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-semibold text-lg truncate">{education.school}</h4>
-                        {education.institutionVerified === true ? (
-                          <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200 flex items-center gap-1 text-xs px-2 py-0.5">
-                            <CheckCircle className="h-3 w-3" />
-                            Verified
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-300 flex items-center gap-1 text-xs px-2 py-0.5">
-                            <XCircle className="h-3 w-3" />
-                            Not Verified
-                          </Badge>
-                        )}
+                        {(() => {
+                          console.log('🔍 Education verification debug:', {
+                            id: education.id,
+                            institutionName: education.institutionName,
+                            institutionVerified: education.institutionVerified,
+                            institutionVerified_type: typeof education.institutionVerified,
+                            institutionVerified_strict_true: education.institutionVerified === true,
+                            institutionVerified_truthy: !!education.institutionVerified
+                          })
+                          
+                          return education.institutionVerified === true ? (
+                            <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200 flex items-center gap-1 text-xs px-2 py-0.5">
+                              <CheckCircle className="h-3 w-3" />
+                              Verified
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-300 flex items-center gap-1 text-xs px-2 py-0.5">
+                              <XCircle className="h-3 w-3" />
+                              Not Verified
+                            </Badge>
+                          )
+                        })()}
                       </div>
                       <p className="text-sm text-gray-600 dark:text-gray-400">{education.type}</p>
                     </div>
