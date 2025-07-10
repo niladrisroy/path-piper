@@ -224,7 +224,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     setHasUnsavedChanges(true) // Indicate changes
   }
 
-  
+
 
 
 
@@ -499,7 +499,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                     </Button>
                   )
                 })}
-                
+
                 {/* All Post Types Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -684,7 +684,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                 </Select>
               </div>
 
-              
+
 
               {/* Over limit warning */}
               {isOverLimit && (
