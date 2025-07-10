@@ -16,11 +16,15 @@ import { toast } from "sonner"
 interface VerificationRequest {
   id: string
   studentName: string
-  institutionName: string
-  course: string
+  studentId: string
+  degreeProgram: string
+  fieldOfStudy: string
+  subjects: string[]
   startDate: string
   endDate: string
-  status: 'pending' | 'approved' | 'rejected'
+  isCurrent: boolean
+  gradeLevel: string
+  description: string
   createdAt: string
 }
 
@@ -50,10 +54,13 @@ export default function InstitutionNotificationsPage() {
   const fetchNotifications = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/education/verification')
+      const response = await fetch('/api/education/verification', {
+        method: 'GET',
+        credentials: 'include'
+      })
       if (response.ok) {
         const data = await response.json()
-        setVerificationRequests(data.requests || [])
+        setVerificationRequests(data.verificationRequests || [])
       }
     } catch (error) {
       console.error('Error fetching notifications:', error)
@@ -67,13 +74,14 @@ export default function InstitutionNotificationsPage() {
     try {
       setProcessingRequest(requestId)
       const response = await fetch('/api/education/verification', {
-        method: 'PUT',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
-          requestId,
-          action
+          educationId: requestId,
+          action: action === 'approve' ? 'verify' : 'reject'
         })
       })
 
@@ -82,7 +90,7 @@ export default function InstitutionNotificationsPage() {
         fetchNotifications() // Refresh the list
       } else {
         const error = await response.json()
-        toast.error(error.message || `Failed to ${action} request`)
+        toast.error(error.error || `Failed to ${action} request`)
       }
     } catch (error) {
       console.error(`Error ${action}ing request:`, error)
@@ -113,7 +121,7 @@ export default function InstitutionNotificationsPage() {
     return null
   }
 
-  const pendingRequests = verificationRequests.filter(req => req.status === 'pending')
+  const pendingRequests = verificationRequests // API already filters to pending requests
 
   return (
     <ProtectedLayout>
@@ -174,10 +182,16 @@ export default function InstitutionNotificationsPage() {
                                 {request.studentName}
                               </h4>
                               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                Course: {request.course}
+                                Program: {request.degreeProgram || 'Not specified'}
                               </p>
                               <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Duration: {new Date(request.startDate).toLocaleDateString()} - {new Date(request.endDate).toLocaleDateString()}
+                                Field of Study: {request.fieldOfStudy || 'Not specified'}
+                              </p>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Grade Level: {request.gradeLevel || 'Not specified'}
+                              </p>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Duration: {request.startDate ? new Date(request.startDate).toLocaleDateString() : 'Not specified'} - {request.isCurrent ? 'Current' : (request.endDate ? new Date(request.endDate).toLocaleDateString() : 'Not specified')}
                               </p>
                               <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
                                 Requested {new Date(request.createdAt).toLocaleDateString()}
