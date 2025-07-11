@@ -69,7 +69,7 @@ export default function EnhancedReactions({
       return
     }
 
-    // Use passed onReact function if available
+    // Use passed onReact function if available (preferred)
     if (onReact) {
       onReact(reactionType)
       return
@@ -98,37 +98,39 @@ export default function EnhancedReactions({
 
       const data = await response.json().catch(() => ({ error: 'Invalid response format' }))
       
-      // Check if data exists and has expected properties
-      if (!data) {
-        throw new Error('No response data received')
-      }
-
       if (data.error) {
         throw new Error(data.error)
       }
 
-      if (data.success !== false) {
-        // Update local state
+      // Handle enhanced reactions response
+      if (data.reactionCounts) {
+        setCurrentReaction(data.userReaction)
+        setReactionCount(Object.values(data.reactionCounts).reduce((sum: number, count: number) => sum + count, 0))
+        onReactionChange?.(data.userReaction)
+      } 
+      // Handle fallback like system response
+      else if (reactionType === 'like') {
+        const wasLiked = data.liked
+        setCurrentReaction(wasLiked ? 'like' : null)
+        setReactionCount(data.likeCount || data.likesCount || 0)
+        onReactionChange?.(wasLiked ? 'like' : null)
+      } 
+      // Handle successful reaction change
+      else if (data.success !== false) {
         if (currentReaction === reactionType) {
           // Removing reaction
           setCurrentReaction(null)
           setReactionCount(prev => Math.max(0, prev - 1))
-          toast.success("Reaction removed")
         } else {
           // Adding or changing reaction
           if (!currentReaction) {
             setReactionCount(prev => prev + 1)
           }
           setCurrentReaction(reactionType)
-          
-          const reactionLabel = REACTION_TYPES.find(r => r.type === reactionType)?.label || reactionType
-          toast.success(`Reacted with ${reactionLabel}!`)
         }
-        
         onReactionChange?.(data.reactionType || null)
-      } else {
-        throw new Error('Reaction failed')
       }
+
     } catch (error) {
       console.error('Error adding reaction:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to add reaction'

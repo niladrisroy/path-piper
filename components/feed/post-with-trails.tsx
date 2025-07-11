@@ -120,23 +120,27 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
     setIsVideoPost(post.imageUrl && /\.(mp4|webm|ogg)$/i.test(post.imageUrl))
   }, [post.imageUrl])
 
-  // Fetch user's like status
+  // Initialize states and fetch user's interaction status
   useEffect(() => {
-    const checkLikeStatus = async () => {
-      try {
-        const response = await fetch(`/api/feed/posts/${post.id}/like`)
-        if (response.ok) {
-          const data = await response.json()
-          setIsLiked(data.isLiked)
-        }
-      } catch (error) {
-        console.error('Error checking like status:', error)
-      }
+    // Initialize from post data
+    setIsLiked(post.isLikedByUser || false)
+    setLikesCount(post.likesCount || post._count?.likes || 0)
+    
+    // Initialize reaction counts from likes count
+    setReactionCounts(prev => ({
+      ...prev,
+      like: post.likesCount || post._count?.likes || 0
+    }))
+    
+    if (post.isLikedByUser) {
+      setUserReaction('like')
     }
 
     const checkBookmarkStatus = async () => {
       try {
-        const response = await fetch(`/api/feed/posts/${post.id}/bookmark`)
+        const response = await fetch(`/api/feed/posts/${post.id}/bookmark`, {
+          credentials: 'include'
+        })
         if (response.ok) {
           const data = await response.json()
           setIsBookmarked(data.isBookmarked)
@@ -148,11 +152,15 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
 
     const fetchReactions = async () => {
       try {
-        const response = await fetch(`/api/feed/posts/${post.id}/react`)
+        const response = await fetch(`/api/feed/posts/${post.id}/react`, {
+          credentials: 'include'
+        })
         if (response.ok) {
           const data = await response.json()
-          setReactionCounts(data.reactionCounts || {})
-          setUserReaction(data.userReaction || null)
+          if (data.reactionCounts) {
+            setReactionCounts(data.reactionCounts)
+            setUserReaction(data.userReaction || null)
+          }
         }
       } catch (error) {
         console.error('Error fetching reactions:', error)
@@ -160,28 +168,39 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
     }
 
     if (user) {
-      checkLikeStatus()
       checkBookmarkStatus()
       fetchReactions()
     }
-  }, [post.id, user])
+  }, [post.id, post.isLikedByUser, post.likesCount, post._count?.likes, user])
 
   const handleLike = async () => {
+    if (!user) {
+      toast.error("Please log in to like posts")
+      return
+    }
+
     try {
       const response = await fetch(`/api/feed/posts/${post.id}/like`, {
         method: 'POST',
+        credentials: 'include'
       })
 
       if (response.ok) {
         const data = await response.json()
-        setIsLiked(data.isLiked)
-        setLikesCount(data.likesCount)
+        setIsLiked(data.liked)
+        setLikesCount(data.likeCount || data.likesCount)
 
-        if (data.isLiked) {
+        if (data.liked) {
           showToast({
             title: "Post liked!",
             description: "You liked this post.",
             type: "success"
+          })
+        } else {
+          showToast({
+            title: "Post unliked",
+            description: "You removed your like from this post.",
+            type: "default"
           })
         }
       }
@@ -288,19 +307,56 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
   }
 
   const handleReaction = async (reactionType: string) => {
+    if (!user) {
+      toast.error("Please log in to react to posts")
+      return
+    }
+
     try {
       const response = await fetch(`/api/feed/posts/${post.id}/react`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ reactionType }),
       })
 
       if (response.ok) {
         const data = await response.json()
-        setReactionCounts(data.reactionCounts)
-        setUserReaction(data.userReaction)
+        
+        // Update reaction counts if available
+        if (data.reactionCounts) {
+          setReactionCounts(data.reactionCounts)
+          setUserReaction(data.userReaction)
+        } else {
+          // Fallback for simple like system
+          if (reactionType === 'like') {
+            setIsLiked(data.liked)
+            setLikesCount(data.likeCount || data.likesCount)
+            setUserReaction(data.liked ? 'like' : null)
+            
+            // Update reaction counts for consistency
+            setReactionCounts(prev => ({
+              ...prev,
+              like: data.likeCount || data.likesCount || 0
+            }))
+          }
+        }
+
+        if (data.reactionType) {
+          showToast({
+            title: "Reaction added!",
+            description: `You reacted with ${reactionType}!`,
+            type: "success"
+          })
+        } else if (data.liked === false || data.reactionType === null) {
+          showToast({
+            title: "Reaction removed",
+            description: "You removed your reaction.",
+            type: "default"
+          })
+        }
       }
     } catch (error) {
       console.error('Error reacting to post:', error)
@@ -496,9 +552,13 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
           <div className="flex items-center gap-6">
             <EnhancedReactions
+              postId={post.id}
+              initialLikes={likesCount}
+              isLiked={isLiked}
               reactionCounts={reactionCounts}
               userReaction={userReaction}
               onReact={handleReaction}
+              size="sm"
             />
 
             <Button
