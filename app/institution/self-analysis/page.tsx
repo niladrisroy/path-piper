@@ -144,7 +144,7 @@ export default function InstitutionSelfAnalysisPage() {
 
       // Fetch all data in parallel using the same approach as institution profile page
       const [profileResponse, programsResponse, facultyResponse, facilitiesResponse, eventsResponse, galleryResponse, followersResponse] = await Promise.all([
-        fetch('/api/institution/profile', { method: 'POST' }),
+        fetch('/api/institution/profile'),
         fetch('/api/institution/programs'),
         fetch('/api/institution/faculty'),
         fetch('/api/institution/facilities'),
