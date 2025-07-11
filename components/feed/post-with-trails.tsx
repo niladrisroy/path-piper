@@ -1,64 +1,43 @@
 
+
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
+import Image from "next/image"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Textarea } from "@/components/ui/textarea"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { 
   Heart, 
   MessageCircle, 
   Share2, 
   Bookmark, 
+  Trophy,
+  Code,
+  HelpCircle,
+  MessageSquare,
+  BookOpen,
+  Calendar,
   MoreHorizontal,
   Trash2,
-  Edit,
-  Flag,
-  Repeat2,
-  Send,
-  X
+  Hash,
+  Eye,
+  TrendingUp,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX
 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { toast } from "sonner"
-import Image from "next/image"
 import { formatDistanceToNow } from "date-fns"
+import CreatePost from "./create-post"
+import EnhancedReactions from "./enhanced-reactions"
 import { useCustomToast } from "@/hooks/use-custom-toast"
 import DOMPurify from 'dompurify'
 import MarkdownIt from 'markdown-it'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
-
-interface PostAuthor {
-  id: string
-  firstName: string
-  lastName: string
-  role: string
-  profileImageUrl?: string
-}
-
-interface Trail {
-  id: string
-  content: string
-  imageUrl?: string
-  trailOrder: number
-  createdAt: string
-  author: PostAuthor
-  likesCount: number
-  commentsCount: number
-}
-
-interface Post {
-  id: string
-  content: string
-  imageUrl?: string
-  likesCount: number
-  commentsCount: number
-  createdAt: string
-  author: PostAuthor
-  trails: Trail[]
-}
 
 interface PostWithTrailsProps {
   post: any
@@ -78,577 +57,589 @@ const md = new MarkdownIt({
 });
 
 // Function to format post content with Markdown and sanitize it
-const formatPostContent = (content: string): string => {
-  const html = md.render(content || "");
-  const cleanHtml = DOMPurify.sanitize(html);
-  return cleanHtml;
-};
+const formatContent = (content: string) => {
+  try {
+    const rendered = md.render(content)
+    return DOMPurify.sanitize(rendered, {
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+      ALLOWED_ATTR: ['href', 'target', 'rel']
+    })
+  } catch (error) {
+    console.error('Error formatting content:', error)
+    return content
+  }
+}
+
+const POST_TYPE_ICONS = {
+  GENERAL: MessageSquare,
+  ACHIEVEMENT: Trophy,
+  PROJECT: Code,
+  QUESTION: HelpCircle,
+  DISCUSSION: MessageSquare,
+  TUTORIAL: BookOpen,
+  RESOURCE_SHARE: Share2,
+  EVENT_ANNOUNCEMENT: Calendar,
+}
+
+const POST_TYPE_COLORS = {
+  GENERAL: "bg-blue-500",
+  ACHIEVEMENT: "bg-yellow-500",
+  PROJECT: "bg-green-500",
+  QUESTION: "bg-purple-500",
+  DISCUSSION: "bg-indigo-500",
+  TUTORIAL: "bg-orange-500",
+  RESOURCE_SHARE: "bg-teal-500",
+  EVENT_ANNOUNCEMENT: "bg-red-500",
+}
 
 export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWithTrailsProps) {
   const { user } = useAuth()
-  const [likedTrails, setLikedTrails] = useState<Set<string>>(new Set())
-  const [trailLikeCounts, setTrailLikeCounts] = useState<{[key: string]: number}>({})
-  const [showAddTrail, setShowAddTrail] = useState(false)
-  const [isSubmittingTrail, setIsSubmittingTrail] = useState(false)
-  const [showReactions, setShowReactions] = useState(false)
-  const [showTrailReactions, setShowTrailReactions] = useState<{[key: string]: boolean}>({})
-  const [trailContent, setTrailContent] = useState("")
+  const { showToast } = useCustomToast()
+  const [isLiked, setIsLiked] = useState(false)
+  const [isBookmarked, setIsBookmarked] = useState(false)
+  const [likesCount, setLikesCount] = useState(post._count?.likes || 0)
+  const [commentsCount, setCommentsCount] = useState(post._count?.comments || 0)
+  const [bookmarksCount, setBookmarksCount] = useState(post._count?.bookmarks || 0)
+  const [showTrails, setShowTrails] = useState(false)
+  const [showCreateTrail, setShowCreateTrail] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [deletingItem, setDeletingItem] = useState<{id: string, type: 'post' | 'trail', trailOrder?: number} | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [showRepostDialog, setShowRepostDialog] = useState(false)
-  const [repostContent, setRepostContent] = useState("")
-  const [isReposting, setIsReposting] = useState(false)
+  const [trails, setTrails] = useState(post.trails || [])
+  const [reactionCounts, setReactionCounts] = useState<Record<string, number>>({})
+  const [userReaction, setUserReaction] = useState<string | null>(null)
+  const [isVideoPost, setIsVideoPost] = useState(false)
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false)
+  const [isVideoMuted, setIsVideoMuted] = useState(true)
+  const videoRef = useRef<HTMLVideoElement>(null)
 
+  const PostTypeIcon = POST_TYPE_ICONS[post.postType as keyof typeof POST_TYPE_ICONS] || MessageSquare
+  const postTypeColor = POST_TYPE_COLORS[post.postType as keyof typeof POST_TYPE_COLORS] || "bg-blue-500"
 
-  const reactionTypes = [
-    { type: 'like', emoji: '❤️', label: 'Like' },
-    { type: 'love', emoji: '😍', label: 'Love' },
-    { type: 'laugh', emoji: '😂', label: 'Haha' },
-    { type: 'wow', emoji: '😮', label: 'Wow' },
-    { type: 'sad', emoji: '😢', label: 'Sad' },
-    { type: 'angry', emoji: '😠', label: 'Angry' },
-    { type: 'celebrate', emoji: '🎉', label: 'Celebrate' },
-    { type: 'think', emoji: '🤔', label: 'Thinking' }
-  ]
+  // Memoized formatted content
+  const formattedContent = useMemo(() => formatContent(post.content), [post.content])
 
-  // Initialize trail like states
+  // Check if post contains video
   useEffect(() => {
-    if (post.trails) {
-      const likeCounts: Record<string, number> = {}
-      post.trails.forEach((trail) => {
-        likeCounts[trail.id] = trail.likesCount || 0
-      })
-      setTrailLikeCounts(likeCounts)
-    }
-  }, [post.trails])
+    setIsVideoPost(post.imageUrl && /\.(mp4|webm|ogg)$/i.test(post.imageUrl))
+  }, [post.imageUrl])
 
-  const handleAddTrail = async () => {
-    if (!trailContent.trim() || !user) {
-      toast.error("Please write something before posting")
-      return
-    }
-
-    if (trailContent.length > CHARACTER_LIMIT) {
-      toast.error(`Trail content exceeds ${CHARACTER_LIMIT} characters. Please shorten your content.`)
-      return
+  // Fetch user's like status
+  useEffect(() => {
+    const checkLikeStatus = async () => {
+      try {
+        const response = await fetch(`/api/feed/posts/${post.id}/like`)
+        if (response.ok) {
+          const data = await response.json()
+          setIsLiked(data.isLiked)
+        }
+      } catch (error) {
+        console.error('Error checking like status:', error)
+      }
     }
 
-    setIsSubmittingTrail(true)
+    const checkBookmarkStatus = async () => {
+      try {
+        const response = await fetch(`/api/feed/posts/${post.id}/bookmark`)
+        if (response.ok) {
+          const data = await response.json()
+          setIsBookmarked(data.isBookmarked)
+        }
+      } catch (error) {
+        console.error('Error checking bookmark status:', error)
+      }
+    }
+
+    const fetchReactions = async () => {
+      try {
+        const response = await fetch(`/api/feed/posts/${post.id}/react`)
+        if (response.ok) {
+          const data = await response.json()
+          setReactionCounts(data.reactionCounts || {})
+          setUserReaction(data.userReaction || null)
+        }
+      } catch (error) {
+        console.error('Error fetching reactions:', error)
+      }
+    }
+
+    if (user) {
+      checkLikeStatus()
+      checkBookmarkStatus()
+      fetchReactions()
+    }
+  }, [post.id, user])
+
+  const handleLike = async () => {
     try {
-      const response = await fetch(`/api/feed/posts/${post.id}/trails`, {
+      const response = await fetch(`/api/feed/posts/${post.id}/like`, {
+        method: 'POST',
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setIsLiked(data.isLiked)
+        setLikesCount(data.likesCount)
+        
+        if (data.isLiked) {
+          showToast({
+            title: "Post liked!",
+            description: "You liked this post.",
+            type: "success"
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Error liking post:', error)
+      toast.error("Failed to like post")
+    }
+  }
+
+  const handleBookmark = async () => {
+    try {
+      const response = await fetch(`/api/feed/posts/${post.id}/bookmark`, {
+        method: 'POST',
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setIsBookmarked(data.isBookmarked)
+        setBookmarksCount(data.bookmarksCount)
+        
+        if (data.isBookmarked) {
+          showToast({
+            title: "Post saved!",
+            description: "Post added to your bookmarks.",
+            type: "success"
+          })
+        } else {
+          showToast({
+            title: "Post removed from bookmarks",
+            description: "Post removed from your saved items.",
+            type: "default"
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Error bookmarking post:', error)
+      toast.error("Failed to bookmark post")
+    }
+  }
+
+  const handleRepost = () => {
+    if (onRepost) {
+      onRepost(post.id)
+    }
+  }
+
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(`/api/feed/posts/${post.id}/delete`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        showToast({
+          title: "Post deleted",
+          description: "Your post has been deleted successfully.",
+          type: "success"
+        })
+        onPostUpdate()
+      } else {
+        throw new Error('Failed to delete post')
+      }
+    } catch (error) {
+      console.error('Error deleting post:', error)
+      toast.error("Failed to delete post")
+    }
+  }
+
+  const toggleTrails = () => {
+    setShowTrails(!showTrails)
+  }
+
+  const handleTrailCreated = async () => {
+    // Refetch trails
+    try {
+      const response = await fetch(`/api/feed/posts/${post.id}/trails`)
+      if (response.ok) {
+        const data = await response.json()
+        setTrails(data.trails)
+        setCommentsCount(prev => prev + 1)
+      }
+    } catch (error) {
+      console.error('Error fetching trails:', error)
+    }
+    setShowCreateTrail(false)
+  }
+
+  const handleVideoToggle = () => {
+    if (videoRef.current) {
+      if (isVideoPlaying) {
+        videoRef.current.pause()
+      } else {
+        videoRef.current.play()
+      }
+      setIsVideoPlaying(!isVideoPlaying)
+    }
+  }
+
+  const handleVideoMuteToggle = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !isVideoMuted
+      setIsVideoMuted(!isVideoMuted)
+    }
+  }
+
+  const handleReaction = async (reactionType: string) => {
+    try {
+      const response = await fetch(`/api/feed/posts/${post.id}/react`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
-        body: JSON.stringify({
-          content: trailContent.trim(),
-        }),
+        body: JSON.stringify({ reactionType }),
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to add trail')
+      if (response.ok) {
+        const data = await response.json()
+        setReactionCounts(data.reactionCounts)
+        setUserReaction(data.userReaction)
       }
-
-      toast.success("Trail added successfully!")
-      setTrailContent("")
-      setShowAddTrail(false)
-      onPostUpdate()
     } catch (error) {
-      console.error('Error adding trail:', error)
-      toast.error("Failed to add trail")
-    } finally {
-      setIsSubmittingTrail(false)
+      console.error('Error reacting to post:', error)
+      toast.error("Failed to react to post")
     }
-  }
-
-  const handleDeleteClick = (id: string, type: 'post' | 'trail', trailOrder?: number) => {
-    setDeletingItem({ id, type, trailOrder })
-    setShowDeleteDialog(true)
-  }
-
-  const handleDeleteConfirm = async () => {
-    if (!deletingItem || !user) {
-      console.error('Delete confirmation failed: missing deletingItem or user')
-      return
-    }
-
-    setIsDeleting(true)
-    try {
-      let response
-      if (deletingItem.type === 'post') {
-        response = await fetch(`/api/feed/posts/${deletingItem.id}/delete`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          credentials: 'include'
-        })
-      } else {
-        response = await fetch(`/api/feed/posts/${post.id}/trails/${deletingItem.id}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          credentials: 'include'
-        })
-      }
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || `Failed to delete ${deletingItem.type}`)
-      }
-
-      if (deletingItem.type === 'post') {
-        toast.success('Post deleted successfully')
-      } else {
-        toast.success('Trail message deleted successfully')
-      }
-
-      onPostUpdate()
-    } catch (error) {
-      console.error('Error deleting:', error)
-      const errorMessage = error instanceof Error ? error.message : `Failed to delete ${deletingItem.type}`
-      toast.error(errorMessage)
-    } finally {
-      setIsDeleting(false)
-      setShowDeleteDialog(false)
-      setDeletingItem(null)
-    }
-  }
-
-  const handleTrailLike = async (trailId: string, currentLikeCount: number) => {
-    if (!user) {
-      toast.error("Please login to like trails")
-      return
-    }
-
-    try {
-      const response = await fetch(`/api/feed/posts/${post.id}/trails/${trailId}/like`, {
-        method: 'POST',
-        credentials: 'include'
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to toggle trail like')
-      }
-
-      const data = await response.json()
-
-      // Update local state
-      const newLikedTrails = new Set(likedTrails)
-      if (data.liked) {
-        newLikedTrails.add(trailId)
-        setTrailLikeCounts(prev => ({
-          ...prev,
-          [trailId]: currentLikeCount + 1
-        }))
-      } else {
-        newLikedTrails.delete(trailId)
-        setTrailLikeCounts(prev => ({
-          ...prev,
-          [trailId]: Math.max(0, currentLikeCount - 1)
-        }))
-      }
-      setLikedTrails(newLikedTrails)
-
-    } catch (error) {
-      console.error('Error toggling trail like:', error)
-      toast.error("Failed to update trail like")
-    }
-  }
-
-  const canDelete = (authorId: string) => {
-    return user && user.id === authorId
-  }
-
-  const handleRepostClick = () => {
-    setShowRepostDialog(true)
-  }
-
-  const handleRepostConfirm = () => {
-    setIsReposting(true)
-    if (onRepost) {
-      onRepost(post.id, repostContent)
-      toast.success("Post reposted successfully!")
-    }
-    setShowRepostDialog(false)
-    setIsReposting(false)
   }
 
   return (
-    <>
-      <Card className="border-0 shadow-xl bg-gradient-to-br from-white via-gray-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900 backdrop-blur-sm overflow-hidden">
-        <CardHeader className="pb-4">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center space-x-3">
-              <Avatar className="h-12 w-12 ring-2 ring-pathpiper-teal/20">
-                <AvatarImage src={post.author.profileImageUrl} />
-                <AvatarFallback className="bg-gradient-to-br from-pathpiper-teal to-blue-500 text-white font-medium">
-                  {post.author.firstName?.[0]}{post.author.lastName?.[0]}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h4 className="font-semibold text-gray-900 dark:text-white">
-                  {post.author.firstName} {post.author.lastName}
-                </h4>
-                <div className="flex items-center space-x-2">
-                  <Badge variant="secondary" className="text-xs">
-                    {post.author.role}
+    <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex items-start gap-3">
+            <div className="h-12 w-12 rounded-full overflow-hidden flex-shrink-0">
+              <Image
+                src={post.author?.profileImageUrl || "/images/student-profile.png"}
+                alt={`${post.author?.firstName} ${post.author?.lastName}`}
+                width={48}
+                height={48}
+                className="object-cover"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-semibold text-gray-900 dark:text-white">
+                  {post.author?.firstName} {post.author?.lastName}
+                </h3>
+                <Badge variant="secondary" className="text-xs">
+                  {post.author?.role}
+                </Badge>
+                <div className="flex items-center gap-2">
+                  <div className={`h-6 w-6 rounded-full ${postTypeColor} flex items-center justify-center flex-shrink-0`}>
+                    <PostTypeIcon className="h-3 w-3 text-white" />
+                  </div>
+                  <Badge variant="outline" className="text-xs capitalize">
+                    {post.postType.toLowerCase().replace('_', ' ')}
                   </Badge>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
-                    {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
-                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
+                <time>
+                  {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+                </time>
+                <span>•</span>
+                <div className="flex items-center gap-1">
+                  <Eye className="h-3 w-3" />
+                  <span>{post.viewsCount || 0} views</span>
                 </div>
               </div>
             </div>
-            {canDelete(post.author.id) && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={() => handleDeleteClick(post.id, 'post')}
-                    className="text-red-600 focus:text-red-600"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Post
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
           </div>
-        </CardHeader>
 
-        <CardContent className="space-y-6">
-          {/* Post Content */}
-          <div className="space-y-4">
-            <div className="prose prose-sm max-w-none text-gray-900 dark:text-gray-100">
-                <div 
-                  className="mb-0 whitespace-pre-wrap break-words leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: formatPostContent(post.content) }}
-                />
-              </div>
-            {post.imageUrl && (
-              <div className="relative rounded-xl overflow-hidden shadow-lg">
-                <Image
+          {user?.id === post.author?.id && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="text-red-600 focus:text-red-600"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Post
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
+      </CardHeader>
+
+      <CardContent className="pt-0">
+        {/* Post Content */}
+        <div 
+          className="text-gray-800 dark:text-gray-200 mb-4 whitespace-pre-wrap break-words leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: formattedContent }}
+        />
+
+        {/* Tags */}
+        {post.tags && post.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-4">
+            {post.tags.map((tag: string) => (
+              <Badge key={tag} variant="secondary" className="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100">
+                <Hash className="h-3 w-3 mr-1" />
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
+
+        {/* Achievement Type */}
+        {post.isAchievement && post.achievementType && (
+          <div className="mb-4">
+            <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">
+              <Trophy className="h-3 w-3 mr-1" />
+              {post.achievementType}
+            </Badge>
+          </div>
+        )}
+
+        {/* Project Category */}
+        {post.projectCategory && (
+          <div className="mb-4">
+            <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
+              <Code className="h-3 w-3 mr-1" />
+              {post.projectCategory}
+            </Badge>
+          </div>
+        )}
+
+        {/* Difficulty Level */}
+        {post.difficultyLevel && (
+          <div className="mb-4">
+            <Badge variant="outline" className="capitalize">
+              {post.difficultyLevel}
+            </Badge>
+          </div>
+        )}
+
+        {/* Media */}
+        {post.imageUrl && (
+          <div className="mb-4 rounded-lg overflow-hidden">
+            {isVideoPost ? (
+              <div className="relative">
+                <video
+                  ref={videoRef}
                   src={post.imageUrl}
-                  alt="Post image"
-                  width={600}
-                  height={400}
-                  className="w-full h-auto object-cover"
+                  className="w-full max-h-96 object-cover"
+                  muted={isVideoMuted}
+                  loop
+                  onPlay={() => setIsVideoPlaying(true)}
+                  onPause={() => setIsVideoPlaying(false)}
                 />
+                <div className="absolute bottom-4 right-4 flex gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleVideoToggle}
+                    className="bg-black/50 text-white hover:bg-black/70"
+                  >
+                    {isVideoPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleVideoMuteToggle}
+                    className="bg-black/50 text-white hover:bg-black/70"
+                  >
+                    {isVideoMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                  </Button>
+                </div>
               </div>
+            ) : (
+              <Image
+                src={post.imageUrl}
+                alt="Post image"
+                width={600}
+                height={400}
+                className="w-full max-h-96 object-cover"
+              />
             )}
           </div>
+        )}
 
-          {/* Post Actions */}
-          <div className="flex items-center justify-between pt-4 border-t border-gray-200/50 dark:border-gray-700/50">
-            <div className="flex items-center space-x-6">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowAddTrail(!showAddTrail)}
-                className="text-gray-500 hover:text-pathpiper-teal transition-all duration-200"
-              >
-                <MessageCircle className="h-5 w-5 mr-2" />
-                {post.trails?.length || 0}
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleRepostClick}
-                className="text-gray-500 hover:text-green-500 transition-all duration-200"
-              >
-                <Repeat2 className="h-5 w-5 mr-2" />
-                Repost
-              </Button>
-              <Button variant="ghost" size="sm" className="text-gray-500 hover:text-blue-500 transition-all duration-200">
-                <Share2 className="h-5 w-5 mr-2" />
-                Share
-              </Button>
-              <Button variant="ghost" size="sm" className="text-gray-500 hover:text-yellow-500 transition-all duration-200">
-                <Bookmark className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Add Trail Section */}
-          {showAddTrail && user && (
-            <div className="border-t border-gray-200/50 dark:border-gray-700/50 pt-4">
-              <div className="flex items-start space-x-3">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.profileImageUrl} />
-                  <AvatarFallback className="bg-gradient-to-br from-pathpiper-teal to-blue-500 text-white text-sm">
-                    {user.firstName?.[0]}{user.lastName?.[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 space-y-3">
-                  <Textarea
-                    placeholder="Add to the trail..."
-                    value={trailContent}
-                    onChange={(e) => {
-                      if (e.target.value.length <= CHARACTER_LIMIT) {
-                        setTrailContent(e.target.value)
-                      }
-                    }}
-                    className={`min-h-[80px] border ${
-                      trailContent.length > CHARACTER_LIMIT ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-pathpiper-teal'
-                    } dark:border-gray-700 focus:ring-pathpiper-teal`}
-                  />
-                  <div className={`text-xs mt-1 ${
-                    trailContent.length > CHARACTER_LIMIT - 50 ? 'text-orange-500' : 'text-gray-400'
-                  } ${trailContent.length > CHARACTER_LIMIT ? 'text-red-500' : ''}`}>
-                    {trailContent.length}/{CHARACTER_LIMIT} characters
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowAddTrail(false)}
-                      className="text-gray-500 hover:text-gray-700"
-                    >
-                      <X className="h-4 w-4 mr-2" />
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleAddTrail}
-                      disabled={isSubmittingTrail || !trailContent.trim()}
-                      className="bg-gradient-to-r from-pathpiper-teal to-blue-500 hover:from-pathpiper-teal/90 hover:to-blue-500/90"
-                    >
-                      {isSubmittingTrail ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Adding...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="h-4 w-4 mr-2" />
-                          Add Trail
-                        </>
-                      )}
-                    </Button>
-                  </div>
+        {/* Link Preview */}
+        {post.linkPreview && (
+          <div className="mb-4 border border-gray-200 rounded-lg p-3 bg-gray-50">
+            <div className="flex gap-3">
+              {post.linkPreview.image && (
+                <img
+                  src={post.linkPreview.image}
+                  alt="Link preview"
+                  className="w-16 h-16 object-cover rounded flex-shrink-0"
+                />
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-gray-900 truncate">
+                  {post.linkPreview.title}
+                </div>
+                <div className="text-xs text-gray-600 line-clamp-2">
+                  {post.linkPreview.description}
+                </div>
+                <div className="text-xs text-blue-600 truncate">
+                  {post.linkPreview.url}
                 </div>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Trails */}
-          {post.trails && post.trails.length > 0 && (
-            <div className="space-y-4 border-t border-gray-200/50 dark:border-gray-700/50 pt-4">
-              <h5 className="font-medium text-gray-900 dark:text-white flex items-center">
-                <MessageCircle className="h-4 w-4 mr-2 text-pathpiper-teal" />
-                Trail ({post.trails.length})
-              </h5>
-              {post.trails
-                .sort((a, b) => a.trailOrder - b.trailOrder)
-                .map((trail, index) => (
-                  <div
-                    key={trail.id}
-                    className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200/50 dark:border-gray-700/50"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-6 h-6 rounded-full bg-gradient-to-r from-pathpiper-teal to-blue-500 flex items-center justify-center text-white text-xs font-medium">
-                            {index + 1}
-                          </div>
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={trail.author.profileImageUrl} />
-                            <AvatarFallback className="bg-gradient-to-br from-gray-400 to-gray-600 text-white text-xs">
-                              {trail.author.firstName?.[0]}{trail.author.lastName?.[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                        </div>
-                        <div>
-                          <h6 className="font-medium text-sm text-gray-900 dark:text-white">
-                            {trail.author.firstName} {trail.author.lastName}
-                          </h6>
-                          <div className="flex items-center space-x-2">
-                            <Badge variant="outline" className="text-xs">
-                              {trail.author.role}
-                            </Badge>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              {formatDistanceToNow(new Date(trail.createdAt), { addSuffix: true })}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      {canDelete(trail.author.id) && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                              <MoreHorizontal className="h-3 w-3" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteClick(trail.id, 'trail', trail.trailOrder)}
-                              className="text-red-600 focus:text-red-600"
-                            >
-                              <Trash2 className="h-3 w-3 mr-2" />
-                              Delete Trail
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </div>
+        {/* Enhanced Reactions */}
+        <EnhancedReactions
+          reactionCounts={reactionCounts}
+          userReaction={userReaction}
+          onReact={handleReaction}
+        />
 
-                    <div className="prose prose-sm max-w-none text-gray-700 dark:text-gray-300">
-                      <div 
-                        className="mb-0 whitespace-pre-wrap break-words text-sm leading-relaxed"
-                        dangerouslySetInnerHTML={{ __html: formatPostContent(trail.content) }}
-                      />
-                    </div>
+        {/* Action Buttons */}
+        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+          <div className="flex items-center gap-6">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLike}
+              className={`flex items-center gap-2 ${isLiked ? 'text-red-600' : 'text-gray-600'} hover:text-red-600`}
+            >
+              <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
+              <span>{likesCount}</span>
+            </Button>
 
-                    {trail.imageUrl && (
-                      <div className="relative rounded-lg overflow-hidden mb-3">
-                        <Image
-                          src={trail.imageUrl}
-                          alt="Trail image"
-                          width={400}
-                          height={200}
-                          className="w-full h-auto object-cover"
-                        />
-                      </div>
-                    )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleTrails}
+              className="flex items-center gap-2 text-gray-600 hover:text-blue-600"
+            >
+              <MessageCircle className="h-4 w-4" />
+              <span>{trails.length}</span>
+            </Button>
 
-                    <div className="flex items-center space-x-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleTrailLike(trail.id, trailLikeCounts[trail.id] || trail.likesCount || 0)}
-                        className={`transition-all duration-200 ${
-                          likedTrails.has(trail.id)
-                            ? 'text-red-500 hover:text-red-600'
-                            : 'text-gray-500 hover:text-red-500'
-                        }`}
-                      >
-                        <Heart className={`h-4 w-4 mr-1 ${likedTrails.has(trail.id) ? 'fill-current' : ''}`} />
-                        {trailLikeCounts[trail.id] || trail.likesCount || 0}
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-gray-500 hover:text-pathpiper-teal transition-all duration-200">
-                        <MessageCircle className="h-4 w-4 mr-1" />
-                        {trail.commentsCount || 0}
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRepost}
+              className="flex items-center gap-2 text-gray-600 hover:text-green-600"
+            >
+              <Share2 className="h-4 w-4" />
+              <span>Share</span>
+            </Button>
+          </div>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleBookmark}
+            className={`${isBookmarked ? 'text-blue-600' : 'text-gray-600'} hover:text-blue-600`}
+          >
+            <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
+          </Button>
+        </div>
+
+        {/* Engagement Score */}
+        <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+          <TrendingUp className="h-3 w-3" />
+          <span>Engagement Score: {post.engagementScore || 0}</span>
+        </div>
+
+        {/* Trails Section */}
+        {showTrails && (
+          <div className="mt-6 border-t border-gray-100 pt-4">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="font-medium text-gray-900 dark:text-white">Trail Discussion</h4>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCreateTrail(!showCreateTrail)}
+              >
+                Add to Trail
+              </Button>
             </div>
-          )}
-        </CardContent>
-      </Card>
+
+            {/* Create Trail Form */}
+            {showCreateTrail && (
+              <div className="mb-4">
+                <CreatePost
+                  parentPostId={post.id}
+                  isTrail={true}
+                  onPostCreated={handleTrailCreated}
+                />
+              </div>
+            )}
+
+            {/* Trail Messages */}
+            <div className="space-y-3">
+              {trails.map((trail: any) => (
+                <div key={trail.id} className="flex gap-3 p-3 bg-gray-50 rounded-lg">
+                  <div className="h-8 w-8 rounded-full overflow-hidden flex-shrink-0">
+                    <Image
+                      src={trail.author?.profileImageUrl || "/images/student-profile.png"}
+                      alt={`${trail.author?.firstName} ${trail.author?.lastName}`}
+                      width={32}
+                      height={32}
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-sm">
+                        {trail.author?.firstName} {trail.author?.lastName}
+                      </span>
+                      <Badge variant="secondary" className="text-xs">
+                        #{trail.trailOrder}
+                      </Badge>
+                      <span className="text-xs text-gray-500">
+                        {formatDistanceToNow(new Date(trail.createdAt), { addSuffix: true })}
+                      </span>
+                    </div>
+                    <div 
+                      className="text-sm text-gray-700 whitespace-pre-wrap break-words"
+                      dangerouslySetInnerHTML={{ __html: formatContent(trail.content) }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {trails.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <MessageCircle className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                <p>No trail messages yet. Be the first to start the conversation!</p>
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={(open) => {
-        if (!isDeleting) {
-          setShowDeleteDialog(open)
-          if (!open) {
-            setDeletingItem(null)
-          }
-        }
-      }}>
-        <AlertDialogContent className="sm:max-w-md">
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
-                <Trash2 className="h-4 w-4 text-red-600" />
-              </div>
-              Confirm Deletion
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-left">
-              {deletingItem?.type === 'post' 
-                ? 'Are you sure you want to delete this post? This will permanently remove the post and all its trail messages. This action cannot be undone.'
-                : 'Are you sure you want to delete this trail message? This will permanently remove the message and reorder the remaining trails. This action cannot be undone.'
-              }
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteConfirm}
-              disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-            >
-              {isDeleting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Deleting...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete {deletingItem?.type === 'post' ? 'Post' : 'Trail'}
-                </>
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Repost Confirmation Dialog */}
-      <AlertDialog open={showRepostDialog} onOpenChange={setShowRepostDialog}>
-        <AlertDialogContent className="sm:max-w-md">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <Repeat2 className="h-6 w-6" />
-              Confirm Repost
-            </AlertDialogTitle>
+            <AlertDialogTitle>Delete Post</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to repost this post? You can add a comment to your repost.
+              Are you sure you want to delete this post? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="py-4">
-            <Textarea
-              placeholder="Add a comment to your repost..."
-              value={repostContent}
-              onChange={(e) => {
-                if (e.target.value.length <= CHARACTER_LIMIT) {
-                  setRepostContent(e.target.value)
-                }
-              }}
-              className={`min-h-[80px] border ${
-                repostContent.length > CHARACTER_LIMIT ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-pathpiper-teal'
-              } dark:border-gray-700 focus:ring-pathpiper-teal`}
-            />
-            <div className={`text-xs mt-1 ${
-              repostContent.length > CHARACTER_LIMIT - 50 ? 'text-orange-500' : 'text-gray-400'
-            } ${repostContent.length > CHARACTER_LIMIT ? 'text-red-500' : ''}`}>
-              {repostContent.length}/{CHARACTER_LIMIT} characters
-            </div>
-          </div>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isReposting}>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleRepostConfirm}
-              disabled={isReposting}
-              className="bg-green-600 hover:bg-green-700 focus:ring-green-600"
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700"
             >
-              {isReposting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Reposting...
-                </>
-              ) : (
-                <>
-                  <Repeat2 className="h-4 w-4 mr-2" />
-                  Repost
-                </>
-              )}
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </Card>
   )
 }

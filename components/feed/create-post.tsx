@@ -198,12 +198,22 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
   
 
+  // Function to get actual character count excluding markdown syntax
+  const getActualCharacterCount = (text: string) => {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown
+      .replace(/\*(.*?)\*/g, '$1')     // Remove italic markdown
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Remove link markdown, keep text
+      .length
+  }
+
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value
     const position = e.target.selectionStart
     
-    // Enforce character limit
-    if (value.length > CHARACTER_LIMIT) {
+    // Check actual character count (excluding markdown syntax)
+    const actualCount = getActualCharacterCount(value)
+    if (actualCount > CHARACTER_LIMIT) {
       return
     }
     
@@ -426,7 +436,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     }
   }
 
-  const characterCount = postText.length
+  const characterCount = getActualCharacterCount(postText)
   const isOverLimit = characterCount > CHARACTER_LIMIT
 
   // Warn user if they try to leave with unsaved changes
@@ -621,7 +631,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
               </div>
 
               <div className="flex justify-between items-center mt-3">
-                <div className="text-xs text-gray-400">{characterCount}/{CHARACTER_LIMIT} characters</div>
+                <div className="text-xs text-gray-400">{getActualCharacterCount(postText)}/{CHARACTER_LIMIT} characters</div>
                 <Button
                   onClick={handlePost}
                   disabled={!postText.trim() || isPosting || isOverLimit}
@@ -806,25 +816,48 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
               {/* Main Content Area */}
               <div className="relative">
-                {/* Highlighted text overlay */}
+                {/* Markdown Preview Overlay */}
                 <div 
-                  className={`absolute inset-0 min-h-[120px] p-3 text-transparent whitespace-pre-wrap break-words overflow-hidden pointer-events-none z-10 ${
+                  className={`absolute inset-0 min-h-[120px] p-3 text-gray-800 whitespace-pre-wrap break-words overflow-hidden pointer-events-none z-10 ${
                     isOverLimit ? 'border-red-300' : 'border-gray-200'
-                  } border rounded-md`}
+                  } border rounded-md bg-white/90`}
                   style={{ 
                     fontFamily: 'inherit',
                     fontSize: 'inherit',
                     lineHeight: 'inherit'
                   }}
                 >
-                  {postText.split(/(#\w+)/g).map((part, index) => (
-                    <span
-                      key={index}
-                      className={part.startsWith('#') ? 'text-blue-600 font-medium bg-blue-50 px-1 rounded' : ''}
-                    >
-                      {part}
-                    </span>
-                  ))}
+                  {postText.split(/(#\w+|\*\*.*?\*\*|\*.*?\*|\[.*?\]\(.*?\))/g).map((part, index) => {
+                    if (part.startsWith('#')) {
+                      return (
+                        <span key={index} className="text-blue-600 font-medium bg-blue-50 px-1 rounded">
+                          {part}
+                        </span>
+                      )
+                    } else if (part.startsWith('**') && part.endsWith('**')) {
+                      return (
+                        <span key={index} className="font-bold bg-gray-100 px-1 rounded">
+                          {part.slice(2, -2)}
+                        </span>
+                      )
+                    } else if (part.startsWith('*') && part.endsWith('*') && !part.startsWith('**')) {
+                      return (
+                        <span key={index} className="italic bg-gray-100 px-1 rounded">
+                          {part.slice(1, -1)}
+                        </span>
+                      )
+                    } else if (part.match(/\[.*?\]\(.*?\)/)) {
+                      const linkMatch = part.match(/\[(.*?)\]\((.*?)\)/)
+                      if (linkMatch) {
+                        return (
+                          <span key={index} className="text-blue-600 underline bg-blue-50 px-1 rounded">
+                            {linkMatch[1]}
+                          </span>
+                        )
+                      }
+                    }
+                    return <span key={index}>{part}</span>
+                  })}
                 </div>
                 
                 <Textarea
@@ -832,10 +865,10 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                   value={postText}
                   onChange={handleTextChange}
                   placeholder={
-                    postType === "ACHIEVEMENT" ? "Share your achievement... (Use @ to mention connections, # for hashtags)" :
-                    postType === "PROJECT" ? "Tell us about your project... (Use @ to mention connections, # for hashtags)" :
-                    postType === "QUESTION" ? "Ask your question... (Use @ to mention connections, # for hashtags)" :
-                    "What's on your mind? (Use @ to mention connections, # for hashtags)"
+                    postType === "ACHIEVEMENT" ? "Share your achievement... (Use @ to mention connections, # for hashtags, **bold**, *italic*)" :
+                    postType === "PROJECT" ? "Tell us about your project... (Use @ to mention connections, # for hashtags, **bold**, *italic*)" :
+                    postType === "QUESTION" ? "Ask your question... (Use @ to mention connections, # for hashtags, **bold**, *italic*)" :
+                    "What's on your mind? (Use @ to mention connections, # for hashtags, **bold**, *italic*)"
                   }
                   className={`min-h-[120px] resize-none border bg-transparent relative z-20 ${
                     isOverLimit ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-pathpiper-teal'
@@ -847,7 +880,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
                 {/* Mentions Dropdown */}
                 {showMentions && filteredConnections.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-30 max-h-40 overflow-y-auto">
                     {filteredConnections.slice(0, 5).map((connection) => (
                       <div
                         key={connection.id}
@@ -878,10 +911,10 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
                 <div className={`absolute bottom-2 right-2 text-xs font-medium ${
                   isOverLimit ? 'text-red-500 bg-red-50 px-2 py-1 rounded' : 
-                  characterCount > 250 ? 'text-orange-500 bg-orange-50 px-2 py-1 rounded' : 
+                  getActualCharacterCount(postText) > 250 ? 'text-orange-500 bg-orange-50 px-2 py-1 rounded' : 
                   'text-gray-400'
                 }`}>
-                  {characterCount}/{CHARACTER_LIMIT}
+                  {getActualCharacterCount(postText)}/{CHARACTER_LIMIT}
                   {isOverLimit && <span className="ml-1">⚠️</span>}
                 </div>
               </div>
