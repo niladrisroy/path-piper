@@ -458,7 +458,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
             <div className="space-y-4">
               {/* Post Type and Visibility Selection */}
-              <div className="flex gap-2 flex-wrap items-center justify-between">
+              <div className="flex gap-3 flex-wrap items-center justify-between">
                 <div className="flex gap-2 flex-wrap items-center">
                   {/* Quick Access Buttons */}
                   {POST_TYPES.slice(0, 2).map((type) => {
@@ -503,60 +503,49 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                   </DropdownMenu>
                 </div>
 
-                {/* Enhanced Visibility Buttons */}
-                <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-                  <Button
-                    variant={visibility === "public" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setVisibility("public")}
-                    className={`${
-                      visibility === "public" 
-                        ? "bg-green-500 hover:bg-green-600 text-white shadow-md" 
-                        : "hover:bg-green-50 text-gray-600 hover:text-green-700"
-                    } transition-all duration-200 rounded-md px-3 py-1.5 text-xs font-medium`}
-                  >
-                    <div className="flex items-center gap-1.5">
+                {/* Visibility Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="flex items-center gap-2">
                       <div className={`h-2 w-2 rounded-full ${
-                        visibility === "public" ? "bg-white" : "bg-green-500"
+                        visibility === "public" ? "bg-green-500" :
+                        visibility === "private" ? "bg-orange-500" : "bg-red-500"
                       }`}></div>
-                      Public
-                    </div>
-                  </Button>
-                  <Button
-                    variant={visibility === "private" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setVisibility("private")}
-                    className={`${
-                      visibility === "private" 
-                        ? "bg-orange-500 hover:bg-orange-600 text-white shadow-md" 
-                        : "hover:bg-orange-50 text-gray-600 hover:text-orange-700"
-                    } transition-all duration-200 rounded-md px-3 py-1.5 text-xs font-medium`}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <div className={`h-2 w-2 rounded-full ${
-                        visibility === "private" ? "bg-white" : "bg-orange-500"
-                      }`}></div>
-                      Private
-                    </div>
-                  </Button>
-                  <Button
-                    variant={visibility === "only_me" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setVisibility("only_me")}
-                    className={`${
-                      visibility === "only_me" 
-                        ? "bg-red-500 hover:bg-red-600 text-white shadow-md" 
-                        : "hover:bg-red-50 text-gray-600 hover:text-red-700"
-                    } transition-all duration-200 rounded-md px-3 py-1.5 text-xs font-medium`}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <div className={`h-2 w-2 rounded-full ${
-                        visibility === "only_me" ? "bg-white" : "bg-red-500"
-                      }`}></div>
-                      Only Me
-                    </div>
-                  </Button>
-                </div>
+                      <span className="capitalize">
+                        {visibility === "only_me" ? "Only Me" : visibility}
+                      </span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-36">
+                    <DropdownMenuItem
+                      onClick={() => setVisibility("public")}
+                      className={`cursor-pointer ${visibility === "public" ? 'bg-green-50' : ''}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                        Public
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setVisibility("private")}
+                      className={`cursor-pointer ${visibility === "private" ? 'bg-orange-50' : ''}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-orange-500"></div>
+                        Private
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setVisibility("only_me")}
+                      className={`cursor-pointer ${visibility === "only_me" ? 'bg-red-50' : ''}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-red-500"></div>
+                        Only Me
+                      </div>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
                 {/* Main Content Area */}

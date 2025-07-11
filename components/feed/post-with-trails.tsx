@@ -15,7 +15,9 @@ import {
   Trash2,
   Edit,
   Flag,
-  Repeat2
+  Repeat2,
+  Send,
+  X
 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { toast } from "sonner"
@@ -326,6 +328,15 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
                 <MessageCircle className="h-5 w-5 mr-2" />
                 {post.trails?.length || 0}
               </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleRepostClick}
+                className="text-gray-500 hover:text-green-500 transition-all duration-200"
+              >
+                <Repeat2 className="h-5 w-5 mr-2" />
+                Repost
+              </Button>
               <Button variant="ghost" size="sm" className="text-gray-500 hover:text-blue-500 transition-all duration-200">
                 <Share2 className="h-5 w-5 mr-2" />
                 Share
@@ -543,21 +554,21 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
         <AlertDialogContent className="sm:max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <Repeat2 className="h-6 w-6 mr-2" />
+              <Repeat2 className="h-6 w-6" />
               Confirm Repost
             </AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to repost this post? You can add a comment to your repost.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogContent>
-              <Textarea
-                placeholder="Add a comment to your repost..."
-                value={repostContent}
-                onChange={(e) => setRepostContent(e.target.value)}
-                className="min-h-[80px] border-gray-200 dark:border-gray-700 focus:border-pathpiper-teal focus:ring-pathpiper-teal"
-              />
-            </AlertDialogContent>
+          <div className="py-4">
+            <Textarea
+              placeholder="Add a comment to your repost..."
+              value={repostContent}
+              onChange={(e) => setRepostContent(e.target.value)}
+              className="min-h-[80px] border-gray-200 dark:border-gray-700 focus:border-pathpiper-teal focus:ring-pathpiper-teal"
+            />
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isReposting}>
               Cancel
