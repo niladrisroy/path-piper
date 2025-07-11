@@ -203,6 +203,18 @@
   transition-duration: 150ms;
 }
 
+/* Animation keyframes for feed items */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Enhanced mobile responsiveness */
 @media (max-width: 640px) {
   .feed-card-hover:hover {

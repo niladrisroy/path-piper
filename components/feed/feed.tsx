@@ -35,6 +35,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import EnhancedReactions from "./enhanced-reactions"
 import { useCustomToast } from "@/hooks/use-custom-toast"
 import EnhancedFeedItem from "./enhanced-feed-item"
+import DOMPurify from 'dompurify'
+import MarkdownIt from 'markdown-it'
 
 interface FeedPost {
   id: string
@@ -88,13 +90,29 @@ const POST_TYPE_COLORS = {
   EVENT_ANNOUNCEMENT: "bg-red-500",
 }
 
+// Initialize MarkdownIt with desired options
+const md = new MarkdownIt({
+  html: true,        // Enable HTML tags in source
+  xhtmlOut: false,        // Use '/' to close single tags (<br />)
+  breaks: true,        // Convert '\n' in paragraphs into <br>
+  linkify: true,        // Autoconvert URL-like text to links
+  typographer: true,   // Enable smartypants and other sweet transforms
+});
+
+// Function to format post content with Markdown and sanitize it
+const formatPostContent = (content: string): string => {
+  const html = md.render(content || "");
+  const cleanHtml = DOMPurify.sanitize(html);
+  return cleanHtml;
+};
+
 export default function Feed() {
   const [posts, setPosts] = useState<FeedPost[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [postTypeFilter, setPostTypeFilter] = useState('all')
   const [subjectFilter, setSubjectFilter] = useState('all')
-  const [difficultyFilter, setDifficultyFilter] = useState('all')
+  const [difficultyFilter, setDifficultyFilter] useState('all')
   const [availableSubjects, setAvailableSubjects] = useState<string[]>([])
   const { user } = useAuth()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -435,7 +453,6 @@ export default function Feed() {
               key={post.id}
               className="transform transition-all duration-300 hover:scale-[1.01]"
               style={{ 
-                animationDelay: `${index * 100}ms`,
                 animation: 'fadeInUp 0.6s ease-out forwards'
               }}
             >
