@@ -1,7 +1,4 @@
-The code is modified to include markdown formatting for post and trail content using the 'markdown-it' and 'dompurify' libraries.
-```
 
-```replit_final_file
 "use client"
 
 import { useState, useEffect } from "react"
