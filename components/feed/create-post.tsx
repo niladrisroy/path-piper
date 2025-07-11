@@ -95,7 +95,6 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
   const [isPosting, setIsPosting] = useState(false)
   const [postType, setPostType] = useState("GENERAL")
   const [tags, setTags] = useState<string[]>([])
-  const [newTag, setNewTag] = useState("")
   const [achievementType, setAchievementType] = useState("")
   const [projectCategory, setProjectCategory] = useState("")
   const [difficultyLevel, setDifficultyLevel] = useState("")
@@ -197,12 +196,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     }
   }
 
-  const addTag = () => {
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
-      setTags([...tags, newTag.trim()])
-      setNewTag("")
-    }
-  }
+  
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value
@@ -217,15 +211,12 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     setCursorPosition(position)
     setHasUnsavedChanges(true)
 
-    // Extract hashtags from content
+    // Extract hashtags from content - trigger on space or end of input
     const hashtagRegex = /#(\w+)/g
     const extractedHashtags = [...value.matchAll(hashtagRegex)].map(match => match[1])
 
-    // Update tags with extracted hashtags, avoiding duplicates
-    const uniqueHashtags = [...new Set([...tags, ...extractedHashtags])]
-    if (uniqueHashtags.length !== tags.length || !tags.every(tag => uniqueHashtags.includes(tag))) {
-      setTags(uniqueHashtags)
-    }
+    // Update tags with extracted hashtags, only keeping valid ones
+    setTags(extractedHashtags)
 
     // Check for @ mentions
     const textUpToCursor = value.substring(0, position)
@@ -815,6 +806,27 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
               {/* Main Content Area */}
               <div className="relative">
+                {/* Highlighted text overlay */}
+                <div 
+                  className={`absolute inset-0 min-h-[120px] p-3 text-transparent whitespace-pre-wrap break-words overflow-hidden pointer-events-none z-10 ${
+                    isOverLimit ? 'border-red-300' : 'border-gray-200'
+                  } border rounded-md`}
+                  style={{ 
+                    fontFamily: 'inherit',
+                    fontSize: 'inherit',
+                    lineHeight: 'inherit'
+                  }}
+                >
+                  {postText.split(/(#\w+)/g).map((part, index) => (
+                    <span
+                      key={index}
+                      className={part.startsWith('#') ? 'text-blue-600 font-medium bg-blue-50 px-1 rounded' : ''}
+                    >
+                      {part}
+                    </span>
+                  ))}
+                </div>
+                
                 <Textarea
                   ref={textareaRef}
                   value={postText}
@@ -825,7 +837,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                     postType === "QUESTION" ? "Ask your question... (Use @ to mention connections, # for hashtags)" :
                     "What's on your mind? (Use @ to mention connections, # for hashtags)"
                   }
-                  className={`min-h-[120px] resize-none border ${
+                  className={`min-h-[120px] resize-none border bg-transparent relative z-20 ${
                     isOverLimit ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-pathpiper-teal'
                   } focus:ring-1 ${
                     isOverLimit ? 'focus:ring-red-500' : 'focus:ring-pathpiper-teal'
@@ -955,21 +967,10 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                 </div>
               )}
 
-              {/* Tags */}
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <Input
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    placeholder="Add a tag..."
-                    className="flex-1"
-                    onKeyPress={(e) => e.key === 'Enter' && addTag()}
-                  />
-                  <Button onClick={addTag} size="sm" variant="outline">
-                    <Hash className="h-4 w-4" />
-                  </Button>
-                </div>
-                {tags.length > 0 && (
+              {/* Tags - Auto-detected from content */}
+              {tags.length > 0 && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Hashtags detected in your post:</label>
                   <div className="flex flex-wrap gap-1">
                     {tags.map((tag) => (
                       <Badge key={tag} variant="secondary" className="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100">
@@ -979,8 +980,8 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                       </Badge>
                     ))}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Over limit warning */}
               {isOverLimit && (
