@@ -816,50 +816,6 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
               {/* Main Content Area */}
               <div className="relative">
-                {/* Markdown Preview Overlay */}
-                <div 
-                  className={`absolute inset-0 min-h-[120px] p-3 text-gray-800 whitespace-pre-wrap break-words overflow-hidden pointer-events-none z-10 ${
-                    isOverLimit ? 'border-red-300' : 'border-gray-200'
-                  } border rounded-md bg-white/90`}
-                  style={{ 
-                    fontFamily: 'inherit',
-                    fontSize: 'inherit',
-                    lineHeight: 'inherit'
-                  }}
-                >
-                  {postText.split(/(#\w+|\*\*.*?\*\*|\*.*?\*|\[.*?\]\(.*?\))/g).map((part, index) => {
-                    if (part.startsWith('#')) {
-                      return (
-                        <span key={index} className="text-blue-600 font-medium bg-blue-50 px-1 rounded">
-                          {part}
-                        </span>
-                      )
-                    } else if (part.startsWith('**') && part.endsWith('**')) {
-                      return (
-                        <span key={index} className="font-bold bg-gray-100 px-1 rounded">
-                          {part.slice(2, -2)}
-                        </span>
-                      )
-                    } else if (part.startsWith('*') && part.endsWith('*') && !part.startsWith('**')) {
-                      return (
-                        <span key={index} className="italic bg-gray-100 px-1 rounded">
-                          {part.slice(1, -1)}
-                        </span>
-                      )
-                    } else if (part.match(/\[.*?\]\(.*?\)/)) {
-                      const linkMatch = part.match(/\[(.*?)\]\((.*?)\)/)
-                      if (linkMatch) {
-                        return (
-                          <span key={index} className="text-blue-600 underline bg-blue-50 px-1 rounded">
-                            {linkMatch[1]}
-                          </span>
-                        )
-                      }
-                    }
-                    return <span key={index}>{part}</span>
-                  })}
-                </div>
-                
                 <Textarea
                   ref={textareaRef}
                   value={postText}
@@ -870,7 +826,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                     postType === "QUESTION" ? "Ask your question... (Use @ to mention connections, # for hashtags, **bold**, *italic*)" :
                     "What's on your mind? (Use @ to mention connections, # for hashtags, **bold**, *italic*)"
                   }
-                  className={`min-h-[120px] resize-none border bg-transparent relative z-20 ${
+                  className={`min-h-[120px] resize-none border ${
                     isOverLimit ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-pathpiper-teal'
                   } focus:ring-1 ${
                     isOverLimit ? 'focus:ring-red-500' : 'focus:ring-pathpiper-teal'
