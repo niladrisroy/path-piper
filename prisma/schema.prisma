@@ -105,6 +105,7 @@ model Profile {
   postLikes         PostLike[]
   postComments      PostComment[]
   postBookmarks     PostBookmark[]
+  postReactions  PostReaction[]
 
 
   @@map("profiles")
@@ -646,15 +647,16 @@ model FeedPost {
   isPinned          Boolean  @default(false) @map("is_pinned")
   isPromoted        Boolean  @default(false) @map("is_promoted")
   createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
 
   // Relations
   author       Profile     @relation(fields: [userId], references: [id])
-  parentPost   FeedPost?   @relation("PostTrails", fields: [parentPostId], references: [id])
-  trails       FeedPost[]  @relation("PostTrails")
   likes        PostLike[]
   comments     PostComment[]
   bookmarks    PostBookmark[]
+  reactions    PostReaction[]
+  trails       FeedPost[]  @relation("PostTrails")
+  parentPost   FeedPost?   @relation("PostTrails", fields: [parentPostId], references: [id], onDelete: Cascade)
 
   @@map("feed_posts")
   @@schema("public")
@@ -685,7 +687,6 @@ model PostLike {
 
   @@unique([userId, postId])
   @@map("post_likes")
-  @@schema("public")
 }
 
 model PostComment {
@@ -703,13 +704,12 @@ model PostComment {
   replies  PostComment[] @relation("CommentReplies")
 
   @@map("post_comments")
-  @@schema("public")
 }
 
 model PostBookmark {
-  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId String @map("user_id") @db.Uuid
-  postId String @map("post_id") @db.Uuid
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  postId    String   @map("post_id") @db.Uuid
   createdAt DateTime @default(now()) @map("created_at")
 
   user Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -717,7 +717,21 @@ model PostBookmark {
 
   @@unique([userId, postId])
   @@map("post_bookmarks")
-  @@schema("public")
+}
+
+model PostReaction {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  postId       String   @map("post_id") @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  reactionType String   @default("like") @map("reaction_type") @db.VarChar(20)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  post FeedPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@map("post_reactions")
 }
 
 model AchievementCategory {
