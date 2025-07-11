@@ -66,14 +66,14 @@ export default function FollowingInstitutions({ userId }: FollowingInstitutionsP
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="p-8 space-y-8">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Following</h2>
-          <Badge variant="secondary" className="animate-pulse">Loading...</Badge>
+          <Badge variant="secondary" className="animate-pulse px-3 py-1.5 text-sm font-medium">Loading...</Badge>
         </div>
-        <div className="flex space-x-4 overflow-x-auto pb-4">
+        <div className="flex space-x-6 overflow-x-auto pb-4">
           {[...Array(3)].map((_, i) => (
-            <Card key={i} className="flex-shrink-0 w-80 animate-pulse">
+            <Card key={i} className="flex-shrink-0 w-80 animate-pulse bg-white dark:bg-gray-800">
               <CardContent className="p-6">
                 <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
                 <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
@@ -88,17 +88,17 @@ export default function FollowingInstitutions({ userId }: FollowingInstitutionsP
 
   if (error) {
     return (
-      <div className="space-y-6">
+      <div className="p-8 space-y-8">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Following</h2>
-          <Badge variant="destructive">Error</Badge>
+          <Badge variant="destructive" className="px-3 py-1.5 text-sm font-medium">Error</Badge>
         </div>
-        <div className="text-center py-12">
-          <p className="text-red-600 dark:text-red-400">{error}</p>
+        <div className="text-center py-16">
+          <p className="text-red-600 dark:text-red-400 mb-6">{error}</p>
           <Button 
             variant="outline" 
             onClick={() => window.location.reload()} 
-            className="mt-4"
+            className="px-6 py-2 h-10"
           >
             Try Again
           </Button>
@@ -109,20 +109,20 @@ export default function FollowingInstitutions({ userId }: FollowingInstitutionsP
 
   if (institutions.length === 0) {
     return (
-      <div className="space-y-6">
+      <div className="p-8 space-y-8">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Following</h2>
-          <Badge variant="secondary">0 institutions</Badge>
+          <Badge variant="secondary" className="px-3 py-1.5 text-sm font-medium">0 institutions</Badge>
         </div>
-        <div className="text-center py-12">
-          <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+        <div className="text-center py-16">
+          <Users className="h-16 w-16 text-gray-400 mx-auto mb-6" />
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
             No institutions followed yet
           </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
+          <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
             Start following institutions to stay updated with their latest news and opportunities.
           </p>
-          <Button variant="outline">
+          <Button variant="outline" className="px-6 py-2 h-10">
             Explore Institutions
           </Button>
         </div>
@@ -131,17 +131,19 @@ export default function FollowingInstitutions({ userId }: FollowingInstitutionsP
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-8 space-y-8">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Following</h2>
-        <Badge variant="secondary">{institutions.length} institution{institutions.length !== 1 ? 's' : ''}</Badge>
+        <Badge variant="secondary" className="px-3 py-1.5 text-sm font-medium">
+          {institutions.length} institution{institutions.length !== 1 ? 's' : ''}
+        </Badge>
       </div>
       
       <div className="flex space-x-6 overflow-x-auto pb-4 scrollbar-hide">
         {institutions.map((institution) => (
           <Card 
             key={institution.id} 
-            className="flex-shrink-0 w-80 hover:shadow-lg transition-shadow duration-200 border border-gray-200 dark:border-gray-700"
+            className="flex-shrink-0 w-80 hover:shadow-lg transition-shadow duration-200 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
           >
             {/* Cover Image */}
             {institution.coverImageUrl && (
@@ -224,19 +226,19 @@ export default function FollowingInstitutions({ userId }: FollowingInstitutionsP
                   </div>
 
                   {/* Actions */}
-                  <div className="flex space-x-2">
-                    <Button size="sm" variant="outline" className="flex-1">
+                  <div className="flex gap-2 mt-4">
+                    <Button size="sm" variant="outline" className="flex-1 h-9 text-sm font-medium">
                       View Profile
                     </Button>
                     {institution.website && (
-                      <Button size="sm" variant="ghost" asChild>
+                      <Button size="sm" variant="ghost" className="h-9 w-9 p-0" asChild>
                         <a 
                           href={institution.website} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="flex items-center space-x-1"
+                          className="flex items-center justify-center"
                         >
-                          <ExternalLink className="h-3 w-3" />
+                          <ExternalLink className="h-4 w-4" />
                         </a>
                       </Button>
                     )}
