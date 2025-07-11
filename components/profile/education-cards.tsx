@@ -27,13 +27,13 @@ export default function EducationCards({ educationHistory: realEducationHistory,
       // Debug log for complete raw education data
       console.log('🔍 RAW Education data received:', JSON.stringify(edu, null, 2));
       console.log('🔍 Education verification status:', {
-        institution: edu.institutionName,
-        institutionVerified: edu.institutionVerified,
-        type: typeof edu.institutionVerified,
-        hasProperty: edu.hasOwnProperty('institutionVerified'),
-        keys: Object.keys(edu)
-      });
-      
+          institution: edu.institutionName,
+          institutionVerified: edu.institutionVerified,
+          type: typeof edu.institutionVerified,
+          hasProperty: Object.prototype.hasOwnProperty.call(education, 'institutionVerified'),
+          allKeys: Object.keys(edu)
+        });
+
       return {
         school: edu.institutionName,
         type: edu.institutionTypeName || "Institution",

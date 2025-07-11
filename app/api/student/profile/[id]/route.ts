@@ -171,7 +171,7 @@ export async function GET(
           institutionVerified: edu.institutionVerified,
           fullRecord: edu
         }, null, 2));
-        
+
         console.log('🔍 API Education verification status:', {
           institution: edu.institutionName,
           institutionVerified: edu.institutionVerified,
@@ -179,7 +179,7 @@ export async function GET(
           hasProperty: Object.prototype.hasOwnProperty.call(edu, 'institutionVerified'),
           allKeys: Object.keys(edu)
         });
-        
+
         return {
           id: edu.id,
           institutionName: edu.institutionName,
