@@ -92,14 +92,7 @@ export async function GET(request: NextRequest) {
         role: true,
         profileImageUrl: true,
         bio: true,
-        location: true,
-        institution: {
-          select: {
-            institutionName: true,
-            institutionType: true,
-            logoUrl: true
-          }
-        }
+        location: true
       },
       take: 20, // Limit results
       orderBy: [
@@ -112,33 +105,7 @@ export async function GET(request: NextRequest) {
       ]
     })
 
-    // Get follow status for institutions if user is authenticated
-    let followedInstitutions: string[] = []
-    if (user) {
-      const follows = await prisma.institutionFollowConnection.findMany({
-        where: {
-          senderId: user.id,
-          receiverId: {
-            in: users.filter(u => u.role === 'institution').map(u => u.id)
-          }
-        },
-        select: {
-          receiverId: true
-        }
-      })
-      followedInstitutions = follows.map(f => f.receiverId)
-    }
-
-    // Add follow status to results
-    const usersWithFollowStatus = users.map(user => ({
-      ...user,
-      isFollowed: user.role === 'institution' ? followedInstitutions.includes(user.id) : undefined,
-      institutionName: user.institution?.institutionName,
-      institutionType: user.institution?.institutionType,
-      logoUrl: user.institution?.logoUrl
-    }))
-
-    return NextResponse.json(usersWithFollowStatus)
+    return NextResponse.json(users)
 
   } catch (error) {
     console.error('Error searching users:', error)
