@@ -689,6 +689,7 @@ model PostLike {
 
   @@unique([userId, postId])
   @@map("post_likes")
+  @@schema("public")
 }
 
 model PostComment {
@@ -706,6 +707,7 @@ model PostComment {
   replies  PostComment[] @relation("CommentReplies")
 
   @@map("post_comments")
+  @@schema("public")
 }
 
 model PostBookmark {
@@ -719,6 +721,7 @@ model PostBookmark {
 
   @@unique([userId, postId])
   @@map("post_bookmarks")
+  @@schema("public")
 }
 
 model PostReaction {
