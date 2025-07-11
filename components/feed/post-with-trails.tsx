@@ -1,5 +1,3 @@
-
-
 "use client"
 
 import { useState, useEffect, useRef, useMemo } from "react"
@@ -178,7 +176,7 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
         const data = await response.json()
         setIsLiked(data.isLiked)
         setLikesCount(data.likesCount)
-        
+
         if (data.isLiked) {
           showToast({
             title: "Post liked!",
@@ -203,7 +201,7 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
         const data = await response.json()
         setIsBookmarked(data.isBookmarked)
         setBookmarksCount(data.bookmarksCount)
-        
+
         if (data.isBookmarked) {
           showToast({
             title: "Post saved!",
