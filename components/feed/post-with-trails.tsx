@@ -1,3 +1,7 @@
+The code is modified to include markdown formatting for post and trail content using the 'markdown-it' and 'dompurify' libraries.
+```
+
+```replit_final_file
 "use client"
 
 import { useState, useEffect } from "react"
@@ -23,6 +27,9 @@ import { useAuth } from "@/hooks/use-auth"
 import { toast } from "sonner"
 import Image from "next/image"
 import { formatDistanceToNow } from "date-fns"
+import { useCustomToast } from "@/hooks/use-custom-toast"
+import DOMPurify from 'dompurify'
+import MarkdownIt from 'markdown-it'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 
@@ -62,6 +69,24 @@ interface PostWithTrailsProps {
   onRepost?: (postId: string, content?: string) => void
 }
 
+const CHARACTER_LIMIT = 287
+
+// Initialize MarkdownIt with desired options
+const md = new MarkdownIt({
+  html: true,        // Enable HTML tags in source
+  xhtmlOut: false,        // Use '/' to close single tags (<br />)
+  breaks: true,        // Convert '\n' in paragraphs into <br>
+  linkify: true,        // Autoconvert URL-like text to links
+  typographer: true,   // Enable smartypants and other sweet transforms
+});
+
+// Function to format post content with Markdown and sanitize it
+const formatPostContent = (content: string): string => {
+  const html = md.render(content || "");
+  const cleanHtml = DOMPurify.sanitize(html);
+  return cleanHtml;
+};
+
 export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWithTrailsProps) {
   const { user } = useAuth()
   const [likedTrails, setLikedTrails] = useState<Set<string>>(new Set())
@@ -77,8 +102,7 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
   const [showRepostDialog, setShowRepostDialog] = useState(false)
   const [repostContent, setRepostContent] = useState("")
   const [isReposting, setIsReposting] = useState(false)
-  
-  const CHARACTER_LIMIT = 287
+
 
   const reactionTypes = [
     { type: 'like', emoji: '❤️', label: 'Like' },
@@ -307,9 +331,12 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
         <CardContent className="space-y-6">
           {/* Post Content */}
           <div className="space-y-4">
-            <p className="text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">
-              {post.content}
-            </p>
+            <div className="prose prose-sm max-w-none text-gray-900 dark:text-gray-100">
+                <div 
+                  className="mb-0 whitespace-pre-wrap break-words leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: formatPostContent(post.content) }}
+                />
+              </div>
             {post.imageUrl && (
               <div className="relative rounded-xl overflow-hidden shadow-lg">
                 <Image
@@ -476,9 +503,12 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
                       )}
                     </div>
 
-                    <p className="text-gray-800 dark:text-gray-200 text-sm leading-relaxed whitespace-pre-wrap mb-3">
-                      {trail.content}
-                    </p>
+                    <div className="prose prose-sm max-w-none text-gray-700 dark:text-gray-300">
+                      <div 
+                        className="mb-0 whitespace-pre-wrap break-words text-sm leading-relaxed"
+                        dangerouslySetInnerHTML={{ __html: formatPostContent(trail.content) }}
+                      />
+                    </div>
 
                     {trail.imageUrl && (
                       <div className="relative rounded-lg overflow-hidden mb-3">
