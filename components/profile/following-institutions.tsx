@@ -209,7 +209,17 @@ export default function FollowingInstitutions({ userId }: FollowingInstitutionsP
                   <div className="flex items-center space-x-1 mb-4">
                     <Calendar className="h-3 w-3 text-gray-500" />
                     <span className="text-xs text-gray-600 dark:text-gray-400">
-                      Following since {formatDistanceToNow(new Date(institution.followedAt), { addSuffix: true })}
+                      Following since {(() => {
+                        try {
+                          const date = new Date(institution.followedAt);
+                          if (isNaN(date.getTime())) {
+                            return 'recently';
+                          }
+                          return formatDistanceToNow(date, { addSuffix: true });
+                        } catch (error) {
+                          return 'recently';
+                        }
+                      })()}
                     </span>
                   </div>
 

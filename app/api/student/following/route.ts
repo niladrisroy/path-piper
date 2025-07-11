@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@supabase/supabase-js'
@@ -75,7 +74,7 @@ export async function GET(request: NextRequest) {
         verified: institution?.verified || false,
         bio: profile.bio,
         location: profile.location,
-        followedAt: connection.createdAt
+        followedAt: connection.connectedAt ? new Date(connection.connectedAt).toISOString() : new Date().toISOString()
       }
     })
 
