@@ -106,60 +106,6 @@ export async function GET(
           }
         },
         educationHistory: {
-          select: {
-            id: true,
-            institutionName: true,
-            institutionTypeName: true,
-            degreeProgram: true,
-            fieldOfStudy: true,
-            gradeLevel: true,
-            startDate: true,
-            endDate: true,
-            isCurrent: true,
-            gpa: true,
-            subjects: true,
-            achievements: true,
-            description: true,
-            institutionVerified: true, // Include verification status
-          },
-          orderBy: {
-            startDate: 'desc'
-          }
-        },
-        profile: {
-          include: {
-            userInterests: {
-              include: {
-                interest: {
-                  include: {
-                    category: true
-                  }
-                }
-              }
-            },
-            userSkills: {
-              include: {
-                skill: {
-                  include: {
-                    category: true
-                  }
-                }
-              }
-            },
-            socialLinks: true,
-            goals: {
-              orderBy: {
-                createdAt: 'desc'
-              }
-            },
-            customBadges: {
-              orderBy: {
-                earnedDate: 'desc'
-              }
-            }
-          }
-        },
-        educationHistory: {
           include: {
             institutionType: {
               include: {
@@ -232,8 +178,7 @@ export async function GET(
         gradeLevel: edu.gradeLevel,
         gpa: edu.gpa,
         achievements: edu.achievements,
-        description: edu.description,
-        institutionVerified: edu.institutionVerified
+        description: edu.description
       }))
     }
 
