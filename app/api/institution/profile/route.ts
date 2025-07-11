@@ -1,12 +1,71 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import { cookies } from 'next/headers'
-import { prisma } from '@/lib/prisma'
+import { NextRequest, NextResponse } from "next/server"
+import { cookies } from "next/headers"
+import { supabase } from "@/lib/supabase"
+import { prisma } from "@/lib/prisma"
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+const OPENAI_API_KEY = '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'
+
+export async function GET(request: NextRequest) {
+  try {
+    console.log('🏛️ Institution profile GET request received')
+
+    // Get auth token from cookies
+    const cookieStore = await cookies()
+    const token = cookieStore.get('sb-access-token')?.value
+
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Verify token with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token)
+
+    if (error || !user) {
+      console.error('Auth error:', error)
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Get institution profile
+    const profile = await prisma.profile.findUnique({
+      where: { id: user.id },
+      include: {
+        institution: true
+      }
+    })
+
+    if (!profile || profile.role !== 'institution') {
+      return NextResponse.json({ error: 'Institution profile not found' }, { status: 404 })
+    }
+
+    const institutionProfile = profile.institution
+
+    return NextResponse.json({ 
+      profile: {
+        id: profile.id,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        bio: profile.bio,
+        location: profile.location,
+        institutionName: institutionProfile?.institutionName,
+        institutionType: institutionProfile?.institutionType,
+        website: institutionProfile?.website,
+        logoUrl: institutionProfile?.logoUrl,
+        coverImageUrl: institutionProfile?.coverImageUrl,
+        overview: institutionProfile?.overview,
+        mission: institutionProfile?.mission,
+        coreValues: institutionProfile?.coreValues,
+        verified: institutionProfile?.verified || false
+      }
+    })
+
+  } catch (error) {
+    console.error('Institution profile GET error:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch institution profile' },
+      { status: 500 }
+    )
+  }
+}
 
 export async function PATCH(request: NextRequest) {
   try {

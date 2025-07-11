@@ -143,32 +143,41 @@ export default function InstitutionSelfAnalysisPage() {
     try {
       console.log('⚠️ Fetching institution profile data')
       
-      // Fetch institution profile data
-      const response = await fetch(`/api/institution/profile`)
-      if (!response.ok) {
-        throw new Error('Failed to fetch institution profile data')
-      }
-      
-      const data = await response.json()
-      
-      // Fetch followers count
-      const followersResponse = await fetch(`/api/institutions/followers`)
-      const followersData = await followersResponse.json()
+      // Fetch all data in parallel using the same approach as institution profile page
+      const [profileResponse, programsResponse, facultyResponse, facilitiesResponse, eventsResponse, galleryResponse, followersResponse] = await Promise.all([
+        fetch('/api/institution/profile', { method: 'POST' }),
+        fetch('/api/institution/programs'),
+        fetch('/api/institution/faculty'),
+        fetch('/api/institution/facilities'),
+        fetch('/api/institution/events'),
+        fetch('/api/institution/gallery'),
+        fetch('/api/institutions/followers')
+      ])
+
+      const [profileData, programsData, facultyData, facilitiesData, eventsData, galleryData, followersData] = await Promise.all([
+        profileResponse.ok ? profileResponse.json() : { profile: null },
+        programsResponse.ok ? programsResponse.json() : { programs: [] },
+        facultyResponse.ok ? facultyResponse.json() : { faculty: [] },
+        facilitiesResponse.ok ? facilitiesResponse.json() : { facilities: [] },
+        eventsResponse.ok ? eventsResponse.json() : { events: [] },
+        galleryResponse.ok ? galleryResponse.json() : { gallery: [] },
+        followersResponse.ok ? followersResponse.json() : { followers: [] }
+      ])
       
       const institutionData: InstitutionData = {
         profile: {
-          ...data.profile,
-          institutionName: data.profile?.institutionName || 'Institution',
-          institutionType: data.profile?.institutionType || 'Educational Institution',
-          website: data.profile?.website,
-          description: data.profile?.bio || '',
-          verified: data.profile?.verified || false
+          ...profileData.profile,
+          institutionName: profileData.profile?.institutionName || 'Institution',
+          institutionType: profileData.profile?.institutionType || 'Educational Institution',
+          website: profileData.profile?.website,
+          description: profileData.profile?.bio || profileData.profile?.overview || '',
+          verified: profileData.profile?.verified || false
         },
-        programs: data.programs || [],
-        faculty: data.faculty || [],
-        facilities: data.facilities || [],
-        events: data.events || [],
-        gallery: data.gallery || [],
+        programs: programsData.programs || [],
+        faculty: facultyData.faculty || [],
+        facilities: facilitiesData.facilities || [],
+        events: eventsData.events || [],
+        gallery: galleryData.gallery || [],
         followers: followersData?.followers?.length || 0
       }
 
