@@ -140,8 +140,7 @@ export async function POST(request: NextRequest) {
         achievementType: isAchievement ? achievementType : null,
         projectCategory: postType === "PROJECT" ? projectCategory : null,
         moderationStatus,
-        engagementScore: 0,
-        linkPreview: linkPreview ? JSON.stringify(linkPreview) : null
+        engagementScore: 0
       },
       include: {
         author: {
@@ -347,7 +346,6 @@ export async function GET(request: NextRequest) {
         ...post,
         tags: Array.isArray(post.tags) ? post.tags : [],
         subjects: Array.isArray(post.subjects) ? post.subjects : [],
-        linkPreview: post.linkPreview ? (typeof post.linkPreview === 'string' ? JSON.parse(post.linkPreview) : post.linkPreview) : null,
         // Ensure consistent like data structure
         likesCount: post.likesCount || 0,
         _count: {
