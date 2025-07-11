@@ -156,7 +156,7 @@ export default function InstitutionSelfAnalysisPage() {
       const [profileData, programsData, facultyData, facilitiesData, eventsData, galleryData, followersData] = await Promise.all([
         profileResponse.ok ? profileResponse.json() : { profile: null },
         programsResponse.ok ? programsResponse.json() : { programs: [] },
-        facultyResponse.ok ? programsResponse.json() : { faculty: [] },
+        facultyResponse.ok ? facultyResponse.json() : { faculty: [] },
         facilitiesResponse.ok ? facilitiesResponse.json() : { facilities: [] },
         eventsResponse.ok ? eventsResponse.json() : { events: [] },
         galleryResponse.ok ? galleryResponse.json() : { gallery: [] },
