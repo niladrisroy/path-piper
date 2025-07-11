@@ -68,7 +68,7 @@ export default function EducationCards({ educationHistory: realEducationHistory,
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-semibold text-lg truncate">{education.school}</h4>
-                        {education.isVerified === true ? (
+                        {education.isVerified ? (
                           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs flex-shrink-0">
                             <CheckCircle className="h-3 w-3 mr-1" />
                             Verified
