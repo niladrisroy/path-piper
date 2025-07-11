@@ -1,9 +1,26 @@
 "use client"
-import Image from "next/image"
+
+import { useState } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Verified, Globe, Calendar, Users, GraduationCap, MapPin, ExternalLink, Edit, BookOpen, Building, Award } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { 
+  MapPin, 
+  ExternalLink, 
+  Users, 
+  BookOpen, 
+  Award, 
+  Calendar,
+  Verified,
+  Building,
+  GraduationCap,
+  Settings
+} from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
+import FollowersDialog from "./followers-dialog"
 
 interface InstitutionData {
   id: string
@@ -46,7 +63,10 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
     profileImage: institutionData.logo,
     verified: institutionData.verified,
     specialties: ["Computer Science", "Engineering", "Business", "Medicine", "Law"], // Default - could be dynamic
+    followers: 500,
   }
+
+  const [showFollowersDialog, setShowFollowersDialog] = useState(false)
 
   // Mock circles data
   const academicCommunities = [
@@ -217,7 +237,7 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
               // Blue gradient fallback
               <div className={`w-full h-full bg-gradient-to-r ${institution.bannerColor}`}></div>
             )}
-            
+
             {/* View all photos button */}
             {institutionData.gallery && institutionData.gallery.length > 0 && (
               <div className="absolute top-4 right-4">
@@ -371,6 +391,15 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
                       <Award className="h-3.5 w-3.5 text-teal-500" data-tooltip="Global ranking" />
                       <span data-tooltip="Global ranking">Top 5 Globally</span>
                     </div>
+                    {/* Followers Count - Clickable */}
+                    <button
+                      onClick={() => setShowFollowersDialog(true)}
+                      className="flex items-center gap-1.5 bg-gradient-to-r from-rose-50 to-pink-50 dark:from-rose-900/20 dark:to-pink-900/20 text-rose-600 dark:text-rose-300 px-3 py-1.5 rounded-full hover:bg-gradient-to-r hover:from-rose-100 hover:to-pink-100 dark:hover:from-rose-900/30 dark:hover:to-pink-900/30 transition-all cursor-pointer"
+                      data-tooltip="View followers"
+                    >
+                      <Users className="h-3.5 w-3.5 text-rose-500" />
+                      <span>{institution.followers?.toLocaleString() || 0} Followers</span>
+                    </button>
                   </div>
 
                   {/* Academic Communities - Instagram-style story highlights with horizontal scroll */}
@@ -482,6 +511,15 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
           </div>
         </div>
       </div>
+
+      {/* Followers Dialog */}
+      <FollowersDialog
+        institutionId={institutionData.id}
+        institutionName={institutionData.name}
+        isOpen={showFollowersDialog}
+        onClose={() => setShowFollowersDialog(false)}
+        followerCount={institution.followers || 0}
+      />
     </>
   )
 }
