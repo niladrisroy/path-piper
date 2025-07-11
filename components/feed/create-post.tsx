@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useRef } from "react"
@@ -154,7 +155,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
   useEffect(() => {
     const urlRegex = /(https?:\/\/[^\s]+)/g
     const urls = postText.match(urlRegex)
-
+    
     if (urls && urls.length > 0 && !isLoadingPreview) {
       const firstUrl = urls[0]
       if (linkPreview?.url !== firstUrl) {
@@ -195,17 +196,17 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     }
   }
 
-
+  
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value
     const position = e.target.selectionStart
-
+    
     // Enforce character limit
     if (value.length > CHARACTER_LIMIT) {
       return
     }
-
+    
     setPostText(value)
     setCursorPosition(position)
     setHasUnsavedChanges(true)
@@ -258,12 +259,12 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     const textUpToCursor = postText.substring(0, cursorPosition)
     const textAfterCursor = postText.substring(cursorPosition)
     const newText = textUpToCursor + emoji + textAfterCursor
-
+    
     if (newText.length <= CHARACTER_LIMIT) {
       setPostText(newText)
       setHasUnsavedChanges(true)
       setShowEmojiPicker(false)
-
+      
       setTimeout(() => {
         textareaRef.current?.focus()
         const newPosition = cursorPosition + emoji.length
@@ -274,11 +275,11 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
   const applyRichTextFormat = (format: string) => {
     if (!textareaRef.current) return
-
+    
     const start = textareaRef.current.selectionStart
     const end = textareaRef.current.selectionEnd
     const selectedText = postText.substring(start, end)
-
+    
     if (selectedText) {
       let formattedText = ""
       switch (format) {
@@ -299,7 +300,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
         default:
           return
       }
-
+      
       const newText = postText.substring(0, start) + formattedText + postText.substring(end)
       if (newText.length <= CHARACTER_LIMIT) {
         setPostText(newText)
@@ -313,11 +314,11 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     const textAfterCursor = postText.substring(cursorPosition)
     const listItem = "\n• "
     const newText = textUpToCursor + listItem + textAfterCursor
-
+    
     if (newText.length <= CHARACTER_LIMIT) {
       setPostText(newText)
       setHasUnsavedChanges(true)
-
+      
       setTimeout(() => {
         textareaRef.current?.focus()
         const newPosition = cursorPosition + listItem.length
@@ -444,12 +445,6 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
       window.removeEventListener('beforeunload', handleBeforeUnload)
     }
   }, [hasUnsavedChanges])
-
-    // Smart hashtag suggestions (simple example)
-    const getSmartHashtagSuggestions = () => {
-      const commonTopics = ["programming", "coding", "tutorial", "help", "project", "career", "community"];
-      return commonTopics.filter(topic => !tags.includes(topic)).slice(0, 3); // Suggest up to 3 topics
-    };
 
   if (isTrail) {
     return (
@@ -677,7 +672,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                       </Button>
                     )
                   })}
-
+                  
                   {/* All Post Types Dropdown */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -831,7 +826,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                     </span>
                   ))}
                 </div>
-
+                
                 <Textarea
                   ref={textareaRef}
                   value={postText}
@@ -985,36 +980,6 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                       </Badge>
                     ))}
                   </div>
-                </div>
-              )}
-
-                  {/* Smart hashtag suggestions */}
-                  {tags.length < 10 && getSmartHashtagSuggestions().length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-blue-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-                        <span className="text-xs text-blue-700 font-medium">Suggested hashtags:</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {getSmartHashtagSuggestions().map((suggestion) => (
-                          <button
-                            key={suggestion}
-                            onClick={() => {
-                              const newText = postText + ` #${suggestion}`
-                              if (newText.length <= CHARACTER_LIMIT) {
-                                setPostText(newText)
-                                setHasUnsavedChanges(true)
-                              }
-                            }}
-                            className="text-xs bg-white border border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300 px-2 py-1 rounded-full transition-all duration-200 flex items-center gap-1"
-                          >
-                            <Plus className="h-3 w-3" />
-                            #{suggestion}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
 
