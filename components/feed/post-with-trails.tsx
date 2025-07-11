@@ -14,8 +14,8 @@ import {
   MoreHorizontal,
   Trash2,
   Edit,
-  Send,
-  X
+  Flag,
+  Repeat2
 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { toast } from "sonner"
@@ -55,14 +55,12 @@ interface Post {
 }
 
 interface PostWithTrailsProps {
-  post: Post
+  post: any
   onPostUpdate: () => void
+  onRepost?: (postId: string, content?: string) => void
 }
 
-export default function PostWithTrails({ 
-  post, 
-  onPostUpdate
-}: PostWithTrailsProps) {
+export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWithTrailsProps) {
   const { user } = useAuth()
   const [likedTrails, setLikedTrails] = useState<Set<string>>(new Set())
   const [trailLikeCounts, setTrailLikeCounts] = useState<{[key: string]: number}>({})
@@ -74,6 +72,9 @@ export default function PostWithTrails({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deletingItem, setDeletingItem] = useState<{id: string, type: 'post' | 'trail', trailOrder?: number} | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [showRepostDialog, setShowRepostDialog] = useState(false)
+  const [repostContent, setRepostContent] = useState("")
+  const [isReposting, setIsReposting] = useState(false)
 
   const reactionTypes = [
     { type: 'like', emoji: '❤️', label: 'Like' },
@@ -231,6 +232,20 @@ export default function PostWithTrails({
 
   const canDelete = (authorId: string) => {
     return user && user.id === authorId
+  }
+
+  const handleRepostClick = () => {
+    setShowRepostDialog(true)
+  }
+
+  const handleRepostConfirm = () => {
+    setIsReposting(true)
+    if (onRepost) {
+      onRepost(post.id, repostContent)
+      toast.success("Post reposted successfully!")
+    }
+    setShowRepostDialog(false)
+    setIsReposting(false)
   }
 
   return (
@@ -516,6 +531,51 @@ export default function PostWithTrails({
                 <>
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete {deletingItem?.type === 'post' ? 'Post' : 'Trail'}
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Repost Confirmation Dialog */}
+      <AlertDialog open={showRepostDialog} onOpenChange={setShowRepostDialog}>
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Repeat2 className="h-6 w-6 mr-2" />
+              Confirm Repost
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to repost this post? You can add a comment to your repost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogContent>
+              <Textarea
+                placeholder="Add a comment to your repost..."
+                value={repostContent}
+                onChange={(e) => setRepostContent(e.target.value)}
+                className="min-h-[80px] border-gray-200 dark:border-gray-700 focus:border-pathpiper-teal focus:ring-pathpiper-teal"
+              />
+            </AlertDialogContent>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isReposting}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRepostConfirm}
+              disabled={isReposting}
+              className="bg-green-600 hover:bg-green-700 focus:ring-green-600"
+            >
+              {isReposting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Reposting...
+                </>
+              ) : (
+                <>
+                  <Repeat2 className="h-4 w-4 mr-2" />
+                  Repost
                 </>
               )}
             </AlertDialogAction>

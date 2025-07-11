@@ -503,32 +503,60 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                   </DropdownMenu>
                 </div>
 
-                {/* Visibility Dropdown */}
-                <Select value={visibility} onValueChange={setVisibility}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="public">
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                        Public
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="private">
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-orange-500"></div>
-                        Private
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="only_me">
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-red-500"></div>
-                        Only me
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                {/* Enhanced Visibility Buttons */}
+                <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                  <Button
+                    variant={visibility === "public" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setVisibility("public")}
+                    className={`${
+                      visibility === "public" 
+                        ? "bg-green-500 hover:bg-green-600 text-white shadow-md" 
+                        : "hover:bg-green-50 text-gray-600 hover:text-green-700"
+                    } transition-all duration-200 rounded-md px-3 py-1.5 text-xs font-medium`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <div className={`h-2 w-2 rounded-full ${
+                        visibility === "public" ? "bg-white" : "bg-green-500"
+                      }`}></div>
+                      Public
+                    </div>
+                  </Button>
+                  <Button
+                    variant={visibility === "private" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setVisibility("private")}
+                    className={`${
+                      visibility === "private" 
+                        ? "bg-orange-500 hover:bg-orange-600 text-white shadow-md" 
+                        : "hover:bg-orange-50 text-gray-600 hover:text-orange-700"
+                    } transition-all duration-200 rounded-md px-3 py-1.5 text-xs font-medium`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <div className={`h-2 w-2 rounded-full ${
+                        visibility === "private" ? "bg-white" : "bg-orange-500"
+                      }`}></div>
+                      Private
+                    </div>
+                  </Button>
+                  <Button
+                    variant={visibility === "only_me" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setVisibility("only_me")}
+                    className={`${
+                      visibility === "only_me" 
+                        ? "bg-red-500 hover:bg-red-600 text-white shadow-md" 
+                        : "hover:bg-red-50 text-gray-600 hover:text-red-700"
+                    } transition-all duration-200 rounded-md px-3 py-1.5 text-xs font-medium`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <div className={`h-2 w-2 rounded-full ${
+                        visibility === "only_me" ? "bg-white" : "bg-red-500"
+                      }`}></div>
+                      Only Me
+                    </div>
+                  </Button>
+                </div>
               </div>
 
                 {/* Main Content Area */}

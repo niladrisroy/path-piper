@@ -178,6 +178,35 @@ export default function Feed() {
     }
   }
 
+  const handleRepost = async (postId: string, content?: string) => {
+    if (!user) {
+      toast.error("Please login to repost")
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/feed/posts/${postId}/repost`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ content: content || '' })
+      })
+
+      if (response.ok) {
+        toast.success("Post reposted successfully!")
+        fetchPosts() // Refresh the feed
+      } else {
+        const error = await response.json()
+        toast.error(error.message || "Failed to repost")
+      }
+    } catch (error) {
+      console.error('Error reposting:', error)
+      toast.error("Failed to repost")
+    }
+  }
+
   const handlePostCreated = () => {
     fetchPosts()
   }
@@ -414,6 +443,7 @@ export default function Feed() {
                 <PostWithTrails
                   post={post}
                   onPostUpdate={fetchPosts}
+                  onRepost={handleRepost}
                 />
 
                 {/* Enhanced Reactions Section */}
