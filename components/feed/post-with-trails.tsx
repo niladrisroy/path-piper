@@ -77,6 +77,8 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
   const [showRepostDialog, setShowRepostDialog] = useState(false)
   const [repostContent, setRepostContent] = useState("")
   const [isReposting, setIsReposting] = useState(false)
+  
+  const CHARACTER_LIMIT = 287
 
   const reactionTypes = [
     { type: 'like', emoji: '❤️', label: 'Like' },
@@ -103,6 +105,11 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
   const handleAddTrail = async () => {
     if (!trailContent.trim() || !user) {
       toast.error("Please write something before posting")
+      return
+    }
+
+    if (trailContent.length > CHARACTER_LIMIT) {
+      toast.error(`Trail content exceeds ${CHARACTER_LIMIT} characters. Please shorten your content.`)
       return
     }
 
@@ -361,9 +368,20 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
                   <Textarea
                     placeholder="Add to the trail..."
                     value={trailContent}
-                    onChange={(e) => setTrailContent(e.target.value)}
-                    className="min-h-[80px] border-gray-200 dark:border-gray-700 focus:border-pathpiper-teal focus:ring-pathpiper-teal"
+                    onChange={(e) => {
+                      if (e.target.value.length <= CHARACTER_LIMIT) {
+                        setTrailContent(e.target.value)
+                      }
+                    }}
+                    className={`min-h-[80px] border ${
+                      trailContent.length > CHARACTER_LIMIT ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-pathpiper-teal'
+                    } dark:border-gray-700 focus:ring-pathpiper-teal`}
                   />
+                  <div className={`text-xs mt-1 ${
+                    trailContent.length > CHARACTER_LIMIT - 50 ? 'text-orange-500' : 'text-gray-400'
+                  } ${trailContent.length > CHARACTER_LIMIT ? 'text-red-500' : ''}`}>
+                    {trailContent.length}/{CHARACTER_LIMIT} characters
+                  </div>
                   <div className="flex items-center justify-between">
                     <Button
                       variant="ghost"
@@ -565,9 +583,20 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
             <Textarea
               placeholder="Add a comment to your repost..."
               value={repostContent}
-              onChange={(e) => setRepostContent(e.target.value)}
-              className="min-h-[80px] border-gray-200 dark:border-gray-700 focus:border-pathpiper-teal focus:ring-pathpiper-teal"
+              onChange={(e) => {
+                if (e.target.value.length <= CHARACTER_LIMIT) {
+                  setRepostContent(e.target.value)
+                }
+              }}
+              className={`min-h-[80px] border ${
+                repostContent.length > CHARACTER_LIMIT ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-pathpiper-teal'
+              } dark:border-gray-700 focus:ring-pathpiper-teal`}
             />
+            <div className={`text-xs mt-1 ${
+              repostContent.length > CHARACTER_LIMIT - 50 ? 'text-orange-500' : 'text-gray-400'
+            } ${repostContent.length > CHARACTER_LIMIT ? 'text-red-500' : ''}`}>
+              {repostContent.length}/{CHARACTER_LIMIT} characters
+            </div>
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isReposting}>

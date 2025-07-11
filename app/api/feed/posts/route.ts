@@ -70,7 +70,8 @@ export async function POST(request: NextRequest) {
       difficultyLevel,
       isQuestion = false,
       isAchievement = false,
-      forceTrail = false
+      forceTrail = false,
+      linkPreview
     } = body
 
     if (!content || content.trim().length === 0) {
@@ -140,6 +141,7 @@ export async function POST(request: NextRequest) {
         projectCategory: postType === "PROJECT" ? projectCategory : null,
         moderationStatus,
         engagementScore: 0,
+        linkPreview
       },
       include: {
         author: {

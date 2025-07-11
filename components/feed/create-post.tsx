@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useRef } from "react"
@@ -9,6 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { 
   ImageIcon, 
   Video, 
@@ -25,12 +28,15 @@ import {
   Share2,
   Calendar,
   Hash,
-  X
+  X,
+  Bold,
+  Italic,
+  List,
+  Link2,
+  Type
 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { toast } from "sonner"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 
 interface CreatePostProps {
   parentPostId?: string
@@ -66,7 +72,23 @@ const DIFFICULTY_LEVELS = [
   { value: "expert", label: "Expert" }
 ]
 
+const EMOJIS = [
+  "😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇",
+  "🙂", "🙃", "😉", "😌", "😍", "🥰", "😘", "😗", "😙", "😚",
+  "😋", "😛", "😝", "😜", "🤪", "🤨", "🧐", "🤓", "😎", "🤩",
+  "🥳", "😏", "😒", "😞", "😔", "😟", "😕", "🙁", "☹️", "😣",
+  "😖", "😫", "😩", "🥺", "😢", "😭", "😤", "😠", "😡", "🤬",
+  "🤯", "😳", "🥵", "🥶", "😱", "😨", "😰", "😥", "😓", "🤗",
+  "🤔", "🤭", "🤫", "🤥", "😶", "😐", "😑", "😬", "🙄", "😯",
+  "💭", "💫", "⭐", "🌟", "✨", "🔥", "💯", "💢", "💥", "💨",
+  "🎉", "🎊", "🎈", "🎂", "🎀", "🎁", "🏆", "🥇", "🥈", "🥉",
+  "👍", "👎", "👌", "✌️", "🤞", "🤟", "🤘", "🤙", "👈", "👉",
+  "👆", "🖕", "👇", "☝️", "👋", "🤚", "🖐️", "✋", "🖖", "👏",
+  "🙌", "🤝", "🙏", "✍️", "💪", "🦾", "🦿", "🦵", "🦶", "👂",
+  "🦻", "👃", "🧠", "🫀", "🫁", "🦷", "🦴", "👀", "👁️", "👅"
+]
 
+const CHARACTER_LIMIT = 287
 
 export default function CreatePost({ parentPostId, isTrail = false, onPostCreated }: CreatePostProps) {
   const [postText, setPostText] = useState("")
@@ -87,6 +109,10 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [trailContext, setTrailContext] = useState<any>(null)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [linkPreview, setLinkPreview] = useState<any>(null)
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false)
+  const [richTextMode, setRichTextMode] = useState(false)
 
   const selectedPostType = POST_TYPES.find(type => type.value === postType)
 
@@ -126,6 +152,51 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     }
   }, [isTrail, parentPostId])
 
+  // Auto-generate link preview
+  useEffect(() => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g
+    const urls = postText.match(urlRegex)
+    
+    if (urls && urls.length > 0 && !isLoadingPreview) {
+      const firstUrl = urls[0]
+      if (linkPreview?.url !== firstUrl) {
+        setIsLoadingPreview(true)
+        fetchLinkPreview(firstUrl)
+      }
+    } else if (!urls && linkPreview) {
+      setLinkPreview(null)
+    }
+  }, [postText])
+
+  const fetchLinkPreview = async (url: string) => {
+    try {
+      // Simple preview generation - in a real app, you'd use a service like Unfurl or implement server-side scraping
+      const response = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`)
+      if (response.ok) {
+        const preview = await response.json()
+        setLinkPreview({ url, ...preview })
+      } else {
+        // Fallback - create a basic preview
+        setLinkPreview({
+          url,
+          title: url,
+          description: "Link preview",
+          image: null
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching link preview:', error)
+      setLinkPreview({
+        url,
+        title: url,
+        description: "Link preview",
+        image: null
+      })
+    } finally {
+      setIsLoadingPreview(false)
+    }
+  }
+
   const addTag = () => {
     if (newTag.trim() && !tags.includes(newTag.trim())) {
       setTags([...tags, newTag.trim()])
@@ -136,9 +207,15 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value
     const position = e.target.selectionStart
+    
+    // Enforce character limit
+    if (value.length > CHARACTER_LIMIT) {
+      return
+    }
+    
     setPostText(value)
     setCursorPosition(position)
-    setHasUnsavedChanges(true) // Indicate changes
+    setHasUnsavedChanges(true)
 
     // Extract hashtags from content
     const hashtagRegex = /#(\w+)/g
@@ -156,7 +233,6 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
     if (lastAtIndex !== -1) {
       const textAfterAt = textUpToCursor.substring(lastAtIndex + 1)
-      // Check if there's no space after @, meaning we're still typing a mention
       if (!textAfterAt.includes(' ') && textAfterAt.length >= 0) {
         setMentionSearch(textAfterAt.toLowerCase())
         setShowMentions(true)
@@ -179,14 +255,85 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
     setPostText(newText)
     setShowMentions(false)
-    setHasUnsavedChanges(true) // Indicate changes
+    setHasUnsavedChanges(true)
 
-    // Focus back to textarea
     setTimeout(() => {
       textareaRef.current?.focus()
       const newPosition = beforeAt.length + mention.length + 1
       textareaRef.current?.setSelectionRange(newPosition, newPosition)
     }, 0)
+  }
+
+  const insertEmoji = (emoji: string) => {
+    const textUpToCursor = postText.substring(0, cursorPosition)
+    const textAfterCursor = postText.substring(cursorPosition)
+    const newText = textUpToCursor + emoji + textAfterCursor
+    
+    if (newText.length <= CHARACTER_LIMIT) {
+      setPostText(newText)
+      setHasUnsavedChanges(true)
+      setShowEmojiPicker(false)
+      
+      setTimeout(() => {
+        textareaRef.current?.focus()
+        const newPosition = cursorPosition + emoji.length
+        textareaRef.current?.setSelectionRange(newPosition, newPosition)
+      }, 0)
+    }
+  }
+
+  const applyRichTextFormat = (format: string) => {
+    if (!textareaRef.current) return
+    
+    const start = textareaRef.current.selectionStart
+    const end = textareaRef.current.selectionEnd
+    const selectedText = postText.substring(start, end)
+    
+    if (selectedText) {
+      let formattedText = ""
+      switch (format) {
+        case 'bold':
+          formattedText = `**${selectedText}**`
+          break
+        case 'italic':
+          formattedText = `*${selectedText}*`
+          break
+        case 'link':
+          const url = prompt('Enter URL:')
+          if (url) {
+            formattedText = `[${selectedText}](${url})`
+          } else {
+            return
+          }
+          break
+        default:
+          return
+      }
+      
+      const newText = postText.substring(0, start) + formattedText + postText.substring(end)
+      if (newText.length <= CHARACTER_LIMIT) {
+        setPostText(newText)
+        setHasUnsavedChanges(true)
+      }
+    }
+  }
+
+  const insertList = () => {
+    const textUpToCursor = postText.substring(0, cursorPosition)
+    const textAfterCursor = postText.substring(cursorPosition)
+    const listItem = "\n• "
+    const newText = textUpToCursor + listItem + textAfterCursor
+    
+    if (newText.length <= CHARACTER_LIMIT) {
+      setPostText(newText)
+      setHasUnsavedChanges(true)
+      
+      setTimeout(() => {
+        textareaRef.current?.focus()
+        const newPosition = cursorPosition + listItem.length
+        textareaRef.current?.setSelectionRange(newPosition, newPosition)
+      }, 0)
+    }
   }
 
   const filteredConnections = connections.filter(conn =>
@@ -197,12 +344,8 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
   const removeTag = (tagToRemove: string) => {
     setTags(tags.filter(tag => tag !== tagToRemove))
-    setHasUnsavedChanges(true) // Indicate changes
+    setHasUnsavedChanges(true)
   }
-
-  
-
-
 
   const handlePost = async () => {
     if (!postText.trim()) {
@@ -210,9 +353,8 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
       return
     }
 
-    // Enforce character limit strictly for all posts
-    if (characterCount > 300) {
-      toast.error("Content exceeds 300 characters. Please shorten your content.")
+    if (postText.length > CHARACTER_LIMIT) {
+      toast.error(`Content exceeds ${CHARACTER_LIMIT} characters. Please shorten your content.`)
       return
     }
 
@@ -234,6 +376,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
           visibility: isTrail ? "public" : visibility,
           isTrail,
           imageUrl: imageUrl,
+          linkPreview: linkPreview,
         }),
       })
 
@@ -248,6 +391,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
         setPostType("GENERAL")
         setVisibility("public")
         setImageUrl(null)
+        setLinkPreview(null)
         setHasUnsavedChanges(false)
         toast.success(isTrail ? "Trail added successfully!" : "Post created successfully!")
         onPostCreated?.()
@@ -262,9 +406,13 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     }
   }
 
-
-
   const handleImageUpload = async (file: File) => {
+    // Check file size (1MB limit)
+    if (file.size > 1024 * 1024) {
+      toast.error("Image size must be less than 1MB")
+      return
+    }
+
     const formData = new FormData()
     formData.append('image', file, file.name)
 
@@ -280,7 +428,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
       const data = await response.json()
       setImageUrl(data.imageUrl)
-      setHasUnsavedChanges(true) // Indicate changes
+      setHasUnsavedChanges(true)
     } catch (error) {
       console.error('Error uploading image:', error)
       toast.error('Failed to upload image')
@@ -288,9 +436,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
   }
 
   const characterCount = postText.length
-  const isOverLimit = characterCount > 300 && !isTrail
-
-
+  const isOverLimit = characterCount > CHARACTER_LIMIT
 
   // Warn user if they try to leave with unsaved changes
   useEffect(() => {
@@ -422,11 +568,72 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                   </div>
                 )}
               </div>
+
+              {/* Rich Text Toolbar for Trail */}
+              <div className="flex items-center gap-2 mt-2 mb-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => applyRichTextFormat('bold')}
+                  className="h-8 w-8 p-0"
+                  title="Bold"
+                >
+                  <Bold className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => applyRichTextFormat('italic')}
+                  className="h-8 w-8 p-0"
+                  title="Italic"
+                >
+                  <Italic className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={insertList}
+                  className="h-8 w-8 p-0"
+                  title="List"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => applyRichTextFormat('link')}
+                  className="h-8 w-8 p-0"
+                  title="Link"
+                >
+                  <Link2 className="h-4 w-4" />
+                </Button>
+                <DropdownMenu open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Emoji">
+                      <Smile className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-64 max-h-64 overflow-y-auto">
+                    <div className="grid grid-cols-8 gap-1 p-2">
+                      {EMOJIS.map((emoji, index) => (
+                        <button
+                          key={index}
+                          onClick={() => insertEmoji(emoji)}
+                          className="p-1 hover:bg-gray-100 rounded text-lg"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
               <div className="flex justify-between items-center mt-3">
-                <div className="text-xs text-gray-400">{characterCount} characters</div>
+                <div className="text-xs text-gray-400">{characterCount}/{CHARACTER_LIMIT} characters</div>
                 <Button
                   onClick={handlePost}
-                  disabled={!postText.trim() || isPosting}
+                  disabled={!postText.trim() || isPosting || isOverLimit}
                   className="bg-gradient-to-r from-pathpiper-teal to-pathpiper-blue text-white rounded-full px-4"
                 >
                   Add Trail
@@ -454,8 +661,6 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
           </div>
 
           <div className="flex-1">
-
-
             <div className="space-y-4">
               {/* Post Type and Visibility Selection */}
               <div className="flex gap-3 flex-wrap items-center justify-between">
@@ -548,7 +753,67 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                 </DropdownMenu>
               </div>
 
-                {/* Main Content Area */}
+              {/* Rich Text Toolbar */}
+              <div className="flex items-center gap-2 border-b border-gray-200 pb-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => applyRichTextFormat('bold')}
+                  className="h-8 w-8 p-0"
+                  title="Bold"
+                >
+                  <Bold className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => applyRichTextFormat('italic')}
+                  className="h-8 w-8 p-0"
+                  title="Italic"
+                >
+                  <Italic className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={insertList}
+                  className="h-8 w-8 p-0"
+                  title="List"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => applyRichTextFormat('link')}
+                  className="h-8 w-8 p-0"
+                  title="Link"
+                >
+                  <Link2 className="h-4 w-4" />
+                </Button>
+                <DropdownMenu open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Emoji">
+                      <Smile className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-64 max-h-64 overflow-y-auto">
+                    <div className="grid grid-cols-8 gap-1 p-2">
+                      {EMOJIS.map((emoji, index) => (
+                        <button
+                          key={index}
+                          onClick={() => insertEmoji(emoji)}
+                          className="p-1 hover:bg-gray-100 rounded text-lg"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {/* Main Content Area */}
               <div className="relative">
                 <Textarea
                   ref={textareaRef}
@@ -604,10 +869,47 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                   characterCount > 250 ? 'text-orange-500 bg-orange-50 px-2 py-1 rounded' : 
                   'text-gray-400'
                 }`}>
-                  {characterCount}/300
+                  {characterCount}/{CHARACTER_LIMIT}
                   {isOverLimit && <span className="ml-1">⚠️</span>}
                 </div>
               </div>
+
+              {/* Link Preview */}
+              {linkPreview && (
+                <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm font-medium text-gray-700">Link Preview</div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setLinkPreview(null)}
+                      className="h-6 w-6 p-0"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex gap-3">
+                    {linkPreview.image && (
+                      <img
+                        src={linkPreview.image}
+                        alt="Link preview"
+                        className="w-16 h-16 object-cover rounded"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-gray-900 truncate">
+                        {linkPreview.title}
+                      </div>
+                      <div className="text-xs text-gray-600 line-clamp-2">
+                        {linkPreview.description}
+                      </div>
+                      <div className="text-xs text-blue-600 truncate">
+                        {linkPreview.url}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Post Type Specific Fields */}
               {postType === "ACHIEVEMENT" && (
@@ -680,17 +982,15 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                 )}
               </div>
 
-              
-
               {/* Over limit warning */}
               {isOverLimit && (
                 <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg">
                   <p className="text-sm text-amber-700 font-medium mb-1 flex items-center gap-2">
                     <span className="text-amber-500">⚠️</span>
-                    Content exceeds 300 characters!
+                    Content exceeds {CHARACTER_LIMIT} characters!
                   </p>
                   <p className="text-xs text-amber-600">
-                    Please shorten your content to 300 characters or less.
+                    Please shorten your content to {CHARACTER_LIMIT} characters or less.
                   </p>
                 </div>
               )}
@@ -719,44 +1019,33 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
             {/* Action Buttons */}
             <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
               <div className="flex items-center gap-2">
-                {/* Only show upload buttons if no image is uploaded */}
+                {/* Only show upload button if no image is uploaded */}
                 {!imageUrl && (
-                  <>
-                    <div className="relative">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0]
-                          if (file) {
-                            if (file.size > 5 * 1024 * 1024) {
-                              toast.error("Image size should be less than 5MB")
-                              return
-                            }
-                            handleImageUpload(file)
-                          }
-                        }}
-                        className="hidden"
-                        id="image-upload"
-                      />
-                      <label htmlFor="image-upload">
-                        <Button variant="ghost" size="sm" className="text-gray-600 h-8 w-8 p-0 rounded-full cursor-pointer hover:bg-gray-100" asChild>
-                          <span>
-                            <ImageIcon className="h-4 w-4" />
-                          </span>
-                        </Button>
-                      </label>
-                    </div>
-                    <div className="relative group">
-                      <Button variant="ghost" size="sm" className="text-gray-400 h-8 w-8 p-0 rounded-full cursor-not-allowed">
-                        <Video className="h-4 w-4" />
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          handleImageUpload(file)
+                        }
+                      }}
+                      className="hidden"
+                      id="image-upload"
+                    />
+                    <label htmlFor="image-upload">
+                      <Button variant="ghost" size="sm" className="text-gray-600 h-8 w-8 p-0 rounded-full cursor-pointer hover:bg-gray-100" asChild>
+                        <span>
+                          <ImageIcon className="h-4 w-4" />
+                        </span>
                       </Button>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                        Coming Soon
-                      </div>
-                    </div>
-                  </>
+                    </label>
+                  </div>
                 )}
+                <div className="text-xs text-gray-400">
+                  {!imageUrl ? "Max 1MB" : "1 image max"}
+                </div>
               </div>
 
               <div className="flex items-center gap-2">
