@@ -43,6 +43,16 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    // Debug log verification status for each education record
+    educationHistory.forEach(edu => {
+      console.log('🔍 Education API verification status:', {
+        institution: edu.institutionName,
+        institutionVerified: edu.institutionVerified,
+        type: typeof edu.institutionVerified
+      });
+    });
+    })
+
     // Transform database fields to match the frontend interface
     const transformedEducation = educationHistory.map(entry => ({
       id: entry.id,

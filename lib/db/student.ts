@@ -29,6 +29,17 @@ export async function getStudentProfile(studentId: string) {
       }
     })
 
+    // Debug log verification status for each education record
+    if (student?.educationHistory) {
+      student.educationHistory.forEach(edu => {
+        console.log('🔍 Student DB verification status:', {
+          institution: edu.institutionName,
+          institutionVerified: edu.institutionVerified,
+          type: typeof edu.institutionVerified
+        });
+      });
+    }
+
     return student
   } catch (error) {
     console.error(`Error fetching student profile ${studentId}:`, error)

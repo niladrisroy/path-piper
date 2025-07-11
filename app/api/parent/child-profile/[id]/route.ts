@@ -203,7 +203,8 @@ export async function GET(
         gradeLevel: edu.gradeLevel,
         gpa: edu.gpa,
         achievements: edu.achievements,
-        description: edu.description
+        description: edu.description,
+        institutionVerified: edu.institutionVerified
       })),
       connections: formattedConnections
     }

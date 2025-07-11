@@ -163,23 +163,33 @@ export async function GET(
         goals: studentProfile.profile.goals,
         customBadges: studentProfile.profile.customBadges
       },
-      educationHistory: studentProfile.educationHistory.map(edu => ({
-        id: edu.id,
-        institutionName: edu.institutionName,
-        institutionTypeId: edu.institutionTypeId,
-        institutionTypeName: edu.institutionType?.name,
-        institutionCategoryName: edu.institutionType?.category?.name,
-        degreeProgram: edu.degreeProgram,
-        fieldOfStudy: edu.fieldOfStudy,
-        subjects: edu.subjects,
-        startDate: edu.startDate,
-        endDate: edu.endDate,
-        isCurrent: edu.isCurrent,
-        gradeLevel: edu.gradeLevel,
-        gpa: edu.gpa,
-        achievements: edu.achievements,
-        description: edu.description
-      }))
+      educationHistory: studentProfile.educationHistory.map(edu => {
+        // Debug log for verification status
+        console.log('🔍 API Education verification status:', {
+          institution: edu.institutionName,
+          institutionVerified: edu.institutionVerified,
+          type: typeof edu.institutionVerified
+        });
+        
+        return {
+          id: edu.id,
+          institutionName: edu.institutionName,
+          institutionTypeId: edu.institutionTypeId,
+          institutionTypeName: edu.institutionType?.name,
+          institutionCategoryName: edu.institutionType?.category?.name,
+          degreeProgram: edu.degreeProgram,
+          fieldOfStudy: edu.fieldOfStudy,
+          subjects: edu.subjects,
+          startDate: edu.startDate,
+          endDate: edu.endDate,
+          isCurrent: edu.isCurrent,
+          gradeLevel: edu.gradeLevel,
+          gpa: edu.gpa,
+          achievements: edu.achievements,
+          description: edu.description,
+          institutionVerified: edu.institutionVerified
+        };
+      })
     }
 
     return NextResponse.json(formattedProfile)
