@@ -112,7 +112,7 @@ export default function Feed() {
   const [filter, setFilter] = useState('all')
   const [postTypeFilter, setPostTypeFilter] = useState('all')
   const [subjectFilter, setSubjectFilter] = useState('all')
-  const [difficultyFilter, setDifficultyFilter] useState('all')
+  const [difficultyFilter, setDifficultyFilter] = useState('all')
   const [availableSubjects, setAvailableSubjects] = useState<string[]>([])
   const { user } = useAuth()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
