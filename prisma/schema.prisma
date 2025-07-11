@@ -732,6 +732,7 @@ model PostReaction {
 
   @@unique([postId, userId])
   @@map("post_reactions")
+  @@schema("public")
 }
 
 model AchievementCategory {
