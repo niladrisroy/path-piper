@@ -92,7 +92,7 @@ const POST_TYPE_COLORS = {
 
 export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWithTrailsProps) {
   const { user } = useAuth()
-  const { showToast } = useCustomToast()
+  const { customToast } = useCustomToast()
   const [isLiked, setIsLiked] = useState(false)
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [likesCount, setLikesCount] = useState(post._count?.likes || 0)
@@ -191,16 +191,16 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
         setLikesCount(data.likeCount || data.likesCount)
 
         if (data.liked) {
-          showToast({
+          customToast({
             title: "Post liked!",
             description: "You liked this post.",
             type: "success"
           })
         } else {
-          showToast({
+          customToast({
             title: "Post unliked",
             description: "You removed your like from this post.",
-            type: "default"
+            type: "info"
           })
         }
       }
@@ -222,16 +222,16 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
         setBookmarksCount(data.bookmarksCount)
 
         if (data.isBookmarked) {
-          showToast({
+          customToast({
             title: "Post saved!",
             description: "Post added to your bookmarks.",
             type: "success"
           })
         } else {
-          showToast({
+          customToast({
             title: "Post removed from bookmarks",
             description: "Post removed from your saved items.",
-            type: "default"
+            type: "info"
           })
         }
       }
@@ -254,7 +254,7 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
       })
 
       if (response.ok) {
-        showToast({
+        customToast({
           title: "Post deleted",
           description: "Your post has been deleted successfully.",
           type: "success"
@@ -345,16 +345,16 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
         }
 
         if (data.reactionType) {
-          showToast({
+          customToast({
             title: "Reaction added!",
             description: `You reacted with ${reactionType}!`,
             type: "success"
           })
         } else if (data.liked === false || data.reactionType === null) {
-          showToast({
+          customToast({
             title: "Reaction removed",
             description: "You removed your reaction.",
-            type: "default"
+            type: "info"
           })
         }
       }
