@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -51,6 +51,10 @@ interface InstitutionProfileHeaderProps {
 }
 
 export default function InstitutionProfileHeader({ institutionData }: InstitutionProfileHeaderProps) {
+  const [showFollowersDialog, setShowFollowersDialog] = useState(false)
+  const [followerCount, setFollowerCount] = useState(0)
+  const [loading, setLoading] = useState(true)
+
   // Use real institution data
   const institution = {
     name: institutionData.name,
@@ -66,10 +70,36 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
     profileImage: institutionData.logo,
     verified: institutionData.verified,
     specialties: ["Computer Science", "Engineering", "Business", "Medicine", "Law"], // Default - could be dynamic
-    followers: 500,
+    followers: followerCount, // Use actual count from API
   }
 
-  const [showFollowersDialog, setShowFollowersDialog] = useState(false)
+  // Fetch actual follower count
+  useEffect(() => {
+    const fetchFollowerCount = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch(`/api/institutions/followers?institutionId=${institutionData.id}`, {
+          credentials: 'include'
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success) {
+            setFollowerCount(data.count || 0)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching follower count:', error)
+        setFollowerCount(0)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (institutionData.id) {
+      fetchFollowerCount()
+    }
+  }, [institutionData.id])
 
   // Mock circles data
   const academicCommunities = [
@@ -401,7 +431,9 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
                       data-tooltip="View followers"
                     >
                       <Users className="h-3.5 w-3.5 text-rose-500" />
-                      <span>{institution.followers?.toLocaleString() || 0} Followers</span>
+                      <span>
+                        {loading ? 'Loading...' : `${followerCount.toLocaleString()} Followers`}
+                      </span>
                     </button>
                   </div>
 
@@ -521,7 +553,7 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
         institutionName={institutionData.name}
         isOpen={showFollowersDialog}
         onClose={() => setShowFollowersDialog(false)}
-        followerCount={institution.followers || 0}
+        followerCount={followerCount}
       />
     </>
   )
