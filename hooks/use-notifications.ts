@@ -4,13 +4,15 @@ import { useState, useEffect } from 'react'
 export function useNotifications() {
   const [connectionRequestCount, setConnectionRequestCount] = useState(0)
   const [circleInvitationCount, setCircleInvitationCount] = useState(0)
+  const [verificationRequestCount, setVerificationRequestCount] = useState(0)
   const [loading, setLoading] = useState(true)
 
   const fetchNotificationCounts = async () => {
     try {
-      const [connectionResponse, circleResponse] = await Promise.all([
+      const [connectionResponse, circleResponse, verificationResponse] = await Promise.all([
         fetch('/api/connections/requests?type=received'),
-        fetch('/api/circles/invitations?type=received')
+        fetch('/api/circles/invitations?type=received'),
+        fetch('/api/education/verification')
       ])
 
       if (connectionResponse.ok) {
@@ -23,6 +25,11 @@ export function useNotifications() {
         const invitations = await circleResponse.json()
         const pendingInvitations = invitations.filter((inv: any) => inv.status === 'pending')
         setCircleInvitationCount(pendingInvitations.length)
+      }
+
+      if (verificationResponse.ok) {
+        const data = await verificationResponse.json()
+        setVerificationRequestCount(data.verificationRequests?.length || 0)
       }
     } catch (error) {
       console.error('Error fetching notification counts:', error)
@@ -40,11 +47,12 @@ export function useNotifications() {
     return () => clearInterval(interval)
   }, [])
 
-  const totalCount = connectionRequestCount + circleInvitationCount
+  const totalCount = connectionRequestCount + circleInvitationCount + verificationRequestCount
 
   return {
     connectionRequestCount,
     circleInvitationCount,
+    verificationRequestCount,
     totalCount,
     loading,
     refetch: fetchNotificationCounts
