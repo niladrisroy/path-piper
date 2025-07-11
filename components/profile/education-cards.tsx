@@ -30,7 +30,7 @@ export default function EducationCards({ educationHistory: realEducationHistory,
           institution: edu.institutionName,
           institutionVerified: edu.institutionVerified,
           type: typeof edu.institutionVerified,
-          hasProperty: Object.prototype.hasOwnProperty.call(education, 'institutionVerified'),
+          hasProperty: Object.prototype.hasOwnProperty.call(edu, 'institutionVerified'),
           allKeys: Object.keys(edu)
         });
 
