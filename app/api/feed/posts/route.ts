@@ -78,11 +78,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Content is required' }, { status: 400 })
     }
 
-    // For non-trail posts, enforce character limit strictly
-    if (content.length > 300 && !isTrail && !forceTrail) {
+    // For non-trail posts, enforce character limit strictly (287 chars as per frontend)
+    if (content.length > 287 && !isTrail && !forceTrail) {
       return NextResponse.json(
         { 
-          error: "Content exceeds 300 characters. Please use 'Start Trail' to share longer content.",
+          error: "Content exceeds 287 characters. Please use 'Start Trail' to share longer content.",
           suggestTrail: true
         },
         { status: 400 }
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
         projectCategory: postType === "PROJECT" ? projectCategory : null,
         moderationStatus,
         engagementScore: 0,
-        linkPreview
+        linkPreview: linkPreview ? JSON.stringify(linkPreview) : null
       },
       include: {
         author: {
@@ -347,6 +347,7 @@ export async function GET(request: NextRequest) {
         ...post,
         tags: Array.isArray(post.tags) ? post.tags : [],
         subjects: Array.isArray(post.subjects) ? post.subjects : [],
+        linkPreview: post.linkPreview ? (typeof post.linkPreview === 'string' ? JSON.parse(post.linkPreview) : post.linkPreview) : null,
         // Ensure consistent like data structure
         likesCount: post.likesCount || 0,
         _count: {

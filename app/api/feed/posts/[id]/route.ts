@@ -69,6 +69,7 @@ export async function GET(
       ...post,
       tags: Array.isArray(post.tags) ? post.tags : [],
       subjects: Array.isArray(post.subjects) ? post.subjects : [],
+      linkPreview: post.linkPreview ? (typeof post.linkPreview === 'string' ? JSON.parse(post.linkPreview) : post.linkPreview) : null,
       likesCount: post._count.likes,
       commentsCount: post._count.comments,
       bookmarksCount: post._count.bookmarks
