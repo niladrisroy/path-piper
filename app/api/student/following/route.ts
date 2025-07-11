@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
           include: {
             institution: {
               include: {
-                institutionType: {
+                institutionTypeRef: {
                   include: {
                     category: true
                   }
@@ -67,8 +67,8 @@ export async function GET(request: NextRequest) {
       return {
         id: profile.id,
         institutionName: institution?.institutionName || `${profile.firstName} ${profile.lastName}`,
-        institutionType: institution?.institutionType?.name || 'Institution',
-        institutionCategory: institution?.institutionType?.category?.name || 'Education',
+        institutionType: institution?.institutionTypeRef?.name || institution?.institutionType || 'Institution',
+        institutionCategory: institution?.institutionTypeRef?.category?.name || 'Education',
         website: institution?.website,
         logoUrl: institution?.logoUrl,
         coverImageUrl: institution?.coverImageUrl,
