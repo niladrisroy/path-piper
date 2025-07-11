@@ -54,7 +54,6 @@ export async function GET(request: NextRequest) {
         allKeys: Object.keys(edu)
       });
     });
-    })
 
     // Transform database fields to match the frontend interface
     const transformedEducation = educationHistory.map(entry => {
