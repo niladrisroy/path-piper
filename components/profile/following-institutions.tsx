@@ -227,11 +227,20 @@ export default function FollowingInstitutions({ userId }: FollowingInstitutionsP
 
                   {/* Actions */}
                   <div className="flex gap-2 mt-4">
-                    <Button size="sm" variant="outline" className="flex-1 h-9 text-sm font-medium">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="flex-1 h-9 px-4 py-2 text-sm font-medium min-w-0"
+                    >
                       View Profile
                     </Button>
                     {institution.website && (
-                      <Button size="sm" variant="ghost" className="h-9 w-9 p-0" asChild>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="h-9 w-9 p-2 flex-shrink-0" 
+                        asChild
+                      >
                         <a 
                           href={institution.website} 
                           target="_blank" 
