@@ -559,6 +559,12 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
               userReaction={userReaction}
               onReact={handleReaction}
               size="sm"
+              onReactionChange={(reactionType) => {
+                setUserReaction(reactionType)
+                if (reactionType) {
+                  setIsLiked(reactionType === 'like')
+                }
+              }}
             />
 
             <Button

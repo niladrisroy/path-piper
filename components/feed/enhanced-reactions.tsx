@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Heart } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
@@ -50,6 +50,17 @@ export default function EnhancedReactions({
   const [showReactions, setShowReactions] = useState(false)
   const [currentReaction, setCurrentReaction] = useState<string | null>(userReaction || (isLiked ? 'like' : null))
   const [reactionCount, setReactionCount] = useState(initialLikes || Object.values(reactionCounts).reduce((sum, count) => sum + count, 0))
+  const [isHoveringReactions, setIsHoveringReactions] = useState(false)
+
+  // Sync with parent state changes
+  useEffect(() => {
+    setCurrentReaction(userReaction || (isLiked ? 'like' : null))
+  }, [userReaction, isLiked])
+
+  useEffect(() => {
+    const totalCount = Object.values(reactionCounts).reduce((sum, count) => sum + count, 0)
+    setReactionCount(totalCount || initialLikes)
+  }, [reactionCounts, initialLikes])
 
   const sizeClasses = {
     sm: 'h-4 w-4',
@@ -154,7 +165,11 @@ export default function EnhancedReactions({
         size={size}
         onClick={handleLikeClick}
         onMouseEnter={() => setShowReactions(true)}
-        onMouseLeave={() => setShowReactions(false)}
+        onMouseLeave={() => {
+          if (!isHoveringReactions) {
+            setTimeout(() => setShowReactions(false), 100)
+          }
+        }}
         className={`transition-all duration-200 ${
           currentReaction
             ? 'text-red-500 hover:text-red-600' 
@@ -173,8 +188,14 @@ export default function EnhancedReactions({
       {showReactions && (
         <div 
           className="absolute bottom-full left-0 mb-2 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 px-3 py-2 flex space-x-2 z-50"
-          onMouseEnter={() => setShowReactions(true)}
-          onMouseLeave={() => setShowReactions(false)}
+          onMouseEnter={() => {
+            setIsHoveringReactions(true)
+            setShowReactions(true)
+          }}
+          onMouseLeave={() => {
+            setIsHoveringReactions(false)
+            setTimeout(() => setShowReactions(false), 100)
+          }}
         >
           {REACTION_TYPES.map((reaction) => (
             <button
@@ -182,6 +203,7 @@ export default function EnhancedReactions({
               onClick={(e) => {
                 e.stopPropagation()
                 handleReaction(reaction.type)
+                setIsHoveringReactions(false)
                 setShowReactions(false)
               }}
               className={`${emojiSizes[size]} hover:scale-125 transition-transform duration-200 ${
