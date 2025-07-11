@@ -2,7 +2,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, User, Users, Building } from "lucide-react"
+import { Search, User, Users, Building, UserPlus, UserCheck, UserMinus } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -30,10 +30,13 @@ export default function UserSearch({ onUserSelect, placeholder = "Search for peo
   const [searchResults, setSearchResults] = useState<User[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedRole, setSelectedRole] = useState<string>("")
+  const [followStatus, setFollowStatus] = useState<Record<string, boolean>>({})
+  const [followLoading, setFollowLoading] = useState<Record<string, boolean>>({})
 
   const searchUsers = async (query: string, role?: string) => {
     if (query.length < 2) {
       setSearchResults([])
+      setFollowStatus({})
       return
     }
 
@@ -46,11 +49,57 @@ export default function UserSearch({ onUserSelect, placeholder = "Search for peo
       if (response.ok) {
         const users = await response.json()
         setSearchResults(users)
+        
+        // Get follow status for institutions
+        const institutionIds = users.filter((user: User) => user.role === 'institution').map((user: User) => user.id)
+        if (institutionIds.length > 0) {
+          await checkFollowStatus(institutionIds)
+        }
       }
     } catch (error) {
       console.error('Error searching users:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const checkFollowStatus = async (institutionIds: string[]) => {
+    try {
+      const response = await fetch(`/api/institutions/follow-status?ids=${institutionIds.join(',')}`)
+      if (response.ok) {
+        const data = await response.json()
+        setFollowStatus(data.followStatus)
+      }
+    } catch (error) {
+      console.error('Error checking follow status:', error)
+    }
+  }
+
+  const handleFollowToggle = async (institutionId: string, isFollowing: boolean) => {
+    setFollowLoading(prev => ({ ...prev, [institutionId]: true }))
+    
+    try {
+      const method = isFollowing ? 'DELETE' : 'POST'
+      const response = await fetch('/api/institutions/follow', {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ institutionId })
+      })
+
+      if (response.ok) {
+        setFollowStatus(prev => ({
+          ...prev,
+          [institutionId]: !isFollowing
+        }))
+      } else {
+        console.error('Failed to toggle follow status')
+      }
+    } catch (error) {
+      console.error('Error toggling follow:', error)
+    } finally {
+      setFollowLoading(prev => ({ ...prev, [institutionId]: false }))
     }
   }
 
@@ -154,37 +203,85 @@ export default function UserSearch({ onUserSelect, placeholder = "Search for peo
             searchResults.map((user) => (
               <div
                 key={user.id}
-                className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
-                onClick={() => handleUserClick(user)}
+                className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={user.profileImageUrl} alt={`${user.firstName} ${user.lastName}`} />
-                  <AvatarFallback>
-                    {user.firstName[0]}{user.lastName[0]}
-                  </AvatarFallback>
-                </Avatar>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <h4 className="font-medium text-sm">
-                      {user.firstName} {user.lastName}
-                    </h4>
-                    <Badge variant="outline" className={`text-xs ${getRoleColor(user.role)}`}>
-                      <span className="flex items-center space-x-1">
-                        {getRoleIcon(user.role)}
-                        <span>{user.role}</span>
-                      </span>
-                    </Badge>
+                <div 
+                  className="flex items-center space-x-3 flex-1 min-w-0 cursor-pointer"
+                  onClick={() => handleUserClick(user)}
+                >
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={user.profileImageUrl} alt={`${user.firstName} ${user.lastName}`} />
+                    <AvatarFallback>
+                      {user.firstName[0]}{user.lastName[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <h4 className="font-medium text-sm">
+                        {user.firstName} {user.lastName}
+                      </h4>
+                      <Badge variant="outline" className={`text-xs ${getRoleColor(user.role)}`}>
+                        <span className="flex items-center space-x-1">
+                          {getRoleIcon(user.role)}
+                          <span>{user.role}</span>
+                        </span>
+                      </Badge>
+                    </div>
+                    
+                    {user.bio && (
+                      <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{user.bio}</p>
+                    )}
+                    
+                    {user.location && (
+                      <p className="text-xs text-gray-500 dark:text-gray-500">{user.location}</p>
+                    )}
                   </div>
-                  
-                  {user.bio && (
-                    <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{user.bio}</p>
-                  )}
-                  
-                  {user.location && (
-                    <p className="text-xs text-gray-500 dark:text-gray-500">{user.location}</p>
-                  )}
                 </div>
+
+                {user.role === 'institution' && (
+                  <div className="flex items-center space-x-2">
+                    {followStatus[user.id] ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled
+                          className="text-xs px-3 py-1 h-7"
+                        >
+                          <UserCheck className="h-3 w-3 mr-1" />
+                          Following
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleFollowToggle(user.id, true)
+                          }}
+                          disabled={followLoading[user.id]}
+                          className="text-xs px-2 py-1 h-7 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <UserMinus className="h-3 w-3" />
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleFollowToggle(user.id, false)
+                        }}
+                        disabled={followLoading[user.id]}
+                        className="text-xs px-3 py-1 h-7 bg-blue-600 hover:bg-blue-700"
+                      >
+                        <UserPlus className="h-3 w-3 mr-1" />
+                        Follow
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
             ))
           ) : searchQuery.length >= 2 ? (

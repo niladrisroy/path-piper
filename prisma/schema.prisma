@@ -106,6 +106,8 @@ model Profile {
   postComments      PostComment[]
   postBookmarks     PostBookmark[]
   postReactions  PostReaction[]
+  institutionFollowers InstitutionFollowConnection[] @relation("InstitutionFollowers")
+  institutionFollowing InstitutionFollowConnection[] @relation("InstitutionFollowing")
 
 
   @@map("profiles")
@@ -732,6 +734,20 @@ model PostReaction {
 
   @@unique([postId, userId])
   @@map("post_reactions")
+  @@schema("public")
+}
+
+model InstitutionFollowConnection {
+  id          Int      @id @default(autoincrement())
+  senderId    String   @map("sender_id") @db.Uuid
+  receiverId  String   @map("receiver_id") @db.Uuid
+  connectedAt DateTime @default(now()) @map("connected_at")
+
+  sender   Profile @relation("InstitutionFollowers", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver Profile @relation("InstitutionFollowing", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+  @@map("institution_follow_connections")
   @@schema("public")
 }
 

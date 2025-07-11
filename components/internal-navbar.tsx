@@ -1,3 +1,6 @@
+The code has been modified to include follow/unfollow functionality for institutions in the search results, including API calls and UI updates.
+```
+```replit_final_file
 "use client";
 
 import { useState, useEffect } from "react";
@@ -5,18 +8,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
-  Bell,
-  Home,
-  Search,
-  MessageCircle,
-  User,
-  Menu,
-  X,
-  Settings,
-  LogOut,
-  UserPlus,
-  Loader2,
-  Users,
+  Search, Bell, Menu, X, User, Users, Building, MessageCircle, Home, UserPlus, UserCheck, UserMinus
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
@@ -51,6 +43,8 @@ export function InternalNavbar() {
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
   const { totalCount: notificationCount, loading: notificationsLoading } = useNotifications();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [followStatus, setFollowStatus] = useState<{ [institutionId: string]: boolean }>({});
+  const [followLoading, setFollowLoading] = useState<{ [institutionId: string]: boolean }>({});
 
   const handleLogout = async () => {
     try {
@@ -173,9 +167,9 @@ export function InternalNavbar() {
   }, []);
 
   const searchUsers = async (query: string) => {
-    if (!query.trim() || query.length < 2) {
+    if (query.length < 2) {
       setSearchResults([]);
-      setShowSearchResults(false);
+      setFollowStatus({});
       return;
     }
 
@@ -185,12 +179,57 @@ export function InternalNavbar() {
       if (response.ok) {
         const users = await response.json();
         setSearchResults(users);
-        setShowSearchResults(true);
+
+        // Get follow status for institutions
+        const institutionIds = users.filter((user: SearchUser) => user.role === 'institution').map((user: SearchUser) => user.id);
+        if (institutionIds.length > 0) {
+          await checkFollowStatus(institutionIds);
+        }
       }
     } catch (error) {
-      console.error("Error searching users:", error);
+      console.error('Error searching users:', error);
     } finally {
       setSearchLoading(false);
+    }
+  };
+
+  const checkFollowStatus = async (institutionIds: string[]) => {
+    try {
+      const response = await fetch(`/api/institutions/follow-status?ids=${institutionIds.join(',')}`);
+      if (response.ok) {
+        const data = await response.json();
+        setFollowStatus(data.followStatus);
+      }
+    } catch (error) {
+      console.error('Error checking follow status:', error);
+    }
+  };
+
+  const handleFollowToggle = async (institutionId: string, isFollowing: boolean) => {
+    setFollowLoading(prev => ({ ...prev, [institutionId]: true }));
+
+    try {
+      const method = isFollowing ? 'DELETE' : 'POST';
+      const response = await fetch('/api/institutions/follow', {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ institutionId })
+      });
+
+      if (response.ok) {
+        setFollowStatus(prev => ({
+          ...prev,
+          [institutionId]: !isFollowing
+        }));
+      } else {
+        console.error('Failed to toggle follow status');
+      }
+    } catch (error) {
+      console.error('Error toggling follow:', error);
+    } finally {
+      setFollowLoading(prev => ({ ...prev, [institutionId]: false }));
     }
   };
 
@@ -279,9 +318,9 @@ export function InternalNavbar() {
   // Function to get profile URL based on user role
   const getProfileUrl = () => {
     if (!user || userLoading) return "/student/profile"; // Default fallback
-    
+
     console.log('🔍 Navbar: Getting profile URL for user role:', user.role);
-    
+
     switch (user.role) {
       case "institution":
         return "/institution/profile";
@@ -296,18 +335,18 @@ export function InternalNavbar() {
   // Function to handle profile navigation
   const handleProfileNavigation = (e: React.MouseEvent) => {
     e.preventDefault();
-    
+
     if (userLoading) {
       console.log('🔍 Navbar: User still loading, waiting...');
       return;
     }
-    
+
     if (!user) {
       console.log('🔍 Navbar: No user found, redirecting to login');
       router.push('/login');
       return;
     }
-    
+
     const profileUrl = getProfileUrl();
     console.log('🔍 Navbar: Navigating to profile URL:', profileUrl);
     router.push(profileUrl);
