@@ -164,11 +164,20 @@ export async function GET(
         customBadges: studentProfile.profile.customBadges
       },
       educationHistory: studentProfile.educationHistory.map(edu => {
-        // Debug log for verification status
+        // Debug log for complete raw database record
+        console.log('🔍 RAW DB Education record:', JSON.stringify({
+          id: edu.id,
+          institutionName: edu.institutionName,
+          institutionVerified: edu.institutionVerified,
+          fullRecord: edu
+        }, null, 2));
+        
         console.log('🔍 API Education verification status:', {
           institution: edu.institutionName,
           institutionVerified: edu.institutionVerified,
-          type: typeof edu.institutionVerified
+          type: typeof edu.institutionVerified,
+          hasProperty: Object.prototype.hasOwnProperty.call(edu, 'institutionVerified'),
+          allKeys: Object.keys(edu)
         });
         
         return {

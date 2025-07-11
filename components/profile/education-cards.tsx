@@ -24,11 +24,14 @@ export default function EducationCards({ educationHistory: realEducationHistory,
   // Use real education data only - no fallback to mock data
   const educationHistory = realEducationHistory && realEducationHistory.length > 0 ? 
     realEducationHistory.map((edu: any) => {
-      // Debug log for verification status
+      // Debug log for complete raw education data
+      console.log('🔍 RAW Education data received:', JSON.stringify(edu, null, 2));
       console.log('🔍 Education verification status:', {
         institution: edu.institutionName,
         institutionVerified: edu.institutionVerified,
-        type: typeof edu.institutionVerified
+        type: typeof edu.institutionVerified,
+        hasProperty: edu.hasOwnProperty('institutionVerified'),
+        keys: Object.keys(edu)
       });
       
       return {

@@ -31,11 +31,14 @@ export async function getStudentProfile(studentId: string) {
 
     // Debug log verification status for each education record
     if (student?.educationHistory) {
+      console.log('🔍 RAW Student DB query result:', JSON.stringify(student.educationHistory, null, 2));
       student.educationHistory.forEach(edu => {
         console.log('🔍 Student DB verification status:', {
           institution: edu.institutionName,
           institutionVerified: edu.institutionVerified,
-          type: typeof edu.institutionVerified
+          type: typeof edu.institutionVerified,
+          hasProperty: Object.prototype.hasOwnProperty.call(edu, 'institutionVerified'),
+          allKeys: Object.keys(edu)
         });
       });
     }

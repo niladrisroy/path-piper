@@ -45,10 +45,13 @@ export async function GET(request: NextRequest) {
 
     // Debug log verification status for each education record
     educationHistory.forEach(edu => {
+      console.log('🔍 RAW Education DB record in API route:', JSON.stringify(edu, null, 2));
       console.log('🔍 Education API verification status:', {
         institution: edu.institutionName,
         institutionVerified: edu.institutionVerified,
-        type: typeof edu.institutionVerified
+        type: typeof edu.institutionVerified,
+        hasProperty: Object.prototype.hasOwnProperty.call(edu, 'institutionVerified'),
+        allKeys: Object.keys(edu)
       });
     });
     })

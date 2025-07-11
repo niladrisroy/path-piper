@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@supabase/supabase-js'
@@ -188,24 +187,33 @@ export async function GET(
         goals: childProfile.profile.goals,
         userAchievements: childProfile.profile.achievements
       },
-      educationHistory: childProfile.educationHistory.map(edu => ({
-        id: edu.id,
-        institutionName: edu.institutionName,
-        institutionTypeId: edu.institutionTypeId,
-        institutionTypeName: edu.institutionType?.name,
-        institutionCategoryName: edu.institutionType?.category?.name,
-        degreeProgram: edu.degreeProgram,
-        fieldOfStudy: edu.fieldOfStudy,
-        subjects: edu.subjects,
-        startDate: edu.startDate,
-        endDate: edu.endDate,
-        isCurrent: edu.isCurrent,
-        gradeLevel: edu.gradeLevel,
-        gpa: edu.gpa,
-        achievements: edu.achievements,
-        description: edu.description,
-        institutionVerified: edu.institutionVerified
-      })),
+      educationHistory: childProfile.educationHistory.map(edu => {
+          // Debug log for parent API
+          console.log('🔍 Parent API Education verification status:', {
+            institution: edu.institutionName,
+            institutionVerified: edu.institutionVerified,
+            type: typeof edu.institutionVerified
+          });
+
+          return {
+            id: edu.id,
+            institutionName: edu.institutionName,
+            institutionTypeId: edu.institutionTypeId,
+            institutionTypeName: edu.institutionType?.name,
+            institutionCategoryName: edu.institutionType?.category?.name,
+            degreeProgram: edu.degreeProgram,
+            fieldOfStudy: edu.fieldOfStudy,
+            subjects: edu.subjects,
+            startDate: edu.startDate,
+            endDate: edu.endDate,
+            isCurrent: edu.isCurrent,
+            gradeLevel: edu.gradeLevel,
+            gpa: edu.gpa,
+            achievements: edu.achievements,
+            description: edu.description,
+            institutionVerified: edu.institutionVerified
+          };
+        }),
       connections: formattedConnections
     }
 
