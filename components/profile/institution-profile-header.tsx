@@ -16,7 +16,10 @@ import {
   Verified,
   Building,
   GraduationCap,
-  Settings
+  Settings,
+  Edit,
+  Globe,
+  BadgeCheck
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -295,7 +298,7 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
                     <div className="flex-1 min-w-0 text-center sm:text-left">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                         <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">{institution.name}</h1>
-                        {institution.verified && <BadgeCheckIcon className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 self-center" />}
+                        {institution.verified && <BadgeCheck className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 self-center" />}
                       </div>
                       <p className="text-gray-600 dark:text-gray-300 mt-1 text-sm sm:text-base">
                         {institution.tagline}
