@@ -1,9 +1,8 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { BookOpenIcon, CalendarIcon, AwardIcon, CheckCircle, XCircle } from "lucide-react"
+import { BookOpenIcon, CalendarIcon, AwardIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 
 interface EducationCardsProps {
   educationHistory?: any[]
@@ -11,29 +10,17 @@ interface EducationCardsProps {
 }
 
 export default function EducationCards({ educationHistory: realEducationHistory, isViewMode = false }: EducationCardsProps) {
-  console.log('🔍 Raw education data received:', realEducationHistory)
-  
   // Use real education data only - no fallback to mock data
   const educationHistory = realEducationHistory && realEducationHistory.length > 0 ? 
-    realEducationHistory.map((edu: any) => {
-      console.log('🔍 Processing education item:', {
-        institutionName: edu.institutionName,
-        institutionVerified: edu.institutionVerified,
-        institution_verified: edu.institution_verified,
-        rawEducation: edu
-      })
-      
-      return {
-        school: edu.institutionName,
-        type: edu.institutionTypeName || "Institution",
-        grade: edu.gradeLevel || edu.grade || "Student", 
-        period: `${new Date(edu.startDate).getFullYear()} - ${edu.isCurrent ? 'Present' : new Date(edu.endDate || Date.now()).getFullYear()}`,
-        gpa: edu.gpa && edu.gpa.trim() ? `GPA: ${edu.gpa}` : null,
-        subjects: edu.subjects || [],
-        achievements: edu.achievements || [],
-        institutionVerified: edu.institutionVerified, // Use the already mapped field from API
-      }
-    }) : []
+    realEducationHistory.map((edu: any) => ({
+      school: edu.institutionName,
+      type: edu.institutionTypeName || "Institution",
+      grade: edu.gradeLevel || edu.grade || "Student", 
+      period: `${new Date(edu.startDate).getFullYear()} - ${edu.isCurrent ? 'Present' : new Date(edu.endDate || Date.now()).getFullYear()}`,
+      gpa: edu.gpa && edu.gpa.trim() ? `GPA: ${edu.gpa}` : null,
+      subjects: edu.subjects || [],
+      achievements: edu.achievements || [],
+    })) : []
 
   return (
     <div className="mb-8">
@@ -76,35 +63,11 @@ export default function EducationCards({ educationHistory: realEducationHistory,
                   transition={{ delay: index * 0.1 }}
                 >
                   <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-semibold text-lg truncate">{education.school}</h4>
-                        {(() => {
-                          console.log('🔍 Education verification debug:', {
-                            id: education.id,
-                            institutionName: education.institutionName,
-                            institutionVerified: education.institutionVerified,
-                            institutionVerified_type: typeof education.institutionVerified,
-                            institutionVerified_strict_true: education.institutionVerified === true,
-                            institutionVerified_truthy: !!education.institutionVerified
-                          })
-                          
-                          return education.institutionVerified === true ? (
-                            <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200 flex items-center gap-1 text-xs px-2 py-0.5">
-                              <CheckCircle className="h-3 w-3" />
-                              Verified
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-300 flex items-center gap-1 text-xs px-2 py-0.5">
-                              <XCircle className="h-3 w-3" />
-                              Not Verified
-                            </Badge>
-                          )
-                        })()}
-                      </div>
+                    <div>
+                      <h4 className="font-semibold text-lg">{education.school}</h4>
                       <p className="text-sm text-gray-600 dark:text-gray-400">{education.type}</p>
                     </div>
-                    <span className="px-2 py-1 bg-pathpiper-teal/10 text-pathpiper-teal text-xs rounded-full flex-shrink-0 ml-2">
+                    <span className="px-2 py-1 bg-pathpiper-teal/10 text-pathpiper-teal text-xs rounded-full">
                       {education.grade}
                     </span>
                   </div>

@@ -34,76 +34,33 @@ export async function GET(request: NextRequest) {
       orderBy: {
         startDate: 'desc'
       },
-      select: {
-        id: true,
-        institutionId: true,
-        institutionName: true,
-        institutionTypeId: true,
-        degreeProgram: true,
-        fieldOfStudy: true,
-        subjects: true,
-        startDate: true,
-        endDate: true,
-        isCurrent: true,
-        gradeLevel: true,
-        gpa: true,
-        achievements: true,
-        description: true,
-        institutionVerified: true, // Explicitly select this field
-        createdAt: true,
-        updatedAt: true,
+      include: {
         institutionType: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            category: {
-              select: {
-                id: true,
-                name: true,
-                slug: true
-              }
-            }
+          include: {
+            category: true
           }
         }
       }
     })
 
     // Transform database fields to match the frontend interface
-    const transformedEducation = educationHistory.map(entry => {
-      console.log('🔍 Education entry debug:', {
-        id: entry.id,
-        institutionName: entry.institutionName,
-        institutionVerified: entry.institutionVerified,
-        institution_verified_raw: entry.institutionVerified,
-        institution_verified_type: typeof entry.institutionVerified,
-        all_fields: Object.keys(entry),
-        raw_entry: entry
-      })
-      
-      // Ensure institutionVerified is properly handled
-      const institutionVerified = entry.institutionVerified !== undefined ? entry.institutionVerified : null;
-      
-      return {
-        id: entry.id,
-        institutionId: entry.institutionId || '',
-        institutionName: entry.institutionName,
-        institutionCategory: entry.institutionType?.category?.slug || '',
-        institutionType: entry.institutionTypeId ? entry.institutionTypeId.toString() : '',
-        institutionTypeName: entry.institutionType?.name || '', // Add the type name
-        institutionVerified: institutionVerified, // Explicitly handle the field
-        degree: entry.degreeProgram || '',
-        fieldOfStudy: entry.fieldOfStudy || '',
-        subjects: Array.isArray(entry.subjects) ? entry.subjects : [],
-        startDate: entry.startDate ? entry.startDate.toISOString().split('T')[0] : '',
-        endDate: entry.endDate ? entry.endDate.toISOString().split('T')[0] : '',
-        isCurrent: entry.isCurrent || false,
-        grade: entry.gradeLevel || '',
-        description: entry.description || ''
-      }
-    })
-
-    console.log('🔍 Final transformed education data:', transformedEducation)
+    const transformedEducation = educationHistory.map(entry => ({
+      id: entry.id,
+      institutionId: entry.institutionId || '',
+      institutionName: entry.institutionName,
+      institutionCategory: entry.institutionType?.category?.slug || '',
+      institutionType: entry.institutionTypeId ? entry.institutionTypeId.toString() : '',
+      institutionTypeName: entry.institutionType?.name || '', // Add the type name
+      institutionVerified: entry.institutionVerified,
+      degree: entry.degreeProgram || '',
+      fieldOfStudy: entry.fieldOfStudy || '',
+      subjects: Array.isArray(entry.subjects) ? entry.subjects : [],
+      startDate: entry.startDate ? entry.startDate.toISOString().split('T')[0] : '',
+      endDate: entry.endDate ? entry.endDate.toISOString().split('T')[0] : '',
+      isCurrent: entry.isCurrent || false,
+      grade: entry.gradeLevel || '',
+      description: entry.description || ''
+    }))
 
     return NextResponse.json({ education: transformedEducation })
   } catch (error) {
