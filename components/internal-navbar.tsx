@@ -1,6 +1,4 @@
-The code has been modified to include follow/unfollow functionality for institutions in the search results, including API calls and UI updates.
-```
-```replit_final_file
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -8,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
-  Search, Bell, Menu, X, User, Users, Building, MessageCircle, Home, UserPlus, UserCheck, UserMinus
+  Search, Bell, Menu, X, User, Users, Building, MessageCircle, Home, UserPlus, UserCheck, UserMinus, LogOut, Settings, Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
@@ -179,6 +177,7 @@ export function InternalNavbar() {
       if (response.ok) {
         const users = await response.json();
         setSearchResults(users);
+        setShowSearchResults(true);
 
         // Get follow status for institutions
         const institutionIds = users.filter((user: SearchUser) => user.role === 'institution').map((user: SearchUser) => user.id);
@@ -474,51 +473,81 @@ export function InternalNavbar() {
                           </div>
                         </div>
 
-                        {(() => {
-                          const status = getConnectionStatus(searchUser.id);
-                          if (status === 'connected') {
-                            return (
-                              <Button
-                                size="sm"
-                                disabled
-                                className="shrink-0 bg-green-100 text-green-800 px-3 py-1.5 text-xs font-medium cursor-not-allowed"
-                              >
-                                Connected
-                              </Button>
-                            );
-                          } else if (status === 'pending') {
-                            return (
-                              <Button
-                                size="sm"
-                                disabled
-                                className="shrink-0 bg-yellow-100 text-yellow-800 px-3 py-1.5 text-xs font-medium cursor-not-allowed"
-                              >
-                                Pending
-                              </Button>
-                            );
-                          } else {
-                            return (
-                              <Button
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  sendConnectionRequest(searchUser.id);
-                                }}
-                                disabled={sendingRequest === searchUser.id}
-                                className="shrink-0 bg-pathpiper-teal hover:bg-pathpiper-teal/90 text-white px-3 py-1.5 text-xs font-medium"
-                              >
-                                {sendingRequest === searchUser.id ? (
-                                  <Loader2 className="h-3 w-3 animate-spin" />
-                                ) : (
-                                  <>
-                                    <UserPlus className="h-3 w-3 mr-1" />
-                                    Connect
-                                  </>
-                                )}
-                              </Button>
-                            );
-                          }
-                        })()}
+                        {searchUser.role === 'institution' ? (
+                          <Button
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleFollowToggle(searchUser.id, followStatus[searchUser.id]);
+                            }}
+                            disabled={followLoading[searchUser.id]}
+                            className={`shrink-0 px-3 py-1.5 text-xs font-medium ${
+                              followStatus[searchUser.id]
+                                ? "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                                : "bg-pathpiper-teal hover:bg-pathpiper-teal/90 text-white"
+                            }`}
+                          >
+                            {followLoading[searchUser.id] ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : followStatus[searchUser.id] ? (
+                              <>
+                                <UserCheck className="h-3 w-3 mr-1" />
+                                Following
+                              </>
+                            ) : (
+                              <>
+                                <UserPlus className="h-3 w-3 mr-1" />
+                                Follow
+                              </>
+                            )}
+                          </Button>
+                        ) : (
+                          (() => {
+                            const status = getConnectionStatus(searchUser.id);
+                            if (status === 'connected') {
+                              return (
+                                <Button
+                                  size="sm"
+                                  disabled
+                                  className="shrink-0 bg-green-100 text-green-800 px-3 py-1.5 text-xs font-medium cursor-not-allowed"
+                                >
+                                  Connected
+                                </Button>
+                              );
+                            } else if (status === 'pending') {
+                              return (
+                                <Button
+                                  size="sm"
+                                  disabled
+                                  className="shrink-0 bg-yellow-100 text-yellow-800 px-3 py-1.5 text-xs font-medium cursor-not-allowed"
+                                >
+                                  Pending
+                                </Button>
+                              );
+                            } else {
+                              return (
+                                <Button
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    sendConnectionRequest(searchUser.id);
+                                  }}
+                                  disabled={sendingRequest === searchUser.id}
+                                  className="shrink-0 bg-pathpiper-teal hover:bg-pathpiper-teal/90 text-white px-3 py-1.5 text-xs font-medium"
+                                >
+                                  {sendingRequest === searchUser.id ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <>
+                                      <UserPlus className="h-3 w-3 mr-1" />
+                                      Connect
+                                    </>
+                                  )}
+                                </Button>
+                              );
+                            }
+                          })()
+                        )}
                       </div>
                     ))}
 
