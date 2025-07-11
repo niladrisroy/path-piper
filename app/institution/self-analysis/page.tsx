@@ -1,10 +1,9 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
-import InternalNavbar from "@/components/internal-navbar"
+import InstitutionNavbar from "@/components/institution-navbar"
 import Footer from "@/components/footer"
 import ProtectedLayout from "@/app/protected-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -52,14 +51,14 @@ export default function InstitutionSelfAnalysisPage() {
   // Parse analysis into sections for horizontal layout
   const parseAnalysisIntoSections = (text: string) => {
     const sections = [];
-    
+
     // Split by major headers (## pattern)
     const majorSections = text.split(/## (.*?)$/gm);
-    
+
     for (let i = 1; i < majorSections.length; i += 2) {
       const title = majorSections[i].trim();
       const content = majorSections[i + 1] || '';
-      
+
       if (title && content.trim()) {
         sections.push({
           title: title,
@@ -67,14 +66,14 @@ export default function InstitutionSelfAnalysisPage() {
         });
       }
     }
-    
+
     // If no major sections found, try to split by other patterns
     if (sections.length === 0) {
       const fallbackSections = text.split(/### (.*?)$/gm);
       for (let i = 1; i < fallbackSections.length; i += 2) {
         const title = fallbackSections[i].trim();
         const content = fallbackSections[i + 1] || '';
-        
+
         if (title && content.trim()) {
           sections.push({
             title: title,
@@ -83,7 +82,7 @@ export default function InstitutionSelfAnalysisPage() {
         }
       }
     }
-    
+
     // If still no sections, create a single section
     if (sections.length === 0) {
       sections.push({
@@ -91,14 +90,14 @@ export default function InstitutionSelfAnalysisPage() {
         content: text
       });
     }
-    
+
     return sections;
   };
 
   // Get icon for section based on title
   const getSectionIcon = (title: string) => {
     const titleLower = title.toLowerCase();
-    
+
     if (titleLower.includes('insight') || titleLower.includes('overview')) {
       return <Lightbulb className="h-5 w-5 text-yellow-500" />;
     } else if (titleLower.includes('strength') || titleLower.includes('advantage')) {
@@ -123,17 +122,17 @@ export default function InstitutionSelfAnalysisPage() {
       .replace(/#### (.*?)$/gm, '<h4 class="text-lg font-semibold text-blue-600 dark:text-blue-400 mt-6 mb-3 flex items-center"><span class="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>$1</h4>')
       .replace(/### (.*?)$/gm, '<h3 class="text-xl font-bold text-purple-600 dark:text-purple-400 mt-8 mb-4 flex items-center"><span class="w-3 h-3 bg-purple-600 rounded-full mr-2"></span>$1</h3>')
       .replace(/## (.*?)$/gm, '<h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 mt-10 mb-6 border-l-4 border-purple-500 pl-4">$1</h2>')
-      
+
       // Convert bullet points to styled lists
       .replace(/- \*\*(.*?)\*\*: (.*?)$/gm, '<div class="flex items-start space-x-3 mb-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-400"><div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div><div><span class="font-semibold text-blue-700 dark:text-blue-300">$1:</span> <span class="text-gray-700 dark:text-gray-300">$2</span></div></div>')
       .replace(/- (.*?)$/gm, '<div class="flex items-start space-x-3 mb-2"><div class="w-1.5 h-1.5 bg-gray-500 rounded-full mt-2 flex-shrink-0"></div><span class="text-gray-700 dark:text-gray-300">$1</span></div>')
-      
+
       // Convert bold text
       .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900 dark:text-white">$1</strong>')
-      
+
       // Convert numbered lists
       .replace(/(\d+)\. (.*?)$/gm, '<div class="flex items-start space-x-3 mb-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors"><div class="flex items-center justify-center w-6 h-6 bg-green-500 text-white text-sm font-bold rounded-full flex-shrink-0">$1</div><span class="text-gray-700 dark:text-gray-300">$2</span></div>')
-      
+
       // Convert line breaks to proper spacing
       .replace(/\n\n/g, '<div class="my-4"></div>')
       .replace(/\n/g, '<br/>')
@@ -142,7 +141,7 @@ export default function InstitutionSelfAnalysisPage() {
   const fetchInstitutionData = async () => {
     try {
       console.log('⚠️ Fetching institution profile data')
-      
+
       // Fetch all data in parallel using the same approach as institution profile page
       const [profileResponse, programsResponse, facultyResponse, facilitiesResponse, eventsResponse, galleryResponse, followersResponse] = await Promise.all([
         fetch('/api/institution/profile', { method: 'POST' }),
@@ -157,13 +156,13 @@ export default function InstitutionSelfAnalysisPage() {
       const [profileData, programsData, facultyData, facilitiesData, eventsData, galleryData, followersData] = await Promise.all([
         profileResponse.ok ? profileResponse.json() : { profile: null },
         programsResponse.ok ? programsResponse.json() : { programs: [] },
-        facultyResponse.ok ? facultyResponse.json() : { faculty: [] },
+        facultyResponse.ok ? programsResponse.json() : { faculty: [] },
         facilitiesResponse.ok ? facilitiesResponse.json() : { facilities: [] },
         eventsResponse.ok ? eventsResponse.json() : { events: [] },
         galleryResponse.ok ? galleryResponse.json() : { gallery: [] },
         followersResponse.ok ? followersResponse.json() : { followers: [] }
       ])
-      
+
       const institutionData: InstitutionData = {
         profile: {
           ...profileData.profile,
@@ -234,7 +233,7 @@ export default function InstitutionSelfAnalysisPage() {
     return (
       <ProtectedLayout>
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-          <InternalNavbar />
+          <InstitutionNavbar />
           <main className="flex-grow pt-16 sm:pt-24 flex items-center justify-center">
             <div className="text-center">
               <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
@@ -284,7 +283,7 @@ export default function InstitutionSelfAnalysisPage() {
           .dark .analysis-content h4 {
             color: #60a5fa;
           }
-          
+
           /* Custom scrollbar styles */
           .scrollbar-thin {
             scrollbar-width: thin;
@@ -322,7 +321,7 @@ export default function InstitutionSelfAnalysisPage() {
             background-color: #6b7280;
           }
         `}</style>
-        <InternalNavbar />
+        <InstitutionNavbar />
         <main className="flex-grow pt-16 sm:pt-24">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-6xl">
             {/* Header */}
@@ -482,14 +481,14 @@ export default function InstitutionSelfAnalysisPage() {
                         Competitive Analysis
                       </Button>
                     </div>
-                    
+
                     <Textarea
                       placeholder="Type your question here... For example: 'How can we improve our student enrollment?', 'What programs should we add?', 'How to enhance our institution's reputation?'"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       className="min-h-[120px] resize-none"
                     />
-                    
+
                     <Button 
                       onClick={handleAnalysis}
                       disabled={!query.trim() || isAnalyzing}
@@ -507,7 +506,7 @@ export default function InstitutionSelfAnalysisPage() {
                         </>
                       )}
                     </Button>
-                    
+
                     {isAnalyzing && (
                       <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-400">
                         <p className="text-sm text-blue-700 dark:text-blue-300">
@@ -551,7 +550,7 @@ export default function InstitutionSelfAnalysisPage() {
                                   </div>
                                   <div className="h-1 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full mb-4"></div>
                                 </div>
-                                
+
                                 <div className="space-y-3 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
                                   <div 
                                     className="analysis-content text-sm text-gray-700 dark:text-gray-300 leading-relaxed"
@@ -564,7 +563,7 @@ export default function InstitutionSelfAnalysisPage() {
                             ));
                           })()}
                         </div>
-                        
+
                         {/* Navigation Hint */}
                         <div className="flex items-center justify-center mt-4 text-sm text-gray-500 dark:text-gray-400">
                           <div className="flex items-center gap-2">
