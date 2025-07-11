@@ -105,7 +105,9 @@ model Profile {
   postLikes         PostLike[]
   postComments      PostComment[]
   postBookmarks     PostBookmark[]
-  postReactions  PostReaction[]
+  postReactions     PostReaction[]
+  sentInstitutionFollows     InstitutionFollowConnection[] @relation("SentInstitutionFollows")
+  receivedInstitutionFollows InstitutionFollowConnection[] @relation("ReceivedInstitutionFollows")
 
 
   @@map("profiles")
@@ -806,5 +808,19 @@ model ChatbotTheme {
   updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@map("chatbot_themes")
+  @@schema("public")
+}
+
+model InstitutionFollowConnection {
+  id          BigInt   @id @default(autoincrement())
+  senderId    String   @map("sender_id") @db.Uuid
+  receiverId  String   @map("receiver_id") @db.Uuid
+  connectedAt DateTime @default(now()) @map("connected_at")
+
+  sender   Profile @relation("SentInstitutionFollows", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver Profile @relation("ReceivedInstitutionFollows", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+  @@map("institution_follow_connections")
   @@schema("public")
 }
