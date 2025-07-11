@@ -456,22 +456,11 @@ export default function Feed() {
                 animation: 'fadeInUp 0.6s ease-out forwards'
               }}
             >
-              <div key={post.id} className="space-y-4">
-                <PostWithTrails
-                  post={post}
-                  onPostUpdate={fetchPosts}
-                  onRepost={handleRepost}
-                />
-
-                {/* Enhanced Reactions Section */}
-                <EnhancedReactions
-                  postId={post.id}
-                  initialLikes={post.likesCount || 0}
-                  isLiked={post.isLikedByUser || false}
-                  size="md"
-                  onReactionChange={(reactionType) => handleReactionChange(post.id, reactionType)}
-                />
-              </div>
+              <PostWithTrails
+                post={post}
+                onPostUpdate={fetchPosts}
+                onRepost={handleRepost}
+              />
             </div>
           ))
         )}
