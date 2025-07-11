@@ -108,7 +108,8 @@ export default function StudentProfile({ studentId, currentUser, studentData, is
           gradeLevel: edu.gradeLevel || edu.grade_level,
           gpa: edu.gpa,
           achievements: edu.achievements || [],
-          description: edu.description
+          description: edu.description,
+          institutionVerified: edu.institutionVerified
         })) || [],
         socialLinks: studentData.profile?.socialLinks || [],
         careerGoals: studentData.profile?.careerGoals || [],
