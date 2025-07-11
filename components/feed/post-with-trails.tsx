@@ -494,25 +494,14 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
           </div>
         )}
 
-        {/* Enhanced Reactions */}
-        <EnhancedReactions
-          reactionCounts={reactionCounts}
-          userReaction={userReaction}
-          onReact={handleReaction}
-        />
-
         {/* Action Buttons */}
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
           <div className="flex items-center gap-6">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLike}
-              className={`flex items-center gap-2 ${isLiked ? 'text-red-600' : 'text-gray-600'} hover:text-red-600`}
-            >
-              <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
-              <span>{likesCount}</span>
-            </Button>
+            <EnhancedReactions
+              reactionCounts={reactionCounts}
+              userReaction={userReaction}
+              onReact={handleReaction}
+            />
 
             <Button
               variant="ghost"

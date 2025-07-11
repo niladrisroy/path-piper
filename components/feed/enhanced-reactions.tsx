@@ -14,11 +14,14 @@ interface ReactionType {
 }
 
 interface EnhancedReactionsProps {
-  postId: string
+  postId?: string
   initialLikes?: number
   isLiked?: boolean
   size?: 'sm' | 'md' | 'lg'
   onReactionChange?: (reactionType: string | null) => void
+  reactionCounts?: Record<string, number>
+  userReaction?: string | null
+  onReact?: (reactionType: string) => void
 }
 
 const REACTION_TYPES: ReactionType[] = [
@@ -37,13 +40,16 @@ export default function EnhancedReactions({
   initialLikes = 0, 
   isLiked = false,
   size = 'sm',
-  onReactionChange 
+  onReactionChange,
+  reactionCounts = {},
+  userReaction = null,
+  onReact
 }: EnhancedReactionsProps) {
   const { user } = useAuth()
   const { toast } = useCustomToast()
   const [showReactions, setShowReactions] = useState(false)
-  const [currentReaction, setCurrentReaction] = useState<string | null>(isLiked ? 'like' : null)
-  const [reactionCount, setReactionCount] = useState(initialLikes)
+  const [currentReaction, setCurrentReaction] = useState<string | null>(userReaction || (isLiked ? 'like' : null))
+  const [reactionCount, setReactionCount] = useState(initialLikes || Object.values(reactionCounts).reduce((sum, count) => sum + count, 0))
 
   const sizeClasses = {
     sm: 'h-4 w-4',
@@ -60,6 +66,18 @@ export default function EnhancedReactions({
   const handleReaction = async (reactionType: string) => {
     if (!user) {
       toast.error("Please log in to react to posts")
+      return
+    }
+
+    // Use passed onReact function if available
+    if (onReact) {
+      onReact(reactionType)
+      return
+    }
+
+    // Fallback to direct API call if no onReact prop
+    if (!postId) {
+      toast.error("Cannot react to post")
       return
     }
 
