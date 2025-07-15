@@ -571,19 +571,20 @@ model SkillEndorsement {
 }
 
 model CircleBadge {
-  id              String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  creatorId       String              @map("creator_id") @db.Uuid
-  name            String              @db.VarChar(50)
-  description     String?
-  color           String              @default("#3B82F6") @db.VarChar(20)
-  icon            String              @default("users") @db.VarChar(50)
-  isDefault       Boolean             @default(false) @map("is_default")
-  isDisabled      Boolean             @default(false) @map("is_disabled")
-  creator         Profile             @relation("CreatedCircles", fields: [creatorId], references: [id], onDelete: Cascade)
-  memberships     CircleMembership[]
-  invitations     CircleInvitation[]
-  createdAt       DateTime            @default(now()) @map("created_at")
-  updatedAt       DateTime            @updatedAt @map("updated_at")
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  creatorId         String              @map("creator_id") @db.Uuid
+  name              String              @db.VarChar(50)
+  description       String?
+  color             String              @default("#3B82F6") @db.VarChar(20)
+  icon              String              @default("users") @db.VarChar(50)
+  isDefault         Boolean             @default(false) @map("is_default")
+  isDisabled        Boolean             @default(false) @map("is_disabled")
+  isCreatorDisabled Boolean             @default(false) @map("is_creator_disabled")
+  creator           Profile             @relation("CreatedCircles", fields: [creatorId], references: [id], onDelete: Cascade)
+  memberships       CircleMembership[]
+  invitations       CircleInvitation[]
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
 
   @@map("circle_badges")
   @@schema("public")

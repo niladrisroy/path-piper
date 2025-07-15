@@ -48,34 +48,59 @@ export async function POST(
 
     if (disableType === 'child') {
       // Option A: Disable for only this child
-      // Update the circle_memberships table to set is_disabled_member = TRUE
-      const membership = await prisma.circleMembership.findFirst({
+      // First check if child is the creator of the circle
+      const circle = await prisma.circleBadge.findFirst({
         where: {
-          userId: childId,
-          circleId: circleId
+          id: circleId,
+          creatorId: childId
         }
       })
 
-      if (!membership) {
-        return NextResponse.json(
-          { success: false, error: 'Child is not a member of this circle' },
-          { status: 404 }
-        )
+      if (circle) {
+        // Child is the creator - update is_creator_disabled in circle_badges
+        await prisma.circleBadge.update({
+          where: {
+            id: circleId
+          },
+          data: {
+            isCreatorDisabled: true
+          }
+        })
+
+        return NextResponse.json({
+          success: true,
+          message: 'Circle disabled for child creator successfully'
+        })
+      } else {
+        // Child is not the creator - check membership table
+        const membership = await prisma.circleMembership.findFirst({
+          where: {
+            userId: childId,
+            circleId: circleId
+          }
+        })
+
+        if (!membership) {
+          return NextResponse.json(
+            { success: false, error: 'Child is not a member of this circle' },
+            { status: 404 }
+          )
+        }
+
+        await prisma.circleMembership.update({
+          where: {
+            id: membership.id
+          },
+          data: {
+            isDisabledMember: true
+          }
+        })
+
+        return NextResponse.json({
+          success: true,
+          message: 'Circle disabled for child successfully'
+        })
       }
-
-      await prisma.circleMembership.update({
-        where: {
-          id: membership.id
-        },
-        data: {
-          isDisabledMember: true
-        }
-      })
-
-      return NextResponse.json({
-        success: true,
-        message: 'Circle disabled for child successfully'
-      })
 
     } else if (disableType === 'all') {
       // Option B: Disable for all members
