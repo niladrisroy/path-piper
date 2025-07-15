@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -316,20 +315,20 @@ export function InternalNavbar() {
 
   // Function to get profile URL based on user role
   const getProfileUrl = () => {
-    if (!user || userLoading) return "/student/profile"; // Default fallback
-
-    console.log('🔍 Navbar: Getting profile URL for user role:', user.role);
-
-    switch (user.role) {
-      case "institution":
-        return "/institution/profile";
-      case "mentor":
-        return "/mentor/profile";
-      case "student":
-      default:
-        return "/student/profile";
+    console.log('🔍 Navbar: Getting profile URL for user role:', user?.role)
+    if (!user?.role) {
+      console.warn('⚠️ Navbar: User role is null/undefined, defaulting to /profile')
+      return '/profile'
     }
-  };
+    if (user.role === 'student') {
+      return '/student/profile'
+    } else if (user.role === 'mentor') {
+      return '/mentor/profile'
+    } else if (user.role === 'institution') {
+      return '/institution/profile'
+    }
+    return '/profile'
+  }
 
   // Function to handle profile navigation
   const handleProfileNavigation = (e: React.MouseEvent) => {
