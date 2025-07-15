@@ -107,12 +107,15 @@ export async function GET(
   try {
     const { id: postId } = await params
 
+    console.log('📋 Fetching trails for post:', postId)
+
     // Check if post exists first
     const parentPost = await prisma.feedPost.findUnique({
       where: { id: postId }
     })
 
     if (!parentPost) {
+      console.log('❌ Parent post not found:', postId)
       return NextResponse.json({ error: 'Post not found' }, { status: 404 })
     }
 
@@ -131,9 +134,10 @@ export async function GET(
             profileImageUrl: true
           }
         },
-        likes: {
+        _count: {
           select: {
-            userId: true
+            likes: true,
+            comments: true
           }
         }
       },
@@ -142,11 +146,14 @@ export async function GET(
       }
     })
 
-    // Transform trails to include like counts and user like status
+    console.log('✅ Found', trails.length, 'trails for post:', postId)
+
+    // Transform trails to include like counts
     const transformedTrails = trails.map(trail => ({
       ...trail,
-      likesCount: trail.likes?.length || 0,
-      likes: undefined // Remove the likes array from response for cleaner data
+      likesCount: trail._count?.likes || 0,
+      commentsCount: trail._count?.comments || 0,
+      _count: undefined // Remove the _count object from response
     }))
 
     return NextResponse.json({ trails: transformedTrails })

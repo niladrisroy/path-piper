@@ -300,7 +300,10 @@ export async function GET(request: NextRequest) {
           }
         },
         trails: {
-          where: { isTrail: true },
+          where: { 
+            isTrail: true,
+            moderationStatus: 'approved'
+          },
           include: {
             author: {
               select: {
@@ -318,7 +321,8 @@ export async function GET(request: NextRequest) {
               }
             }
           },
-          orderBy: { trailOrder: 'asc' }
+          orderBy: { trailOrder: 'asc' },
+          take: 10 // Limit trails to prevent large responses
         }
       },
       orderBy: { createdAt: 'desc' },

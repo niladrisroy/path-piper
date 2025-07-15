@@ -101,7 +101,10 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
   const [showTrails, setShowTrails] = useState(false)
   const [showCreateTrail, setShowCreateTrail] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [trails, setTrails] = useState(post.trails || [])
+  const [trails, setTrails] = useState(() => {
+    console.log('🐛 Initializing trails for post:', post.id, 'with', post.trails?.length || 0, 'trails')
+    return post.trails || []
+  })
   const [reactionCounts, setReactionCounts] = useState<Record<string, number>>({})
   const [userReaction, setUserReaction] = useState<string | null>(null)
   const [isVideoPost, setIsVideoPost] = useState(false)
@@ -276,11 +279,17 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
   const handleTrailCreated = async () => {
     // Refetch trails
     try {
-      const response = await fetch(`/api/feed/posts/${post.id}/trails`)
+      console.log('🔄 Refetching trails for post:', post.id)
+      const response = await fetch(`/api/feed/posts/${post.id}/trails`, {
+        credentials: 'include'
+      })
       if (response.ok) {
         const data = await response.json()
-        setTrails(data.trails)
+        console.log('✅ Fetched trails:', data.trails?.length || 0)
+        setTrails(data.trails || [])
         setCommentsCount(prev => prev + 1)
+      } else {
+        console.error('❌ Failed to fetch trails:', response.status)
       }
     } catch (error) {
       console.error('Error fetching trails:', error)
