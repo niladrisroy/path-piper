@@ -55,6 +55,13 @@ export default function ModerationTestPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [showHelper, setShowHelper] = useState(false)
   const [testHistory, setTestHistory] = useState<Array<{content: string, result: ModerationResult}>>([])
+  const [isRunningAllTests, setIsRunningAllTests] = useState(false)
+  const [allTestResults, setAllTestResults] = useState<Array<{
+    content: string
+    result?: ModerationResult
+    error?: string
+    category: string
+  }>>([])
 
   const testModeration = async (content: string) => {
     setIsLoading(true)
@@ -90,6 +97,81 @@ export default function ModerationTestPage() {
       toast.error('Failed to test moderation')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const runAllTests = async () => {
+    setIsRunningAllTests(true)
+    setAllTestResults([])
+    
+    const allTestCases = []
+    
+    // Collect all test cases
+    Object.entries(TEST_SCENARIOS).forEach(([category, examples]) => {
+      examples.forEach(example => {
+        allTestCases.push({ content: example, category })
+      })
+    })
+
+    const results = []
+    
+    for (const testCase of allTestCases) {
+      try {
+        console.log(`Testing: ${testCase.content}`)
+        
+        const response = await fetch('/api/moderation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: testCase.content,
+            type: 'post',
+            userId: 'batch-test-user-id',
+            imageUrl: null
+          })
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        
+        if (!data.moderation) {
+          throw new Error('No moderation data in response')
+        }
+
+        results.push({
+          content: testCase.content,
+          result: data.moderation,
+          category: testCase.category
+        })
+        
+        console.log(`✅ Test passed for: ${testCase.content.substring(0, 50)}...`)
+        
+      } catch (error) {
+        console.error(`❌ Test failed for: ${testCase.content}`, error)
+        results.push({
+          content: testCase.content,
+          error: (error as Error).message,
+          category: testCase.category
+        })
+      }
+      
+      // Add a small delay to avoid overwhelming the server
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+    
+    setAllTestResults(results)
+    setIsRunningAllTests(false)
+    
+    // Show summary
+    const errorCount = results.filter(r => r.error).length
+    const successCount = results.filter(r => !r.error).length
+    
+    if (errorCount > 0) {
+      toast.error(`Tests completed: ${successCount} passed, ${errorCount} failed`)
+    } else {
+      toast.success(`All ${successCount} tests passed!`)
     }
   }
 
@@ -172,6 +254,14 @@ export default function ModerationTestPage() {
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   {isLoading ? "Testing..." : "Test Moderation"}
+                </Button>
+                
+                <Button 
+                  onClick={runAllTests}
+                  disabled={isRunningAllTests}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  {isRunningAllTests ? "Running All Tests..." : "🔥 Test All Scenarios"}
                 </Button>
                 
                 <Button 
@@ -306,11 +396,155 @@ export default function ModerationTestPage() {
           </CardContent>
         </Card>
 
+        {/* Comprehensive Test Results */}
+        {allTestResults.length > 0 && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                All Test Results
+                <Badge variant="outline" className="ml-2">
+                  {allTestResults.filter(r => !r.error).length}/{allTestResults.length} passed
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="errors">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="errors">
+                    Errors ({allTestResults.filter(r => r.error).length})
+                  </TabsTrigger>
+                  <TabsTrigger value="all">All Results</TabsTrigger>
+                  <TabsTrigger value="summary">Summary</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="errors" className="space-y-3">
+                  {allTestResults.filter(r => r.error).length === 0 ? (
+                    <div className="text-center py-8 text-green-600">
+                      <CheckCircle className="h-12 w-12 mx-auto mb-2" />
+                      <p className="text-lg font-medium">No errors found!</p>
+                      <p className="text-sm">All tests passed successfully.</p>
+                    </div>
+                  ) : (
+                    allTestResults.filter(r => r.error).map((test, index) => (
+                      <div key={index} className="p-4 border border-red-200 rounded-lg bg-red-50">
+                        <div className="flex items-start gap-3">
+                          <XCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant="destructive">{test.category}</Badge>
+                              <span className="text-sm font-medium text-red-800">ERROR</span>
+                            </div>
+                            <p className="text-sm text-gray-700 mb-2 font-mono bg-gray-100 p-2 rounded">
+                              {test.content}
+                            </p>
+                            <div className="text-sm text-red-600 bg-red-100 p-2 rounded">
+                              <strong>Error:</strong> {test.error}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="all" className="space-y-3">
+                  {allTestResults.map((test, index) => (
+                    <div key={index} className={`p-3 border rounded ${test.error ? 'border-red-200 bg-red-50' : 'border-gray-200'}`}>
+                      <div className="flex items-center gap-3">
+                        {test.error ? (
+                          <XCircle className="h-5 w-5 text-red-500" />
+                        ) : (
+                          getStatusIcon(test.result?.status || 'unknown')
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="outline">{test.category}</Badge>
+                            {test.result && (
+                              <>
+                                <Badge className={getStatusColor(test.result.status)}>
+                                  {test.result.status}
+                                </Badge>
+                                <Badge className={getRiskScoreColor(test.result.riskScore)}>
+                                  {test.result.riskScore}
+                                </Badge>
+                              </>
+                            )}
+                            {test.error && <Badge variant="destructive">ERROR</Badge>}
+                          </div>
+                          <p className="text-sm text-gray-600 truncate">{test.content}</p>
+                          {test.error && (
+                            <p className="text-xs text-red-600 mt-1">{test.error}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </TabsContent>
+                
+                <TabsContent value="summary" className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center p-4 bg-green-50 rounded-lg">
+                      <div className="text-2xl font-bold text-green-600">
+                        {allTestResults.filter(r => !r.error).length}
+                      </div>
+                      <div className="text-sm text-green-700">Passed</div>
+                    </div>
+                    <div className="text-center p-4 bg-red-50 rounded-lg">
+                      <div className="text-2xl font-bold text-red-600">
+                        {allTestResults.filter(r => r.error).length}
+                      </div>
+                      <div className="text-sm text-red-700">Failed</div>
+                    </div>
+                    <div className="text-center p-4 bg-blue-50 rounded-lg">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {allTestResults.length}
+                      </div>
+                      <div className="text-sm text-blue-700">Total Tests</div>
+                    </div>
+                    <div className="text-center p-4 bg-purple-50 rounded-lg">
+                      <div className="text-2xl font-bold text-purple-600">
+                        {Object.keys(TEST_SCENARIOS).length}
+                      </div>
+                      <div className="text-sm text-purple-700">Categories</div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <h4 className="font-medium">Results by Category:</h4>
+                    {Object.keys(TEST_SCENARIOS).map(category => {
+                      const categoryResults = allTestResults.filter(r => r.category === category)
+                      const errorCount = categoryResults.filter(r => r.error).length
+                      const successCount = categoryResults.filter(r => !r.error).length
+                      
+                      return (
+                        <div key={category} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                          <span className="font-medium capitalize">{category.replace('_', ' ')}</span>
+                          <div className="flex gap-2">
+                            <Badge variant="outline" className="bg-green-100 text-green-700">
+                              ✓ {successCount}
+                            </Badge>
+                            {errorCount > 0 && (
+                              <Badge variant="outline" className="bg-red-100 text-red-700">
+                                ✗ {errorCount}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Test History */}
         {testHistory.length > 0 && (
           <Card className="mt-6">
             <CardHeader>
-              <CardTitle>Recent Tests</CardTitle>
+              <CardTitle>Recent Individual Tests</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
