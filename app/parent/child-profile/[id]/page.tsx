@@ -27,7 +27,8 @@ import {
   Plus,
   Trash2,
   Eye,
-  MessageCircle
+  MessageCircle,
+  Settings
 } from "lucide-react"
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
@@ -1025,7 +1026,7 @@ export default function ParentChildProfilePage() {
                                   <Eye className="w-4 h-4 mr-1" />
                                   View Members
                                 </Button>
-                                
+
                                 <Dialog>
                                   <DialogTrigger asChild>
                                     <Button 
@@ -1060,7 +1061,7 @@ export default function ParentChildProfilePage() {
                                             </div>
                                           </div>
                                         </Button>
-                                        
+
                                         <Button
                                           variant="outline"
                                           className="w-full justify-start text-left h-auto p-4"
@@ -1132,7 +1133,7 @@ export default function ParentChildProfilePage() {
                                       </span>
                                     )}
                                   </div>
-                                  
+
                                   {/* Circle Members - Horizontal Display */}
                                   <div className="mt-3">
                                     <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Members:</p>
@@ -1154,7 +1155,7 @@ export default function ParentChildProfilePage() {
                                           </Badge>
                                         </div>
                                       )}
-                                      
+
                                       {/* Show other members */}
                                       {circle.memberships?.slice(0, 6).map((membership) => (
                                         <div key={membership.user.id} className="flex items-center gap-1 bg-white dark:bg-gray-700 rounded-full px-2 py-1 border">
@@ -1169,7 +1170,7 @@ export default function ParentChildProfilePage() {
                                           </span>
                                         </div>
                                       ))}
-                                      
+
                                       {/* Show "more" indicator if there are additional members */}
                                       {(circle.memberships?.length || 0) > 6 && (
                                         <div className="flex items-center justify-center bg-gray-200 dark:bg-gray-600 rounded-full px-2 py-1 border">
@@ -1339,7 +1340,7 @@ export default function ParentChildProfilePage() {
               <p className="font-medium text-gray-900">
                 "{circleDisableConfirmation.circleName}"
               </p>
-              
+
               {circleDisableConfirmation.disableType === 'all' && (
                 <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
                   <p className="text-sm text-red-700">
@@ -1348,7 +1349,7 @@ export default function ParentChildProfilePage() {
                   </p>
                 </div>
               )}
-              
+
               {circleDisableConfirmation.disableType === 'child' && (
                 <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
                   <p className="text-sm text-orange-700">
