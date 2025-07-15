@@ -466,6 +466,36 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
       return
     }
 
+    // Pre-moderation check
+    try {
+      const moderationResponse = await fetch('/api/moderation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: postText,
+          type: 'post',
+          userId: user?.id,
+          imageUrl: imageUrl
+        })
+      })
+
+      const moderationResult = await moderationResponse.json()
+      
+      if (moderationResult.moderation.status === 'rejected') {
+        toast.error("Content violates community guidelines and cannot be posted")
+        return
+      } else if (moderationResult.moderation.status === 'pending_review') {
+        toast.warning("Content requires review and will be posted after approval")
+      } else if (moderationResult.moderation.status === 'flagged') {
+        if (moderationResult.moderation.suggestions?.length > 0) {
+          toast.warning(`Content flagged: ${moderationResult.moderation.suggestions[0]}`)
+        }
+      }
+    } catch (error) {
+      console.error('Moderation check failed:', error)
+      // Continue with posting if moderation service fails
+    }
+
     setIsPosting(true)
     try {
       // First create the main post
