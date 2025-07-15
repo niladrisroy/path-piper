@@ -354,8 +354,19 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
       return
     }
 
-    if (postText.length > CHARACTER_LIMIT) {
+    if (getActualCharacterCount(postText) > CHARACTER_LIMIT) {
       toast.error(`Content exceeds ${CHARACTER_LIMIT} characters. Please shorten your content.`)
+      return
+    }
+
+    // Additional validation for specific post types
+    if (postType === "ACHIEVEMENT" && !achievementType && !isTrail) {
+      toast.error("Please select an achievement type")
+      return
+    }
+
+    if (postType === "PROJECT" && !projectCategory && !isTrail) {
+      toast.error("Please select a project category")
       return
     }
 
