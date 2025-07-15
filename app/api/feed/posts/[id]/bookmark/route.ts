@@ -69,9 +69,6 @@ export async function POST(
     return NextResponse.json({ error: 'Failed to handle bookmark' }, { status: 500 })
   }
 }
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
