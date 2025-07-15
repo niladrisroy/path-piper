@@ -107,6 +107,12 @@ model Profile {
   postBookmarks     PostBookmark[]
   postReactions  PostReaction[]
 
+  // Moderation relations
+  moderationLogs    ModerationLog[]
+  humanReviewLogs   ModerationLog[] @relation("HumanReviewer")
+  reviewQueue       HumanReviewQueue[]
+  reviewedItems     HumanReviewQueue[] @relation("QueueReviewer")
+
 
   @@map("profiles")
   @@schema("public")
@@ -658,6 +664,9 @@ model FeedPost {
   trails       FeedPost[]  @relation("PostTrails")
   parentPost   FeedPost?   @relation("PostTrails", fields: [parentPostId], references: [id], onDelete: Cascade)
 
+    // Moderation relation
+  reviewQueue     HumanReviewQueue[]
+
   @@map("feed_posts")
   @@schema("public")
 }
@@ -720,11 +729,11 @@ model PostBookmark {
 }
 
 model PostReaction {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  postId       String   @map("post_id") @db.Uuid
-  userId       String   @map("user_id") @db.Uuid
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  postId    String   @db.Uuid
+  userId    String   @db.Uuid
   reactionType String   @default("like") @map("reaction_type") @db.VarChar(20)
-  createdAt    DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   post FeedPost @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -761,6 +770,7 @@ model AchievementType {
 }
 
 model UserAchievement {
+  ```text
   id                     Int      @id @default(autoincrement())
   userId                 String   @map("user_id") @db.Uuid
   name                   String
@@ -806,5 +816,55 @@ model ChatbotTheme {
   updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@map("chatbot_themes")
+  @@schema("public")
+}
+
+model ModerationLog {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  contentType       String   // 'post', 'comment', 'profile', 'message'
+  content           String?
+  imageUrl          String?
+  videoUrl          String?
+  status            String   // 'approved', 'pending_review', 'flagged', 'rejected'
+  riskScore         Int      @default(0)
+  flags             String[] @default([])
+  reason            String?
+  requiresHumanReview Boolean @default(false)
+  moderatedAt       DateTime @default(now()) @map("moderated_at")
+  humanReviewerId   String?  @map("human_reviewer_id") @db.Uuid
+
+  user            Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  humanReviewer   Profile? @relation("HumanReviewer", fields: [humanReviewerId], references: [id])
+
+  @@map("moderation_logs")
+  @@schema("public")
+}
+
+model HumanReviewQueue {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId             String   @map("user_id") @db.Uuid
+  contentType        String   // 'post', 'comment'
+  content            String?
+  imageUrl           String?
+  videoUrl           String?
+  postId             String?  @map("post_id") @db.Uuid
+  status             String   // 'pending_review', 'flagged', 'rejected'
+  riskScore          Int      @default(0)
+  flags              String[] @default([])
+  reason             String?
+  priority           String   @default("medium") // 'low', 'medium', 'high'
+  queuedAt           DateTime @default(now()) @map("queued_at")
+  reviewStatus       String   @default("pending") @map("review_status") // 'pending', 'approved', 'rejected'
+  reviewedAt         DateTime? @map("reviewed_at")
+  reviewerId         String?  @map("reviewer_id") @db.Uuid
+  reviewerReason     String?  @map("reviewer_reason")
+  reviewerSuggestions String[] @default([]) @map("reviewer_suggestions")
+
+  user     Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewer Profile? @relation("QueueReviewer", fields: [reviewerId], references: [id])
+  post     FeedPost? @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("human_review_queue")
   @@schema("public")
 }

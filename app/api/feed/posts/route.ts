@@ -119,14 +119,30 @@ export async function POST(request: NextRequest) {
       console.log(`📝 Creating trail ${trailOrder} for parent post ${parentPostId}`)
     }
 
-    // Content moderation - comprehensive filtering
-    let moderationStatus = await moderateContent(content, imageUrl || undefined)
-    
-    // If content passed but there's an image, check image too
-    if (moderationStatus === 'approved' && imageUrl) {
-      const imageModerationStatus = await moderateImage(imageUrl)
-      if (imageModerationStatus !== 'approved') {
-        moderationStatus = imageModerationStatus
+    // Content moderation using the enhanced system
+    const moderationResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/moderation`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        content,
+        type: 'post',
+        userId: user.id,
+        imageUrl,
+        videoUrl: null // Add video support if needed
+      })
+    })
+
+    let moderationStatus = 'pending_review'
+    if (moderationResponse.ok) {
+      const moderationResult = await moderationResponse.json()
+      moderationStatus = moderationResult.moderation.status
+      
+      // If content is rejected, return error immediately
+      if (moderationStatus === 'rejected') {
+        return NextResponse.json({ 
+          error: 'Content violates community guidelines and cannot be posted',
+          suggestions: moderationResult.moderation.suggestions 
+        }, { status: 400 })
       }
     }
 

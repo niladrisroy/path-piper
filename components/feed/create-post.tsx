@@ -37,6 +37,7 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { toast } from "sonner"
+import ModerationHelper from "./moderation-helper"
 
 interface CreatePostProps {
   parentPostId?: string
@@ -123,6 +124,8 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
   const [trailContent, setTrailContent] = useState("")
   const [trailImageUrl, setTrailImageUrl] = useState<string | null>(null)
   const [isDraft, setIsDraft] = useState(false)
+  const [showModerationHelper, setShowModerationHelper] = useState(false)
+  const [moderationResult, setModerationResult] = useState<any>(null)
 
   const selectedPostType = POST_TYPES.find(type => type.value === postType)
 
@@ -480,15 +483,19 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
       })
 
       const moderationResult = await moderationResponse.json()
+      setModerationResult(moderationResult)
       
       if (moderationResult.moderation.status === 'rejected') {
         toast.error("Content violates community guidelines and cannot be posted")
+        setShowModerationHelper(true)
         return
       } else if (moderationResult.moderation.status === 'pending_review') {
         toast.warning("Content requires review and will be posted after approval")
       } else if (moderationResult.moderation.status === 'flagged') {
         if (moderationResult.moderation.suggestions?.length > 0) {
           toast.warning(`Content flagged: ${moderationResult.moderation.suggestions[0]}`)
+          setShowModerationHelper(true)
+          return
         }
       }
     } catch (error) {
@@ -669,6 +676,19 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
       window.removeEventListener('beforeunload', handleBeforeUnload)
     }
   }, [hasUnsavedChanges])
+
+  if (showModerationHelper) {
+    return (
+      <ModerationHelper
+        content={postText}
+        onSuggestionSelect={(suggestion) => {
+          setPostText(suggestion)
+          setHasUnsavedChanges(true)
+        }}
+        onClose={() => setShowModerationHelper(false)}
+      />
+    )
+  }
 
   if (isTrail) {
     return (
