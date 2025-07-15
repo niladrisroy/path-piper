@@ -101,10 +101,7 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
   const [showTrails, setShowTrails] = useState(false)
   const [showCreateTrail, setShowCreateTrail] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [trails, setTrails] = useState(() => {
-    console.log('🐛 Initializing trails for post:', post.id, 'with', post.trails?.length || 0, 'trails')
-    return post.trails || []
-  })
+  const [trails, setTrails] = useState(post.trails || [])
   const [reactionCounts, setReactionCounts] = useState<Record<string, number>>({})
   const [userReaction, setUserReaction] = useState<string | null>(null)
   const [isVideoPost, setIsVideoPost] = useState(false)
@@ -272,7 +269,21 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
     }
   }
 
-  const toggleTrails = () => {
+  const toggleTrails = async () => {
+    if (!showTrails) {
+      // Fetch trails when showing them
+      try {
+        const response = await fetch(`/api/feed/posts/${post.id}/trails`, {
+          credentials: 'include'
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setTrails(data.trails || [])
+        }
+      } catch (error) {
+        console.error('Error fetching trails:', error)
+      }
+    }
     setShowTrails(!showTrails)
   }
 
@@ -580,7 +591,7 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
               variant="ghost"
               size="sm"
               onClick={toggleTrails}
-              className="flex items-center gap-2 text-gray-600 hover:text-blue-600"
+              className={`flex items-center gap-2 ${showTrails ? 'text-blue-600' : 'text-gray-600 hover:text-blue-600'}`}
             >
               <MessageCircle className="h-4 w-4" />
               <span>{trails.length}</span>
