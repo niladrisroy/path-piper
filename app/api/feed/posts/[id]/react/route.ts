@@ -48,7 +48,7 @@ export async function POST(
       // Check if user already reacted to this post
       const existingReaction = await prisma.$queryRaw`
         SELECT * FROM post_reactions 
-        WHERE user_id = ${user.id}::uuid AND post_id = ${postId}::uuid
+        WHERE user_id = ${user.id} AND post_id = ${postId}
         LIMIT 1
       ` as any[]
 
@@ -59,7 +59,7 @@ export async function POST(
           // Remove reaction if same type
           await prisma.$executeRaw`
             DELETE FROM post_reactions 
-            WHERE user_id = ${user.id}::uuid AND post_id = ${postId}::uuid
+            WHERE user_id = ${user.id} AND post_id = ${postId}
           `
 
           // Decrement engagement score
@@ -78,7 +78,7 @@ export async function POST(
           await prisma.$executeRaw`
             UPDATE post_reactions 
             SET reaction_type = ${reactionType}, updated_at = NOW()
-            WHERE user_id = ${user.id}::uuid AND post_id = ${postId}::uuid
+            WHERE user_id = ${user.id} AND post_id = ${postId}
           `
 
           return NextResponse.json({ 
@@ -91,7 +91,7 @@ export async function POST(
         // Create new reaction
         await prisma.$executeRaw`
           INSERT INTO post_reactions (user_id, post_id, reaction_type)
-          VALUES (${user.id}::uuid, ${postId}::uuid, ${reactionType})
+          VALUES (${user.id}, ${postId}, ${reactionType})
         `
 
         // Increment engagement score
@@ -191,7 +191,7 @@ export async function GET(
       const reactions = await prisma.$queryRaw`
         SELECT reaction_type, COUNT(*) as count
         FROM post_reactions 
-        WHERE post_id = ${postId}::uuid
+        WHERE post_id = ${postId}
         GROUP BY reaction_type
       ` as { reaction_type: string; count: bigint }[]
 

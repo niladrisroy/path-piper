@@ -106,12 +106,8 @@ model Profile {
   postComments      PostComment[]
   postBookmarks     PostBookmark[]
   postReactions  PostReaction[]
-
-  // Moderation relations
-  moderationLogs    ModerationLog[]
-  humanReviewLogs   ModerationLog[] @relation("HumanReviewer")
-  reviewQueue       HumanReviewQueue[]
-  reviewedItems     HumanReviewQueue[] @relation("QueueReviewer")
+  institutionFollowers InstitutionFollowConnection[] @relation("InstitutionFollowers")
+  institutionFollowing InstitutionFollowConnection[] @relation("InstitutionFollowing")
 
 
   @@map("profiles")
@@ -582,6 +578,7 @@ model CircleBadge {
   color           String              @default("#3B82F6") @db.VarChar(20)
   icon            String              @default("users") @db.VarChar(50)
   isDefault       Boolean             @default(false) @map("is_default")
+  isDisabled      Boolean             @default(false) @map("is_disabled")
   creator         Profile             @relation("CreatedCircles", fields: [creatorId], references: [id], onDelete: Cascade)
   memberships     CircleMembership[]
   invitations     CircleInvitation[]
@@ -593,15 +590,16 @@ model CircleBadge {
 }
 
 model CircleMembership {
-  id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  circleId  String      @map("circle_id") @db.Uuid
-  userId    String      @map("user_id") @db.Uuid
-  status    String      @default("active") // 'active', 'pending', 'declined', 'left'
-  joinedAt  DateTime    @default(now()) @map("joined_at")
-  circle    CircleBadge @relation(fields: [circleId], references: [id], onDelete: Cascade)
-  user      Profile     @relation("CircleMemberships", fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime    @default(now()) @map("created_at")
-  updatedAt DateTime    @updatedAt @map("updated_at")
+  id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  circleId          String      @map("circle_id") @db.Uuid
+  userId            String      @map("user_id") @db.Uuid
+  status            String      @default("active") // 'active', 'pending', 'declined', 'left'
+  joinedAt          DateTime    @default(now()) @map("joined_at")
+  isDisabledMember  Boolean     @default(false) @map("is_disabled_member")
+  circle            CircleBadge @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  user              Profile     @relation("CircleMemberships", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime    @default(now()) @map("created_at")
+  updatedAt         DateTime    @updatedAt @map("updated_at")
 
   @@unique([circleId, userId])
   @@map("circle_memberships")
@@ -664,9 +662,6 @@ model FeedPost {
   trails       FeedPost[]  @relation("PostTrails")
   parentPost   FeedPost?   @relation("PostTrails", fields: [parentPostId], references: [id], onDelete: Cascade)
 
-    // Moderation relation
-  reviewQueue     HumanReviewQueue[]
-
   @@map("feed_posts")
   @@schema("public")
 }
@@ -696,6 +691,7 @@ model PostLike {
 
   @@unique([userId, postId])
   @@map("post_likes")
+  @@schema("public")
 }
 
 model PostComment {
@@ -713,6 +709,7 @@ model PostComment {
   replies  PostComment[] @relation("CommentReplies")
 
   @@map("post_comments")
+  @@schema("public")
 }
 
 model PostBookmark {
@@ -726,14 +723,15 @@ model PostBookmark {
 
   @@unique([userId, postId])
   @@map("post_bookmarks")
+  @@schema("public")
 }
 
 model PostReaction {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  postId    String   @db.Uuid
-  userId    String   @db.Uuid
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  postId       String   @map("post_id") @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
   reactionType String   @default("like") @map("reaction_type") @db.VarChar(20)
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   post FeedPost @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -741,6 +739,20 @@ model PostReaction {
 
   @@unique([postId, userId])
   @@map("post_reactions")
+  @@schema("public")
+}
+
+model InstitutionFollowConnection {
+  id          Int      @id @default(autoincrement())
+  senderId    String   @map("sender_id") @db.Uuid
+  receiverId  String   @map("receiver_id") @db.Uuid
+  connectedAt DateTime @default(now()) @map("connected_at")
+
+  sender   Profile @relation("InstitutionFollowers", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver Profile @relation("InstitutionFollowing", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+  @@map("institution_follow_connections")
   @@schema("public")
 }
 
@@ -770,7 +782,6 @@ model AchievementType {
 }
 
 model UserAchievement {
-  ```text
   id                     Int      @id @default(autoincrement())
   userId                 String   @map("user_id") @db.Uuid
   name                   String
@@ -816,55 +827,5 @@ model ChatbotTheme {
   updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@map("chatbot_themes")
-  @@schema("public")
-}
-
-model ModerationLog {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId            String   @map("user_id") @db.Uuid
-  contentType       String   // 'post', 'comment', 'profile', 'message'
-  content           String?
-  imageUrl          String?
-  videoUrl          String?
-  status            String   // 'approved', 'pending_review', 'flagged', 'rejected'
-  riskScore         Int      @default(0)
-  flags             String[] @default([])
-  reason            String?
-  requiresHumanReview Boolean @default(false)
-  moderatedAt       DateTime @default(now()) @map("moderated_at")
-  humanReviewerId   String?  @map("human_reviewer_id") @db.Uuid
-
-  user            Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  humanReviewer   Profile? @relation("HumanReviewer", fields: [humanReviewerId], references: [id])
-
-  @@map("moderation_logs")
-  @@schema("public")
-}
-
-model HumanReviewQueue {
-  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId             String   @map("user_id") @db.Uuid
-  contentType        String   // 'post', 'comment'
-  content            String?
-  imageUrl           String?
-  videoUrl           String?
-  postId             String?  @map("post_id") @db.Uuid
-  status             String   // 'pending_review', 'flagged', 'rejected'
-  riskScore          Int      @default(0)
-  flags              String[] @default([])
-  reason             String?
-  priority           String   @default("medium") // 'low', 'medium', 'high'
-  queuedAt           DateTime @default(now()) @map("queued_at")
-  reviewStatus       String   @default("pending") @map("review_status") // 'pending', 'approved', 'rejected'
-  reviewedAt         DateTime? @map("reviewed_at")
-  reviewerId         String?  @map("reviewer_id") @db.Uuid
-  reviewerReason     String?  @map("reviewer_reason")
-  reviewerSuggestions String[] @default([]) @map("reviewer_suggestions")
-
-  user     Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  reviewer Profile? @relation("QueueReviewer", fields: [reviewerId], references: [id])
-  post     FeedPost? @relation(fields: [postId], references: [id], onDelete: Cascade)
-
-  @@map("human_review_queue")
   @@schema("public")
 }
