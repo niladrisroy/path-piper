@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { cookies } from "next/headers"
@@ -10,19 +9,19 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string; trailId: string }> }
+  { params }: { params: { id: string; trailId: string } }
 ) {
   try {
-    const { id: postId, trailId } = await params
-    const cookieStore = await cookies()
-    const token = cookieStore.get('auth-token')?.value
+    const { id: postId, trailId } = params
+    const cookieStore = request.cookies
+    const accessToken = cookieStore.get('sb-access-token')?.value
 
-    if (!token) {
+    if (!accessToken) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 })
     }
 
     // Verify the user
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
     if (authError || !user) {
       return NextResponse.json({ error: "Invalid authentication" }, { status: 401 })
     }
