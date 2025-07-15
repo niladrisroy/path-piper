@@ -71,7 +71,8 @@ export async function POST(request: NextRequest) {
       isQuestion = false,
       isAchievement = false,
       forceTrail = false,
-      linkPreview
+      linkPreview,
+      trailContent
     } = body
 
     if (!content || content.trim().length === 0) {
@@ -192,6 +193,86 @@ export async function POST(request: NextRequest) {
         where: { id: post.id },
         data: { engagementScore: initialEngagementBoost }
       })
+    }
+
+    // Create initial trail if provided and this is not already a trail
+    if (trailContent && trailContent.trim() && !isTrail) {
+      try {
+        const trail = await prisma.feedPost.create({
+          data: {
+            userId: user.id,
+            content: trailContent.trim(),
+            isTrail: true,
+            parentPostId: post.id,
+            trailOrder: 1,
+            postType: 'GENERAL',
+            moderationStatus: 'approved'
+          },
+          include: {
+            author: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                profileImageUrl: true,
+                role: true
+              }
+            }
+          }
+        })
+
+        // Update the post response to include the trail
+        const updatedPost = await prisma.feedPost.findUnique({
+          where: { id: post.id },
+          include: {
+            author: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                profileImageUrl: true,
+                role: true,
+                student: {
+                  select: {
+                    age_group: true
+                  }
+                }
+              }
+            },
+            trails: {
+              orderBy: { trailOrder: 'asc' },
+              include: { 
+                author: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    profileImageUrl: true,
+                    role: true
+                  }
+                }
+              }
+            },
+            _count: {
+              select: {
+                likes: true,
+                comments: true,
+                bookmarks: true
+              }
+            }
+          }
+        })
+
+        return NextResponse.json({ success: true, post: updatedPost, initialTrail: trail })
+      } catch (trailError) {
+        console.error('Error creating initial trail:', trailError)
+        // Return the post anyway, just log the error
+        return NextResponse.json({ 
+          success: true, 
+          post, 
+          warning: 'Post created but failed to create initial trail' 
+        })
+      }
     }
 
     return NextResponse.json({ success: true, post })

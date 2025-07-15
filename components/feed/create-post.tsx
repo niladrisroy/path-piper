@@ -112,6 +112,8 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
   const [linkPreview, setLinkPreview] = useState<any>(null)
   const [isLoadingPreview, setIsLoadingPreview] = useState(false)
   const [richTextMode, setRichTextMode] = useState(false)
+  const [showTrailPreview, setShowTrailPreview] = useState(false)
+  const [trailContent, setTrailContent] = useState("")
 
   const selectedPostType = POST_TYPES.find(type => type.value === postType)
 
@@ -245,6 +247,12 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     }
   }
 
+  const handleTrailTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value
+    setTrailContent(value)
+    setHasUnsavedChanges(true)
+  }
+
   const insertMention = (connection: any) => {
     const textUpToCursor = postText.substring(0, cursorPosition)
     const textAfterCursor = postText.substring(cursorPosition)
@@ -361,6 +369,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
     setIsPosting(true)
     try {
+      // First create the main post
       const response = await fetch('/api/feed/posts', {
         method: 'POST',
         headers: {
@@ -384,7 +393,30 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
       const data = await response.json()
 
       if (response.ok) {
+        // If there's trail content and this is not already a trail, create the trail
+        if (trailContent.trim() && !isTrail) {
+          try {
+            const trailResponse = await fetch(`/api/feed/posts/${data.post.id}/trails`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                content: trailContent.trim(),
+              }),
+            })
+
+            if (!trailResponse.ok) {
+              console.error('Failed to create trail, but main post was created')
+            }
+          } catch (trailError) {
+            console.error('Error creating trail:', trailError)
+          }
+        }
+
+        // Reset form
         setPostText("")
+        setTrailContent("")
         setTags([])
         setAchievementType("")
         setProjectCategory("")
@@ -393,8 +425,16 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
         setVisibility("public")
         setImageUrl(null)
         setLinkPreview(null)
+        setShowTrailPreview(false)
         setHasUnsavedChanges(false)
-        toast.success(isTrail ? "Trail added successfully!" : "Post created successfully!")
+        
+        const successMessage = trailContent.trim() && !isTrail 
+          ? "Post with trail created successfully!" 
+          : isTrail 
+            ? "Trail added successfully!" 
+            : "Post created successfully!"
+        
+        toast.success(successMessage)
         onPostCreated?.()
       } else {
         toast.error(data.error || "Failed to create post")
@@ -984,6 +1024,62 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                   </p>
                 </div>
               )}
+
+              {/* Add Trail Option */}
+              {!isTrail && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowTrailPreview(!showTrailPreview)}
+                    className="flex items-center gap-2"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    {showTrailPreview ? 'Remove Trail' : 'Add Trail'}
+                  </Button>
+                  {showTrailPreview && (
+                    <span className="text-xs text-gray-500">
+                      Add a follow-up message to your post
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Trail Preview Section */}
+              {showTrailPreview && !isTrail && (
+                <div className="border-t border-gray-200 pt-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <MessageCircle className="h-4 w-4 text-purple-600" />
+                    <span className="text-sm font-medium text-purple-700">Trail Message Preview</span>
+                    <Badge variant="secondary" className="text-xs">Will be posted as #1</Badge>
+                  </div>
+                  
+                  <div className="relative">
+                    <Textarea
+                      value={trailContent}
+                      onChange={handleTrailTextChange}
+                      placeholder="Add a follow-up message, continuation, or additional thoughts..."
+                      className="min-h-[80px] resize-none border border-purple-200 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                      disabled={isPosting}
+                    />
+                    <div className="absolute bottom-2 right-2 text-xs text-gray-400">
+                      {trailContent.length} characters
+                    </div>
+                  </div>
+
+                  {trailContent.trim() && (
+                    <div className="mt-3 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg">
+                      <div className="text-xs text-purple-700 font-medium mb-2 flex items-center gap-1">
+                        <MessageCircle className="h-3 w-3" />
+                        Trail Preview
+                      </div>
+                      <div className="text-sm text-gray-700 whitespace-pre-wrap break-words">
+                        {trailContent}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Image Preview */}
@@ -1046,7 +1142,9 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                   className={`${selectedPostType?.color || 'bg-gradient-to-r from-pathpiper-teal to-pathpiper-blue'} text-white rounded-full px-6 font-medium shadow-sm hover:shadow-md transition-all duration-200 ${isOverLimit ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   {selectedPostType && <selectedPostType.icon className="h-4 w-4 mr-1" />}
-                  {isPosting ? "Posting..." : "Post"}
+                  {isPosting ? "Posting..." : 
+                   trailContent.trim() && !isTrail ? "Post with Trail" : 
+                   "Post"}
                 </Button>
               </div>
             </div>
