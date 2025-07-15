@@ -1,0 +1,101 @@
+prisma:query SELECT "public"."feed_posts"."id", "public"."feed_posts"."likes_count" FROM "public"."feed_posts" WHERE ("public"."feed_posts"."id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+ GET /api/feed/posts/9621e789-d16d-4c8d-a147-328eb0ca047f/react 200 in 171ms
+prisma:query 
+        SELECT reaction_type, COUNT(*) as count
+        FROM post_reactions 
+        WHERE post_id = $1
+        GROUP BY reaction_type
+      
+prisma:error 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+Raw query failed. Code: `42P01`. Message: `relation "post_reactions" does not exist`
+ GET /api/feed/posts/646c3d73-08f9-4e31-8166-c1e826bf259c/bookmark 405 in 11ms
+prisma:query SELECT "public"."feed_posts"."id", "public"."feed_posts"."likes_count" FROM "public"."feed_posts" WHERE ("public"."feed_posts"."id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+ GET /api/feed/posts/4f90c74c-25e5-49f2-a6cd-7e3879bf9010/react 200 in 149ms
+prisma:query 
+        SELECT reaction_type, COUNT(*) as count
+        FROM post_reactions 
+        WHERE post_id = $1
+        GROUP BY reaction_type
+      
+prisma:error 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+Raw query failed. Code: `42P01`. Message: `relation "post_reactions" does not exist`
+ GET /api/feed/posts/58ee1e34-d037-4aa3-96df-78973b85b9d5/bookmark 405 in 14ms
+prisma:query SELECT "public"."feed_posts"."id", "public"."feed_posts"."likes_count" FROM "public"."feed_posts" WHERE ("public"."feed_posts"."id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+ GET /api/feed/posts/646c3d73-08f9-4e31-8166-c1e826bf259c/react 200 in 151ms
+prisma:query 
+        SELECT reaction_type, COUNT(*) as count
+        FROM post_reactions 
+        WHERE post_id = $1
+        GROUP BY reaction_type
+      
+prisma:error 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+Raw query failed. Code: `42P01`. Message: `relation "post_reactions" does not exist`
+ GET /api/feed/posts/eb39f709-562a-4ef0-b1d1-f9e73da82f9d/bookmark 405 in 58ms
+ GET /api/feed/posts/4f90c74c-25e5-49f2-a6cd-7e3879bf9010/bookmark 405 in 50ms
+prisma:query SELECT "public"."feed_posts"."id", "public"."feed_posts"."likes_count" FROM "public"."feed_posts" WHERE ("public"."feed_posts"."id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+ GET /api/feed/posts/eb39f709-562a-4ef0-b1d1-f9e73da82f9d/react 200 in 167ms
+prisma:query 
+        SELECT reaction_type, COUNT(*) as count
+        FROM post_reactions 
+        WHERE post_id = $1
+        GROUP BY reaction_type
+      
+prisma:error 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+Raw query failed. Code: `42P01`. Message: `relation "post_reactions" does not exist`
+ GET /api/feed/posts/03e368fc-171c-4005-9265-68d6c9b73b23/bookmark 405 in 22ms
+prisma:query SELECT "public"."feed_posts"."id", "public"."feed_posts"."likes_count" FROM "public"."feed_posts" WHERE ("public"."feed_posts"."id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+ GET /api/feed/posts/6044d506-7ef4-4ae0-b9eb-a7ac6f3e95c5/react 200 in 160ms
+prisma:query 
+        SELECT reaction_type, COUNT(*) as count
+        FROM post_reactions 
+        WHERE post_id = $1
+        GROUP BY reaction_type
+      
+prisma:error 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+Raw query failed. Code: `42P01`. Message: `relation "post_reactions" does not exist`
+prisma:query SELECT "public"."feed_posts"."id", "public"."feed_posts"."likes_count" FROM "public"."feed_posts" WHERE ("public"."feed_posts"."id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+ GET /api/feed/posts/58ee1e34-d037-4aa3-96df-78973b85b9d5/react 200 in 165ms
+prisma:query 
+        SELECT reaction_type, COUNT(*) as count
+        FROM post_reactions 
+        WHERE post_id = $1
+        GROUP BY reaction_type
+      
+prisma:error 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+Raw query failed. Code: `42P01`. Message: `relation "post_reactions" does not exist`
+prisma:query SELECT "public"."feed_posts"."id", "public"."feed_posts"."likes_count" FROM "public"."feed_posts" WHERE ("public"."feed_posts"."id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+ GET /api/feed/posts/e8aa6e8a-a8f8-4285-886f-f267d10d2021/react 200 in 195ms
+ GET /api/feed/posts/e8aa6e8a-a8f8-4285-886f-f267d10d2021/bookmark 405 in 42ms
+prisma:query 
+        SELECT reaction_type, COUNT(*) as count
+        FROM post_reactions 
+        WHERE post_id = $1
+        GROUP BY reaction_type
+      
+prisma:error 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+Raw query failed. Code: `42P01`. Message: `relation "post_reactions" does not exist`
+prisma:query SELECT "public"."feed_posts"."id", "public"."feed_posts"."likes_count" FROM "public"."feed_posts" WHERE ("public"."feed_posts"."id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+ GET /api/feed/posts/03e368fc-171c-4005-9265-68d6c9b73b23/react 200 in 181ms
+ ○ Compiling /login ...
+ ✓ Compiled /login in 2.4s (2329 modules)
