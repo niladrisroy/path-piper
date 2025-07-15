@@ -44,6 +44,12 @@ interface CreatePostProps {
   onPostCreated?: () => void
 }
 
+interface TrailDraft {
+  id: string
+  content: string
+  imageUrl?: string
+}
+
 const POST_TYPES = [
   { value: "GENERAL", label: "General Post", icon: MessageSquare, color: "bg-blue-500" },
   { value: "ACHIEVEMENT", label: "Achievement", icon: Trophy, color: "bg-yellow-500" },
@@ -112,6 +118,11 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
   const [linkPreview, setLinkPreview] = useState<any>(null)
   const [isLoadingPreview, setIsLoadingPreview] = useState(false)
   const [richTextMode, setRichTextMode] = useState(false)
+  const [trails, setTrails] = useState<TrailDraft[]>([])
+  const [showAddTrail, setShowAddTrail] = useState(false)
+  const [trailContent, setTrailContent] = useState("")
+  const [trailImageUrl, setTrailImageUrl] = useState<string | null>(null)
+  const [isDraft, setIsDraft] = useState(false)
 
   const selectedPostType = POST_TYPES.find(type => type.value === postType)
 
@@ -348,6 +359,102 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     setHasUnsavedChanges(true)
   }
 
+  const addTrail = () => {
+    if (!trailContent.trim()) {
+      toast.error("Please write something for the trail")
+      return
+    }
+
+    const newTrail: TrailDraft = {
+      id: Date.now().toString(),
+      content: trailContent.trim(),
+      imageUrl: trailImageUrl || undefined
+    }
+
+    setTrails([...trails, newTrail])
+    setTrailContent("")
+    setTrailImageUrl(null)
+    setShowAddTrail(false)
+    setIsDraft(true)
+    setHasUnsavedChanges(true)
+    toast.success("Trail added to draft!")
+  }
+
+  const removeTrail = (trailId: string) => {
+    setTrails(trails.filter(trail => trail.id !== trailId))
+    if (trails.length === 1) {
+      setIsDraft(false)
+    }
+    setHasUnsavedChanges(true)
+  }
+
+  const saveDraft = () => {
+    const draftData = {
+      mainPost: {
+        content: postText,
+        imageUrl,
+        postType,
+        tags,
+        achievementType,
+        projectCategory,
+        difficultyLevel,
+        visibility,
+        linkPreview
+      },
+      trails,
+      timestamp: Date.now()
+    }
+    
+    localStorage.setItem('postDraft', JSON.stringify(draftData))
+    setIsDraft(false)
+    setHasUnsavedChanges(false)
+    toast.success("Draft saved!")
+  }
+
+  const loadDraft = () => {
+    const savedDraft = localStorage.getItem('postDraft')
+    if (savedDraft) {
+      try {
+        const draftData = JSON.parse(savedDraft)
+        setPostText(draftData.mainPost.content || "")
+        setImageUrl(draftData.mainPost.imageUrl || null)
+        setPostType(draftData.mainPost.postType || "GENERAL")
+        setTags(draftData.mainPost.tags || [])
+        setAchievementType(draftData.mainPost.achievementType || "")
+        setProjectCategory(draftData.mainPost.projectCategory || "")
+        setDifficultyLevel(draftData.mainPost.difficultyLevel || "")
+        setVisibility(draftData.mainPost.visibility || "public")
+        setLinkPreview(draftData.mainPost.linkPreview || null)
+        setTrails(draftData.trails || [])
+        setIsDraft(true)
+        setHasUnsavedChanges(true)
+        toast.success("Draft loaded!")
+      } catch (error) {
+        console.error('Error loading draft:', error)
+        toast.error("Failed to load draft")
+      }
+    } else {
+      toast.error("No draft found")
+    }
+  }
+
+  const clearDraft = () => {
+    localStorage.removeItem('postDraft')
+    setPostText("")
+    setTags([])
+    setAchievementType("")
+    setProjectCategory("")
+    setDifficultyLevel("")
+    setPostType("GENERAL")
+    setVisibility("public")
+    setImageUrl(null)
+    setLinkPreview(null)
+    setTrails([])
+    setIsDraft(false)
+    setHasUnsavedChanges(false)
+    toast.success("Draft cleared!")
+  }
+
   const handlePost = async () => {
     if (!postText.trim()) {
       toast.error("Please write something to post")
@@ -361,6 +468,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
 
     setIsPosting(true)
     try {
+      // First create the main post
       const response = await fetch('/api/feed/posts', {
         method: 'POST',
         headers: {
@@ -384,6 +492,31 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
       const data = await response.json()
 
       if (response.ok) {
+        const createdPostId = data.post.id
+
+        // If there are trails, create them one by one
+        if (trails.length > 0 && !isTrail) {
+          for (let i = 0; i < trails.length; i++) {
+            const trail = trails[i]
+            try {
+              await fetch(`/api/feed/posts/${createdPostId}/trails`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  content: trail.content,
+                  imageUrl: trail.imageUrl || null
+                }),
+              })
+            } catch (trailError) {
+              console.error(`Error creating trail ${i + 1}:`, trailError)
+              toast.error(`Failed to create trail ${i + 1}`)
+            }
+          }
+        }
+
+        // Clear form and draft
         setPostText("")
         setTags([])
         setAchievementType("")
@@ -393,8 +526,18 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
         setVisibility("public")
         setImageUrl(null)
         setLinkPreview(null)
+        setTrails([])
+        setIsDraft(false)
         setHasUnsavedChanges(false)
-        toast.success(isTrail ? "Trail added successfully!" : "Post created successfully!")
+        
+        // Clear saved draft
+        localStorage.removeItem('postDraft')
+        
+        const successMessage = trails.length > 0 
+          ? `Post with ${trails.length} trail(s) created successfully!`
+          : isTrail ? "Trail added successfully!" : "Post created successfully!"
+        
+        toast.success(successMessage)
         onPostCreated?.()
       } else {
         toast.error(data.error || "Failed to create post")
@@ -436,8 +579,49 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
     }
   }
 
+  const handleTrailImageUpload = async (file: File) => {
+    // Check file size (1MB limit)
+    if (file.size > 1024 * 1024) {
+      toast.error("Image size must be less than 1MB")
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('image', file, file.name)
+
+    try {
+      const response = await fetch('/api/upload/feed-image', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image')
+      }
+
+      const data = await response.json()
+      setTrailImageUrl(data.imageUrl)
+    } catch (error) {
+      console.error('Error uploading trail image:', error)
+      toast.error('Failed to upload trail image')
+    }
+  }
+
   const characterCount = getActualCharacterCount(postText)
   const isOverLimit = characterCount > CHARACTER_LIMIT
+
+  // Check for saved draft on component mount
+  useEffect(() => {
+    const savedDraft = localStorage.getItem('postDraft')
+    if (savedDraft && !isTrail) {
+      try {
+        const draftData = JSON.parse(savedDraft)
+        setIsDraft(true)
+      } catch (error) {
+        console.error('Error checking draft:', error)
+      }
+    }
+  }, [isTrail])
 
   // Warn user if they try to leave with unsaved changes
   useEffect(() => {
@@ -984,6 +1168,176 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                   </p>
                 </div>
               )}
+
+              {/* Draft indicator */}
+              {isDraft && (
+                <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-blue-500">💾</span>
+                      <p className="text-sm text-blue-700 font-medium">
+                        Draft saved with {trails.length} trail(s)
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={loadDraft}
+                        className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                      >
+                        Load Draft
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={clearDraft}
+                        className="text-red-600 border-red-300 hover:bg-red-50"
+                      >
+                        Clear
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Trails Display */}
+              {trails.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium text-gray-700">Trails ({trails.length})</h4>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={saveDraft}
+                      className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                    >
+                      Save Draft
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {trails.map((trail, index) => (
+                      <div key={trail.id} className="p-3 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-xs font-medium text-purple-700 bg-purple-100 px-2 py-1 rounded">
+                                Trail #{index + 1}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-700 line-clamp-2">{trail.content}</p>
+                            {trail.imageUrl && (
+                              <div className="mt-2">
+                                <img 
+                                  src={trail.imageUrl} 
+                                  alt="Trail image" 
+                                  className="w-16 h-16 object-cover rounded border"
+                                />
+                              </div>
+                            )}
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeTrail(trail.id)}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 h-auto"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Add Trail Form */}
+              {showAddTrail && (
+                <div className="p-4 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium text-purple-700">Add Trail</h4>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setShowAddTrail(false)
+                        setTrailContent("")
+                        setTrailImageUrl(null)
+                      }}
+                      className="text-purple-500 hover:text-purple-700 p-1 h-auto"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  <Textarea
+                    value={trailContent}
+                    onChange={(e) => setTrailContent(e.target.value)}
+                    placeholder="Continue your story... (Trail content)"
+                    className="min-h-[80px] resize-none border border-purple-200 focus:border-purple-400"
+                  />
+                  
+                  {trailImageUrl && (
+                    <div className="relative">
+                      <img 
+                        src={trailImageUrl} 
+                        alt="Trail image" 
+                        className="max-w-full h-auto rounded-lg border border-purple-200"
+                        style={{ maxHeight: '200px' }}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setTrailImageUrl(null)}
+                        className="absolute top-2 right-2 bg-black/50 text-white hover:bg-black/70 rounded-full w-8 h-8 p-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {!trailImageUrl && (
+                        <div className="relative">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0]
+                              if (file) {
+                                handleTrailImageUpload(file)
+                              }
+                            }}
+                            className="hidden"
+                            id="trail-image-upload"
+                          />
+                          <label htmlFor="trail-image-upload">
+                            <Button variant="ghost" size="sm" className="text-gray-600 h-8 w-8 p-0 rounded-full cursor-pointer hover:bg-gray-100" asChild>
+                              <span>
+                                <ImageIcon className="h-4 w-4" />
+                              </span>
+                            </Button>
+                          </label>
+                        </div>
+                      )}
+                      <div className="text-xs text-purple-600">
+                        {trailContent.length}/287 characters
+                      </div>
+                    </div>
+                    
+                    <Button
+                      onClick={addTrail}
+                      disabled={!trailContent.trim() || trailContent.length > 287}
+                      size="sm"
+                      className="bg-purple-600 text-white hover:bg-purple-700"
+                    >
+                      Add Trail
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Image Preview */}
@@ -1033,12 +1387,37 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                     </label>
                   </div>
                 )}
+                
+                {/* Add Trail Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAddTrail(true)}
+                  disabled={showAddTrail}
+                  className="text-purple-600 border-purple-300 hover:bg-purple-50 rounded-full px-4"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Trail
+                </Button>
+                
                 <div className="text-xs text-gray-400">
                   {!imageUrl ? "Max 1MB" : "1 image max"}
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
+                {/* Save Draft Button */}
+                {(postText.trim() || trails.length > 0) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={saveDraft}
+                    className="text-blue-600 border-blue-300 hover:bg-blue-50 rounded-full px-4"
+                  >
+                    Save Draft
+                  </Button>
+                )}
+                
                 <Button
                   onClick={handlePost}
                   disabled={!postText.trim() || isPosting || isOverLimit}
@@ -1046,7 +1425,7 @@ export default function CreatePost({ parentPostId, isTrail = false, onPostCreate
                   className={`${selectedPostType?.color || 'bg-gradient-to-r from-pathpiper-teal to-pathpiper-blue'} text-white rounded-full px-6 font-medium shadow-sm hover:shadow-md transition-all duration-200 ${isOverLimit ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   {selectedPostType && <selectedPostType.icon className="h-4 w-4 mr-1" />}
-                  {isPosting ? "Posting..." : "Post"}
+                  {isPosting ? "Posting..." : trails.length > 0 ? `Post with ${trails.length} Trail(s)` : "Post"}
                 </Button>
               </div>
             </div>
