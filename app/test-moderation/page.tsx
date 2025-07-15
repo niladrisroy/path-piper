@@ -50,7 +50,7 @@ const TEST_SCENARIOS = {
 }
 
 export default function ModerationTestPage() {
-  const [testContent, setTestContent] = useState("")
+  const [testContent, setTestContent] = useState("This is a test message to check moderation")
   const [moderationResult, setModerationResult] = useState<ModerationResult | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [showHelper, setShowHelper] = useState(false)
@@ -64,20 +64,39 @@ export default function ModerationTestPage() {
   }>>([])
 
   const testModeration = async (content: string) => {
+    if (!content || content.trim() === '') {
+      toast.error('Please enter some content to test')
+      return
+    }
+
     setIsLoading(true)
+    console.log('Testing moderation for content:', content)
+    
     try {
       const response = await fetch('/api/moderation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          content,
+          content: content.trim(),
           type: 'post',
           userId: 'test-user-id',
           imageUrl: null
         })
       })
 
+      console.log('Moderation API response status:', response.status)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
       const data = await response.json()
+      console.log('Moderation API response data:', data)
+      
+      if (!data.moderation) {
+        throw new Error('No moderation data in response')
+      }
+
       const result = data.moderation as ModerationResult
       
       setModerationResult(result)
@@ -94,7 +113,8 @@ export default function ModerationTestPage() {
       }
     } catch (error) {
       console.error('Moderation test failed:', error)
-      toast.error('Failed to test moderation')
+      toast.error(`Failed to test moderation: ${(error as Error).message}`)
+      setModerationResult(null)
     } finally {
       setIsLoading(false)
     }
@@ -249,8 +269,11 @@ export default function ModerationTestPage() {
               
               <div className="flex gap-2">
                 <Button 
-                  onClick={() => testModeration(testContent)}
-                  disabled={!testContent.trim() || isLoading}
+                  onClick={() => {
+                    console.log('Test button clicked, content:', testContent)
+                    testModeration(testContent)
+                  }}
+                  disabled={isLoading}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   {isLoading ? "Testing..." : "Test Moderation"}

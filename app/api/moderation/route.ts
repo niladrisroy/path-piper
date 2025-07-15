@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { prisma } from '@/lib/prisma'
@@ -49,23 +48,34 @@ const SAFE_PHRASE_SUGGESTIONS = {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('📝 Moderation API endpoint called')
+    const body = await request.json()
+    console.log('📝 Moderation request received:', {
+      content: body.content?.substring(0, 100),
+      type: body.type,
+      userId: body.userId,
+      bodyKeys: Object.keys(body)
+    })
+
     const cookieStore = request.cookies
     const accessToken = cookieStore.get('sb-access-token')?.value
 
     if (!accessToken) {
+      console.warn('Unauthorized: No access token found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { data: { user }, error } = await supabase.auth.getUser(accessToken)
 
     if (error || !user) {
+      console.error('Unauthorized: Supabase user error', error)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body: ModerationRequest = await request.json()
     const { content, type, userId, imageUrl, videoUrl } = body
 
     if (!content || !type || !userId) {
+      console.warn('Bad Request: Missing required fields')
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
@@ -341,14 +351,14 @@ async function moderateImage(imageUrl: string): Promise<{riskScore: number, flag
     // This would integrate with Google Cloud Vision API, AWS Rekognition, or similar
     // For now, implementing basic checks
     console.log(`🖼️ Moderating image: ${imageUrl}`)
-    
+
     // Placeholder for actual image analysis
     // In production, you would call:
     // - Google Cloud Vision SafeSearch
     // - AWS Rekognition Content Moderation
     // - Microsoft Azure Computer Vision
     // - OpenAI's moderation API
-    
+
     // Example implementation structure:
     /*
     const response = await fetch('https://vision.googleapis.com/v1/images:annotate', {
@@ -365,11 +375,11 @@ async function moderateImage(imageUrl: string): Promise<{riskScore: number, flag
       })
     })
     */
-    
+
     // Basic file extension and size checks
     const suspiciousExtensions = ['.exe', '.bat', '.cmd', '.scr', '.zip', '.rar']
     const extension = imageUrl.split('.').pop()?.toLowerCase()
-    
+
     if (extension && suspiciousExtensions.includes(`.${extension}`)) {
       return {
         riskScore: 20,
@@ -377,7 +387,7 @@ async function moderateImage(imageUrl: string): Promise<{riskScore: number, flag
         requiresHumanReview: true
       }
     }
-    
+
     // For now, flag all images for human review in a child-safe environment
     return {
       riskScore: 2,
@@ -397,7 +407,7 @@ async function moderateImage(imageUrl: string): Promise<{riskScore: number, flag
 async function moderateVideo(videoUrl: string): Promise<{riskScore: number, flags: string[], requiresHumanReview: boolean}> {
   try {
     console.log(`🎥 Moderating video: ${videoUrl}`)
-    
+
     // Videos always require human review for children's content
     return {
       riskScore: 5,
@@ -418,39 +428,39 @@ function analyzeSentiment(content: string): number {
   // Simple sentiment analysis - in production, use a proper NLP library
   const positiveWords = ['happy', 'good', 'great', 'awesome', 'wonderful', 'amazing', 'love', 'like', 'enjoy', 'fun', 'excited', 'proud']
   const negativeWords = ['sad', 'bad', 'terrible', 'awful', 'hate', 'angry', 'mad', 'upset', 'disappointed', 'frustrated', 'worried', 'scared']
-  
+
   const words = content.toLowerCase().split(/\s+/)
   let score = 0
-  
+
   words.forEach(word => {
     if (positiveWords.includes(word)) score += 1
     if (negativeWords.includes(word)) score -= 1
   })
-  
+
   return score / words.length
 }
 
 function generateSafeAlternatives(content: string, flags: string[]): string[] {
   const alternatives: string[] = []
-  
+
   if (flags.includes('explicit_language')) {
     alternatives.push("I'm frustrated with this situation")
     alternatives.push("This is really challenging")
     alternatives.push("I'm having a hard time with this")
   }
-  
+
   if (flags.includes('bullying')) {
     alternatives.push("I disagree with your opinion")
     alternatives.push("I see things differently")
     alternatives.push("Let's talk about this respectfully")
   }
-  
+
   if (flags.includes('negative_sentiment')) {
     alternatives.push("I'm working through some challenges")
     alternatives.push("I'm learning to handle difficult situations")
     alternatives.push("I could use some encouragement")
   }
-  
+
   return alternatives
 }
 
@@ -516,13 +526,13 @@ async function queueForHumanReview(
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const scenario = searchParams.get('scenario')
-  
+
   if (scenario && SAFE_PHRASE_SUGGESTIONS[scenario as keyof typeof SAFE_PHRASE_SUGGESTIONS]) {
     return NextResponse.json({
       suggestions: SAFE_PHRASE_SUGGESTIONS[scenario as keyof typeof SAFE_PHRASE_SUGGESTIONS]
     })
   }
-  
+
   return NextResponse.json({
     vocabulary: CHILD_SAFE_VOCABULARY.slice(0, 50), // Return first 50 words
     suggestions: Object.values(SAFE_PHRASE_SUGGESTIONS).flat().slice(0, 10)
