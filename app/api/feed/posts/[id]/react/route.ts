@@ -186,33 +186,67 @@ export async function GET(
   try {
     const { id: postId } = await params
 
-    // Try to get reactions from enhanced table
+    // Get current reaction counts - fallback to likes system if post_reactions doesn't exist
     try {
-      const reactions = await prisma.$queryRaw`
-        SELECT reaction_type, COUNT(*) as count
-        FROM post_reactions 
-        WHERE post_id = ${postId}
-        GROUP BY reaction_type
-      ` as { reaction_type: string; count: bigint }[]
+      let reactionCounts: Record<string, number> = {}
+      let userReactionType: string | null = null
 
-      const reactionCounts = reactions.reduce((acc, reaction) => {
-        acc[reaction.reaction_type] = Number(reaction.count)
-        return acc
-      }, {} as Record<string, number>)
+      try {
+        // Try to use post_reactions table
+        const reactions = await prisma.$queryRaw<{reaction_type: string, count: bigint}[]>`
+            SELECT reaction_type, COUNT(*) as count
+            FROM post_reactions 
+            WHERE post_id = ${postId}
+            GROUP BY reaction_type
+          `
 
-      return NextResponse.json({ reactionCounts })
+        // Convert to the expected format
+        reactions.forEach(row => {
+          reactionCounts[row.reaction_type] = Number(row.count)
+        })
+
+        // Get user's current reaction
+        const userReaction = await prisma.$queryRaw<{reaction_type: string}[]>`
+            SELECT reaction_type 
+            FROM post_reactions 
+            WHERE post_id = ${postId} AND user_id = ${user.id}
+            LIMIT 1
+          `
+
+        userReactionType = userReaction[0]?.reaction_type || null
+      } catch (tableError) {
+        console.log('post_reactions table not found, falling back to likes system')
+
+        // Fallback to existing likes system
+        const post = await prisma.feedPost.findUnique({
+          where: { id: postId },
+          select: { likesCount: true }
+        })
+
+        if (post) {
+          reactionCounts.like = post.likesCount || 0
+        }
+
+        // Check if user liked the post
+        const userLike = await prisma.postLike.findUnique({
+          where: {
+            userId_postId: {
+              userId: user.id,
+              postId: postId
+            }
+          }
+        })
+
+        userReactionType = userLike ? 'like' : null
+      }
+
+      return NextResponse.json({
+        reactionCounts,
+        userReaction: userReactionType
+      })
     } catch (error) {
-      // Fallback to likes only
-      const post = await prisma.feedPost.findUnique({
-        where: { id: postId },
-        select: { likesCount: true }
-      })
-
-      return NextResponse.json({ 
-        reactionCounts: { 
-          like: post?.likesCount || 0 
-        } 
-      })
+      console.error('Error fetching reactions:', error)
+      return NextResponse.json({ error: 'Failed to fetch reactions' }, { status: 500 })
     }
   } catch (error) {
     console.error('Error fetching reactions:', error)

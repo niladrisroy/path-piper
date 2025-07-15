@@ -206,7 +206,10 @@ export async function POST(request: NextRequest) {
             parentPostId: post.id,
             trailOrder: 1,
             postType: 'GENERAL',
-            moderationStatus: 'approved'
+            moderationStatus: 'approved',
+            engagementScore: 0,
+            likesCount: 0,
+            commentsCount: 0
           },
           include: {
             author: {
@@ -220,6 +223,8 @@ export async function POST(request: NextRequest) {
             }
           }
         })
+
+        console.log(`✅ Created initial trail ${trail.id} for post ${post.id}`)
 
         // Update the post response to include the trail
         const updatedPost = await prisma.feedPost.findUnique({
@@ -240,6 +245,7 @@ export async function POST(request: NextRequest) {
               }
             },
             trails: {
+              where: { isTrail: true },
               orderBy: { trailOrder: 'asc' },
               include: { 
                 author: {
@@ -249,6 +255,12 @@ export async function POST(request: NextRequest) {
                     lastName: true,
                     profileImageUrl: true,
                     role: true
+                  }
+                },
+                _count: {
+                  select: {
+                    likes: true,
+                    comments: true
                   }
                 }
               }
@@ -381,7 +393,10 @@ export async function GET(request: NextRequest) {
           }
         },
         trails: {
-          where: { isTrail: true },
+          where: { 
+            isTrail: true,
+            moderationStatus: 'approved'
+          },
           include: {
             author: {
               select: {
