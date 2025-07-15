@@ -13,15 +13,14 @@ export async function POST(
   try {
     const { id: postId } = await params
     const { content, imageUrl } = await request.json()
-    const cookieStore = await cookies()
-    const token = cookieStore.get('auth-token')?.value
+    const accessToken = request.cookies.get('sb-access-token')?.value
 
-    if (!token) {
+    if (!accessToken) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 })
     }
 
     // Verify the user
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
     if (authError || !user) {
       return NextResponse.json({ error: "Invalid authentication" }, { status: 401 })
     }

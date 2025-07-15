@@ -8,10 +8,10 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string; trailId: string }> }
+  { params }: { params: { id: string; trailId: string } }
 ) {
   try {
-    const { id: postId, trailId } = await params
+    const { id: postId, trailId } = params
     const accessToken = request.cookies.get('sb-access-token')?.value
 
     if (!accessToken) {
