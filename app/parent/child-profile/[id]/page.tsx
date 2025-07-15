@@ -27,8 +27,7 @@ import {
   Plus,
   Trash2,
   Eye,
-  MessageCircle,
-  Settings
+  MessageCircle
 } from "lucide-react"
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
@@ -148,13 +147,6 @@ export default function ParentChildProfilePage() {
   const params = useParams()
   const childId = params.id as string
   const [selectedCircleMembers, setSelectedCircleMembers] = useState<any[] | null>(null);
-  const [circleDisableConfirmation, setCircleDisableConfirmation] = useState<{
-    isOpen: boolean
-    circleId: string
-    circleName: string
-    disableType: 'child' | 'all'
-  } | null>(null)
-  const [isDisablingCircle, setIsDisablingCircle] = useState(false)
 
   useEffect(() => {
     fetchChildProfile()
@@ -341,52 +333,6 @@ export default function ParentChildProfilePage() {
     } catch (error) {
       console.error('Error fetching circle members:', error);
       setSelectedCircleMembers([]);
-    }
-  };
-
-  const handleCircleDisable = (circleId: string, disableType: 'child' | 'all') => {
-    const circle = circles.find(c => c.id === circleId);
-    if (circle) {
-      setCircleDisableConfirmation({
-        isOpen: true,
-        circleId,
-        circleName: circle.name,
-        disableType
-      });
-    }
-  };
-
-  const confirmCircleDisable = async () => {
-    if (!circleDisableConfirmation) return;
-
-    setIsDisablingCircle(true);
-    try {
-      const response = await fetch(`/api/parent/child-profile/${childId}/circles/disable`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          circleId: circleDisableConfirmation.circleId,
-          disableType: circleDisableConfirmation.disableType
-        })
-      });
-
-      if (response.ok) {
-        toast.success(`Circle ${circleDisableConfirmation.disableType === 'child' ? 'disabled for your child' : 'disabled for all members'} successfully!`);
-        // Refresh the circles data
-        await fetchChildCircles();
-      } else {
-        const error = await response.json();
-        toast.error(error.error || 'Failed to disable circle');
-      }
-    } catch (error) {
-      console.error('Error disabling circle:', error);
-      toast.error('Failed to disable circle');
-    } finally {
-      setIsDisablingCircle(false);
-      setCircleDisableConfirmation(null);
     }
   };
 
@@ -959,129 +905,92 @@ export default function ParentChildProfilePage() {
                     </div>
                   ) : circles.length > 0 ? (
                     <div className="space-y-6">
-                      {/* Circle Cards Display */}
+                      {/* Circle Badges Display */}
                       <div>
                         <h4 className="text-sm font-medium mb-4 flex items-center gap-2">
                           <Users className="h-4 w-4 text-blue-600" />
                           Circle Badges ({circles.length})
                         </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
                           {circles.map((circle) => (
-                            <Card key={circle.id} className="p-4 hover:shadow-md transition-shadow">
-                              <div className="flex items-start justify-between mb-3">
-                                <div className="flex items-center gap-3">
-                                  {/* Circle Badge */}
-                                  <div className="relative">
-                                    <div
-                                      className="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg overflow-hidden"
-                                      style={{ backgroundColor: circle.color }}
-                                    >
-                                      {circle.icon && (circle.icon.startsWith('data:image') || circle.icon.startsWith('/uploads/')) ? (
-                                        <img
-                                          src={circle.icon}
-                                          alt={circle.name}
-                                          className="w-full h-full object-cover rounded-full"
-                                        />
-                                      ) : (
-                                        <div className="scale-75">
-                                          {getIconComponent(circle.icon)}
-                                        </div>
-                                      )}
-                                    </div>
-                                    {/* Member count indicator */}
-                                    <div className="absolute -top-1 -right-1 bg-gray-900 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                                      <span className="text-xs leading-none">
-                                        {(circle._count?.memberships || 0) + 1}
-                                      </span>
-                                    </div>
-                                    {/* Default badge indicator */}
-                                    {circle.isDefault && (
-                                      <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full w-3 h-3 flex items-center justify-center">
-                                        <User className="h-1.5 w-1.5" />
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  <div className="flex-1">
-                                    <h5 className="font-medium text-gray-900 dark:text-white">
-                                      {circle.name}
-                                    </h5>
-                                    {circle.description && (
-                                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                                        {circle.description}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Circle Actions */}
-                              <div className="flex items-center justify-between pt-3 border-t">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => showCircleMembers(circle.id)}
-                                  className="text-blue-600 hover:text-blue-700"
+                            <div
+                              key={circle.id}
+                              className="flex flex-col items-center group cursor-pointer hover:scale-105 transition-transform"
+                            >
+                              {/* Circle Badge */}
+                              <div className="relative mb-2">
+                                <div
+                                  className="w-16 h-16 rounded-full flex items-center justify-center text-white shadow-lg group-hover:shadow-xl transition-all duration-200 overflow-hidden"
+                                  style={{ backgroundColor: circle.color }}
                                 >
-                                  <Eye className="w-4 h-4 mr-1" />
-                                  View Members
-                                </Button>
-
-                                <Dialog>
-                                  <DialogTrigger asChild>
-                                    <Button 
-                                      variant="outline" 
-                                      size="sm"
-                                      className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
-                                    >
-                                      <Settings className="w-4 h-4 mr-1" />
-                                      Enable/Disable
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent className="sm:max-w-[425px]">
-                                    <DialogHeader>
-                                      <DialogTitle>Circle Control - {circle.name}</DialogTitle>
-                                      <DialogDescription>
-                                        Choose how you want to disable this circle for your child.
-                                      </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="space-y-4 py-4">
-                                      <div className="space-y-3">
-                                        <Button
-                                          variant="outline"
-                                          className="w-full justify-start text-left h-auto p-4"
-                                          onClick={() => handleCircleDisable(circle.id, 'child')}
-                                        >
-                                          <div>
-                                            <div className="font-medium text-orange-600">
-                                              Disable for only my child
-                                            </div>
-                                            <div className="text-sm text-gray-500 mt-1">
-                                              Your child will be removed from this circle, but other members can continue using it.
-                                            </div>
-                                          </div>
-                                        </Button>
-
-                                        <Button
-                                          variant="outline"
-                                          className="w-full justify-start text-left h-auto p-4"
-                                          onClick={() => handleCircleDisable(circle.id, 'all')}
-                                        >
-                                          <div>
-                                            <div className="font-medium text-red-600">
-                                              Disable for all members
-                                            </div>
-                                            <div className="text-sm text-gray-500 mt-1">
-                                              This entire circle will be disabled for all members. This action affects everyone in the circle.
-                                            </div>
-                                          </div>
-                                        </Button>
-                                      </div>
+                                  {circle.icon && (circle.icon.startsWith('data:image') || circle.icon.startsWith('/uploads/')) ? (
+                                    <img
+                                      src={circle.icon}
+                                      alt={circle.name}
+                                      className="w-full h-full object-cover rounded-full"
+                                    />
+                                  ) : (
+                                    <div className="scale-90">
+                                      {getIconComponent(circle.icon)}
                                     </div>
-                                  </DialogContent>
-                                </Dialog>
+                                  )}
+                                </div>
+                                {/* Member count indicator */}
+                                <div className="absolute -top-1 -right-1 bg-gray-900 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                  <span className="text-xs leading-none">
+                                    {(circle._count?.memberships || 0) + 1}
+                                  </span>
+                                </div>
+                                {/* Default badge indicator */}
+                                {circle.isDefault && (
+                                  <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full w-4 h-4 flex items-center justify-center">
+                                    <User className="h-2 w-2" />
+                                  </div>
+                                )}
                               </div>
-                            </Card>
+
+                              {/* Circle Name */}
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                <span onClick={() => showCircleMembers(circle.id)} className="text-xs text-center text-gray-700 dark:text-gray-300 font-medium truncate w-20 hover:underline cursor-pointer">
+                                  {circle.name}
+                                </span>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[425px]">
+                                  <DialogHeader>
+                                    <DialogTitle>{circle.name} Members</DialogTitle>
+                                    <DialogDescription>
+                                      A list of all members in {circle.name}.
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <div className="grid gap-4 py-4">
+                                      {selectedCircleMembers && selectedCircleMembers.length > 0 ? (
+                                        selectedCircleMembers.map((member) => (
+                                          <div key={member.id} className="flex items-center space-x-3">
+                                            <Avatar className="w-8 h-8">
+                                              <AvatarImage src={member.profileImageUrl} alt={member.firstName} />
+                                              <AvatarFallback>{getInitials(member.firstName, member.lastName)}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                              <p className="text-sm font-medium leading-none">{member.firstName} {member.lastName}</p>
+                                              <p className="text-sm text-gray-500 dark:text-gray-400">Role: {member.role}</p>
+                                            </div>
+                                          </div>
+                                        ))
+                                      ) : (
+                                        <p>No members in this circle yet.</p>
+                                      )}
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+
+                              {/* Circle Description */}
+                              {circle.description && (
+                                <span className="text-xs text-center text-gray-500 dark:text-gray-400 truncate w-20 mt-1">
+                                  {circle.description}
+                                </span>
+                              )}
+                            </div>
                           ))}
                         </div>
                       </div>
@@ -1133,7 +1042,7 @@ export default function ParentChildProfilePage() {
                                       </span>
                                     )}
                                   </div>
-
+                                  
                                   {/* Circle Members - Horizontal Display */}
                                   <div className="mt-3">
                                     <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Members:</p>
@@ -1155,7 +1064,7 @@ export default function ParentChildProfilePage() {
                                           </Badge>
                                         </div>
                                       )}
-
+                                      
                                       {/* Show other members */}
                                       {circle.memberships?.slice(0, 6).map((membership) => (
                                         <div key={membership.user.id} className="flex items-center gap-1 bg-white dark:bg-gray-700 rounded-full px-2 py-1 border">
@@ -1170,7 +1079,7 @@ export default function ParentChildProfilePage() {
                                           </span>
                                         </div>
                                       ))}
-
+                                      
                                       {/* Show "more" indicator if there are additional members */}
                                       {(circle.memberships?.length || 0) > 6 && (
                                         <div className="flex items-center justify-center bg-gray-200 dark:bg-gray-600 rounded-full px-2 py-1 border">
@@ -1303,85 +1212,6 @@ export default function ParentChildProfilePage() {
                   <>
                     <Trash2 className="w-4 h-4 mr-2" />
                     Delete
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Circle Disable Confirmation Dialog */}
-      {circleDisableConfirmation && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="flex-shrink-0 w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                <Settings className="w-5 h-5 text-orange-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Confirm Circle Control
-                </h3>
-                <p className="text-sm text-gray-600">
-                  This action will affect circle access.
-                </p>
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <p className="text-gray-700 mb-2">
-                You are about to <span className="font-medium">
-                  {circleDisableConfirmation.disableType === 'child' 
-                    ? 'disable the circle for only your child' 
-                    : 'disable the circle for all members'}
-                </span>:
-              </p>
-              <p className="font-medium text-gray-900">
-                "{circleDisableConfirmation.circleName}"
-              </p>
-
-              {circleDisableConfirmation.disableType === 'all' && (
-                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-700">
-                    <strong>Warning:</strong> This will disable the circle for ALL members, not just your child. 
-                    All members will lose access to this circle.
-                  </p>
-                </div>
-              )}
-
-              {circleDisableConfirmation.disableType === 'child' && (
-                <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                  <p className="text-sm text-orange-700">
-                    Your child will be removed from this circle, but other members can continue using it.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-end space-x-3">
-              <Button
-                variant="outline"
-                onClick={() => setCircleDisableConfirmation(null)}
-                disabled={isDisablingCircle}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={confirmCircleDisable}
-                disabled={isDisablingCircle}
-                className={`${circleDisableConfirmation.disableType === 'child' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-red-600 hover:bg-red-700'}`}
-              >
-                {isDisablingCircle ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <Settings className="w-4 h-4 mr-2" />
-                    Confirm
                   </>
                 )}
               </Button>

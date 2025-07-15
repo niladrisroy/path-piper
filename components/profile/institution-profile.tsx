@@ -111,10 +111,6 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
     }
   }
 
-  const isViewMode = false;
-  const currentUser = {};
-  const student = {};
-
   return (
     <div className="min-h-screen bg-gray-50">
       <InstitutionProfileHeader institutionData={institutionData} />
@@ -232,21 +228,6 @@ export default function InstitutionProfile({ institutionData }: InstitutionProfi
           </div>
         </div>
       </div>
-
-      {/* Institution Self Analysis Floating Button */}
-      {!isViewMode && (
-        <div className="fixed bottom-6 right-6 z-50">
-          <a
-            href="/institution/self-analysis"
-            className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-          >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0h4M9 7h6M9 11h6M9 15h6" />
-            </svg>
-            <span className="font-semibold">Institution Analysis</span>
-          </a>
-        </div>
-      )}
 
       <style jsx>{`
         .scrollbar-hide::-webkit-scrollbar {

@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@supabase/supabase-js'
@@ -11,19 +12,20 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const postId = params.id
-    const accessToken = request.cookies.get('sb-access-token')?.value
+    const cookieStore = request.cookies
+    const accessToken = cookieStore.get('sb-access-token')?.value
 
     if (!accessToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user from token
     const { data: { user }, error } = await supabase.auth.getUser(accessToken)
 
     if (error || !user) {
-      return NextResponse.json({ error: "Invalid authentication" }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const postId = params.id
 
     // Check if post exists
     const post = await prisma.feedPost.findUnique({
@@ -31,25 +33,26 @@ export async function POST(
     })
 
     if (!post) {
-      return NextResponse.json({ error: "Post not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 })
     }
 
-    // Check if user already bookmarked this post
-    const existingBookmark = await prisma.postBookmark.findFirst({
+    // Check if user already bookmarked the post
+    const existingBookmark = await prisma.postBookmark.findUnique({
       where: {
-        userId: user.id,
-        postId: postId
+        userId_postId: {
+          userId: user.id,
+          postId: postId
+        }
       }
     })
-
-    let bookmarked = false
 
     if (existingBookmark) {
       // Remove bookmark
       await prisma.postBookmark.delete({
         where: { id: existingBookmark.id }
       })
-      bookmarked = false
+
+      return NextResponse.json({ success: true, bookmarked: false })
     } else {
       // Add bookmark
       await prisma.postBookmark.create({
@@ -58,46 +61,11 @@ export async function POST(
           postId: postId
         }
       })
-      bookmarked = true
-    }
 
-    return NextResponse.json({ success: true, bookmarked })
+      return NextResponse.json({ success: true, bookmarked: true })
+    }
   } catch (error) {
     console.error('Error handling bookmark:', error)
-    return NextResponse.json({ error: "Failed to handle bookmark" }, { status: 500 })
-  }
-}
-
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const postId = params.id
-    const accessToken = request.cookies.get('sb-access-token')?.value
-
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Get user from token
-    const { data: { user }, error } = await supabase.auth.getUser(accessToken)
-
-    if (error || !user) {
-      return NextResponse.json({ error: "Invalid authentication" }, { status: 401 })
-    }
-
-    // Check if user has bookmarked this post
-    const bookmark = await prisma.postBookmark.findFirst({
-      where: {
-        userId: user.id,
-        postId: postId
-      }
-    })
-
-    return NextResponse.json({ bookmarked: !!bookmark })
-  } catch (error) {
-    console.error('Error checking bookmark status:', error)
-    return NextResponse.json({ error: "Failed to check bookmark status" }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to handle bookmark' }, { status: 500 })
   }
 }

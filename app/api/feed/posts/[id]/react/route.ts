@@ -188,14 +188,14 @@ export async function GET(
 
     // Try to get reactions from enhanced table
     try {
-      const reactionCounts = await prisma.$queryRaw`
+      const reactions = await prisma.$queryRaw`
         SELECT reaction_type, COUNT(*) as count
         FROM post_reactions 
-        WHERE post_id = ${postId}::uuid
+        WHERE post_id = ${postId}
         GROUP BY reaction_type
       ` as { reaction_type: string; count: bigint }[]
 
-      const reactionCounts = reactionCounts.reduce((acc, reaction) => {
+      const reactionCounts = reactions.reduce((acc, reaction) => {
         acc[reaction.reaction_type] = Number(reaction.count)
         return acc
       }, {} as Record<string, number>)

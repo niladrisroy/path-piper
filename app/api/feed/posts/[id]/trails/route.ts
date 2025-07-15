@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { cookies } from "next/headers"
 import { createClient } from "@supabase/supabase-js"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -13,14 +14,15 @@ export async function POST(
   try {
     const { id: postId } = await params
     const { content, imageUrl } = await request.json()
-    const accessToken = request.cookies.get('sb-access-token')?.value
+    const cookieStore = await cookies()
+    const token = cookieStore.get('auth-token')?.value
 
-    if (!accessToken) {
+    if (!token) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 })
     }
 
     // Verify the user
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     if (authError || !user) {
       return NextResponse.json({ error: "Invalid authentication" }, { status: 401 })
     }

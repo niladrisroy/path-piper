@@ -6,7 +6,6 @@ import InternalNavbar from "@/components/internal-navbar"
 import Footer from "@/components/footer"
 import { Suspense } from "react"
 import FeedTest from "@/components/feed/feed-test"
-import PostCreationTest from "@/components/feed/post-creation-test"
 
 export default function FeedPage() {
   return (
@@ -31,11 +30,6 @@ export default function FeedPage() {
                 {/* Feed Testing Panel */}
                 <Suspense fallback={<div>Loading test panel...</div>}>
                   <FeedTest />
-                </Suspense>
-                
-                {/* Post Creation Testing Panel */}
-                <Suspense fallback={<div>Loading post creation test...</div>}>
-                  <PostCreationTest />
                 </Suspense>
 
                 {/* Quick Actions */}

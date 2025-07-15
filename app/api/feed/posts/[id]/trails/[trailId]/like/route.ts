@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { cookies } from "next/headers"
 import { createClient } from "@supabase/supabase-js"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -8,11 +9,12 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string; trailId: string } }
+  { params }: { params: Promise<{ id: string; trailId: string }> }
 ) {
   try {
-    const { id: postId, trailId } = params
-    const accessToken = request.cookies.get('sb-access-token')?.value
+    const { id: postId, trailId } = await params
+    const cookieStore = await cookies()
+    const accessToken = cookieStore.get('sb-access-token')?.value
 
     if (!accessToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

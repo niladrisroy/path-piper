@@ -106,8 +106,6 @@ model Profile {
   postComments      PostComment[]
   postBookmarks     PostBookmark[]
   postReactions  PostReaction[]
-  institutionFollowers InstitutionFollowConnection[] @relation("InstitutionFollowers")
-  institutionFollowing InstitutionFollowConnection[] @relation("InstitutionFollowing")
 
 
   @@map("profiles")
@@ -578,7 +576,6 @@ model CircleBadge {
   color           String              @default("#3B82F6") @db.VarChar(20)
   icon            String              @default("users") @db.VarChar(50)
   isDefault       Boolean             @default(false) @map("is_default")
-  isDisabled      Boolean             @default(false) @map("is_disabled")
   creator         Profile             @relation("CreatedCircles", fields: [creatorId], references: [id], onDelete: Cascade)
   memberships     CircleMembership[]
   invitations     CircleInvitation[]
@@ -590,16 +587,15 @@ model CircleBadge {
 }
 
 model CircleMembership {
-  id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  circleId          String      @map("circle_id") @db.Uuid
-  userId            String      @map("user_id") @db.Uuid
-  status            String      @default("active") // 'active', 'pending', 'declined', 'left'
-  joinedAt          DateTime    @default(now()) @map("joined_at")
-  isDisabledMember  Boolean     @default(false) @map("is_disabled_member")
-  circle            CircleBadge @relation(fields: [circleId], references: [id], onDelete: Cascade)
-  user              Profile     @relation("CircleMemberships", fields: [userId], references: [id], onDelete: Cascade)
-  createdAt         DateTime    @default(now()) @map("created_at")
-  updatedAt         DateTime    @updatedAt @map("updated_at")
+  id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  circleId  String      @map("circle_id") @db.Uuid
+  userId    String      @map("user_id") @db.Uuid
+  status    String      @default("active") // 'active', 'pending', 'declined', 'left'
+  joinedAt  DateTime    @default(now()) @map("joined_at")
+  circle    CircleBadge @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  user      Profile     @relation("CircleMemberships", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
 
   @@unique([circleId, userId])
   @@map("circle_memberships")
@@ -691,7 +687,6 @@ model PostLike {
 
   @@unique([userId, postId])
   @@map("post_likes")
-  @@schema("public")
 }
 
 model PostComment {
@@ -709,7 +704,6 @@ model PostComment {
   replies  PostComment[] @relation("CommentReplies")
 
   @@map("post_comments")
-  @@schema("public")
 }
 
 model PostBookmark {
@@ -723,7 +717,6 @@ model PostBookmark {
 
   @@unique([userId, postId])
   @@map("post_bookmarks")
-  @@schema("public")
 }
 
 model PostReaction {
@@ -739,20 +732,6 @@ model PostReaction {
 
   @@unique([postId, userId])
   @@map("post_reactions")
-  @@schema("public")
-}
-
-model InstitutionFollowConnection {
-  id          Int      @id @default(autoincrement())
-  senderId    String   @map("sender_id") @db.Uuid
-  receiverId  String   @map("receiver_id") @db.Uuid
-  connectedAt DateTime @default(now()) @map("connected_at")
-
-  sender   Profile @relation("InstitutionFollowers", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver Profile @relation("InstitutionFollowing", fields: [receiverId], references: [id], onDelete: Cascade)
-
-  @@unique([senderId, receiverId])
-  @@map("institution_follow_connections")
   @@schema("public")
 }
 

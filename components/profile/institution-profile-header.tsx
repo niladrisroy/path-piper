@@ -1,29 +1,9 @@
 "use client"
-
-import { useState, useEffect } from "react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { 
-  MapPin, 
-  ExternalLink, 
-  Users, 
-  BookOpen, 
-  Award, 
-  Calendar,
-  Verified,
-  Building,
-  GraduationCap,
-  Settings,
-  Edit,
-  Globe,
-  BadgeCheck
-} from "lucide-react"
+import { Verified, Globe, Calendar, Users, GraduationCap, MapPin, ExternalLink, Edit, BookOpen, Building, Award } from "lucide-react"
 import Link from "next/link"
-import Image from "next/image"
-import FollowersDialog from "./followers-dialog"
 
 interface InstitutionData {
   id: string
@@ -51,10 +31,6 @@ interface InstitutionProfileHeaderProps {
 }
 
 export default function InstitutionProfileHeader({ institutionData }: InstitutionProfileHeaderProps) {
-  const [showFollowersDialog, setShowFollowersDialog] = useState(false)
-  const [followerCount, setFollowerCount] = useState(0)
-  const [loading, setLoading] = useState(true)
-
   // Use real institution data
   const institution = {
     name: institutionData.name,
@@ -70,36 +46,7 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
     profileImage: institutionData.logo,
     verified: institutionData.verified,
     specialties: ["Computer Science", "Engineering", "Business", "Medicine", "Law"], // Default - could be dynamic
-    followers: followerCount, // Use actual count from API
   }
-
-  // Fetch actual follower count
-  useEffect(() => {
-    const fetchFollowerCount = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch(`/api/institutions/followers?institutionId=${institutionData.id}`, {
-          credentials: 'include'
-        })
-
-        if (response.ok) {
-          const data = await response.json()
-          if (data.success) {
-            setFollowerCount(data.count || 0)
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching follower count:', error)
-        setFollowerCount(0)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    if (institutionData.id) {
-      fetchFollowerCount()
-    }
-  }, [institutionData.id])
 
   // Mock circles data
   const academicCommunities = [
@@ -270,7 +217,7 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
               // Blue gradient fallback
               <div className={`w-full h-full bg-gradient-to-r ${institution.bannerColor}`}></div>
             )}
-
+            
             {/* View all photos button */}
             {institutionData.gallery && institutionData.gallery.length > 0 && (
               <div className="absolute top-4 right-4">
@@ -328,7 +275,7 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
                     <div className="flex-1 min-w-0 text-center sm:text-left">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                         <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">{institution.name}</h1>
-                        {institution.verified && <BadgeCheck className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 self-center" />}
+                        {institution.verified && <BadgeCheckIcon className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 self-center" />}
                       </div>
                       <p className="text-gray-600 dark:text-gray-300 mt-1 text-sm sm:text-base">
                         {institution.tagline}
@@ -424,17 +371,6 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
                       <Award className="h-3.5 w-3.5 text-teal-500" data-tooltip="Global ranking" />
                       <span data-tooltip="Global ranking">Top 5 Globally</span>
                     </div>
-                    {/* Followers Count - Clickable */}
-                    <button
-                      onClick={() => setShowFollowersDialog(true)}
-                      className="flex items-center gap-1.5 bg-gradient-to-r from-rose-50 to-pink-50 dark:from-rose-900/20 dark:to-pink-900/20 text-rose-600 dark:text-rose-300 px-3 py-1.5 rounded-full hover:bg-gradient-to-r hover:from-rose-100 hover:to-pink-100 dark:hover:from-rose-900/30 dark:hover:to-pink-900/30 transition-all cursor-pointer"
-                      data-tooltip="View followers"
-                    >
-                      <Users className="h-3.5 w-3.5 text-rose-500" />
-                      <span>
-                        {loading ? 'Loading...' : `${followerCount.toLocaleString()} Followers`}
-                      </span>
-                    </button>
                   </div>
 
                   {/* Academic Communities - Instagram-style story highlights with horizontal scroll */}
@@ -546,15 +482,6 @@ export default function InstitutionProfileHeader({ institutionData }: Institutio
           </div>
         </div>
       </div>
-
-      {/* Followers Dialog */}
-      <FollowersDialog
-        institutionId={institutionData.id}
-        institutionName={institutionData.name}
-        isOpen={showFollowersDialog}
-        onClose={() => setShowFollowersDialog(false)}
-        followerCount={followerCount}
-      />
     </>
   )
 }

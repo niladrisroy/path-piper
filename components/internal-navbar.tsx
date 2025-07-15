@@ -5,7 +5,18 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
-  Search, Bell, Menu, X, User, Users, Building, MessageCircle, Home, UserPlus, UserCheck, UserMinus, LogOut, Settings, Loader2
+  Bell,
+  Home,
+  Search,
+  MessageCircle,
+  User,
+  Menu,
+  X,
+  Settings,
+  LogOut,
+  UserPlus,
+  Loader2,
+  Users,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
@@ -40,8 +51,6 @@ export function InternalNavbar() {
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
   const { totalCount: notificationCount, loading: notificationsLoading } = useNotifications();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [followStatus, setFollowStatus] = useState<{ [institutionId: string]: boolean }>({});
-  const [followLoading, setFollowLoading] = useState<{ [institutionId: string]: boolean }>({});
 
   const handleLogout = async () => {
     try {
@@ -164,9 +173,9 @@ export function InternalNavbar() {
   }, []);
 
   const searchUsers = async (query: string) => {
-    if (query.length < 2) {
+    if (!query.trim() || query.length < 2) {
       setSearchResults([]);
-      setFollowStatus({});
+      setShowSearchResults(false);
       return;
     }
 
@@ -177,57 +186,11 @@ export function InternalNavbar() {
         const users = await response.json();
         setSearchResults(users);
         setShowSearchResults(true);
-
-        // Get follow status for institutions
-        const institutionIds = users.filter((user: SearchUser) => user.role === 'institution').map((user: SearchUser) => user.id);
-        if (institutionIds.length > 0) {
-          await checkFollowStatus(institutionIds);
-        }
       }
     } catch (error) {
-      console.error('Error searching users:', error);
+      console.error("Error searching users:", error);
     } finally {
       setSearchLoading(false);
-    }
-  };
-
-  const checkFollowStatus = async (institutionIds: string[]) => {
-    try {
-      const response = await fetch(`/api/institutions/follow-status?ids=${institutionIds.join(',')}`);
-      if (response.ok) {
-        const data = await response.json();
-        setFollowStatus(data.followStatus);
-      }
-    } catch (error) {
-      console.error('Error checking follow status:', error);
-    }
-  };
-
-  const handleFollowToggle = async (institutionId: string, isFollowing: boolean) => {
-    setFollowLoading(prev => ({ ...prev, [institutionId]: true }));
-
-    try {
-      const method = isFollowing ? 'DELETE' : 'POST';
-      const response = await fetch('/api/institutions/follow', {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ institutionId })
-      });
-
-      if (response.ok) {
-        setFollowStatus(prev => ({
-          ...prev,
-          [institutionId]: !isFollowing
-        }));
-      } else {
-        console.error('Failed to toggle follow status');
-      }
-    } catch (error) {
-      console.error('Error toggling follow:', error);
-    } finally {
-      setFollowLoading(prev => ({ ...prev, [institutionId]: false }));
     }
   };
 
@@ -315,36 +278,36 @@ export function InternalNavbar() {
 
   // Function to get profile URL based on user role
   const getProfileUrl = () => {
-    console.log('🔍 Navbar: Getting profile URL for user role:', user?.role)
-    if (!user?.role) {
-      console.warn('⚠️ Navbar: User role is null/undefined, defaulting to /profile')
-      return '/profile'
+    if (!user || userLoading) return "/student/profile"; // Default fallback
+    
+    console.log('🔍 Navbar: Getting profile URL for user role:', user.role);
+    
+    switch (user.role) {
+      case "institution":
+        return "/institution/profile";
+      case "mentor":
+        return "/mentor/profile";
+      case "student":
+      default:
+        return "/student/profile";
     }
-    if (user.role === 'student') {
-      return '/student/profile'
-    } else if (user.role === 'mentor') {
-      return '/mentor/profile'
-    } else if (user.role === 'institution') {
-      return '/institution/profile'
-    }
-    return '/profile'
-  }
+  };
 
   // Function to handle profile navigation
   const handleProfileNavigation = (e: React.MouseEvent) => {
     e.preventDefault();
-
+    
     if (userLoading) {
       console.log('🔍 Navbar: User still loading, waiting...');
       return;
     }
-
+    
     if (!user) {
       console.log('🔍 Navbar: No user found, redirecting to login');
       router.push('/login');
       return;
     }
-
+    
     const profileUrl = getProfileUrl();
     console.log('🔍 Navbar: Navigating to profile URL:', profileUrl);
     router.push(profileUrl);
@@ -472,81 +435,51 @@ export function InternalNavbar() {
                           </div>
                         </div>
 
-                        {searchUser.role === 'institution' ? (
-                          <Button
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleFollowToggle(searchUser.id, followStatus[searchUser.id]);
-                            }}
-                            disabled={followLoading[searchUser.id]}
-                            className={`shrink-0 px-3 py-1.5 text-xs font-medium ${
-                              followStatus[searchUser.id]
-                                ? "bg-gray-200 text-gray-800 hover:bg-gray-300"
-                                : "bg-pathpiper-teal hover:bg-pathpiper-teal/90 text-white"
-                            }`}
-                          >
-                            {followLoading[searchUser.id] ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            ) : followStatus[searchUser.id] ? (
-                              <>
-                                <UserCheck className="h-3 w-3 mr-1" />
-                                Following
-                              </>
-                            ) : (
-                              <>
-                                <UserPlus className="h-3 w-3 mr-1" />
-                                Follow
-                              </>
-                            )}
-                          </Button>
-                        ) : (
-                          (() => {
-                            const status = getConnectionStatus(searchUser.id);
-                            if (status === 'connected') {
-                              return (
-                                <Button
-                                  size="sm"
-                                  disabled
-                                  className="shrink-0 bg-green-100 text-green-800 px-3 py-1.5 text-xs font-medium cursor-not-allowed"
-                                >
-                                  Connected
-                                </Button>
-                              );
-                            } else if (status === 'pending') {
-                              return (
-                                <Button
-                                  size="sm"
-                                  disabled
-                                  className="shrink-0 bg-yellow-100 text-yellow-800 px-3 py-1.5 text-xs font-medium cursor-not-allowed"
-                                >
-                                  Pending
-                                </Button>
-                              );
-                            } else {
-                              return (
-                                <Button
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    sendConnectionRequest(searchUser.id);
-                                  }}
-                                  disabled={sendingRequest === searchUser.id}
-                                  className="shrink-0 bg-pathpiper-teal hover:bg-pathpiper-teal/90 text-white px-3 py-1.5 text-xs font-medium"
-                                >
-                                  {sendingRequest === searchUser.id ? (
-                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                  ) : (
-                                    <>
-                                      <UserPlus className="h-3 w-3 mr-1" />
-                                      Connect
-                                    </>
-                                  )}
-                                </Button>
-                              );
-                            }
-                          })()
-                        )}
+                        {(() => {
+                          const status = getConnectionStatus(searchUser.id);
+                          if (status === 'connected') {
+                            return (
+                              <Button
+                                size="sm"
+                                disabled
+                                className="shrink-0 bg-green-100 text-green-800 px-3 py-1.5 text-xs font-medium cursor-not-allowed"
+                              >
+                                Connected
+                              </Button>
+                            );
+                          } else if (status === 'pending') {
+                            return (
+                              <Button
+                                size="sm"
+                                disabled
+                                className="shrink-0 bg-yellow-100 text-yellow-800 px-3 py-1.5 text-xs font-medium cursor-not-allowed"
+                              >
+                                Pending
+                              </Button>
+                            );
+                          } else {
+                            return (
+                              <Button
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  sendConnectionRequest(searchUser.id);
+                                }}
+                                disabled={sendingRequest === searchUser.id}
+                                className="shrink-0 bg-pathpiper-teal hover:bg-pathpiper-teal/90 text-white px-3 py-1.5 text-xs font-medium"
+                              >
+                                {sendingRequest === searchUser.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <>
+                                    <UserPlus className="h-3 w-3 mr-1" />
+                                    Connect
+                                  </>
+                                )}
+                              </Button>
+                            );
+                          }
+                        })()}
                       </div>
                     ))}
 
