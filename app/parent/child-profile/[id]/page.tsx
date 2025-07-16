@@ -148,6 +148,7 @@ export default function ParentChildProfilePage() {
   const params = useParams()
   const childId = params.id as string
   const [selectedCircleMembers, setSelectedCircleMembers] = useState<any[] | null>(null);
+  const [selectedCircleInfo, setSelectedCircleInfo] = useState<any | null>(null);
   const [circleDisableConfirmation, setCircleDisableConfirmation] = useState<{
     isOpen: boolean
     circleId: string
@@ -344,21 +345,24 @@ export default function ParentChildProfilePage() {
     }
   }
 
-  const showCircleMembers = async (circleId: string) => {
+  const showCircleMembers = async (circle: any) => {
     try {
-      const response = await fetch(`/api/parent/child-profile/${childId}/circles/${circleId}/members`, {
+      const response = await fetch(`/api/parent/child-profile/${childId}/circles/${circle.id}/members`, {
         credentials: 'include'
       });
       if (response.ok) {
         const data = await response.json();
         setSelectedCircleMembers(data.members);
+        setSelectedCircleInfo(data.circle);
       } else {
         console.error('Failed to fetch circle members');
         setSelectedCircleMembers([]);
+        setSelectedCircleInfo(null);
       }
     } catch (error) {
       console.error('Error fetching circle members:', error);
       setSelectedCircleMembers([]);
+      setSelectedCircleInfo(null);
     }
   };
 
@@ -1134,7 +1138,7 @@ export default function ParentChildProfilePage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => showCircleMembers(circle.id)}
+                                  onClick={() => showCircleMembers(circle)}
                                   className="text-blue-600 hover:text-blue-700"
                                 >
                                   <Eye className="w-4 h-4 mr-1" />
@@ -1238,107 +1242,99 @@ export default function ParentChildProfilePage() {
                         </div>
                       </div>
 
-                      {/* Circle Details */}
-                      <div className="space-y-4">
-                        <h4 className="text-sm font-medium">Circle Details</h4>
-                        <div className="space-y-3">
-                          {circles.map((circle) => (
-                            <div key={`detail-${circle.id}`} className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
-                              <div className="flex items-start gap-3">
-                                <div
-                                  className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-medium overflow-hidden flex-shrink-0"
-                                  style={{ backgroundColor: circle.color }}
-                                >
-                                  {circle.icon && (circle.icon.startsWith('data:image') || circle.icon.startsWith('/uploads/')) ? (
-                                    <img
-                                      src={circle.icon}
-                                      alt={circle.name}
-                                      className="w-full h-full object-cover rounded-full"
-                                    />
-                                  ) : (
-                                    <div className="scale-75">
-                                      {getIconComponent(circle.icon)}
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <h5 className="font-medium text-gray-900 dark:text-white truncate">
-                                      {circle.name}
-                                    </h5>
-                                    {circle.isDefault && (
-                                      <Badge variant="secondary" className="text-xs">
-                                        Default
-                                      </Badge>
-                                    )}
+                      {/* Selected Circle Members Display */}
+                      {selectedCircleMembers && selectedCircleInfo && (
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-white overflow-hidden"
+                                style={{ backgroundColor: selectedCircleInfo.color }}
+                              >
+                                {selectedCircleInfo.icon && (selectedCircleInfo.icon.startsWith('data:image') || selectedCircleInfo.icon.startsWith('/uploads/')) ? (
+                                  <img
+                                    src={selectedCircleInfo.icon}
+                                    alt={selectedCircleInfo.name}
+                                    className="w-full h-full object-cover rounded-full"
+                                  />
+                                ) : (
+                                  <div className="scale-75">
+                                    {getIconComponent(selectedCircleInfo.icon)}
                                   </div>
-                                  {circle.description && (
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                                      {circle.description}
-                                    </p>
-                                  )}
-                                  <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
-                                    <span>{(circle._count?.memberships || 0) + 1} members</span>
-                                    {circle.creator && (
-                                      <span>
-                                        Created by {circle.creator.firstName} {circle.creator.lastName}
-                                      </span>
-                                    )}
-                                  </div>
-
-                                  {/* Circle Members - Horizontal Display */}
-                                  <div className="mt-3">
-                                    <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Members:</p>
-                                    <div className="flex flex-wrap gap-2">
-                                      {/* Show creator first */}
-                                      {circle.creator && (
-                                        <div className="flex items-center gap-1 bg-white dark:bg-gray-700 rounded-full px-2 py-1 border">
-                                          <Avatar className="w-5 h-5">
-                                            <AvatarImage src={circle.creator.profileImageUrl} />
-                                            <AvatarFallback className="text-xs bg-blue-500 text-white">
-                                              {getInitials(circle.creator.firstName, circle.creator.lastName)}
-                                            </AvatarFallback>
-                                          </Avatar>
-                                          <span className="text-xs text-gray-700 dark:text-gray-300 truncate max-w-16">
-                                            {circle.creator.firstName}
-                                          </span>
-                                          <Badge variant="outline" className="text-xs px-1 py-0 h-4">
-                                            Creator
-                                          </Badge>
-                                        </div>
-                                      )}
-
-                                      {/* Show other members */}
-                                      {circle.memberships?.slice(0, 6).map((membership) => (
-                                        <div key={membership.user.id} className="flex items-center gap-1 bg-white dark:bg-gray-700 rounded-full px-2 py-1 border">
-                                          <Avatar className="w-5 h-5">
-                                            <AvatarImage src={membership.user.profileImageUrl} />
-                                            <AvatarFallback className="text-xs bg-gray-500 text-white">
-                                              {getInitials(membership.user.firstName, membership.user.lastName)}
-                                            </AvatarFallback>
-                                          </Avatar>
-                                          <span className="text-xs text-gray-700 dark:text-gray-300 truncate max-w-16">
-                                            {membership.user.firstName}
-                                          </span>
-                                        </div>
-                                      ))}
-
-                                      {/* Show "more" indicator if there are additional members */}
-                                      {(circle.memberships?.length || 0) > 6 && (
-                                        <div className="flex items-center justify-center bg-gray-200 dark:bg-gray-600 rounded-full px-2 py-1 border">
-                                          <span className="text-xs text-gray-600 dark:text-gray-400">
-                                            +{(circle.memberships?.length || 0) - 6} more
-                                          </span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
+                                )}
+                              </div>
+                              <div>
+                                <h4 className="text-lg font-medium text-gray-900 dark:text-white">
+                                  {selectedCircleInfo.name} Members
+                                </h4>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  {selectedCircleMembers.length} member{selectedCircleMembers.length !== 1 ? 's' : ''}
+                                </p>
                               </div>
                             </div>
-                          ))}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedCircleMembers(null);
+                                setSelectedCircleInfo(null);
+                              }}
+                              className="text-gray-500 hover:text-gray-700"
+                            >
+                              ✕
+                            </Button>
+                          </div>
+
+                          {/* Circular Members Grid */}
+                          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-4 justify-items-center">
+                            {selectedCircleMembers.map((member) => (
+                              <div key={member.id} className="flex flex-col items-center text-center">
+                                <div className="relative mb-2">
+                                  <Avatar className="w-12 h-12 border-2 border-gray-200">
+                                    <AvatarImage src={member.profileImageUrl} />
+                                    <AvatarFallback className="bg-gradient-to-br from-blue-400 to-purple-500 text-white text-sm">
+                                      {getInitials(member.firstName, member.lastName)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  {member.isCreator && (
+                                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center">
+                                      <User className="w-3 h-3 text-white" />
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="w-16">
+                                  <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
+                                    {member.firstName}
+                                  </p>
+                                  <p className="text-xs text-gray-500 truncate">
+                                    {member.lastName}
+                                  </p>
+                                  <Badge 
+                                    variant="outline" 
+                                    className={`text-xs mt-1 ${
+                                      member.isCreator 
+                                        ? 'bg-yellow-50 text-yellow-700 border-yellow-200' 
+                                        : member.role === 'mentor'
+                                        ? 'bg-green-50 text-green-700 border-green-200'
+                                        : 'bg-blue-50 text-blue-700 border-blue-200'
+                                    }`}
+                                  >
+                                    {member.isCreator ? 'Creator' : member.role}
+                                  </Badge>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {selectedCircleInfo.description && (
+                            <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                              <p className="text-sm text-gray-700 dark:text-gray-300">
+                                {selectedCircleInfo.description}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                      </div>
+                      )}
                     </div>
                   ) : (
                     <div className="text-center py-8 text-gray-500">
