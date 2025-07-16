@@ -85,7 +85,13 @@ interface Circle {
 }
 
 // Circle Badges Section Component
-function CircleBadgesSection({ onCircleSelect }: { onCircleSelect: (circle: Circle) => void }) {
+function CircleBadgesSection({ 
+  onCircleSelect, 
+  currentUserId 
+}: { 
+  onCircleSelect: (circle: Circle) => void;
+  currentUserId?: string;
+}) {
   const [circles, setCircles] = useState<Circle[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateCircle, setShowCreateCircle] = useState(false);
@@ -112,6 +118,29 @@ function CircleBadgesSection({ onCircleSelect }: { onCircleSelect: (circle: Circ
 
     fetchCircles();
   }, []);
+
+  // Function to check if circle should be disabled for current user
+  const isCircleDisabled = (circle: Circle, currentUserId: string) => {
+    // 1. Check if circle is globally disabled
+    if (circle.isDisabled) {
+      return true;
+    }
+
+    // 2. Check if creator is disabled and current user is the creator
+    if (circle.isCreatorDisabled && circle.creator.id === currentUserId) {
+      return true;
+    }
+
+    // 3. Check if current user's membership is disabled
+    const userMembership = circle.memberships.find(
+      (membership: any) => membership.user.id === currentUserId
+    );
+    if (userMembership && userMembership.isDisabledMember) {
+      return true;
+    }
+
+    return false;
+  };
 
   const getIconComponent = (iconName: string) => {
     switch (iconName) {
@@ -271,50 +300,80 @@ function CircleBadgesSection({ onCircleSelect }: { onCircleSelect: (circle: Circ
           <div className="space-y-3">
             {/* 3-Column Grid Layout for all circles */}
             <div className="grid grid-cols-3 gap-4 py-3">
-              {circles.map((circle) => (
-                <div
-                  key={circle.id}
-                  className="flex flex-col items-center group cursor-pointer"
-                  onClick={() => onCircleSelect(circle)}
-                >
-                  {/* Circle Badge */}
-                  <div className="relative mb-2">
-                    <div
-                      className="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg group-hover:shadow-xl transition-all duration-200 group-hover:scale-105 overflow-hidden"
-                      style={{ backgroundColor: circle.color }}
-                    >
-                      {circle.icon && (circle.icon.startsWith('data:image') || circle.icon.startsWith('/uploads/')) ? (
-                        <img
-                          src={circle.icon}
-                          alt={circle.name}
-                          className="w-full h-full object-cover rounded-full"
-                        />
-                      ) : (
-                        <div className="scale-75">
-                          {getIconComponent(circle.icon)}
+              {circles.map((circle) => {
+                const isDisabled = currentUserId ? isCircleDisabled(circle, currentUserId) : false;
+
+                return (
+                  <div
+                    key={circle.id}
+                    className={`flex flex-col items-center group ${
+                      isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+                    }`}
+                    onClick={() => !isDisabled && onCircleSelect(circle)}
+                  >
+                    {/* Circle Badge */}
+                    <div className="relative mb-2">
+                      <div
+                        className={`w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-200 overflow-hidden ${
+                          isDisabled 
+                            ? 'grayscale cursor-not-allowed' 
+                            : 'group-hover:shadow-xl group-hover:scale-105'
+                        }`}
+                        style={{ backgroundColor: isDisabled ? '#9CA3AF' : circle.color }}
+                      >
+                        {circle.icon && (circle.icon.startsWith('data:image') || circle.icon.startsWith('/uploads/')) ? (
+                          <img
+                            src={circle.icon}
+                            alt={circle.name}
+                            className={`w-full h-full object-cover rounded-full ${
+                              isDisabled ? 'grayscale' : ''
+                            }`}
+                          />
+                        ) : (
+                          <div className="scale-75">
+                            {getIconComponent(circle.icon)}
+                          </div>
+                        )}
+                      </div>
+                      {isDisabled && (
+                        <div className="absolute inset-0 rounded-full bg-gray-500 bg-opacity-30 flex items-center justify-center">
+                          <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636" />
+                          </svg>
+                        </div>
+                      )}
+                  {/* Member count indicator */}
+                      <div className={`absolute -top-0.5 -right-0.5 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center ${
+                        isDisabled ? 'bg-gray-500' : 'bg-gray-900'
+                      }`}>
+                        <span className="text-xs leading-none">
+                          {circle._count.memberships + 1}
+                        </span>
+                      </div>
+                      {/* Default badge indicator */}
+                      {circle.isDefault && (
+                        <div className={`absolute -bottom-0.5 -right-0.5 text-white rounded-full w-3 h-3 flex items-center justify-center ${
+                          isDisabled ? 'bg-gray-500' : 'bg-blue-500'
+                        }`}>
+                          <Crown className="h-1.5 w-1.5" />
                         </div>
                       )}
                     </div>
-                    {/* Member count indicator */}
-                    <div className="absolute -top-0.5 -right-0.5 bg-gray-900 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                      <span className="text-xs leading-none">
-                        {circle._count.memberships + 1}
-                      </span>
-                    </div>
-                    {/* Default badge indicator */}
-                    {circle.isDefault && (
-                      <div className="absolute -bottom-0.5 -right-0.5 bg-blue-500 text-white rounded-full w-3 h-3 flex items-center justify-center">
-                        <Crown className="h-1.5 w-1.5" />
-                      </div>
-                    )}
-                  </div>
 
-                  {/* Circle Name */}
-                  <span className="text-xs text-center text-gray-700 dark:text-gray-300 font-medium truncate w-16">
-                    {circle.name}
-                  </span>
-                </div>
-              ))}
+                    {/* Circle Name */}
+                    <span className={`text-xs text-center font-medium truncate w-16 ${
+                      isDisabled 
+                        ? 'text-gray-400 dark:text-gray-500' 
+                        : 'text-gray-700 dark:text-gray-300'
+                    }`}>
+                      {circle.name}
+                      {isDisabled && (
+                        <div className="text-[10px] text-gray-400">Disabled</div>
+                      )}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -418,9 +477,10 @@ function CircleBadgesSection({ onCircleSelect }: { onCircleSelect: (circle: Circ
 
 interface CircleViewProps {
   student: any;
+  currentUserId?: string;
 }
 
-export default function CircleView({ student }: CircleViewProps) {
+export default function CircleView({ student, currentUserId }: CircleViewProps) {
   const [connections, setConnections] = useState<Connection[]>([]);
   const [pendingRequests, setPendingRequests] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -665,7 +725,10 @@ export default function CircleView({ student }: CircleViewProps) {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Circle Badges Section - Takes 4 columns on large screens */}
             <div className="lg:col-span-4">
-              <CircleBadgesSection onCircleSelect={handleCircleSelect} />
+              <CircleBadgesSection 
+                onCircleSelect={handleCircleSelect} 
+                currentUserId={currentUserId}
+              />
             </div>
 
             {/* Connections Section - Takes 8 columns on large screens */}

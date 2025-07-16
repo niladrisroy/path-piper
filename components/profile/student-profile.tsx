@@ -12,6 +12,7 @@ import ActionBar from "./action-bar"
 import Goals from "./goals"
 import InterestsSection from "./interests-section"
 import SuggestedConnections from "./suggested-connections"
+import FollowingInstitutions from "./following-institutions"
 
 interface StudentProfileProps {
   studentId?: string
@@ -174,6 +175,7 @@ export default function StudentProfile({ studentId, currentUser, studentData, is
     { id: "interests", label: "Interests" },
     ...(isViewMode ? [] : [{ id: "suggested", label: "Suggested Connections" }]),
     ...(isViewMode ? [] : [{ id: "circle", label: "My Circle" }]),
+    { id: "following", label: "Following" },
     { id: "skills", label: "Skills Canvas" },
     { id: "projects", label: "Projects" },
     { id: "achievements", label: "Achievements" },
@@ -196,11 +198,12 @@ export default function StudentProfile({ studentId, currentUser, studentData, is
           {activeTab === "achievements" && <AchievementTimeline userId={student.id} isOwnProfile={!isViewMode} />}
           {activeTab === "circle" && <CircleView student={student} isViewMode={isViewMode} />}
           {activeTab === "goals" && <Goals student={student} currentUser={currentUser} isViewMode={isViewMode} />}
+          {activeTab === "following" && <FollowingInstitutions userId={studentId} />}
         </div>
       </div>
 
       {!isViewMode && <ActionBar student={student} currentUser={currentUser} />}
-      
+
       {/* Self Analysis Floating Button */}
       {!isViewMode && (
         <div className="fixed bottom-6 right-6 z-50">

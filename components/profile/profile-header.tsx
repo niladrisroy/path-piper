@@ -265,9 +265,35 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
 
   const [searchQuery, setSearchQuery] = useState('')
 
+  // Function to check if circle should be disabled for current user
+  const isCircleDisabled = (circle: any, currentUserId: string) => {
+    // 1. Check if circle is globally disabled
+    if (circle.isDisabled) {
+      return true;
+    }
+
+    // 2. Check if creator is disabled and current user is the creator
+    if (circle.isCreatorDisabled && circle.creator?.id === currentUserId) {
+      return true;
+    }
+
+    // 3. Check if current user's membership is disabled
+    const userMembership = circle.memberships?.find(
+      (membership: any) => membership.user.id === currentUserId
+    );
+    if (userMembership && userMembership.isDisabledMember) {
+      return true;
+    }
+
+    return false;
+  };
+
   const handleCircleClick = (circle: any) => {
-    setSelectedCircle(circle)
-    setShowCircleManagement(true)
+    const disabled = isCircleDisabled(circle, studentProp.id);
+    if (!disabled) {
+      setSelectedCircle(circle)
+      setShowCircleManagement(true)
+    }
   }
 
   const handleCircleUpdated = async () => {
@@ -518,42 +544,69 @@ export default function ProfileHeader({ student, currentUser, connectionCounts, 
                                 )}
 
                                 {/* Dynamic Circles from Database */}
-                                {circles.map((circle) => (
-                                  <div 
-                                    key={circle.id}
-                                    className="flex flex-col items-center min-w-[72px] shrink-0"
-                                  >
-                                    <div className="relative mb-1">
-                                      <button
-                                        onClick={() => handleCircleClick(circle)}
-                                        className="w-16 h-16 rounded-full p-[3px] hover:opacity-80 transition-all duration-200"
-                                        style={{ 
-                                          background: `linear-gradient(135deg, ${circle.color}, ${circle.color}dd)`
-                                        }}
-                                      >
-                                        <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
-                                          <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
-                                            {circle.icon && (circle.icon.startsWith('data:image') || circle.icon.startsWith('/uploads/')) ? (
-                                              <img
-                                                src={circle.icon}
-                                                alt={circle.name}
-                                                className="w-full h-full object-cover rounded-full"
-                                              />
-                                            ) : (
-                                              <div 
-                                                className="w-3 h-3 rounded-full"
-                                                style={{ backgroundColor: circle.color }}
-                                              />
-                                            )}
+                                {circles.map((circle) => {
+                                  const isDisabled = isCircleDisabled(circle, studentProp.id);
+                                  
+                                  return (
+                                    <div 
+                                      key={circle.id}
+                                      className="flex flex-col items-center min-w-[72px] shrink-0"
+                                    >
+                                      <div className="relative mb-1">
+                                        <button
+                                          onClick={() => handleCircleClick(circle)}
+                                          disabled={isDisabled}
+                                          className={`w-16 h-16 rounded-full p-[3px] transition-all duration-200 relative ${
+                                            isDisabled 
+                                              ? 'cursor-not-allowed opacity-50 grayscale' 
+                                              : 'hover:opacity-80'
+                                          }`}
+                                          style={{ 
+                                            background: isDisabled 
+                                              ? 'linear-gradient(135deg, #9CA3AF, #9CA3AFdd)'
+                                              : `linear-gradient(135deg, ${circle.color}, ${circle.color}dd)`
+                                          }}
+                                        >
+                                          <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 p-[2px]">
+                                            <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                                              {circle.icon && (circle.icon.startsWith('data:image') || circle.icon.startsWith('/uploads/')) ? (
+                                                <img
+                                                  src={circle.icon}
+                                                  alt={circle.name}
+                                                  className={`w-full h-full object-cover rounded-full ${
+                                                    isDisabled ? 'grayscale' : ''
+                                                  }`}
+                                                />
+                                              ) : (
+                                                <div 
+                                                  className="w-3 h-3 rounded-full"
+                                                  style={{ backgroundColor: isDisabled ? '#9CA3AF' : circle.color }}
+                                                />
+                                              )}
+                                            </div>
                                           </div>
-                                        </div>
-                                      </button>
+                                          {isDisabled && (
+                                            <div className="absolute inset-0 rounded-full bg-gray-500 bg-opacity-30 flex items-center justify-center">
+                                              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636" />
+                                              </svg>
+                                            </div>
+                                          )}
+                                        </button>
+                                      </div>
+                                      <span className={`text-xs text-center truncate w-full ${
+                                        isDisabled 
+                                          ? 'text-gray-400 dark:text-gray-500' 
+                                          : 'text-gray-600 dark:text-gray-400'
+                                      }`}>
+                                        {circle.name} ({(circle._count?.memberships || 0) + 1})
+                                        {isDisabled && (
+                                          <div className="text-[10px] text-gray-400">Disabled</div>
+                                        )}
+                                      </span>
                                     </div>
-                                    <span className="text-xs text-center text-gray-600 dark:text-gray-400 truncate w-full">
-                                      {circle.name} ({(circle._count?.memberships || 0) + 1})
-                                    </span>
-                                  </div>
-                                ))}
+                                  );
+                                })}
 
                                 
                               </div>

@@ -21,30 +21,6 @@ export default function FeedPage() {
 
             {/* Main Feed */}
             <div className="lg:col-span-2">
-              <div className="mb-8">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Feed</h1>
-                  <p className="text-gray-600 dark:text-gray-400 mt-2">
-                    Stay updated with the latest posts from your network
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <a 
-                    href="/trail-test" 
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                  >
-                    Test Trails
-                  </a>
-                  <a 
-                    href="/test-moderation" 
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
-                  >
-                    Test Moderation
-                  </a>
-                </div>
-              </div>
-            </div>
               <Feed />
             </div>
 
