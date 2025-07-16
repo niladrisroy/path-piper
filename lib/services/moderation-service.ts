@@ -24,8 +24,8 @@ class OptimizedModerationService {
   private config: ModerationConfig = {
     enableCache: true,
     enableMLModeration: false, // Enable when ML service is ready
-    cacheExpiryMinutes: 60,
-    fastTrackThreshold: 5
+    cacheExpiryMinutes: 30, // Shorter cache for more accurate results
+    fastTrackThreshold: 3 // Lower threshold for faster processing
   }
 
   // Fast pattern-based moderation for low-risk content
@@ -67,13 +67,15 @@ class OptimizedModerationService {
     const flags: string[] = []
     let confidence = 0.8
 
-    // Optimized pattern matching with pre-compiled regex
+    // Enhanced pattern matching with better coverage
     const patterns = {
-      violence: /\b(kill|murder|death|bomb|gun|weapon|hurt|harm|fight)\b/gi,
-      selfHarm: /\b(suicide|kill myself|hurt myself|cut myself|end it all)\b/gi,
-      personalInfo: /\b(\d{3}-\d{2}-\d{4}|\d{10}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b/g,
-      bullying: /\b(you (are|look) (stupid|ugly|fat|dumb|weird|loser))\b/gi,
-      inappropriate: /\b(sex|porn|nude|drugs|alcohol|marijuana)\b/gi
+      violence: /\b(kill|murder|death|bomb|gun|weapon|hurt|harm|fight|attack|stab|shoot|beat|punch|kick|slap|hit|destroy|eliminate|torture|assault|terror|threat|die|dead|blood|brutal|execute|massacre|slaughter)\b/gi,
+      selfHarm: /\b(suicide|kill myself|hurt myself|cut myself|end it all|self.harm|cutting|overdose|pills|razor|blade|wrist|hanging|want to die|better off dead|no reason to live)\b/gi,
+      personalInfo: /\b(\d{3}-\d{2}-\d{4}|\d{10}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|\b\d+\s+[A-Za-z0-9\s,.-]+\s+(street|st|avenue|ave|road|rd|boulevard|blvd|lane|ln|drive|dr|court|ct|place|pl)\b)\b/gi,
+      bullying: /\b(you (are|look|sound) (stupid|ugly|fat|dumb|weird|loser|pathetic|worthless)|nobody likes you|everyone hates you|you have no friends|kill yourself|go away|shut up|you suck|i hate you)\b/gi,
+      inappropriate: /\b(sex|porn|nude|naked|drugs|alcohol|marijuana|weed|cocaine|heroin|meth|smoking|cigarette|vape|drunk|high|stoned)\b/gi,
+      profanity: /\b(fuck|shit|damn|bitch|asshole|bastard|crap|piss|hell|bloody|goddamn|motherfucker|dickhead|whore|slut|cunt|f\*ck|sh\*t|d\*mn|b\*tch|wtf|stfu|gtfo)\b/gi,
+      strangerDanger: /\b(meet (me|up)|let's meet|come over|send me your|what's your address|where do you live|don't tell (your parents|anyone)|this is our secret|keep this between us|adults don't need to know)\b/gi
     }
 
     // Process patterns in parallel for better performance
@@ -93,11 +95,11 @@ class OptimizedModerationService {
             flags.push('violence')
             break
           case 'selfHarm':
-            riskScore += matches * 20
+            riskScore += matches * 25
             flags.push('self_harm')
             break
           case 'personalInfo':
-            riskScore += matches * 25
+            riskScore += matches * 20
             flags.push('personal_information')
             break
           case 'bullying':
@@ -107,6 +109,14 @@ class OptimizedModerationService {
           case 'inappropriate':
             riskScore += matches * 8
             flags.push('inappropriate_content')
+            break
+          case 'profanity':
+            riskScore += matches * 10
+            flags.push('profanity')
+            break
+          case 'strangerDanger':
+            riskScore += matches * 30
+            flags.push('stranger_danger')
             break
         }
       }
@@ -208,6 +218,11 @@ class OptimizedModerationService {
 
   private async logModerationResult(userId: string, type: string, content: string, result: ModerationResult): Promise<void> {
     try {
+      if (!prisma) {
+        console.warn('Prisma client not available for moderation logging')
+        return
+      }
+      
       await prisma.moderationLog.create({
         data: {
           userId,
@@ -222,8 +237,20 @@ class OptimizedModerationService {
       })
     } catch (error) {
       console.error('Failed to log moderation result:', error)
+      // Continue processing even if logging fails
     }
   }
 }
 
 export const moderationService = new OptimizedModerationService()
+
+// Performance metrics
+export const getModerationMetrics = () => {
+  const service = moderationService as any
+  return {
+    cacheSize: service.cache.size,
+    cacheHitRate: service.cacheHits / (service.cacheHits + service.cacheMisses) || 0,
+    fastTrackRate: service.fastTrackApprovals / service.totalRequests || 0,
+    averageProcessingTime: service.totalProcessingTime / service.totalRequests || 0
+  }
+}

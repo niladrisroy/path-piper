@@ -242,11 +242,7 @@ export default function ModerationTestPage() {
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="container mx-auto max-w-6xl">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Shield className="h-8 w-8 text-blue-600" />
-            Content Moderation Testing
-          </h1>
-          <p className="text-gray-600">Test the AI-powered content moderation system</p>
+          
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -603,7 +599,7 @@ export default function ModerationTestPage() {
         </Card>
       </div>
         {/* Changed p to div to fix HTML nesting error */}
-                  
+
     </div>
   )
 }

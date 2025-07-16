@@ -506,6 +506,11 @@ async function queueForHumanReview(
   videoUrl?: string
 ) {
   try {
+    if (!prisma) {
+      console.warn('Prisma client not available for human review queue')
+      return
+    }
+    
     await prisma.humanReviewQueue.create({
       data: {
         userId,
@@ -523,6 +528,7 @@ async function queueForHumanReview(
     })
   } catch (error) {
     console.error('Failed to queue for human review:', error)
+    // Continue processing even if queuing fails
   }
 }
 
