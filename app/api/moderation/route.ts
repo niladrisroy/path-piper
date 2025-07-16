@@ -352,35 +352,9 @@ async function performComprehensiveModeration(
 
 async function moderateImage(imageUrl: string): Promise<{riskScore: number, flags: string[], requiresHumanReview: boolean}> {
   try {
-    // This would integrate with Google Cloud Vision API, AWS Rekognition, or similar
-    // For now, implementing basic checks
     console.log(`🖼️ Moderating image: ${imageUrl}`)
 
-    // Placeholder for actual image analysis
-    // In production, you would call:
-    // - Google Cloud Vision SafeSearch
-    // - AWS Rekognition Content Moderation
-    // - Microsoft Azure Computer Vision
-    // - OpenAI's moderation API
-
-    // Example implementation structure:
-    /*
-    const response = await fetch('https://vision.googleapis.com/v1/images:annotate', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.GOOGLE_CLOUD_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        requests: [{
-          image: { source: { imageUri: imageUrl } },
-          features: [{ type: 'SAFE_SEARCH_DETECTION' }]
-        }]
-      })
-    })
-    */
-
-    // Basic file extension and size checks
+    // Basic file extension and size checks first
     const suspiciousExtensions = ['.exe', '.bat', '.cmd', '.scr', '.zip', '.rar']
     const extension = imageUrl.split('.').pop()?.toLowerCase()
 
@@ -392,10 +366,120 @@ async function moderateImage(imageUrl: string): Promise<{riskScore: number, flag
       }
     }
 
-    // For now, flag all images for human review in a child-safe environment
+    // Use Google Vision API if available
+    if (process.env.GOOGLE_VISION_API_KEY) {
+      try {
+        const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${process.env.GOOGLE_VISION_API_KEY}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            requests: [{
+              image: { source: { imageUri: imageUrl } },
+              features: [
+                { type: 'SAFE_SEARCH_DETECTION' },
+                { type: 'TEXT_DETECTION' },
+                { type: 'OBJECT_LOCALIZATION' }
+              ]
+            }]
+          })
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          const result = data.responses[0]
+          
+          let riskScore = 0
+          const flags: string[] = []
+
+          // Analyze SafeSearch results
+          if (result.safeSearchAnnotation) {
+            const safeSearch = result.safeSearchAnnotation
+            
+            const likelihoodScores = {
+              'VERY_UNLIKELY': 0,
+              'UNLIKELY': 1,
+              'POSSIBLE': 3,
+              'LIKELY': 8,
+              'VERY_LIKELY': 15
+            }
+
+            if (safeSearch.adult && likelihoodScores[safeSearch.adult] > 1) {
+              riskScore += likelihoodScores[safeSearch.adult]
+              flags.push('adult_content')
+            }
+            
+            if (safeSearch.violence && likelihoodScores[safeSearch.violence] > 1) {
+              riskScore += likelihoodScores[safeSearch.violence]
+              flags.push('violent_content')
+            }
+            
+            if (safeSearch.racy && likelihoodScores[safeSearch.racy] > 1) {
+              riskScore += likelihoodScores[safeSearch.racy]
+              flags.push('racy_content')
+            }
+
+            if (safeSearch.medical && likelihoodScores[safeSearch.medical] > 3) {
+              riskScore += 2
+              flags.push('medical_content')
+            }
+
+            if (safeSearch.spoof && likelihoodScores[safeSearch.spoof] > 3) {
+              riskScore += 3
+              flags.push('spoof_content')
+            }
+          }
+
+          // Check for concerning objects
+          if (result.localizedObjectAnnotations) {
+            const concerningObjects = ['weapon', 'gun', 'knife', 'drug', 'alcohol']
+            result.localizedObjectAnnotations.forEach((obj: any) => {
+              if (concerningObjects.some(concern => obj.name.toLowerCase().includes(concern))) {
+                riskScore += 10
+                flags.push('concerning_object')
+              }
+            })
+          }
+
+          // Check text in images using our moderation service
+          if (result.textAnnotations && result.textAnnotations.length > 0) {
+            const detectedText = result.textAnnotations[0].description
+            if (detectedText && detectedText.length > 3) {
+              // Use our existing text moderation
+              const { moderationService } = await import('@/lib/services/moderation-service')
+              const textResult = await moderationService.moderateContent(detectedText, 'system', 'image_text')
+              
+              riskScore += textResult.riskScore * 0.3 // Reduce weight for text in images
+              flags.push(...textResult.flags.map(f => `image_text_${f}`))
+            }
+          }
+
+          return {
+            riskScore: Math.round(riskScore),
+            flags,
+            requiresHumanReview: riskScore > 5 || flags.length > 0
+          }
+        }
+      } catch (visionError) {
+        console.error('Google Vision API error:', visionError)
+      }
+    }
+
+    // Fallback: AWS Rekognition if Google Vision fails
+    if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+      try {
+        // Note: This would require AWS SDK setup
+        console.log('Could integrate AWS Rekognition as fallback')
+      } catch (awsError) {
+        console.error('AWS Rekognition error:', awsError)
+      }
+    }
+
+    // Default behavior for child-safe environment
     return {
-      riskScore: 2,
-      flags: ['image_content'],
+      riskScore: 3,
+      flags: ['image_requires_review'],
       requiresHumanReview: true
     }
   } catch (error) {

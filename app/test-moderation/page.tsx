@@ -11,6 +11,62 @@ import { Shield, AlertTriangle, CheckCircle, XCircle, Clock, Flag } from "lucide
 import { toast } from "sonner"
 import ModerationHelper from "@/components/feed/moderation-helper"
 
+// API Status Component
+function APIStatusComponent() {
+  const [apiStatus, setApiStatus] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/moderation/status')
+      .then(res => res.json())
+      .then(data => {
+        setApiStatus(data)
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error('Failed to fetch API status:', err)
+        setLoading(false)
+      })
+  }, [])
+
+  if (loading) {
+    return <div className="text-center">Loading API status...</div>
+  }
+
+  if (!apiStatus) {
+    return <div className="text-center text-red-600">Failed to load API status</div>
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'online': return 'text-green-600 bg-green-100'
+      case 'error': return 'text-red-600 bg-red-100'
+      default: return 'text-gray-600 bg-gray-100'
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {Object.entries(apiStatus.apis).map(([name, api]: [string, any]) => (
+          <div key={name} className="p-3 border rounded-lg">
+            <div className="font-medium capitalize">{name.replace(/([A-Z])/g, ' $1')}</div>
+            <div className="flex items-center gap-2 mt-1">
+              <Badge className={getStatusColor(api.status)}>
+                {api.enabled ? api.status : 'disabled'}
+              </Badge>
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      <div className="text-sm text-gray-600">
+        {apiStatus.summary.totalOnline} of {apiStatus.summary.totalEnabled} enabled APIs are online
+      </div>
+    </div>
+  )
+}
+
 interface ModerationResult {
   status: 'approved' | 'pending_review' | 'flagged' | 'rejected'
   riskScore: number
@@ -580,6 +636,15 @@ export default function ModerationTestPage() {
 
         <Card className="mt-6">
           <CardHeader>
+            <CardTitle>External API Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <APIStatusComponent />
+          </CardContent>
+        </Card>
+
+        <Card className="mt-6">
+          <CardHeader>
             <CardTitle>Moderation System Links</CardTitle>
           </CardHeader>
           <CardContent>
@@ -592,6 +657,11 @@ export default function ModerationTestPage() {
               <Button asChild variant="outline">
                 <a href="/feed" target="_blank">
                   Test in Live Feed
+                </a>
+              </Button>
+              <Button asChild variant="outline">
+                <a href="/api/moderation/status" target="_blank">
+                  API Status JSON
                 </a>
               </Button>
             </div>

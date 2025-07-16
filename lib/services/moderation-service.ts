@@ -1,6 +1,22 @@
 
 import { prisma } from '@/lib/prisma'
 
+// External API Configuration
+interface ExternalModerationConfig {
+  openai: {
+    apiKey: string | undefined
+    enabled: boolean
+  }
+  googleVision: {
+    apiKey: string | undefined
+    enabled: boolean
+  }
+  perspective: {
+    apiKey: string | undefined
+    enabled: boolean
+  }
+}
+
 interface ModerationConfig {
   enableCache: boolean
   enableMLModeration: boolean
@@ -23,9 +39,24 @@ class OptimizedModerationService {
   private cache = new Map<string, { result: ModerationResult; timestamp: number }>()
   private config: ModerationConfig = {
     enableCache: true,
-    enableMLModeration: false, // Enable when ML service is ready
-    cacheExpiryMinutes: 30, // Shorter cache for more accurate results
-    fastTrackThreshold: 3 // Lower threshold for faster processing
+    enableMLModeration: true, // Now enabled with external APIs
+    cacheExpiryMinutes: 30,
+    fastTrackThreshold: 3
+  }
+
+  private externalConfig: ExternalModerationConfig = {
+    openai: {
+      apiKey: process.env.OPENAI_API_KEY,
+      enabled: !!process.env.OPENAI_API_KEY
+    },
+    googleVision: {
+      apiKey: process.env.GOOGLE_VISION_API_KEY,
+      enabled: !!process.env.GOOGLE_VISION_API_KEY
+    },
+    perspective: {
+      apiKey: process.env.PERSPECTIVE_API_KEY,
+      enabled: !!process.env.PERSPECTIVE_API_KEY
+    }
   }
 
   // Fast pattern-based moderation for low-risk content
@@ -192,6 +223,236 @@ class OptimizedModerationService {
     return hash.toString()
   }
 
+  // OpenAI Moderation API integration
+  private async moderateWithOpenAI(content: string): Promise<{riskScore: number, flags: string[], confidence: number}> {
+    if (!this.externalConfig.openai.enabled) {
+      return { riskScore: 0, flags: [], confidence: 0 }
+    }
+
+    try {
+      const response = await fetch('https://api.openai.com/v1/moderations', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.externalConfig.openai.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          input: content,
+          model: 'text-moderation-latest'
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.status}`)
+      }
+
+      const data = await response.json()
+      const result = data.results[0]
+      
+      let riskScore = 0
+      const flags: string[] = []
+
+      // Map OpenAI categories to our flags
+      const categoryMap = {
+        'hate': { flag: 'hate_speech', score: 15 },
+        'hate/threatening': { flag: 'violence_threats', score: 20 },
+        'harassment': { flag: 'bullying', score: 12 },
+        'harassment/threatening': { flag: 'violence_threats', score: 18 },
+        'self-harm': { flag: 'self_harm', score: 25 },
+        'self-harm/intent': { flag: 'self_harm', score: 30 },
+        'self-harm/instructions': { flag: 'self_harm', score: 25 },
+        'sexual': { flag: 'inappropriate_content', score: 20 },
+        'sexual/minors': { flag: 'inappropriate_content', score: 30 },
+        'violence': { flag: 'violence', score: 18 },
+        'violence/graphic': { flag: 'violence', score: 22 }
+      }
+
+      Object.entries(result.categories).forEach(([category, flagged]) => {
+        if (flagged && categoryMap[category as keyof typeof categoryMap]) {
+          const mapping = categoryMap[category as keyof typeof categoryMap]
+          flags.push(mapping.flag)
+          riskScore += mapping.score
+        }
+      })
+
+      return {
+        riskScore,
+        flags,
+        confidence: result.flagged ? 0.95 : 0.85
+      }
+    } catch (error) {
+      console.error('OpenAI moderation error:', error)
+      return { riskScore: 0, flags: [], confidence: 0 }
+    }
+  }
+
+  // Google Perspective API integration for toxicity detection
+  private async moderateWithPerspective(content: string): Promise<{riskScore: number, flags: string[], confidence: number}> {
+    if (!this.externalConfig.perspective.enabled) {
+      return { riskScore: 0, flags: [], confidence: 0 }
+    }
+
+    try {
+      const response = await fetch(`https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=${this.externalConfig.perspective.apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          requestedAttributes: {
+            TOXICITY: {},
+            SEVERE_TOXICITY: {},
+            IDENTITY_ATTACK: {},
+            INSULT: {},
+            PROFANITY: {},
+            THREAT: {},
+            SEXUALLY_EXPLICIT: {},
+            FLIRTATION: {}
+          },
+          comment: { text: content },
+          languages: ['en']
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Perspective API error: ${response.status}`)
+      }
+
+      const data = await response.json()
+      const scores = data.attributeScores
+      
+      let riskScore = 0
+      const flags: string[] = []
+
+      // Map Perspective scores to our system
+      const scoreThreshold = 0.7 // Threshold for flagging
+      
+      if (scores.TOXICITY?.summaryScore?.value > scoreThreshold) {
+        riskScore += 10
+        flags.push('toxicity')
+      }
+      
+      if (scores.SEVERE_TOXICITY?.summaryScore?.value > scoreThreshold) {
+        riskScore += 20
+        flags.push('severe_toxicity')
+      }
+      
+      if (scores.IDENTITY_ATTACK?.summaryScore?.value > scoreThreshold) {
+        riskScore += 15
+        flags.push('hate_speech')
+      }
+      
+      if (scores.THREAT?.summaryScore?.value > scoreThreshold) {
+        riskScore += 18
+        flags.push('violence_threats')
+      }
+      
+      if (scores.SEXUALLY_EXPLICIT?.summaryScore?.value > scoreThreshold) {
+        riskScore += 20
+        flags.push('inappropriate_content')
+      }
+      
+      if (scores.PROFANITY?.summaryScore?.value > scoreThreshold) {
+        riskScore += 8
+        flags.push('profanity')
+      }
+
+      return {
+        riskScore,
+        flags,
+        confidence: 0.90
+      }
+    } catch (error) {
+      console.error('Perspective API error:', error)
+      return { riskScore: 0, flags: [], confidence: 0 }
+    }
+  }
+
+  // Google Vision API for image moderation
+  private async moderateImageWithVision(imageUrl: string): Promise<{riskScore: number, flags: string[], confidence: number}> {
+    if (!this.externalConfig.googleVision.enabled) {
+      return { riskScore: 0, flags: [], confidence: 0 }
+    }
+
+    try {
+      const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${this.externalConfig.googleVision.apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          requests: [{
+            image: {
+              source: { imageUri: imageUrl }
+            },
+            features: [
+              { type: 'SAFE_SEARCH_DETECTION' },
+              { type: 'TEXT_DETECTION' }
+            ]
+          }]
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Google Vision API error: ${response.status}`)
+      }
+
+      const data = await response.json()
+      const result = data.responses[0]
+      
+      let riskScore = 0
+      const flags: string[] = []
+
+      // Check SafeSearch results
+      if (result.safeSearchAnnotation) {
+        const safeSearch = result.safeSearchAnnotation
+        
+        // Map likelihood levels to risk scores
+        const likelihoodScores = {
+          'VERY_UNLIKELY': 0,
+          'UNLIKELY': 1,
+          'POSSIBLE': 3,
+          'LIKELY': 8,
+          'VERY_LIKELY': 15
+        }
+
+        if (safeSearch.adult && likelihoodScores[safeSearch.adult] > 3) {
+          riskScore += likelihoodScores[safeSearch.adult]
+          flags.push('inappropriate_content')
+        }
+        
+        if (safeSearch.violence && likelihoodScores[safeSearch.violence] > 3) {
+          riskScore += likelihoodScores[safeSearch.violence]
+          flags.push('violence')
+        }
+        
+        if (safeSearch.racy && likelihoodScores[safeSearch.racy] > 3) {
+          riskScore += likelihoodScores[safeSearch.racy]
+          flags.push('inappropriate_content')
+        }
+      }
+
+      // Check for text in images and moderate that too
+      if (result.textAnnotations && result.textAnnotations.length > 0) {
+        const detectedText = result.textAnnotations[0].description
+        if (detectedText) {
+          const textModeration = await this.moderateWithOpenAI(detectedText)
+          riskScore += textModeration.riskScore * 0.5 // Reduce weight for text in images
+          flags.push(...textModeration.flags.map(f => `image_text_${f}`))
+        }
+      }
+
+      return {
+        riskScore,
+        flags,
+        confidence: 0.90
+      }
+    } catch (error) {
+      console.error('Google Vision API error:', error)
+      return { riskScore: 0, flags: [], confidence: 0 }
+    }
+  }
+
   // Main moderation method
   async moderateContent(content: string, userId: string, type: string): Promise<ModerationResult> {
     // Check cache first
@@ -208,8 +469,55 @@ class OptimizedModerationService {
       return fastResult
     }
 
-    // Fall back to comprehensive moderation
-    const result = await this.comprehensiveModeration(content)
+    // Use comprehensive moderation with external APIs
+    let result = await this.comprehensiveModeration(content)
+
+    // Enhance with external APIs if enabled
+    if (this.config.enableMLModeration) {
+      const [openaiResult, perspectiveResult] = await Promise.all([
+        this.moderateWithOpenAI(content),
+        this.moderateWithPerspective(content)
+      ])
+
+      // Combine results from different APIs
+      const combinedRiskScore = result.riskScore + 
+        (openaiResult.riskScore * 0.4) + 
+        (perspectiveResult.riskScore * 0.3)
+
+      const combinedFlags = [
+        ...result.flags,
+        ...openaiResult.flags.map(f => `openai_${f}`),
+        ...perspectiveResult.flags.map(f => `perspective_${f}`)
+      ]
+
+      const avgConfidence = (result.confidence + openaiResult.confidence + perspectiveResult.confidence) / 3
+
+      // Update status based on enhanced scoring
+      let status: ModerationResult['status'] = result.status
+      let requiresHumanReview = result.requiresHumanReview
+
+      if (combinedRiskScore >= 25 || combinedFlags.some(f => f.includes('self_harm'))) {
+        status = 'rejected'
+        requiresHumanReview = true
+      } else if (combinedRiskScore >= 15) {
+        status = 'pending_review'
+        requiresHumanReview = true
+      } else if (combinedRiskScore >= 5) {
+        status = 'flagged'
+      } else {
+        status = 'approved'
+      }
+
+      result = {
+        ...result,
+        status,
+        riskScore: Math.round(combinedRiskScore),
+        flags: [...new Set(combinedFlags)],
+        confidence: avgConfidence,
+        requiresHumanReview
+      }
+    }
+
     this.setCachedResult(content, result)
     await this.logModerationResult(userId, type, content, result)
     
