@@ -347,12 +347,15 @@ export default function ParentChildProfilePage() {
   const handleCircleDisable = (circleId: string, disableType: 'child' | 'all') => {
     const circle = circles.find(c => c.id === circleId);
     if (circle) {
-      setCircleDisableConfirmation({
-        isOpen: true,
-        circleId,
-        circleName: circle.name,
-        disableType
-      });
+      // Use setTimeout to ensure the options dialog closes before the confirmation dialog opens
+      setTimeout(() => {
+        setCircleDisableConfirmation({
+          isOpen: true,
+          circleId,
+          circleName: circle.name,
+          disableType
+        });
+      }, 100);
     }
   };
 
@@ -1038,7 +1041,7 @@ export default function ParentChildProfilePage() {
                                       Enable/Disable
                                     </Button>
                                   </DialogTrigger>
-                                  <DialogContent className="sm:max-w-[425px]">
+                                  <DialogContent className="sm:max-w-[500px] max-w-[90vw]">
                                     <DialogHeader>
                                       <DialogTitle>Circle Control - {circle.name}</DialogTitle>
                                       <DialogDescription>
@@ -1049,14 +1052,14 @@ export default function ParentChildProfilePage() {
                                       <div className="space-y-3">
                                         <Button
                                           variant="outline"
-                                          className="w-full justify-start text-left h-auto p-4"
+                                          className="w-full justify-start text-left h-auto p-4 min-h-[80px]"
                                           onClick={() => handleCircleDisable(circle.id, 'child')}
                                         >
-                                          <div>
-                                            <div className="font-medium text-orange-600">
+                                          <div className="w-full">
+                                            <div className="font-medium text-orange-600 mb-2">
                                               Disable for only my child
                                             </div>
-                                            <div className="text-sm text-gray-500 mt-1">
+                                            <div className="text-sm text-gray-500 leading-relaxed">
                                               Your child will be removed from this circle, but other members can continue using it.
                                             </div>
                                           </div>
@@ -1064,14 +1067,14 @@ export default function ParentChildProfilePage() {
 
                                         <Button
                                           variant="outline"
-                                          className="w-full justify-start text-left h-auto p-4"
+                                          className="w-full justify-start text-left h-auto p-4 min-h-[80px]"
                                           onClick={() => handleCircleDisable(circle.id, 'all')}
                                         >
-                                          <div>
-                                            <div className="font-medium text-red-600">
+                                          <div className="w-full">
+                                            <div className="font-medium text-red-600 mb-2">
                                               Disable for all members
                                             </div>
-                                            <div className="text-sm text-gray-500 mt-1">
+                                            <div className="text-sm text-gray-500 leading-relaxed">
                                               This entire circle will be disabled for all members. This action affects everyone in the circle.
                                             </div>
                                           </div>
@@ -1313,7 +1316,7 @@ export default function ParentChildProfilePage() {
 
       {/* Circle Disable Confirmation Dialog */}
       {circleDisableConfirmation && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <div className="flex items-center space-x-3 mb-4">
               <div className="flex-shrink-0 w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
