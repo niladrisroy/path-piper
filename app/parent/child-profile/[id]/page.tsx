@@ -156,6 +156,22 @@ export default function ParentChildProfilePage() {
   } | null>(null)
   const [isDisablingCircle, setIsDisablingCircle] = useState(false)
   const [optionsDialogOpen, setOptionsDialogOpen] = useState(false)
+  const [currentCircleStatus, setCurrentCircleStatus] = useState<{
+    circleId: string | null
+    isDisabled: boolean
+    disableType: 'child' | 'all' | null
+  }>({
+    circleId: null,
+    isDisabled: false,
+    disableType: null
+  })
+  const [revokeConfirmation, setRevokeConfirmation] = useState<{
+    isOpen: boolean
+    circleId: string
+    circleName: string
+    disableType: 'child' | 'all'
+  } | null>(null)
+  const [isRevokingCircle, setIsRevokingCircle] = useState(false)
 
   useEffect(() => {
     fetchChildProfile()
@@ -357,6 +373,48 @@ export default function ParentChildProfilePage() {
     }
   };
 
+  const checkCircleStatus = (circle: any) => {
+    // Check if circle is disabled for all members
+    if (circle.isDisabled) {
+      return {
+        isDisabled: true,
+        disableType: 'all' as const
+      };
+    }
+
+    // Check if child is creator and is disabled
+    if (circle.creatorId === childId && circle.isCreatorDisabled) {
+      return {
+        isDisabled: true,
+        disableType: 'child' as const
+      };
+    }
+
+    // Check if child is a member and is disabled
+    const childMembership = circle.memberships?.find((m: any) => m.userId === childId);
+    if (childMembership?.isDisabledMember) {
+      return {
+        isDisabled: true,
+        disableType: 'child' as const
+      };
+    }
+
+    return {
+      isDisabled: false,
+      disableType: null
+    };
+  };
+
+  const handleOptionsDialogOpen = (circle: any) => {
+    const status = checkCircleStatus(circle);
+    setCurrentCircleStatus({
+      circleId: circle.id,
+      isDisabled: status.isDisabled,
+      disableType: status.disableType
+    });
+    setOptionsDialogOpen(true);
+  };
+
   const confirmCircleDisable = async () => {
     if (!circleDisableConfirmation) return;
 
@@ -388,6 +446,59 @@ export default function ParentChildProfilePage() {
     } finally {
       setIsDisablingCircle(false);
       setCircleDisableConfirmation(null);
+    }
+  };
+
+  const handleRevokeDisable = (circle: any) => {
+    const status = checkCircleStatus(circle);
+    if (status.isDisabled && status.disableType) {
+      setRevokeConfirmation({
+        isOpen: true,
+        circleId: circle.id,
+        circleName: circle.name,
+        disableType: status.disableType
+      });
+    }
+  };
+
+  const confirmRevokeDisable = async () => {
+    if (!revokeConfirmation) return;
+
+    setIsRevokingCircle(true);
+    try {
+      const response = await fetch(`/api/parent/child-profile/${childId}/circles/revoke`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          circleId: revokeConfirmation.circleId,
+          disableType: revokeConfirmation.disableType
+        })
+      });
+
+      if (response.ok) {
+        toast.success(`Circle access restored successfully!`);
+        // Refresh the circles data
+        await fetchChildCircles();
+        // Close options dialog and reset state
+        setOptionsDialogOpen(false);
+        setCurrentCircleStatus({
+          circleId: null,
+          isDisabled: false,
+          disableType: null
+        });
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Failed to restore circle access');
+      }
+    } catch (error) {
+      console.error('Error restoring circle access:', error);
+      toast.error('Failed to restore circle access');
+    } finally {
+      setIsRevokingCircle(false);
+      setRevokeConfirmation(null);
     }
   };
 
@@ -1034,6 +1145,7 @@ export default function ParentChildProfilePage() {
                                       variant="outline" 
                                       size="sm"
                                       className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                                      onClick={() => handleOptionsDialogOpen(circle)}
                                     >
                                       <Settings className="w-4 h-4 mr-1" />
                                       Enable/Disable
@@ -1047,43 +1159,74 @@ export default function ParentChildProfilePage() {
                                       </DialogDescription>
                                     </DialogHeader>
                                     <div className="space-y-4 py-4">
-                                      <div className="space-y-3">
-                                        <Button
-                                          variant="outline"
-                                          className="w-full justify-start text-left h-auto p-3 min-h-[70px] overflow-hidden"
-                                          onClick={() => {
-                                            setOptionsDialogOpen(false);
-                                            handleCircleDisable(circle.id, 'child');
-                                          }}
-                                        >
-                                          <div className="w-full overflow-hidden">
-                                            <div className="font-medium text-orange-600 mb-1 text-sm">
-                                              Disable for only my child
+                                      {currentCircleStatus.isDisabled ? (
+                                        // Show current status and revoke option
+                                        <div className="space-y-4">
+                                          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                            <div className="text-sm font-medium text-blue-800 mb-1">
+                                              Current Status: {currentCircleStatus.disableType === 'all' ? 'Disabled for all members' : 'Disabled for your child'}
                                             </div>
-                                            <div className="text-xs text-gray-500 leading-relaxed break-words">
-                                              Your child will be removed from this circle, but other members can continue using it.
+                                            <div className="text-xs text-blue-600">
+                                              {currentCircleStatus.disableType === 'all' 
+                                                ? 'This circle is currently disabled for all members.'
+                                                : 'Your child is currently removed from this circle.'}
                                             </div>
                                           </div>
-                                        </Button>
+                                          
+                                          <Button
+                                            variant="outline"
+                                            className="w-full bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+                                            onClick={() => {
+                                              setOptionsDialogOpen(false);
+                                              handleRevokeDisable(circle);
+                                            }}
+                                          >
+                                            <div className="flex items-center justify-center">
+                                              <Settings className="w-4 h-4 mr-2" />
+                                              Revoke & Restore Access
+                                            </div>
+                                          </Button>
+                                        </div>
+                                      ) : (
+                                        // Show disable options
+                                        <div className="space-y-3">
+                                          <Button
+                                            variant="outline"
+                                            className="w-full justify-start text-left h-auto p-3 min-h-[70px] overflow-hidden"
+                                            onClick={() => {
+                                              setOptionsDialogOpen(false);
+                                              handleCircleDisable(circle.id, 'child');
+                                            }}
+                                          >
+                                            <div className="w-full overflow-hidden">
+                                              <div className="font-medium text-orange-600 mb-1 text-sm">
+                                                Disable for only my child
+                                              </div>
+                                              <div className="text-xs text-gray-500 leading-relaxed break-words">
+                                                Your child will be removed from this circle, but other members can continue using it.
+                                              </div>
+                                            </div>
+                                          </Button>
 
-                                        <Button
-                                          variant="outline"
-                                          className="w-full justify-start text-left h-auto p-3 min-h-[70px] overflow-hidden"
-                                          onClick={() => {
-                                            setOptionsDialogOpen(false);
-                                            handleCircleDisable(circle.id, 'all');
-                                          }}
-                                        >
-                                          <div className="w-full overflow-hidden">
-                                            <div className="font-medium text-red-600 mb-1 text-sm">
-                                              Disable for all members
+                                          <Button
+                                            variant="outline"
+                                            className="w-full justify-start text-left h-auto p-3 min-h-[70px] overflow-hidden"
+                                            onClick={() => {
+                                              setOptionsDialogOpen(false);
+                                              handleCircleDisable(circle.id, 'all');
+                                            }}
+                                          >
+                                            <div className="w-full overflow-hidden">
+                                              <div className="font-medium text-red-600 mb-1 text-sm">
+                                                Disable for all members
+                                              </div>
+                                              <div className="text-xs text-gray-500 leading-relaxed break-words">
+                                                This entire circle will be disabled for all members. This action affects everyone in the circle.
+                                              </div>
                                             </div>
-                                            <div className="text-xs text-gray-500 leading-relaxed break-words">
-                                              This entire circle will be disabled for all members. This action affects everyone in the circle.
-                                            </div>
-                                          </div>
-                                        </Button>
-                                      </div>
+                                          </Button>
+                                        </div>
+                                      )}
                                     </div>
                                   </DialogContent>
                                 </Dialog>
@@ -1389,6 +1532,71 @@ export default function ParentChildProfilePage() {
                   <>
                     <Settings className="w-4 h-4 mr-2" />
                     Confirm
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Revoke Confirmation Dialog */}
+      {revokeConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <Settings className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Confirm Restore Access
+                </h3>
+                <p className="text-sm text-gray-600">
+                  This will restore circle access.
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-gray-700 mb-2">
+                You are about to <span className="font-medium text-green-700">restore access</span> to:
+              </p>
+              <p className="font-medium text-gray-900">
+                "{revokeConfirmation.circleName}"
+              </p>
+
+              <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm text-green-700">
+                  {revokeConfirmation.disableType === 'all' 
+                    ? 'This will re-enable the circle for all members.'
+                    : 'This will restore your child\'s access to this circle.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <Button
+                variant="outline"
+                onClick={() => setRevokeConfirmation(null)}
+                disabled={isRevokingCircle}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmRevokeDisable}
+                disabled={isRevokingCircle}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                {isRevokingCircle ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Restoring...
+                  </>
+                ) : (
+                  <>
+                    <Settings className="w-4 h-4 mr-2" />
+                    Confirm Restore
                   </>
                 )}
               </Button>
