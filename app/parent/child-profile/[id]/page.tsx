@@ -155,6 +155,7 @@ export default function ParentChildProfilePage() {
     disableType: 'child' | 'all'
   } | null>(null)
   const [isDisablingCircle, setIsDisablingCircle] = useState(false)
+  const [optionsDialogOpen, setOptionsDialogOpen] = useState(false)
 
   useEffect(() => {
     fetchChildProfile()
@@ -347,15 +348,12 @@ export default function ParentChildProfilePage() {
   const handleCircleDisable = (circleId: string, disableType: 'child' | 'all') => {
     const circle = circles.find(c => c.id === circleId);
     if (circle) {
-      // Use setTimeout to ensure the options dialog closes before the confirmation dialog opens
-      setTimeout(() => {
-        setCircleDisableConfirmation({
-          isOpen: true,
-          circleId,
-          circleName: circle.name,
-          disableType
-        });
-      }, 100);
+      setCircleDisableConfirmation({
+        isOpen: true,
+        circleId,
+        circleName: circle.name,
+        disableType
+      });
     }
   };
 
@@ -1030,7 +1028,7 @@ export default function ParentChildProfilePage() {
                                   View Members
                                 </Button>
 
-                                <Dialog>
+                                <Dialog open={optionsDialogOpen} onOpenChange={setOptionsDialogOpen}>
                                   <DialogTrigger asChild>
                                     <Button 
                                       variant="outline" 
@@ -1053,7 +1051,10 @@ export default function ParentChildProfilePage() {
                                         <Button
                                           variant="outline"
                                           className="w-full justify-start text-left h-auto p-4 min-h-[80px]"
-                                          onClick={() => handleCircleDisable(circle.id, 'child')}
+                                          onClick={() => {
+                                            setOptionsDialogOpen(false);
+                                            handleCircleDisable(circle.id, 'child');
+                                          }}
                                         >
                                           <div className="w-full">
                                             <div className="font-medium text-orange-600 mb-2">
@@ -1068,7 +1069,10 @@ export default function ParentChildProfilePage() {
                                         <Button
                                           variant="outline"
                                           className="w-full justify-start text-left h-auto p-4 min-h-[80px]"
-                                          onClick={() => handleCircleDisable(circle.id, 'all')}
+                                          onClick={() => {
+                                            setOptionsDialogOpen(false);
+                                            handleCircleDisable(circle.id, 'all');
+                                          }}
                                         >
                                           <div className="w-full">
                                             <div className="font-medium text-red-600 mb-2">
