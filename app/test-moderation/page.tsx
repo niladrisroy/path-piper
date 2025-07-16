@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from 'react'
@@ -99,7 +100,7 @@ export default function ModerationTestPage() {
       const result = data.moderation as ModerationResult
 
       setModerationResult(result)
-      setTestHistory(prev => [...prev, { content, result }].slice(-10)) // Keep last 10 tests
+      setTestHistory(prev => [...prev, { content, result }].slice(-10))
 
       if (result.status === 'rejected') {
         toast.error("Content rejected - violates safety guidelines")
@@ -125,7 +126,6 @@ export default function ModerationTestPage() {
 
     const allTestCases = []
 
-    // Collect all test cases
     Object.entries(TEST_SCENARIOS).forEach(([category, examples]) => {
       examples.forEach(example => {
         allTestCases.push({ content: example, category })
@@ -176,14 +176,12 @@ export default function ModerationTestPage() {
         })
       }
 
-      // Add a small delay to avoid overwhelming the server
       await new Promise(resolve => setTimeout(resolve, 100))
     }
 
     setAllTestResults(results)
     setIsRunningAllTests(false)
 
-    // Show summary
     const errorCount = results.filter(r => r.error).length
     const successCount = results.filter(r => !r.error).length
 
@@ -253,7 +251,6 @@ export default function ModerationTestPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Test Input */}
           <Card>
             <CardHeader>
               <CardTitle>Test Content</CardTitle>
@@ -307,7 +304,6 @@ export default function ModerationTestPage() {
             </CardContent>
           </Card>
 
-          {/* Results */}
           <Card>
             <CardHeader>
               <CardTitle>Moderation Result</CardTitle>
@@ -352,8 +348,9 @@ export default function ModerationTestPage() {
                         {moderationResult.suggestions.map((suggestion, index) => (
                           <li key={index}>{suggestion}</li>
                         ))}
-                      </div>
-                    )}
+                      </ul>
+                    </div>
+                  )}
 
                   {moderationResult.safeAlternatives && moderationResult.safeAlternatives.length > 0 && (
                     <div>
@@ -381,7 +378,6 @@ export default function ModerationTestPage() {
           </Card>
         </div>
 
-        {/* Test Scenarios */}
         <Card className="mt-6">
           <CardHeader>
             <CardTitle>Pre-built Test Scenarios</CardTitle>
@@ -418,7 +414,6 @@ export default function ModerationTestPage() {
           </CardContent>
         </Card>
 
-        {/* Comprehensive Test Results */}
         {allTestResults.length > 0 && (
           <Card className="mt-6">
             <CardHeader>
@@ -562,7 +557,6 @@ export default function ModerationTestPage() {
           </Card>
         )}
 
-        {/* Test History */}
         {testHistory.length > 0 && (
           <Card className="mt-6">
             <CardHeader>
@@ -589,7 +583,6 @@ export default function ModerationTestPage() {
           </Card>
         )}
 
-        {/* Quick Links */}
         <Card className="mt-6">
           <CardHeader>
             <CardTitle>Moderation System Links</CardTitle>
