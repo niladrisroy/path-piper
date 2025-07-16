@@ -1039,10 +1039,10 @@ export default function ParentChildProfilePage() {
                                       Enable/Disable
                                     </Button>
                                   </DialogTrigger>
-                                  <DialogContent className="sm:max-w-[500px] max-w-[90vw]">
+                                  <DialogContent className="sm:max-w-[600px] max-w-[95vw] w-full">
                                     <DialogHeader>
-                                      <DialogTitle>Circle Control - {circle.name}</DialogTitle>
-                                      <DialogDescription>
+                                      <DialogTitle className="text-lg">Circle Control - {circle.name}</DialogTitle>
+                                      <DialogDescription className="text-sm">
                                         Choose how you want to disable this circle for your child.
                                       </DialogDescription>
                                     </DialogHeader>
@@ -1050,17 +1050,17 @@ export default function ParentChildProfilePage() {
                                       <div className="space-y-3">
                                         <Button
                                           variant="outline"
-                                          className="w-full justify-start text-left h-auto p-4 min-h-[80px]"
+                                          className="w-full justify-start text-left h-auto p-3 min-h-[70px] overflow-hidden"
                                           onClick={() => {
                                             setOptionsDialogOpen(false);
                                             handleCircleDisable(circle.id, 'child');
                                           }}
                                         >
-                                          <div className="w-full">
-                                            <div className="font-medium text-orange-600 mb-2">
+                                          <div className="w-full overflow-hidden">
+                                            <div className="font-medium text-orange-600 mb-1 text-sm">
                                               Disable for only my child
                                             </div>
-                                            <div className="text-sm text-gray-500 leading-relaxed">
+                                            <div className="text-xs text-gray-500 leading-relaxed break-words">
                                               Your child will be removed from this circle, but other members can continue using it.
                                             </div>
                                           </div>
@@ -1068,17 +1068,17 @@ export default function ParentChildProfilePage() {
 
                                         <Button
                                           variant="outline"
-                                          className="w-full justify-start text-left h-auto p-4 min-h-[80px]"
+                                          className="w-full justify-start text-left h-auto p-3 min-h-[70px] overflow-hidden"
                                           onClick={() => {
                                             setOptionsDialogOpen(false);
                                             handleCircleDisable(circle.id, 'all');
                                           }}
                                         >
-                                          <div className="w-full">
-                                            <div className="font-medium text-red-600 mb-2">
+                                          <div className="w-full overflow-hidden">
+                                            <div className="font-medium text-red-600 mb-1 text-sm">
                                               Disable for all members
                                             </div>
-                                            <div className="text-sm text-gray-500 leading-relaxed">
+                                            <div className="text-xs text-gray-500 leading-relaxed break-words">
                                               This entire circle will be disabled for all members. This action affects everyone in the circle.
                                             </div>
                                           </div>
