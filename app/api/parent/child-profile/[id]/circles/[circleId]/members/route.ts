@@ -1,50 +1,42 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string; circleId: string } }
+  { params }: { params: Promise<{ id: string; circleId: string }> }
 ) {
   try {
-    const childId = params.id
-    const circleId = params.circleId
+    const resolvedParams = await params
+    const childId = resolvedParams.id
+    const circleId = resolvedParams.circleId
     
     console.log('🔍 Parent requesting circle members for child:', childId, 'circle:', circleId)
 
-    // Get parent session from cookies
-    const cookieStore = request.cookies
-    const sessionData = cookieStore.get('parent-session')?.value
+    // Get parent authentication from cookies
+    const cookieStore = request.headers.get('cookie') || ''
+    const cookies = Object.fromEntries(
+      cookieStore.split(';').map(cookie => {
+        const [name, ...rest] = cookie.trim().split('=')
+        return [name, decodeURIComponent(rest.join('='))]
+      })
+    )
 
-    if (!sessionData) {
+    const parentId = cookies['parent_id']
+    const parentSession = cookies['parent_session']
+
+    console.log('🔍 Auth cookies:', { parentId: !!parentId, parentSession: !!parentSession })
+
+    if (!parentId || !parentSession) {
       console.log('❌ No parent session found')
       return NextResponse.json(
-        { success: false, error: 'Parent not authenticated' },
+        { success: false, error: 'Authentication required' },
         { status: 401 }
       )
     }
 
-    let parentData
-    try {
-      parentData = JSON.parse(sessionData)
-    } catch (error) {
-      console.log('❌ Invalid parent session data')
-      return NextResponse.json(
-        { success: false, error: 'Invalid session' },
-        { status: 401 }
-      )
-    }
-
-    const parentId = parentData.id
-
-    // Verify the child belongs to this parent
-    const childProfile = await prisma.profile.findFirst({
+    // Verify parent-child relationship
+    const child = await prisma.profile.findFirst({
       where: {
         id: childId,
         parentId: parentId,
@@ -52,21 +44,60 @@ export async function GET(
       }
     })
 
-    if (!childProfile) {
-      console.log('❌ Child not found or not associated with this parent')
+    if (!child) {
+      console.log('❌ Child not found or not authorized')
       return NextResponse.json(
-        { success: false, error: 'Child profile not found or access denied' },
+        { success: false, error: 'Child not found or not authorized' },
         { status: 403 }
       )
     }
 
-    console.log('✅ Parent verified, fetching circle members')
-
-    // Get the circle with all members
+    // Get circle information
     const circle = await prisma.circleBadge.findUnique({
       where: { id: circleId },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        color: true,
+        icon: true,
+        creatorId: true
+      }
+    })
+
+    if (!circle) {
+      console.log('❌ Circle not found')
+      return NextResponse.json(
+        { success: false, error: 'Circle not found' },
+        { status: 404 }
+      )
+    }
+
+    // Check if child has access to this circle (either creator or member)
+    const hasAccess = circle.creatorId === childId || await prisma.circleMembership.findFirst({
+      where: {
+        circleId: circleId,
+        userId: childId,
+        status: 'active'
+      }
+    })
+
+    if (!hasAccess) {
+      console.log('❌ Child does not have access to this circle')
+      return NextResponse.json(
+        { success: false, error: 'Child does not have access to this circle' },
+        { status: 403 }
+      )
+    }
+
+    // Get all active members of the circle
+    const memberships = await prisma.circleMembership.findMany({
+      where: {
+        circleId: circleId,
+        status: 'active'
+      },
       include: {
-        creator: {
+        user: {
           select: {
             id: true,
             firstName: true,
@@ -74,64 +105,52 @@ export async function GET(
             profileImageUrl: true,
             role: true
           }
-        },
-        memberships: {
-          where: {
-            status: 'active'
-          },
-          include: {
-            user: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                profileImageUrl: true,
-                role: true,
-                bio: true
-              }
-            }
-          }
         }
       }
     })
 
-    if (!circle) {
-      return NextResponse.json(
-        { success: false, error: 'Circle not found' },
-        { status: 404 }
-      )
-    }
+    // Get circle creator info
+    const creator = await prisma.profile.findUnique({
+      where: { id: circle.creatorId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        profileImageUrl: true,
+        role: true
+      }
+    })
 
-    // Combine creator and members into a single array
+    // Combine creator and members
     const allMembers = []
-
+    
     // Add creator first
-    if (circle.creator) {
+    if (creator) {
       allMembers.push({
-        id: circle.creator.id,
-        firstName: circle.creator.firstName,
-        lastName: circle.creator.lastName,
-        profileImageUrl: circle.creator.profileImageUrl,
-        role: 'creator',
-        bio: null,
+        id: creator.id,
+        firstName: creator.firstName,
+        lastName: creator.lastName,
+        profileImageUrl: creator.profileImageUrl,
+        role: creator.role,
         isCreator: true
       })
     }
 
     // Add other members
-    circle.memberships.forEach(membership => {
-      allMembers.push({
-        id: membership.user.id,
-        firstName: membership.user.firstName,
-        lastName: membership.user.lastName,
-        profileImageUrl: membership.user.profileImageUrl,
-        role: membership.user.role,
-        bio: membership.user.bio,
-        isCreator: false
-      })
+    memberships.forEach(membership => {
+      if (membership.user.id !== circle.creatorId) {
+        allMembers.push({
+          id: membership.user.id,
+          firstName: membership.user.firstName,
+          lastName: membership.user.lastName,
+          profileImageUrl: membership.user.profileImageUrl,
+          role: membership.user.role,
+          isCreator: false
+        })
+      }
     })
 
-    console.log('✅ Returning', allMembers.length, 'members for circle:', circle.name)
+    console.log('✅ Circle members fetched successfully:', allMembers.length)
 
     return NextResponse.json({
       success: true,
@@ -146,7 +165,7 @@ export async function GET(
     })
 
   } catch (error) {
-    console.error('❌ Error fetching circle members:', error)
+    console.error('Error fetching circle members:', error)
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
