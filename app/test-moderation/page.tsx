@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from 'react'
@@ -71,7 +70,7 @@ export default function ModerationTestPage() {
 
     setIsLoading(true)
     console.log('Testing moderation for content:', content)
-    
+
     try {
       const response = await fetch('/api/moderation', {
         method: 'POST',
@@ -85,23 +84,23 @@ export default function ModerationTestPage() {
       })
 
       console.log('Moderation API response status:', response.status)
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
 
       const data = await response.json()
       console.log('Moderation API response data:', data)
-      
+
       if (!data.moderation) {
         throw new Error('No moderation data in response')
       }
 
       const result = data.moderation as ModerationResult
-      
+
       setModerationResult(result)
       setTestHistory(prev => [...prev, { content, result }].slice(-10)) // Keep last 10 tests
-      
+
       if (result.status === 'rejected') {
         toast.error("Content rejected - violates safety guidelines")
       } else if (result.status === 'pending_review') {
@@ -123,9 +122,9 @@ export default function ModerationTestPage() {
   const runAllTests = async () => {
     setIsRunningAllTests(true)
     setAllTestResults([])
-    
+
     const allTestCases = []
-    
+
     // Collect all test cases
     Object.entries(TEST_SCENARIOS).forEach(([category, examples]) => {
       examples.forEach(example => {
@@ -134,11 +133,11 @@ export default function ModerationTestPage() {
     })
 
     const results = []
-    
+
     for (const testCase of allTestCases) {
       try {
         console.log(`Testing: ${testCase.content}`)
-        
+
         const response = await fetch('/api/moderation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -155,7 +154,7 @@ export default function ModerationTestPage() {
         }
 
         const data = await response.json()
-        
+
         if (!data.moderation) {
           throw new Error('No moderation data in response')
         }
@@ -165,9 +164,9 @@ export default function ModerationTestPage() {
           result: data.moderation,
           category: testCase.category
         })
-        
+
         console.log(`✅ Test passed for: ${testCase.content.substring(0, 50)}...`)
-        
+
       } catch (error) {
         console.error(`❌ Test failed for: ${testCase.content}`, error)
         results.push({
@@ -176,18 +175,18 @@ export default function ModerationTestPage() {
           category: testCase.category
         })
       }
-      
+
       // Add a small delay to avoid overwhelming the server
       await new Promise(resolve => setTimeout(resolve, 100))
     }
-    
+
     setAllTestResults(results)
     setIsRunningAllTests(false)
-    
+
     // Show summary
     const errorCount = results.filter(r => r.error).length
     const successCount = results.filter(r => !r.error).length
-    
+
     if (errorCount > 0) {
       toast.error(`Tests completed: ${successCount} passed, ${errorCount} failed`)
     } else {
@@ -266,7 +265,7 @@ export default function ModerationTestPage() {
                 placeholder="Enter content to test moderation..."
                 className="min-h-[120px]"
               />
-              
+
               <div className="flex gap-2">
                 <Button 
                   onClick={() => {
@@ -278,7 +277,7 @@ export default function ModerationTestPage() {
                 >
                   {isLoading ? "Testing..." : "Test Moderation"}
                 </Button>
-                
+
                 <Button 
                   onClick={runAllTests}
                   disabled={isRunningAllTests}
@@ -286,7 +285,7 @@ export default function ModerationTestPage() {
                 >
                   {isRunningAllTests ? "Running All Tests..." : "🔥 Test All Scenarios"}
                 </Button>
-                
+
                 <Button 
                   variant="outline"
                   onClick={() => setShowHelper(true)}
@@ -294,7 +293,7 @@ export default function ModerationTestPage() {
                 >
                   Get Suggestions
                 </Button>
-                
+
                 <Button 
                   variant="outline"
                   onClick={() => {
@@ -440,7 +439,7 @@ export default function ModerationTestPage() {
                   <TabsTrigger value="all">All Results</TabsTrigger>
                   <TabsTrigger value="summary">Summary</TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="errors" className="space-y-3">
                   {allTestResults.filter(r => r.error).length === 0 ? (
                     <div className="text-center py-8 text-green-600">
@@ -470,7 +469,7 @@ export default function ModerationTestPage() {
                     ))
                   )}
                 </TabsContent>
-                
+
                 <TabsContent value="all" className="space-y-3">
                   {allTestResults.map((test, index) => (
                     <div key={index} className={`p-3 border rounded ${test.error ? 'border-red-200 bg-red-50' : 'border-gray-200'}`}>
@@ -504,7 +503,7 @@ export default function ModerationTestPage() {
                     </div>
                   ))}
                 </TabsContent>
-                
+
                 <TabsContent value="summary" className="space-y-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="text-center p-4 bg-green-50 rounded-lg">
@@ -532,14 +531,14 @@ export default function ModerationTestPage() {
                       <div className="text-sm text-purple-700">Categories</div>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-3">
                     <h4 className="font-medium">Results by Category:</h4>
                     {Object.keys(TEST_SCENARIOS).map(category => {
                       const categoryResults = allTestResults.filter(r => r.category === category)
                       const errorCount = categoryResults.filter(r => r.error).length
                       const successCount = categoryResults.filter(r => !r.error).length
-                      
+
                       return (
                         <div key={category} className="flex items-center justify-between p-3 bg-gray-50 rounded">
                           <span className="font-medium capitalize">{category.replace('_', ' ')}</span>
