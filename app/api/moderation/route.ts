@@ -50,36 +50,28 @@ export async function POST(request: NextRequest) {
   try {
     console.log('📝 Moderation API endpoint called')
     const body = await request.json()
-    console.log('📝 Moderation request received:', {
-      content: body.content?.substring(0, 100),
-      type: body.type,
-      userId: body.userId,
-      bodyKeys: Object.keys(body)
-    })
+    const startTime = Date.now()
 
     const cookieStore = request.cookies
     const accessToken = cookieStore.get('sb-access-token')?.value
 
     if (!accessToken) {
-      console.warn('Unauthorized: No access token found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { data: { user }, error } = await supabase.auth.getUser(accessToken)
 
     if (error || !user) {
-      console.error('Unauthorized: Supabase user error', error)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { content, type, userId, imageUrl, videoUrl } = body
 
     if (!content || !type || !userId) {
-      console.warn('Bad Request: Missing required fields')
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Only moderate posts, not chats, profiles, or messages
+    // Only moderate posts and comments for performance
     if (type !== 'post' && type !== 'comment') {
       return NextResponse.json({ 
         success: true, 
@@ -87,20 +79,32 @@ export async function POST(request: NextRequest) {
           status: 'approved', 
           riskScore: 0, 
           flags: [], 
-          requiresHumanReview: false 
+          requiresHumanReview: false,
+          processingTime: Date.now() - startTime
         } 
       })
     }
 
-    const result = await performComprehensiveModeration(content, type, userId, imageUrl, videoUrl)
+    // Use optimized moderation service
+    const { moderationService } = await import('@/lib/services/moderation-service')
+    const result = await moderationService.moderateContent(content, userId, type)
 
-    // Log moderation decision
-    await logModerationDecision(userId, type, content, result, imageUrl, videoUrl)
+    // Handle image/video moderation if needed
+    if (imageUrl) {
+      const imageResult = await moderateImage(imageUrl)
+      if (imageResult.riskScore > result.riskScore) {
+        result.riskScore += imageResult.riskScore
+        result.flags.push(...imageResult.flags)
+        result.requiresHumanReview = result.requiresHumanReview || imageResult.requiresHumanReview
+      }
+    }
 
-    // If content requires human review, queue it
+    // Queue for human review if needed
     if (result.requiresHumanReview) {
       await queueForHumanReview(userId, type, content, result, imageUrl, videoUrl)
     }
+
+    console.log(`📊 Moderation completed in ${result.processingTime}ms - Status: ${result.status}`)
 
     return NextResponse.json({ success: true, moderation: result })
   } catch (error) {
