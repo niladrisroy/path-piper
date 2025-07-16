@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@supabase/supabase-js'
@@ -6,6 +5,42 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: postId } = await params
+    const cookieStore = request.cookies
+    const accessToken = cookieStore.get('sb-access-token')?.value
+
+    if (!accessToken) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken)
+
+    if (error || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Check if post is bookmarked
+    const bookmark = await prisma.postBookmark.findFirst({
+      where: {
+        postId,
+        userId: user.id
+      }
+    })
+
+    return NextResponse.json({ 
+      isBookmarked: !!bookmark 
+    })
+  } catch (error) {
+    console.error('Error checking bookmark status:', error)
+    return NextResponse.json({ error: 'Failed to check bookmark status' }, { status: 500 })
+  }
+}
 
 export async function POST(
   request: NextRequest,

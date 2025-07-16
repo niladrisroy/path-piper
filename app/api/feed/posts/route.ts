@@ -119,8 +119,32 @@ export async function POST(request: NextRequest) {
       console.log(`📝 Creating trail ${trailOrder} for parent post ${parentPostId}`)
     }
 
-    // Content moderation - simple keyword filtering
-    const moderationStatus = await moderateContent(content)
+    // Content moderation using the enhanced system
+    const moderationResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/moderation`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        content,
+        type: 'post',
+        userId: user.id,
+        imageUrl,
+        videoUrl: null // Add video support if needed
+      })
+    })
+
+    let moderationStatus = 'pending_review'
+    if (moderationResponse.ok) {
+      const moderationResult = await moderationResponse.json()
+      moderationStatus = moderationResult.moderation.status
+      
+      // If content is rejected, return error immediately
+      if (moderationStatus === 'rejected') {
+        return NextResponse.json({ 
+          error: 'Content violates community guidelines and cannot be posted',
+          suggestions: moderationResult.moderation.suggestions 
+        }, { status: 400 })
+      }
+    }
 
     const post = await prisma.feedPost.create({
       data: {
@@ -300,7 +324,10 @@ export async function GET(request: NextRequest) {
           }
         },
         trails: {
-          where: { isTrail: true },
+          where: { 
+            isTrail: true,
+            moderationStatus: 'approved'
+          },
           include: {
             author: {
               select: {
@@ -318,7 +345,8 @@ export async function GET(request: NextRequest) {
               }
             }
           },
-          orderBy: { trailOrder: 'asc' }
+          orderBy: { trailOrder: 'asc' },
+          take: 10 // Limit trails to prevent large responses
         }
       },
       orderBy: { createdAt: 'desc' },
@@ -361,21 +389,210 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Simple content moderation function
-async function moderateContent(content: string): Promise<string> {
-  const inappropriateWords = [
-    'spam', 'fake', 'scam', 'cheat', 'hack', 'illegal'
-    // Add more words as needed
+// Enhanced content moderation function
+async function moderateContent(content: string, imageUrl?: string): Promise<string> {
+  let riskScore = 0
+  const flags: string[] = []
+
+  // 1. Profanity and Inappropriate Language Detection
+  const profanityWords = [
+    'fuck', 'shit', 'damn', 'bitch', 'asshole', 'bastard', 'crap', 'piss',
+    'hell', 'bloody', 'goddamn', 'motherfucker', 'cocksucker', 'dickhead',
+    'whore', 'slut', 'faggot', 'nigger', 'retard', 'gay', 'lesbian'
+  ]
+
+  // 2. Violence and Threats Detection
+  const violenceWords = [
+    'kill', 'murder', 'death', 'suicide', 'bomb', 'gun', 'weapon', 'knife',
+    'stab', 'shoot', 'attack', 'hurt', 'harm', 'violence', 'fight', 'beat',
+    'punch', 'kick', 'slap', 'hit', 'destroy', 'annihilate', 'eliminate',
+    'assassinate', 'torture', 'abuse', 'rape', 'assault', 'terror', 'threat'
+  ]
+
+  // 3. Sexual Content Detection
+  const sexualWords = [
+    'sex', 'porn', 'nude', 'naked', 'boobs', 'penis', 'vagina', 'orgasm',
+    'masturbate', 'horny', 'sexy', 'erotic', 'xxx', 'adult', 'fetish',
+    'bdsm', 'kinky', 'oral', 'anal', 'threesome', 'prostitute', 'escort'
+  ]
+
+  // 4. Hate Speech Detection
+  const hateWords = [
+    'nazi', 'hitler', 'terrorist', 'racism', 'racist', 'sexist', 'homophobe',
+    'transphobe', 'xenophobe', 'bigot', 'supremacist', 'genocide', 'holocaust',
+    'jihad', 'infidel', 'savage', 'primitive', 'subhuman'
+  ]
+
+  // 5. Drug and Substance Abuse Detection
+  const drugWords = [
+    'cocaine', 'heroin', 'meth', 'marijuana', 'weed', 'drugs', 'dealer',
+    'addiction', 'overdose', 'high', 'stoned', 'drunk', 'alcohol', 'beer',
+    'wine', 'vodka', 'whiskey', 'smoking', 'cigarette', 'tobacco'
+  ]
+
+  // 6. Spam and Scam Detection
+  const spamWords = [
+    'spam', 'fake', 'scam', 'cheat', 'hack', 'illegal', 'pirated', 'stolen',
+    'free money', 'get rich quick', 'click here', 'limited time', 'act now',
+    'guaranteed', 'risk-free', 'no catch', 'special offer', 'urgent'
+  ]
+
+  // 7. Self-Harm Detection
+  const selfHarmWords = [
+    'self-harm', 'cutting', 'suicide', 'kill myself', 'end it all', 'depression',
+    'hopeless', 'worthless', 'want to die', 'hurt myself', 'self-injury',
+    'overdose', 'pills', 'razor', 'blade', 'wrist', 'hanging'
   ]
 
   const lowerContent = content.toLowerCase()
-  const hasInappropriateContent = inappropriateWords.some(word => 
-    lowerContent.includes(word)
-  )
 
-  if (hasInappropriateContent) {
+  // Check each category and assign risk scores
+  profanityWords.forEach(word => {
+    if (lowerContent.includes(word)) {
+      riskScore += 3
+      flags.push('profanity')
+    }
+  })
+
+  violenceWords.forEach(word => {
+    if (lowerContent.includes(word)) {
+      riskScore += 5
+      flags.push('violence')
+    }
+  })
+
+  sexualWords.forEach(word => {
+    if (lowerContent.includes(word)) {
+      riskScore += 4
+      flags.push('sexual_content')
+    }
+  })
+
+  hateWords.forEach(word => {
+    if (lowerContent.includes(word)) {
+      riskScore += 6
+      flags.push('hate_speech')
+    }
+  })
+
+  drugWords.forEach(word => {
+    if (lowerContent.includes(word)) {
+      riskScore += 3
+      flags.push('substance_abuse')
+    }
+  })
+
+  spamWords.forEach(word => {
+    if (lowerContent.includes(word)) {
+      riskScore += 2
+      flags.push('spam')
+    }
+  })
+
+  selfHarmWords.forEach(word => {
+    if (lowerContent.includes(word)) {
+      riskScore += 8
+      flags.push('self_harm')
+    }
+  })
+
+  // 8. Pattern-based detection
+  // Excessive capitalization
+  const capsRatio = (content.match(/[A-Z]/g) || []).length / content.length
+  if (capsRatio > 0.7 && content.length > 10) {
+    riskScore += 2
+    flags.push('excessive_caps')
+  }
+
+  // Repeated characters (e.g., "sooooo")
+  if (/(.)\1{3,}/.test(content)) {
+    riskScore += 1
+    flags.push('repeated_chars')
+  }
+
+  // Excessive punctuation
+  if (/[!?]{3,}/.test(content)) {
+    riskScore += 1
+    flags.push('excessive_punctuation')
+  }
+
+  // URLs in posts (potential spam)
+  const urlPattern = /https?:\/\/[^\s]+/g
+  const urls = content.match(urlPattern)
+  if (urls && urls.length > 2) {
+    riskScore += 3
+    flags.push('multiple_urls')
+  }
+
+  // 9. Phone numbers and emails (potential spam)
+  const phonePattern = /(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/
+  const emailPattern = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/
+  
+  if (phonePattern.test(content)) {
+    riskScore += 2
+    flags.push('phone_number')
+  }
+  
+  if (emailPattern.test(content)) {
+    riskScore += 2
+    flags.push('email_address')
+  }
+
+  // 10. Age-inappropriate content detection based on educational context
+  const educationalViolations = [
+    'skip school', 'ditch class', 'fake sick', 'cheat on test', 'copy homework',
+    'hate teacher', 'teacher sucks', 'school is stupid', 'dropout', 'fail on purpose'
+  ]
+
+  educationalViolations.forEach(phrase => {
+    if (lowerContent.includes(phrase)) {
+      riskScore += 2
+      flags.push('educational_violation')
+    }
+  })
+
+  // Log moderation results for monitoring
+  console.log(`📋 Content Moderation Results:`)
+  console.log(`   - Content: "${content.substring(0, 50)}..."`)
+  console.log(`   - Risk Score: ${riskScore}`)
+  console.log(`   - Flags: ${flags.join(', ') || 'none'}`)
+
+  // Decision logic
+  if (riskScore >= 8 || flags.includes('self_harm') || flags.includes('hate_speech')) {
+    return 'rejected'
+  } else if (riskScore >= 4 || flags.includes('violence') || flags.includes('sexual_content')) {
     return 'pending_review'
+  } else if (riskScore >= 2) {
+    return 'flagged'
   }
 
   return 'approved'
+}
+
+// Image content moderation (basic implementation)
+async function moderateImage(imageUrl: string): Promise<string> {
+  try {
+    // This is a placeholder for image moderation
+    // In production, you would integrate with services like:
+    // - Google Cloud Vision API
+    // - AWS Rekognition
+    // - Microsoft Azure Computer Vision
+    
+    console.log(`🖼️ Image moderation check for: ${imageUrl}`)
+    
+    // Basic checks on file extension and size could be done here
+    const suspiciousExtensions = ['.exe', '.bat', '.cmd', '.scr']
+    const extension = imageUrl.split('.').pop()?.toLowerCase()
+    
+    if (extension && suspiciousExtensions.includes(`.${extension}`)) {
+      return 'rejected'
+    }
+    
+    // For now, approve all images
+    // TODO: Implement actual image content analysis
+    return 'approved'
+  } catch (error) {
+    console.error('Image moderation error:', error)
+    return 'pending_review'
+  }
 }

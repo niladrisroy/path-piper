@@ -269,18 +269,38 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
     }
   }
 
-  const toggleTrails = () => {
+  const toggleTrails = async () => {
+    if (!showTrails) {
+      // Fetch trails when showing them
+      try {
+        const response = await fetch(`/api/feed/posts/${post.id}/trails`, {
+          credentials: 'include'
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setTrails(data.trails || [])
+        }
+      } catch (error) {
+        console.error('Error fetching trails:', error)
+      }
+    }
     setShowTrails(!showTrails)
   }
 
   const handleTrailCreated = async () => {
     // Refetch trails
     try {
-      const response = await fetch(`/api/feed/posts/${post.id}/trails`)
+      console.log('🔄 Refetching trails for post:', post.id)
+      const response = await fetch(`/api/feed/posts/${post.id}/trails`, {
+        credentials: 'include'
+      })
       if (response.ok) {
         const data = await response.json()
-        setTrails(data.trails)
+        console.log('✅ Fetched trails:', data.trails?.length || 0)
+        setTrails(data.trails || [])
         setCommentsCount(prev => prev + 1)
+      } else {
+        console.error('❌ Failed to fetch trails:', response.status)
       }
     } catch (error) {
       console.error('Error fetching trails:', error)
@@ -571,7 +591,7 @@ export default function PostWithTrails({ post, onPostUpdate, onRepost }: PostWit
               variant="ghost"
               size="sm"
               onClick={toggleTrails}
-              className="flex items-center gap-2 text-gray-600 hover:text-blue-600"
+              className={`flex items-center gap-2 ${showTrails ? 'text-blue-600' : 'text-gray-600 hover:text-blue-600'}`}
             >
               <MessageCircle className="h-4 w-4" />
               <span>{trails.length}</span>

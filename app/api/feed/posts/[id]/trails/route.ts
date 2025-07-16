@@ -7,6 +7,45 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+// Helper function to get user from request (matches pattern from working endpoints)
+async function getUserFromRequest(request: NextRequest) {
+  const cookieStore = await cookies()
+  
+  // Get all cookies and log them for debugging
+  const allCookies = cookieStore.getAll()
+  console.log('🍪 Available cookies:', allCookies.map(c => c.name).join(', '))
+  
+  // Try different cookie names that might contain the auth token
+  const possibleTokens = [
+    cookieStore.get('sb-access-token')?.value,
+    cookieStore.get('supabase-access-token')?.value,
+    cookieStore.get('auth-token')?.value,
+    cookieStore.get('supabase.auth.token')?.value
+  ].filter(Boolean)
+
+  if (possibleTokens.length === 0) {
+    console.log('❌ No authentication tokens found')
+    return null
+  }
+
+  // Try each token until one works
+  for (const token of possibleTokens) {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser(token)
+      if (!error && user) {
+        console.log('✅ Auth successful with user:', user.id)
+        return user
+      }
+    } catch (e) {
+      console.log('🔍 Token failed:', e)
+      continue
+    }
+  }
+
+  console.log('❌ All tokens failed authentication')
+  return null
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -15,16 +54,11 @@ export async function POST(
     const { id: postId } = await params
     const { content, imageUrl } = await request.json()
     const cookieStore = await cookies()
-    const token = cookieStore.get('auth-token')?.value
-
-    if (!token) {
+    
+    // Get authenticated user
+    const user = await getUserFromRequest(request)
+    if (!user) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 })
-    }
-
-    // Verify the user
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-    if (authError || !user) {
-      return NextResponse.json({ error: "Invalid authentication" }, { status: 401 })
     }
 
     if (!content || !content.trim()) {
@@ -107,12 +141,15 @@ export async function GET(
   try {
     const { id: postId } = await params
 
+    console.log('📋 Fetching trails for post:', postId)
+
     // Check if post exists first
     const parentPost = await prisma.feedPost.findUnique({
       where: { id: postId }
     })
 
     if (!parentPost) {
+      console.log('❌ Parent post not found:', postId)
       return NextResponse.json({ error: 'Post not found' }, { status: 404 })
     }
 
@@ -131,9 +168,10 @@ export async function GET(
             profileImageUrl: true
           }
         },
-        likes: {
+        _count: {
           select: {
-            userId: true
+            likes: true,
+            comments: true
           }
         }
       },
@@ -142,11 +180,14 @@ export async function GET(
       }
     })
 
-    // Transform trails to include like counts and user like status
+    console.log('✅ Found', trails.length, 'trails for post:', postId)
+
+    // Transform trails to include like counts
     const transformedTrails = trails.map(trail => ({
       ...trail,
-      likesCount: trail.likes?.length || 0,
-      likes: undefined // Remove the likes array from response for cleaner data
+      likesCount: trail._count?.likes || 0,
+      commentsCount: trail._count?.comments || 0,
+      _count: undefined // Remove the _count object from response
     }))
 
     return NextResponse.json({ trails: transformedTrails })
