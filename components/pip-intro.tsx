@@ -143,7 +143,7 @@ export default function PipIntro() {
               Pip is PathPiper's AI guide — always learning your goals, suggesting the right mentors, celebrating your wins, and nudging you toward opportunities you didn't know existed. Think of Pip as a career counselor, study buddy, and hype coach rolled into one.
             </p>
 
-            <a href="https://my.pathpiper.com/auth" target="_blank" rel="noopener noreferrer">
+            <a href="https://my.pathpiper.com/auth">
               <Button className="bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full px-8 py-6 text-lg">
                 Meet Pip — It's Free
               </Button>

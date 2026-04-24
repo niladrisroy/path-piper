@@ -96,9 +96,14 @@ export default function Hero() {
               PathPiper connects students with AI-matched mentors, career discovery tools, and a global academic community — in the only platform built from the ground up for student safety.
             </p>
             <div className="flex flex-col sm:flex-row md:justify-start justify-center gap-4 mb-10">
-              <a href="https://my.pathpiper.com/auth" target="_blank" rel="noopener noreferrer">
+              <a href="https://my.pathpiper.com/auth">
                 <Button className="bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full px-8 py-6 text-lg">
                   Join the Community
+                </Button>
+              </a>
+              <a href="#how-it-works">
+                <Button variant="outline" className="rounded-full px-8 py-6 text-lg border-slate-300 text-slate-700 hover:border-teal-400 hover:text-teal-600">
+                  See How It Works
                 </Button>
               </a>
             </div>

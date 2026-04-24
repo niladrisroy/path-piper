@@ -73,7 +73,7 @@ export default function Discovery() {
               </div>
               <div className="p-6">
                 <p className="text-slate-600 mb-4">{item.description}</p>
-                <a href="https://my.pathpiper.com/auth" target="_blank" rel="noopener noreferrer" className="w-full block">
+                <a href="https://my.pathpiper.com/auth" className="w-full block">
                   <Button
                     variant="outline"
                     className="w-full border-yellow-200 text-yellow-600 hover:bg-yellow-50 hover:text-yellow-700 rounded-full"

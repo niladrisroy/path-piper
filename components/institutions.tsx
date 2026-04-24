@@ -280,7 +280,7 @@ export default function Institutions() {
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          <a href="https://my.pathpiper.com/auth" target="_blank" rel="noopener noreferrer">
+          <a href="https://my.pathpiper.com/auth">
             <Button className="bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white rounded-full px-8 py-6 text-lg">
               Partner With Us
             </Button>

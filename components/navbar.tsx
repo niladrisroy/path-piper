@@ -67,12 +67,12 @@ export function Navbar() {
                 {link.name}
               </Link>
             ))}
-            <a href="https://my.pathpiper.com/auth" target="_blank" rel="noopener noreferrer">
+            <a href="https://my.pathpiper.com/auth">
               <Button className="bg-gradient-to-r from-purple-400 to-pink-500 hover:from-purple-500 hover:to-pink-600 text-white rounded-full px-6 mr-2">
                 Login
               </Button>
             </a>
-            <a href="https://my.pathpiper.com/auth" target="_blank" rel="noopener noreferrer">
+            <a href="https://my.pathpiper.com/auth">
               <Button className="bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full px-6">
                 Join Now
               </Button>
@@ -105,7 +105,7 @@ export function Navbar() {
                     {link.name}
                   </Link>
                 ))}
-                <a href="https://my.pathpiper.com/auth" target="_blank" rel="noopener noreferrer" className="w-full">
+                <a href="https://my.pathpiper.com/auth" className="w-full">
                   <Button
                     className="bg-gradient-to-r from-purple-400 to-pink-500 hover:from-purple-500 hover:to-pink-600 text-white rounded-full w-full mb-2"
                     onClick={() => setIsOpen(false)}
@@ -113,7 +113,7 @@ export function Navbar() {
                     Login
                   </Button>
                 </a>
-                <a href="https://my.pathpiper.com/auth" target="_blank" rel="noopener noreferrer" className="w-full">
+                <a href="https://my.pathpiper.com/auth" className="w-full">
                   <Button
                     className="bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full w-full"
                     onClick={() => setIsOpen(false)}

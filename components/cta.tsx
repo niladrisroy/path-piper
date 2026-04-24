@@ -28,7 +28,7 @@ export default function CTA() {
                 It's free. It's safe. And it takes less than 2 minutes to set up your profile and get your first mentor match.
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <a href="https://my.pathpiper.com/auth" target="_blank" rel="noopener noreferrer">
+                <a href="https://my.pathpiper.com/auth">
                   <Button className="bg-white text-teal-600 hover:bg-yellow-100 hover:text-orange-600 rounded-full px-8 py-6 text-lg transition-colors duration-300">
                     Join Now
                   </Button>

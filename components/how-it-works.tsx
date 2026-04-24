@@ -39,7 +39,7 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <section className="py-20 bg-white">
+    <section id="how-it-works" className="py-20 bg-white">
       <div className="container mx-auto px-4">
         <motion.div
           className="text-center mb-14"
@@ -94,7 +94,7 @@ export default function HowItWorks() {
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          <a href="https://my.pathpiper.com/auth" target="_blank" rel="noopener noreferrer">
+          <a href="https://my.pathpiper.com/auth">
             <Button className="bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-full px-10 py-6 text-lg shadow-md">
               Get Started Free
             </Button>
